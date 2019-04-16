@@ -61,6 +61,7 @@ public class battery_monitoring_service extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_OKAY);
         filter.addAction(Intent.ACTION_BATTERY_LOW);
+        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
         registerReceiver(battery_receiver, filter);
         registerReceiver(stop_broadcast_receiver, intentFilter);
 
