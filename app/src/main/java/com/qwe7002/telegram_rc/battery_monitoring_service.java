@@ -61,7 +61,6 @@ public class battery_monitoring_service extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_OKAY);
         filter.addAction(Intent.ACTION_BATTERY_LOW);
-        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
         registerReceiver(battery_receiver, filter);
         registerReceiver(stop_broadcast_receiver, intentFilter);
 
@@ -106,12 +105,6 @@ class battery_receiver extends BroadcastReceiver {
                 break;
             case Intent.ACTION_BATTERY_LOW:
                 prebody = prebody.append(context.getString(R.string.battery_low));
-                break;
-            case Intent.ACTION_POWER_CONNECTED:
-                prebody = prebody.append(context.getString(R.string.ac_connect));
-                break;
-            case Intent.ACTION_POWER_DISCONNECTED:
-                prebody = prebody.append(context.getString(R.string.ac_disconnect));
                 break;
         }
         request_body.text = prebody.append("\n").append(context.getString(R.string.current_battery_level)).append(batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)).append("%").toString();
