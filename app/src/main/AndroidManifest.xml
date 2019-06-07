@@ -15,7 +15,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="com.qwe7002.telegram_sms.broadcast.permission"/>
+    <uses-permission
+        android:name="com.qwe7002.telegram_rc.broadcast.permission" />
+    <permission
+        android:name="com.qwe7002.telegram_rc.broadcast.permission" />
 
     <application
         android:allowBackup="true"

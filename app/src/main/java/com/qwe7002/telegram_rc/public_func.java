@@ -250,6 +250,7 @@ class public_func {
         return result_obj.get("message_id").getAsString();
     }
 
+
     static Notification get_notification_obj(Context context, String notification_name) {
         Notification notification;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
