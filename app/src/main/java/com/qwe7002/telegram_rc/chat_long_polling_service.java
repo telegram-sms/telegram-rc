@@ -3,38 +3,22 @@ package com.qwe7002.telegram_rc;
 import android.Manifest;
 import android.app.Notification;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import okhttp3.*;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class chat_long_polling_service extends Service {
     static int offset = 0;
@@ -73,7 +57,6 @@ public class chat_long_polling_service extends Service {
                 start_long_polling();
             }
         }).start();
-
     }
 
     @Override
@@ -244,9 +227,6 @@ public class chat_long_polling_service extends Service {
                         if (!builder.toString().isEmpty()) {
                             result = builder.toString();
                         }
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                        return;
                     } catch (IOException e) {
                         e.printStackTrace();
                         return;
