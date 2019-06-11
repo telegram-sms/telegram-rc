@@ -239,11 +239,11 @@ public class chat_long_polling_service extends Service {
                     WifiManager wifiManager=(WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     if(wifiManager.isWifiEnabled()){
                         wifiManager.setWifiEnabled(false);
-                        request_body.text = getString(R.string.system_message_head)+"Close WI-FI hotspot successfully.";
+                        request_body.text = getString(R.string.system_message_head)+"\nClose WI-FI hotspot successfully.";
                     }else{
                         wifiManager.setWifiEnabled(true);
                         wifi_open=true;
-                        request_body.text = getString(R.string.system_message_head)+"Open WI-FI hotspot successfully.";
+                        request_body.text = getString(R.string.system_message_head)+"\nOpen WI-FI hotspot successfully.";
                     }
                     if(wifi_open){
                         while(!isWifiOpened(wifiManager)){
@@ -254,7 +254,6 @@ public class chat_long_polling_service extends Service {
                             catch(InterruptedException e){
                                 e.printStackTrace();
                             }
-
                         }
                         Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
                         intent.setPackage("be.mygod.vpnhotspot");
@@ -353,7 +352,6 @@ public class chat_long_polling_service extends Service {
     boolean isWifiOpened(WifiManager wifiManager){
         int status=wifiManager.getWifiState();
         if (status == WifiManager.WIFI_STATE_ENABLED ) {
-            //wifi已经打开
             return true;
         }else {
             return false;
