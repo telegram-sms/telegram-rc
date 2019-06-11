@@ -20,6 +20,8 @@
     <permission
         android:name="com.qwe7002.telegram_rc.broadcast.permission" />
 
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <application
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"
