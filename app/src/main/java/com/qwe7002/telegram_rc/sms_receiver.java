@@ -9,7 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Telephony;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
@@ -25,7 +25,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static android.content.Context.MODE_PRIVATE;
-import static android.support.v4.content.PermissionChecker.checkSelfPermission;
+import static androidx.core.content.PermissionChecker.checkSelfPermission;
 
 public class sms_receiver extends BroadcastReceiver {
     public void onReceive(final Context context, Intent intent) {

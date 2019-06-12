@@ -8,8 +8,8 @@ import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import android.util.Log;
 import com.google.gson.*;
 import okhttp3.*;
@@ -351,11 +351,7 @@ public class chat_long_polling_service extends Service {
     }
     boolean isWifiOpened(WifiManager wifiManager){
         int status=wifiManager.getWifiState();
-        if (status == WifiManager.WIFI_STATE_ENABLED ) {
-            return true;
-        }else {
-            return false;
-        }
+        return status == WifiManager.WIFI_STATE_ENABLED;
     }
     class stop_broadcast_receiver extends BroadcastReceiver {
         @Override
