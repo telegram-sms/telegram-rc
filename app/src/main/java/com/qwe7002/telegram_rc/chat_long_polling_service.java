@@ -203,6 +203,7 @@ public class chat_long_polling_service extends Service {
                             card_info = "\nSIM1:" + public_func.get_sim_display_name(context, 0) + "\nSIM2:" + public_func.get_sim_display_name(context, 1);
                         }
                     }
+                    assert batteryManager != null;
                     request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) + "%\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
                     break;
                 case "/log":
@@ -237,13 +238,14 @@ public class chat_long_polling_service extends Service {
                 case "/switchap":
                     boolean wifi_open=false;
                     WifiManager wifiManager=(WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                    assert wifiManager != null;
                     if(wifiManager.isWifiEnabled()){
                         wifiManager.setWifiEnabled(false);
-                        request_body.text = getString(R.string.system_message_head)+"\nClose WI-FI hotspot successfully.";
+                        request_body.text = getString(R.string.system_message_head)+"\n"+getString(R.string.close_wifi);
                     }else{
                         wifiManager.setWifiEnabled(true);
                         wifi_open=true;
-                        request_body.text = getString(R.string.system_message_head)+"\nOpen WI-FI hotspot successfully.";
+                        request_body.text = getString(R.string.system_message_head)+"\n"+getString(R.string.open_wifi);
                     }
                     if(wifi_open){
                         while(!isWifiOpened(wifiManager)){

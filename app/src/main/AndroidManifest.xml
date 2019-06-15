@@ -64,7 +64,7 @@
             </intent-filter>
         </service>
         <receiver android:name="com.qwe7002.telegram_rc.boot_receiver"
-                  android:directBootAware="true">
+                  android:directBootAware="true" tools:targetApi="n">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
