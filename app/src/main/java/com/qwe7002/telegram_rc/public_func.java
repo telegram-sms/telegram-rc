@@ -253,6 +253,7 @@ class public_func {
             NotificationChannel channel = new NotificationChannel(notification_name, public_func.log_tag,
                     NotificationManager.IMPORTANCE_LOW);
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            assert manager != null;
             manager.createNotificationChannel(channel);
             notification = new Notification.Builder(context, notification_name)
                     .setAutoCancel(false)
