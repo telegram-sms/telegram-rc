@@ -8,18 +8,11 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
-
 import com.google.gson.Gson;
+import okhttp3.*;
 
 import java.io.IOException;
 import java.util.Objects;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -70,7 +63,7 @@ public class sms_send_receiver extends BroadcastReceiver {
         }
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj();
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS status failed:";

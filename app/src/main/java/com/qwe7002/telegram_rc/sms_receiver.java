@@ -1,28 +1,17 @@
 package com.qwe7002.telegram_rc;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
+import android.content.*;
 import android.os.Bundle;
 import android.provider.Telephony;
-import androidx.annotation.NonNull;
 import android.telephony.SmsMessage;
 import android.util.Log;
-
+import androidx.annotation.NonNull;
+import androidx.core.content.PermissionChecker;
 import com.google.gson.Gson;
+import okhttp3.*;
 
 import java.io.IOException;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 import static android.content.Context.MODE_PRIVATE;
 import static androidx.core.content.PermissionChecker.checkSelfPermission;
@@ -88,7 +77,7 @@ public class sms_receiver extends BroadcastReceiver {
             }
             request_body.text = "[" + dual_sim + context.getString(R.string.receive_sms_head) + "]" + "\n" + context.getString(R.string.from) + display_address + "\n" + context.getString(R.string.content) + msgBody;
             assert msg_address != null;
-            if (checkSelfPermission(context, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(context, Manifest.permission.SEND_SMS) == PermissionChecker.PERMISSION_GRANTED) {
                 if (msg_address.equals(sharedPreferences.getString("trusted_phone_number", null))) {
                     String[] msg_send_list = msgBody.toString().split("\n");
                     String msg_send_to = public_func.get_send_phone_number(msg_send_list[0]);
@@ -117,7 +106,7 @@ public class sms_receiver extends BroadcastReceiver {
             }
             String request_body_json = new Gson().toJson(request_body);
             RequestBody body = RequestBody.create(public_func.JSON, request_body_json);
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj();
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send SMS forward failed:";

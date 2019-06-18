@@ -5,11 +5,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -17,17 +13,18 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.ContactsContract;
-import androidx.core.app.ActivityCompat;
 import android.telephony.SmsManager;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import okhttp3.*;
+import okhttp3.dnsoverhttps.DnsOverHttps;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -40,15 +37,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-
-import okhttp3.Call;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.dnsoverhttps.DnsOverHttps;
 
 import static android.content.Context.MODE_PRIVATE;
 import static androidx.core.content.PermissionChecker.checkSelfPermission;
@@ -94,19 +82,17 @@ class public_func {
         return "https://api.telegram.org/bot" + token + "/" + func;
     }
 
-    static OkHttpClient get_okhttp_obj(boolean doh_switch) {
+    static OkHttpClient get_okhttp_obj() {
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true);
-        if (doh_switch) {
             okhttp.dns(new DnsOverHttps.Builder().client(new OkHttpClient.Builder().retryOnConnectionFailure(true).build())
                     .url(HttpUrl.get("https://cloudflare-dns.com/dns-query"))
                     .bootstrapDnsHosts(getByIp("1.1.1.1"), getByIp("2606:4700:4700::1111"), getByIp("185.222.222.222"), getByIp("2a09::"))
                     .includeIPv6(true)
                     .build());
-        }
         return okhttp.build();
     }
 
@@ -134,6 +120,7 @@ class public_func {
     static String get_network_type(Context context) {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        assert connect_manager != null;
         NetworkInfo network_info = connect_manager.getActiveNetworkInfo();
         if (network_info == null) {
             return net_type;
@@ -196,7 +183,7 @@ class public_func {
         Gson gson = new Gson();
         String request_body_raw = gson.toJson(request_body);
         RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj();
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         try {
@@ -408,7 +395,7 @@ class public_func {
         public_func.write_file(context, "message.json", new Gson().toJson(message_list_obj));
     }
 
-    static void append_file(Context context, String file_name, String write_string) {
+    private static void append_file(Context context, String file_name, String write_string) {
         private_write_file(context,file_name,write_string,Context.MODE_APPEND);
     }
     static void write_file(Context context, String file_name, String write_string) {

@@ -8,9 +8,9 @@ import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
-import android.util.Log;
 import com.google.gson.*;
 import okhttp3.*;
 
@@ -51,7 +51,7 @@ public class chat_long_polling_service extends Service {
         sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         chat_id = sharedPreferences.getString("chat_id", "");
         bot_token = sharedPreferences.getString("bot_token", "");
-        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        okhttp_client = public_func.get_okhttp_obj();
 
         new Thread(() -> {
             while (true) {

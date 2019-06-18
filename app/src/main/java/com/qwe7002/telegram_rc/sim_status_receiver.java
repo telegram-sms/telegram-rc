@@ -5,20 +5,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import androidx.annotation.NonNull;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-
+import androidx.annotation.NonNull;
 import com.google.gson.Gson;
+import okhttp3.*;
 
 import java.io.IOException;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -38,6 +31,7 @@ public class sim_status_receiver extends BroadcastReceiver {
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = public_func.get_url(bot_token, "sendMessage");
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Service.TELEPHONY_SERVICE);
+        assert tm != null;
         int state = tm.getSimState();
         if (last_status == state) {
             return;
@@ -70,7 +64,7 @@ public class sim_status_receiver extends BroadcastReceiver {
         }
         String request_body_json = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(public_func.JSON, request_body_json);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj();
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS status failed:";

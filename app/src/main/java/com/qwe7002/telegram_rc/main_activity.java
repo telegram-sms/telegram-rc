@@ -11,32 +11,21 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
-import androidx.annotation.NonNull;
-import com.google.android.material.snackbar.Snackbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.*;
+import okhttp3.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 import static android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS;
 
@@ -57,13 +46,10 @@ public class main_activity extends AppCompatActivity {
         final Switch chat_command = findViewById(R.id.chat_command);
         final Switch fallback_sms = findViewById(R.id.fallback_sms);
         final Switch battery_monitoring_switch = findViewById(R.id.battery_monitoring);
-        final Switch doh_switch = findViewById(R.id.doh_switch);
         display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
         final SharedPreferences sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
-        assert bot_token_save != null;
-        assert chat_id_save != null;
         if (sharedPreferences.getBoolean("initialized", false)) {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
         }
@@ -86,7 +72,6 @@ public class main_activity extends AppCompatActivity {
         battery_monitoring_switch.setChecked(sharedPreferences.getBoolean("battery_monitoring_switch", false));
         fallback_sms.setChecked(sharedPreferences.getBoolean("fallback_sms", false));
         chat_command.setChecked(sharedPreferences.getBoolean("chat_command", false));
-        doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
         display_dual_sim_display_name.setOnClickListener(v -> {
             int checkPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
             if (checkPermission != PackageManager.PERMISSION_GRANTED) {
@@ -119,7 +104,7 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setCancelable(false);
             progress_dialog.show();
             String request_uri = public_func.get_url(bot_token.getText().toString().trim(), "getUpdates");
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked());
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj();
             okhttp_client = okhttp_client.newBuilder()
                     .readTimeout((120 + 5), TimeUnit.SECONDS)
                     .build();
@@ -208,6 +193,7 @@ public class main_activity extends AppCompatActivity {
 
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                assert powerManager != null;
                 boolean has_ignored = powerManager.isIgnoringBatteryOptimizations(getPackageName());
                 if (!has_ignored) {
                     Intent intent = new Intent(ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
@@ -231,7 +217,7 @@ public class main_activity extends AppCompatActivity {
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);
             RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked());
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj();
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send message failed:";
@@ -272,7 +258,6 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("chat_command", chat_command.isChecked());
                     editor.putBoolean("battery_monitoring_switch", battery_monitoring_switch.isChecked());
                     editor.putBoolean("display_dual_sim_display_name", display_dual_sim_display_name.isChecked());
-                    editor.putBoolean("doh_switch", doh_switch.isChecked());
                     editor.putBoolean("initialized", true);
                     editor.apply();
                     public_func.stop_all_service(context);

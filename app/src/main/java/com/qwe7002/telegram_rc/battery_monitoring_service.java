@@ -20,7 +20,6 @@ public class battery_monitoring_service extends Service {
     static String chat_id;
     static Boolean fallback;
     static String trusted_phone_number;
-    static boolean doh_switch;
     Context context;
     SharedPreferences sharedPreferences;
     private battery_receiver battery_receiver = null;
@@ -42,7 +41,6 @@ public class battery_monitoring_service extends Service {
         bot_token = sharedPreferences.getString("bot_token", "");
         fallback = sharedPreferences.getBoolean("fallback_sms", false);
         trusted_phone_number = sharedPreferences.getString("trusted_phone_number", null);
-        doh_switch = sharedPreferences.getBoolean("doh_switch", true);
         IntentFilter intentFilter = new IntentFilter(public_func.broadcast_stop_service);
         stop_broadcast_receiver = new stop_broadcast_receiver();
 
@@ -100,6 +98,7 @@ class battery_receiver extends BroadcastReceiver {
                 prebody = prebody.append(context.getString(R.string.charger_disconnect));
                 break;
         }
+        assert batteryManager != null;
         request_body.text = prebody.append("\n").append(context.getString(R.string.current_battery_level)).append(batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)).append("%").toString();
 
         if (!public_func.check_network(context)) {
@@ -109,7 +108,7 @@ class battery_receiver extends BroadcastReceiver {
             }
             return;
         }
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(battery_monitoring_service.doh_switch);
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj();
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
