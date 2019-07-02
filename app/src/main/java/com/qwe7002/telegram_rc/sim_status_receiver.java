@@ -7,13 +7,19 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
-import okhttp3.*;
 
 import java.io.IOException;
 
-import static android.content.Context.MODE_PRIVATE;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class sim_status_receiver extends BroadcastReceiver {
@@ -22,7 +28,7 @@ public class sim_status_receiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.d(public_func.log_tag, "onReceive: " + intent.getAction());
         String message = context.getString(R.string.system_message_head) + "\n";
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+        final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         if (!sharedPreferences.getBoolean("initialized", false)) {
             Log.i(public_func.log_tag, "Uninitialized, SIM status receiver is deactivated");
             return;
@@ -34,6 +40,7 @@ public class sim_status_receiver extends BroadcastReceiver {
         assert tm != null;
         int state = tm.getSimState();
         if (last_status == state) {
+            Log.d(public_func.log_tag, "sim_status_receiver: SIM status is the same as the previous one");
             return;
         }
         last_status = state;
@@ -58,13 +65,13 @@ public class sim_status_receiver extends BroadcastReceiver {
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         request_body.text = message;
-        if (!public_func.check_network(context)) {
+        if (!public_func.check_network_status(context)) {
             public_func.write_log(context, public_func.network_error);
             return;
         }
         String request_body_json = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(public_func.JSON, request_body_json);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj();
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS status failed:";
@@ -79,7 +86,8 @@ public class sim_status_receiver extends BroadcastReceiver {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     assert response.body() != null;
-                    public_func.write_log(context, error_head + response.body().string());
+                    String error_message = error_head + response.code() + " " + response.body().string();
+                    public_func.write_log(context, error_message);
                 }
             }
         });

@@ -3,10 +3,12 @@ package com.qwe7002.telegram_rc;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.FileObserver;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class logcat_activity extends AppCompatActivity {
 
@@ -46,7 +48,7 @@ public class logcat_activity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         public_func.write_file(context, "error.log", "");
         public_func.write_file(context, "message.json", "{}");
         return true;

@@ -11,9 +11,7 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".main_activity">
 
-
     <ScrollView
-            android:id="@+id/login_form"
             android:layout_width="match_parent"
             android:layout_height="match_parent" tools:ignore="UselessParent">
 
@@ -34,7 +32,8 @@
                         android:hint="@string/bot_token"
                         android:inputType="textEmailAddress"
                         android:maxLines="1"
-                        android:singleLine="true" android:importantForAutofill="no" tools:targetApi="o"/>
+                        android:singleLine="true"
+                        tools:ignore="Autofill" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -47,8 +46,8 @@
                         android:layout_height="wrap_content"
                         android:hint="@string/chat_id"
                         android:maxLines="1"
-                        android:singleLine="true" android:importantForAutofill="no" tools:targetApi="o"
-                        tools:ignore="TextFields"/>
+                        android:singleLine="true"
+                        tools:ignore="Autofill,TextFields" />
             </com.google.android.material.textfield.TextInputLayout>
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -59,8 +58,8 @@
                         android:layout_height="wrap_content"
                         android:hint="@string/trusted_phone_number"
                         android:maxLines="1"
-                        android:singleLine="true" android:importantForAutofill="no" tools:targetApi="o"
-                        tools:ignore="TextFields"/>
+                        android:singleLine="true"
+                        tools:ignore="Autofill,TextFields" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Switch
@@ -76,12 +75,36 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="3dp"
                     android:text="@string/battery_monitoring" tools:ignore="RtlSymmetry"/>
+
+            <Switch
+                    android:id="@+id/charger_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/charger_status"
+                    tools:ignore="RtlSymmetry" />
             <Switch
                     android:id="@+id/chat_command"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingStart="3dp"
                     android:text="@string/chat_command" tools:ignore="RtlSymmetry"/>
+
+            <Switch
+                    android:id="@+id/wakelock_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/wakelock"
+                    tools:ignore="RtlSymmetry" />
+
+            <Switch
+                    android:id="@+id/verification_code_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/using_verification_code_identification"
+                    tools:ignore="RtlSymmetry" />
             <Switch
                     android:id="@+id/display_dual_sim"
                     android:layout_width="match_parent"
@@ -89,6 +112,13 @@
                     android:paddingStart="3dp"
                     android:text="@string/display_sim_card_alias_in_dual_card_mode" tools:ignore="RtlSymmetry"/>
 
+            <Switch
+                    android:id="@+id/doh_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/using_doh"
+                    tools:ignore="RtlSymmetry" />
             <Button
                 android:id="@+id/get_id"
                 android:layout_width="match_parent"

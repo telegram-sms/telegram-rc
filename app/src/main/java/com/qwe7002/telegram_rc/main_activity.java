@@ -3,6 +3,7 @@ package com.qwe7002.telegram_rc;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,23 +12,38 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import com.google.android.material.snackbar.Snackbar;
-import com.google.gson.*;
-import okhttp3.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 
 
 public class main_activity extends AppCompatActivity {
@@ -46,8 +62,16 @@ public class main_activity extends AppCompatActivity {
         final Switch chat_command = findViewById(R.id.chat_command);
         final Switch fallback_sms = findViewById(R.id.fallback_sms);
         final Switch battery_monitoring_switch = findViewById(R.id.battery_monitoring);
-        display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
+        final Switch doh_switch = findViewById(R.id.doh_switch);
         final SharedPreferences sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
+        final Switch charger_status = findViewById(R.id.charger_status);
+        final Switch verification_code = findViewById(R.id.verification_code_switch);
+        final Switch wakelock_switch = findViewById(R.id.wakelock_switch);
+        final Button save_button = findViewById(R.id.save);
+        final Button get_id = findViewById(R.id.get_id);
+        final Button logcat = findViewById(R.id.logcat_button);
+        display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
+
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
         if (sharedPreferences.getBoolean("initialized", false)) {
@@ -61,17 +85,29 @@ public class main_activity extends AppCompatActivity {
             }
             display_dual_sim_display_name.setChecked(display_dual_sim_display_name_config);
         }
-        Button save_button = findViewById(R.id.save);
-        Button get_id = findViewById(R.id.get_id);
-        Button logcat = findViewById(R.id.logcat_button);
 
         bot_token.setText(bot_token_save);
         chat_id.setText(chat_id_save);
 
         trusted_phone_number.setText(sharedPreferences.getString("trusted_phone_number", ""));
         battery_monitoring_switch.setChecked(sharedPreferences.getBoolean("battery_monitoring_switch", false));
+        charger_status.setEnabled(battery_monitoring_switch.isChecked());
+        charger_status.setChecked(sharedPreferences.getBoolean("charger_status", false));
+
         fallback_sms.setChecked(sharedPreferences.getBoolean("fallback_sms", false));
+        if (trusted_phone_number.length() == 0) {
+            fallback_sms.setEnabled(false);
+            fallback_sms.setChecked(false);
+        }
+
         chat_command.setChecked(sharedPreferences.getBoolean("chat_command", false));
+        verification_code.setChecked(sharedPreferences.getBoolean("verification_code", false));
+        wakelock_switch.setChecked(sharedPreferences.getBoolean("wakelock", false));
+        wakelock_switch.setEnabled(chat_command.isChecked());
+        doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
+
+        chat_command.setOnClickListener(v -> wakelock_switch.setEnabled(chat_command.isChecked()));
+
         display_dual_sim_display_name.setOnClickListener(v -> {
             int checkPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
             if (checkPermission != PackageManager.PERMISSION_GRANTED) {
@@ -86,6 +122,27 @@ public class main_activity extends AppCompatActivity {
             }
         });
 
+        trusted_phone_number.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (trusted_phone_number.length() != 0) {
+                    fallback_sms.setEnabled(true);
+                }
+                if (trusted_phone_number.length() == 0) {
+                    fallback_sms.setEnabled(false);
+                    fallback_sms.setChecked(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        battery_monitoring_switch.setOnClickListener(v -> charger_status.setEnabled(battery_monitoring_switch.isChecked()));
         logcat.setOnClickListener(v -> {
             Intent logcat_intent = new Intent(main_activity.this, logcat_activity.class);
             startActivity(logcat_intent);
@@ -96,6 +153,7 @@ public class main_activity extends AppCompatActivity {
                 Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show();
                 return;
             }
+            public_func.stop_all_service(context);
             final ProgressDialog progress_dialog = new ProgressDialog(main_activity.this);
             progress_dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progress_dialog.setTitle(getString(R.string.get_recent_chat_title));
@@ -104,13 +162,13 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setCancelable(false);
             progress_dialog.show();
             String request_uri = public_func.get_url(bot_token.getText().toString().trim(), "getUpdates");
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj();
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked());
             okhttp_client = okhttp_client.newBuilder()
-                    .readTimeout((120 + 5), TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
                     .build();
             polling_json request_body = new polling_json();
             request_body.offset = 0;
-            request_body.timeout = 120;
+            request_body.timeout = 60;
             RequestBody body = RequestBody.create(public_func.JSON, new Gson().toJson(request_body));
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
@@ -153,13 +211,21 @@ public class main_activity extends AppCompatActivity {
                             JsonObject chat_obj = message_obj.get("chat").getAsJsonObject();
                             if (!chat_id_list.contains(chat_obj.get("id").getAsString())) {
                                 String username = "";
-                                if (!chat_obj.has("username")) {
-                                    username = chat_obj.get("first_name").getAsString() + " " + chat_obj.get("last_name").getAsString();
-                                }
                                 if (chat_obj.has("username")) {
                                     username = chat_obj.get("username").getAsString();
                                 }
-                                chat_name_list.add(username + "(Chat)");
+                                if (chat_obj.has("title")) {
+                                    username = chat_obj.get("title").getAsString();
+                                }
+                                if (username.equals("") && !chat_obj.has("username")) {
+                                    if (chat_obj.has("first_name")) {
+                                        username = chat_obj.get("first_name").getAsString();
+                                    }
+                                    if (chat_obj.has("last_name")) {
+                                        username += " " + chat_obj.get("last_name").getAsString();
+                                    }
+                                }
+                                chat_name_list.add(username + "(" + chat_obj.get("type").getAsString() + ")");
                                 chat_id_list.add(chat_obj.get("id").getAsString());
                             }
                         }
@@ -196,13 +262,14 @@ public class main_activity extends AppCompatActivity {
                 assert powerManager != null;
                 boolean has_ignored = powerManager.isIgnoringBatteryOptimizations(getPackageName());
                 if (!has_ignored) {
-                    Intent intent = new Intent(ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
                     intent.setData(Uri.parse("package:" + getPackageName()));
                     if (intent.resolveActivityInfo(getPackageManager(), PackageManager.MATCH_DEFAULT_ONLY) != null) {
                         startActivity(intent);
                     }
                 }
             }
+
             final ProgressDialog progress_dialog = new ProgressDialog(main_activity.this);
             progress_dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progress_dialog.setTitle(getString(R.string.connect_wait_title));
@@ -210,6 +277,7 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setIndeterminate(false);
             progress_dialog.setCancelable(false);
             progress_dialog.show();
+
             String request_uri = public_func.get_url(bot_token.getText().toString().trim(), "sendMessage");
             message_json request_body = new message_json();
             request_body.chat_id = chat_id.getText().toString().trim();
@@ -217,7 +285,7 @@ public class main_activity extends AppCompatActivity {
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);
             RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj();
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked());
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send message failed:";
@@ -257,7 +325,10 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("fallback_sms", fallback_sms.isChecked());
                     editor.putBoolean("chat_command", chat_command.isChecked());
                     editor.putBoolean("battery_monitoring_switch", battery_monitoring_switch.isChecked());
+                    editor.putBoolean("charger_status", charger_status.isChecked());
                     editor.putBoolean("display_dual_sim_display_name", display_dual_sim_display_name.isChecked());
+                    editor.putBoolean("verification_code", verification_code.isChecked());
+                    editor.putBoolean("doh_switch", doh_switch.isChecked());
                     editor.putBoolean("initialized", true);
                     editor.apply();
                     public_func.stop_all_service(context);
@@ -282,5 +353,37 @@ public class main_activity extends AppCompatActivity {
             }
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        String file_name = "";
+        switch (item.getItemId()) {
+            case R.id.user_manual:
+                file_name = context.getString(R.string.user_manual_url);
+                break;
+            case R.id.privacy_policy:
+                file_name = context.getString(R.string.privacy_policy_url);
+                break;
+        }
+
+        Uri uri = Uri.parse("https://get-tg-sms.reall.uk/get/wiki/" + file_name);
+        Intent intent = new Intent();
+        intent.setAction("android.intent.action.VIEW");
+        intent.setData(uri);
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            e.printStackTrace();
+            Snackbar.make(findViewById(R.id.bot_token), "Browser not found.", Snackbar.LENGTH_LONG).show();
+        }
+        return true;
+    }
+
 }
 

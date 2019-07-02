@@ -5,7 +5,11 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
@@ -18,13 +22,13 @@ import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import okhttp3.*;
-import okhttp3.dnsoverhttps.DnsOverHttps;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -38,7 +42,15 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import static android.content.Context.MODE_PRIVATE;
+import okhttp3.Call;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.dnsoverhttps.DnsOverHttps;
+
 import static androidx.core.content.PermissionChecker.checkSelfPermission;
 
 class public_func {
@@ -46,6 +58,7 @@ class public_func {
     static final String network_error = "Send Message:No network connection";
     static final String broadcast_stop_service = "com.qwe7002.telegram_sms.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private static final code_aux_lib parser = new code_aux_lib();
 
     static String get_send_phone_number(String phone_number) {
         return phone_number.trim()
@@ -67,7 +80,7 @@ class public_func {
         return dual_sim;
     }
 
-    static boolean check_network(Context context) {
+    static boolean check_network_status(Context context) {
         ConnectivityManager manager = (ConnectivityManager) context
                 .getApplicationContext().getSystemService(
                         Context.CONNECTIVITY_SERVICE);
@@ -75,24 +88,26 @@ class public_func {
             return false;
         }
         NetworkInfo networkinfo = manager.getActiveNetworkInfo();
-        return networkinfo != null && networkinfo.isAvailable();
+        return networkinfo != null && networkinfo.isConnected();
     }
 
     static String get_url(String token, String func) {
         return "https://api.telegram.org/bot" + token + "/" + func;
     }
 
-    static OkHttpClient get_okhttp_obj() {
+    static OkHttpClient get_okhttp_obj(boolean doh_switch) {
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true);
+        if (doh_switch) {
             okhttp.dns(new DnsOverHttps.Builder().client(new OkHttpClient.Builder().retryOnConnectionFailure(true).build())
                     .url(HttpUrl.get("https://cloudflare-dns.com/dns-query"))
                     .bootstrapDnsHosts(getByIp("1.1.1.1"), getByIp("2606:4700:4700::1111"), getByIp("185.222.222.222"), getByIp("2a09::"))
                     .includeIPv6(true)
                     .build());
+        }
         return okhttp.build();
     }
 
@@ -131,6 +146,9 @@ class public_func {
                 break;
             case ConnectivityManager.TYPE_MOBILE:
                 switch (network_info.getSubtype()) {
+                    case TelephonyManager.NETWORK_TYPE_NR:
+                        net_type = "5G";
+                        break;
                     case TelephonyManager.NETWORK_TYPE_LTE:
                         net_type = "LTE/4G";
                         break;
@@ -154,12 +172,17 @@ class public_func {
                         net_type = "2G";
                         break;
                 }
+                break;
         }
         return net_type;
     }
 
     static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+        if (!is_numeric(send_to)) {
+            write_log(context, "[" + send_to + "] is an illegal phone number");
+            return;
+        }
+        SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = public_func.get_url(bot_token, "sendMessage");
@@ -183,7 +206,7 @@ class public_func {
         Gson gson = new Gson();
         String request_body_raw = gson.toJson(request_body);
         RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj();
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         try {
@@ -193,6 +216,7 @@ class public_func {
             }
             message_id = get_message_id(response.body().string());
         } catch (IOException e) {
+            e.printStackTrace();
             public_func.write_log(context, "failed to send message:" + e.getMessage());
         }
         ArrayList<String> divideContents = sms_manager.divideMessage(content);
@@ -213,15 +237,18 @@ class public_func {
         if (checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             return;
         }
-        SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         if (!sharedPreferences.getBoolean("fallback_sms", false)) {
             return;
         }
         android.telephony.SmsManager sms_manager;
-        if (sub_id == -1) {
-            sms_manager = SmsManager.getDefault();
-        } else {
-            sms_manager = SmsManager.getSmsManagerForSubscriptionId(sub_id);
+        switch (sub_id) {
+            case -1:
+                sms_manager = android.telephony.SmsManager.getDefault();
+                break;
+            default:
+                sms_manager = android.telephony.SmsManager.getSmsManagerForSubscriptionId(sub_id);
+                break;
         }
         ArrayList<String> divideContents = sms_manager.divideMessage(content);
         sms_manager.sendMultipartTextMessage(sharedPreferences.getString("trusted_phone_number", null), null, divideContents, null, null);
@@ -233,12 +260,11 @@ class public_func {
         return result_obj.get("message_id").getAsString();
     }
 
-
     static Notification get_notification_obj(Context context, String notification_name) {
         Notification notification;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(notification_name, public_func.log_tag,
-                    NotificationManager.IMPORTANCE_LOW);
+                    NotificationManager.IMPORTANCE_MIN);
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             assert manager != null;
             manager.createNotificationChannel(channel);
@@ -428,4 +454,7 @@ class public_func {
         return result;
     }
 
+    static String get_verification_code(String body) {
+        return parser.find(body);
+    }
 }

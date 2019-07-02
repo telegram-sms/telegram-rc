@@ -1,9 +1,54 @@
-# Telegram Remote Control
+# Telegram SMS
 
+![pipeline status](https://badges.git.reallct.com/qwe7002/telegram-sms/badges/master/pipeline.svg)
 ![Min Android Version](https://img.shields.io/badge/Min%20Android%20Version-5.0+-orange.svg)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/qwe7002/telegram-sms/blob/master/LICENSE)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fqwe7002%2Ftelegram-sms.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fqwe7002%2Ftelegram-sms?ref=badge_shield)
 
 A robot running on your Android device.
+
+The primary language used for commit messages are Chinese. You can use English or Chinese in commit messages.
+
+You can come [https://reall.uk](https://reall.uk) to submit an issue or discuss any issues with this project.
+
+You can follow the channel [Telegram 更新日志](https://t.me/tg_sms_changelog) for the latest news.(Use only Simplified Chinese)
+
+[Download](https://github.com/qwe7002/telegram-sms/releases)
+
+[Android 5.0 or lower? Click here to download the latest and greatest.](https://github.com/qwe7002/telegram-sms-compat)
+
+**There may be unknown bugs in the pre-release version,Please use at your own risk.**
+
+## Features
+
+- Forward SMS to Telegram
+
+- Monitor missed calls
+
+- Monitor device battery power changes
+
+- Remote control via chat command or SMS.
+
+## Permission
+
+This app requires the following permissions:
+
+- SMS : Read and send a text message.
+
+- Phone : Get whether it is a dual card phone, card status and identifier ID.
+
+- Call log : Get the incoming number.
+
+- Contact : Get the contact information and automatically identify the incoming caller's number.
+
+You can set this app as the default SMS app, which will block all SMS notifications and automatically set the SMS to read.
+
+## User manual
+
+- [English](https://get-tg-sms.reall.uk/get/wiki/User_manual)
+- [简体中文](https://get-tg-sms.reall.uk/get/wiki/用户手册)
+- [繁體中文](https://get-tg-sms.reall.uk/get/wiki/用戶手冊)
+- [日本語](https://get-tg-sms.reall.uk/get/wiki/マニュアル)
 
 ## License
 
@@ -39,6 +84,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fqwe7002%2Ftelegram-sms.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fqwe7002%2Ftelegram-sms?ref=badge_large)
+
 ## Acknowledgements
 
 This software uses these open source libraries:
@@ -55,9 +102,9 @@ The birth of this software is inseparable from their help:
 
 Thanks for their translation and support of this project document:
 
-- en_US:[@tangbao](https://github.com/tangbao) [@jixunmoe](https://github.com/jixunmoe)
+- En translate:[@tangbao](https://github.com/tangbao) Proofreading:[@jixunmoe](https://github.com/jixunmoe)
 
-- ja-JP:[@Lollycc](https://github.com/lollycc) [@AisakaMk2](https://github.com/AisakaMk2)
+- Ja translate:[@Lollycc](https://github.com/lollycc) Proofreading:[@AisakaMk2](https://github.com/AisakaMk2)
 
 The following organizations for providing image storage for this page:
 
@@ -65,11 +112,10 @@ The following organizations for providing image storage for this page:
 
 ## Give a cup of coffee and let me better maintain this project?
 
-- [Support me in Paypal](https://paypal.me/qwe7002)
+- [Support me in Paypal](https://paypal.me/nicoranshi)
 
 - Support me in Bitcoin (**17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae**)
 
 - [Support me in Cloud QuickPass](https://static.reallct.com/2019/02/21/5c6d812840bac.png)
-
 
 Your donation will make me work better for this project.

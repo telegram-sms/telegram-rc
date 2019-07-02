@@ -1,18 +1,29 @@
 package com.qwe7002.telegram_rc;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.Service;
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
-import com.google.gson.*;
-import okhttp3.*;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,6 +31,15 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 
 public class chat_long_polling_service extends Service {
     static int offset = 0;
@@ -31,15 +51,17 @@ public class chat_long_polling_service extends Service {
     SharedPreferences sharedPreferences;
     OkHttpClient okhttp_client;
     private stop_broadcast_receiver stop_broadcast_receiver = null;
-
+    Boolean wakelock_switch;
+    private PowerManager.WakeLock wakelock;
+    private WifiManager.WifiLock wifiLock;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.chat_command_service_name));
         startForeground(2, notification);
         return START_STICKY;
-
     }
 
+    @SuppressLint("InvalidWakeLockTag")
     @Override
     public void onCreate() {
         super.onCreate();
@@ -51,17 +73,37 @@ public class chat_long_polling_service extends Service {
         sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         chat_id = sharedPreferences.getString("chat_id", "");
         bot_token = sharedPreferences.getString("bot_token", "");
-        okhttp_client = public_func.get_okhttp_obj();
+        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+
+        wifiLock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL, "bot_command_polling_wifi");
+        wifiLock.acquire();
+
+        wakelock_switch = sharedPreferences.getBoolean("wakelock", false);
+        if (wakelock_switch) {
+            wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(PARTIAL_WAKE_LOCK, "bot_command_polling");
+            wakelock.setReferenceCounted(false);
+        }
 
         new Thread(() -> {
             while (true) {
+                if (wakelock_switch) {
+                    wakelock.acquire(90000);
+                }
                 start_long_polling();
+                if (wakelock_switch) {
+                    wakelock.release();
+                }
             }
         }).start();
+
     }
 
     @Override
     public void onDestroy() {
+        wifiLock.release();
+        if (wakelock_switch) {
+            wakelock.release();
+        }
         unregisterReceiver(stop_broadcast_receiver);
         stopForeground(true);
         super.onDestroy();
@@ -69,9 +111,10 @@ public class chat_long_polling_service extends Service {
 
 
     void start_long_polling() {
-        int read_timeout = 30 * magnification;
+        int read_timeout = 5 * magnification;
         OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
                 .readTimeout((read_timeout + 5), TimeUnit.SECONDS)
+                .writeTimeout((read_timeout + 5), TimeUnit.SECONDS)
                 .build();
         String request_uri = public_func.get_url(bot_token, "getUpdates");
         polling_json request_body = new polling_json();
@@ -82,7 +125,7 @@ public class chat_long_polling_service extends Service {
         Call call = okhttp_client_new.newCall(request);
         Response response;
         try {
-            if (!public_func.check_network(context)) {
+            if (!public_func.check_network_status(context)) {
                 throw new IOException("Network");
             }
             response = call.execute();
@@ -90,7 +133,6 @@ public class chat_long_polling_service extends Service {
         } catch (IOException e) {
             e.printStackTrace();
             int sleep_time = 5 * error_magnification;
-
             public_func.write_log(context, "No network service,try again after " + sleep_time + " seconds");
 
             magnification = 1;
@@ -121,7 +163,7 @@ public class chat_long_polling_service extends Service {
                     receive_handle(item.getAsJsonObject());
                 }
             }
-            if (magnification <= 9) {
+            if (magnification <= 11) {
                 magnification++;
             }
         }
@@ -178,6 +220,10 @@ public class chat_long_polling_service extends Service {
                 int command_offset = entities_obj_command.get("offset").getAsInt();
                 int command_end_offset = command_offset + entities_obj_command.get("length").getAsInt();
                 command = request_msg.substring(command_offset, command_end_offset).trim().toLowerCase();
+                if (command.contains("@")) {
+                    int command_at_location = command.indexOf("@");
+                    command = command.substring(0, command_at_location);
+                }
             }
         }
 
@@ -204,7 +250,11 @@ public class chat_long_polling_service extends Service {
                         }
                     }
                     assert batteryManager != null;
-                    request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) + "%\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
+                    int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+                    if (battery_level > 100) {
+                        battery_level = 100;
+                    }
+                    request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + battery_level + "%\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
                     break;
                 case "/log":
                     String result = "\n" + getString(R.string.no_logs);
@@ -302,6 +352,10 @@ public class chat_long_polling_service extends Service {
 
                     break;
                 default:
+                    if (!message_obj.get("chat").getAsJsonObject().get("type").getAsString().equals("private")) {
+                        Log.d(public_func.log_tag, "receive_handle: The conversation is not Private and does not prompt an error.");
+                        return;
+                    }
                     request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
                     break;
             }
@@ -345,7 +399,7 @@ public class chat_long_polling_service extends Service {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     assert response.body() != null;
-                    String error_message = error_head + response.body().string();
+                    String error_message = error_head + response.code() + " " + response.body().string();
                     public_func.write_log(context, error_message);
                 }
             }

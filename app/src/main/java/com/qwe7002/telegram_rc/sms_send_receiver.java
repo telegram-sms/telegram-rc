@@ -8,11 +8,18 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
+
 import com.google.gson.Gson;
-import okhttp3.*;
 
 import java.io.IOException;
 import java.util.Objects;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -36,11 +43,10 @@ public class sms_send_receiver extends BroadcastReceiver {
         String request_uri = public_func.get_url(bot_token, "sendMessage");
         int message_id = Integer.parseInt(Objects.requireNonNull(extras.getString("message_id")));
         if (message_id != -1) {
+            Log.d(public_func.log_tag, "sms_send_receiver: Find the message_id and switch to edit mode.");
             request_uri = public_func.get_url(bot_token, "editMessageText");
             request_body.message_id = message_id;
         }
-
-
         request_body.text = extras.getString("message_text") + "\n" + context.getString(R.string.status);
         switch (getResultCode()) {
             case Activity.RESULT_OK:
@@ -56,14 +62,14 @@ public class sms_send_receiver extends BroadcastReceiver {
                 request_body.text += context.getString(R.string.no_network);
                 break;
         }
-        if (!public_func.check_network(context)) {
+        if (!public_func.check_network_status(context)) {
             public_func.write_log(context, public_func.network_error);
             public_func.send_fallback_sms(context, request_body.text, sub);
             return;
         }
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj();
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS status failed:";
@@ -79,9 +85,8 @@ public class sms_send_receiver extends BroadcastReceiver {
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.code() != 200) {
                     assert response.body() != null;
-                    String error_message = error_head + response.body().string();
+                    String error_message = error_head + response.code() + " " + response.body().string();
                     public_func.write_log(context, error_message);
-
                 }
             }
         });

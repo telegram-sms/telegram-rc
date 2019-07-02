@@ -7,16 +7,23 @@ import android.content.SharedPreferences;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import okhttp3.*;
 
 import java.io.IOException;
 import java.util.Objects;
 
-import static android.content.Context.MODE_PRIVATE;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 
 public class call_receiver extends BroadcastReceiver {
     private static int slot;
@@ -59,7 +66,7 @@ class call_state_listener extends PhoneStateListener {
     public void onCallStateChanged(int state, String incomingNumber) {
         if (lastState == TelephonyManager.CALL_STATE_RINGING
                 && state == TelephonyManager.CALL_STATE_IDLE) {
-            final SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+            final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
             if (!sharedPreferences.getBoolean("initialized", false)) {
                 Log.i(public_func.log_tag, "Uninitialized, Phone receiver is deactivated");
                 return;
@@ -80,7 +87,7 @@ class call_state_listener extends PhoneStateListener {
             String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences);
             request_body.text = "[" + dual_sim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + display_address;
 
-            if (!public_func.check_network(context)) {
+            if (!public_func.check_network_status(context)) {
                 public_func.write_log(context, public_func.network_error);
                 public_func.send_fallback_sms(context, request_body.text, public_func.get_sub_id(context, slot));
                 return;
@@ -88,7 +95,7 @@ class call_state_listener extends PhoneStateListener {
 
             String request_body_raw = new Gson().toJson(request_body);
             RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj();
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send missed call error:";
@@ -105,7 +112,7 @@ class call_state_listener extends PhoneStateListener {
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     if (response.code() != 200) {
                         assert response.body() != null;
-                        String error_message = error_head + response.body().string();
+                        String error_message = error_head + response.code() + " " + response.body().string();
                         public_func.write_log(context, error_message);
                     }
                     if (response.code() == 200) {
