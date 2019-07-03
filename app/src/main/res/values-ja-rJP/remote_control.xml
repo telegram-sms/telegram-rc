@@ -1,0 +1,4 @@
+<resources>
+    <string name="close_wifi">WI-FIホットスポットを閉じます。</string>
+    <string name="open_wifi">WI-FIホットスポットを正常に開きます。</string>
+</resources>

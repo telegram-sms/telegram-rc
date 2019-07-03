@@ -1,0 +1,4 @@
+<resources>
+    <string name="close_wifi">Close WI-FI hotspot successfully.</string>
+    <string name="open_wifi">Open WI-FI hotspot successfully.</string>
+</resources>
