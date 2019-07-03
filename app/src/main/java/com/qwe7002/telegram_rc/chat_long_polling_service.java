@@ -61,16 +61,17 @@ public class chat_long_polling_service extends Service {
         return START_STICKY;
     }
 
-    @SuppressLint("InvalidWakeLockTag")
+    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
     @Override
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
+        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+
         IntentFilter intentFilter = new IntentFilter(public_func.broadcast_stop_service);
         stop_broadcast_receiver = new stop_broadcast_receiver();
         registerReceiver(stop_broadcast_receiver, intentFilter);
 
-        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         chat_id = sharedPreferences.getString("chat_id", "");
         bot_token = sharedPreferences.getString("bot_token", "");
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
@@ -82,17 +83,12 @@ public class chat_long_polling_service extends Service {
         if (wakelock_switch) {
             wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(PARTIAL_WAKE_LOCK, "bot_command_polling");
             wakelock.setReferenceCounted(false);
+            wakelock.acquire();
         }
 
         new Thread(() -> {
             while (true) {
-                if (wakelock_switch) {
-                    wakelock.acquire(90000);
-                }
                 start_long_polling();
-                if (wakelock_switch) {
-                    wakelock.release();
-                }
             }
         }).start();
 
