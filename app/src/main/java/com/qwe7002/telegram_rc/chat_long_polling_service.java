@@ -129,7 +129,7 @@ public class chat_long_polling_service extends Service {
         } catch (IOException e) {
             e.printStackTrace();
             int sleep_time = 5 * error_magnification;
-            public_func.write_log(context, "No network service,try again after " + sleep_time + " seconds");
+            public_func.write_log(context, "No network service,try again after " + sleep_time + " seconds.");
 
             magnification = 1;
             if (error_magnification <= 59) {
@@ -186,7 +186,7 @@ public class chat_long_polling_service extends Service {
             message_obj = result_obj.get("channel_post").getAsJsonObject();
         }
         if (message_obj == null) {
-            public_func.write_log(context, "Request type is not allowed by security policy");
+            public_func.write_log(context, "Request type is not allowed by security policy.");
             return;
         }
         JsonObject from_obj = null;
