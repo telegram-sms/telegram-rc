@@ -63,6 +63,5 @@
     <string name="wakelock">Stay awake (increased power consumption)</string>
     <string name="user_manual">User manual</string>
     <string name="privacy_policy">Privacy policy</string>
-    <string name="close_wifi" translatable="false">Close WI-FI hotspot successfully.</string>
-    <string name="open_wifi" translatable="false">Open WI-FI hotspot successfully.</string>
+
 </resources>
