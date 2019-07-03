@@ -33,7 +33,7 @@ public class sms_receiver extends BroadcastReceiver {
         Log.d(public_func.log_tag, "onReceive: " + intent.getAction());
         Bundle extras = intent.getExtras();
         if (extras == null) {
-            Log.d(public_func.log_tag, "reject: Error Extras");
+            Log.d(public_func.log_tag, "reject: Error Extras.");
             return;
         }
         final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);

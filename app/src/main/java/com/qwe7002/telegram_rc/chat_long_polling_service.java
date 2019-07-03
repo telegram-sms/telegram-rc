@@ -209,6 +209,26 @@ public class chat_long_polling_service extends Service {
         if (message_obj.has("text")) {
             request_msg = message_obj.get("text").getAsString();
         }
+        if (message_obj.has("reply_to_message")) {
+            JsonObject reply_obj = message_obj.get("reply_to_message").getAsJsonObject();
+            String reply_id = reply_obj.get("message_id").getAsString();
+            String message_list_raw = public_func.read_file(context, "message.json");
+            JsonObject message_list = new JsonParser().parse(message_list_raw).getAsJsonObject();
+            if (message_list.has(reply_id)) {
+                JsonObject message_item_obj = message_list.get(reply_id).getAsJsonObject();
+                String phone_number = message_item_obj.get("phone").getAsString();
+                int card_slot = message_item_obj.get("card").getAsInt();
+                int sub_id = -1;
+                if (message_item_obj.has("sub_id")) {
+                    sub_id = message_item_obj.get("sub_id").getAsInt();
+                }
+                if (card_slot != -1 && sub_id == -1) {
+                    sub_id = public_func.get_sub_id(context, card_slot);
+                }
+                public_func.send_sms(context, phone_number, request_msg, card_slot, sub_id);
+                return;
+            }
+        }
         if (message_obj.has("entities")) {
             JsonArray entities_arr = message_obj.get("entities").getAsJsonArray();
             JsonObject entities_obj_command = entities_arr.get(0).getAsJsonObject();
@@ -222,10 +242,7 @@ public class chat_long_polling_service extends Service {
                 }
             }
         }
-
         Log.d(public_func.log_tag, "receive_handle: " + command);
-
-        if (!message_obj.has("reply_to_message")) {
             switch (command) {
                 case "/help":
                 case "/start":
@@ -355,29 +372,7 @@ public class chat_long_polling_service extends Service {
                     request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
                     break;
             }
-        }
 
-        if (message_obj.has("reply_to_message")) {
-            JsonObject reply_obj = message_obj.get("reply_to_message").getAsJsonObject();
-            String reply_id = reply_obj.get("message_id").getAsString();
-            String message_list_raw = public_func.read_file(context, "message.json");
-            JsonObject message_list = new JsonParser().parse(message_list_raw).getAsJsonObject();
-            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.unable_to_get_information);
-            if (message_list.has(reply_id)) {
-                JsonObject message_item_obj = message_list.get(reply_id).getAsJsonObject();
-                String phone_number = message_item_obj.get("phone").getAsString();
-                int card_slot = message_item_obj.get("card").getAsInt();
-                int sub_id = -1;
-                if (message_item_obj.has("sub_id")) {
-                    sub_id = message_item_obj.get("sub_id").getAsInt();
-                }
-                if (card_slot != -1 && sub_id == -1) {
-                    sub_id = public_func.get_sub_id(context, card_slot);
-                }
-                public_func.send_sms(context, phone_number, request_msg, card_slot, sub_id);
-                return;
-            }
-        }
 
         String request_uri = public_func.get_url(bot_token, "sendMessage");
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
