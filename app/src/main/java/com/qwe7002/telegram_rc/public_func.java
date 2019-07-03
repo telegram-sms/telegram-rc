@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -54,8 +55,8 @@ import okhttp3.dnsoverhttps.DnsOverHttps;
 import static androidx.core.content.PermissionChecker.checkSelfPermission;
 
 class public_func {
-    static final String log_tag = "telegram-sms";
-    static final String network_error = "Send Message:No network connection";
+    static final String log_tag = "telegram-rc";
+    static final String network_error = "Send Message:No network connection.";
     static final String broadcast_stop_service = "com.qwe7002.telegram_sms.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final code_aux_lib parser = new code_aux_lib();
@@ -205,7 +206,7 @@ class public_func {
         request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.sending);
         Gson gson = new Gson();
         String request_body_raw = gson.toJson(request_body);
-        RequestBody body = RequestBody.create(public_func.JSON, request_body_raw);
+        RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
@@ -214,7 +215,7 @@ class public_func {
             if (response.code() != 200 || response.body() == null) {
                 throw new IOException(String.valueOf(response.code()));
             }
-            message_id = get_message_id(response.body().string());
+            message_id = get_message_id(Objects.requireNonNull(response.body()).string());
         } catch (IOException e) {
             e.printStackTrace();
             public_func.write_log(context, "failed to send message:" + e.getMessage());
