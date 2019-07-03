@@ -120,7 +120,7 @@ public class chat_long_polling_service extends Service {
         polling_json request_body = new polling_json();
         request_body.offset = offset;
         request_body.timeout = read_timeout;
-        RequestBody body = RequestBody.create(public_func.JSON, new Gson().toJson(request_body));
+        RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client_new.newCall(request);
         Response response;
@@ -147,11 +147,11 @@ public class chat_long_polling_service extends Service {
             return;
 
         }
-        if (response != null && response.code() == 200) {
+        if (response.code() == 200) {
             assert response.body() != null;
             String result;
             try {
-                result = response.body().string();
+                result = Objects.requireNonNull(response.body()).string();
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
@@ -384,7 +384,7 @@ public class chat_long_polling_service extends Service {
         }
 
         String request_uri = public_func.get_url(bot_token, "sendMessage");
-        RequestBody body = RequestBody.create(public_func.JSON, new Gson().toJson(request_body));
+        RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
         Request send_request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(send_request);
         final String error_head = "Send reply failed:";
@@ -399,7 +399,7 @@ public class chat_long_polling_service extends Service {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     assert response.body() != null;
-                    String error_message = error_head + response.code() + " " + response.body().string();
+                    String error_message = error_head + response.code() + " " + Objects.requireNonNull(response.body()).string();
                     public_func.write_log(context, error_message);
                 }
             }
