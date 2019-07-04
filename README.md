@@ -1,9 +1,4 @@
-# Telegram SMS
-
-![pipeline status](https://badges.git.reallct.com/qwe7002/telegram-sms/badges/master/pipeline.svg)
-![Min Android Version](https://img.shields.io/badge/Min%20Android%20Version-5.0+-orange.svg)
-[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/qwe7002/telegram-sms/blob/master/LICENSE)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fqwe7002%2Ftelegram-sms.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fqwe7002%2Ftelegram-sms?ref=badge_shield)
+# Telegram Remote Control
 
 A robot running on your Android device.
 
@@ -13,42 +8,12 @@ You can come [https://reall.uk](https://reall.uk) to submit an issue or discuss 
 
 You can follow the channel [Telegram 更新日志](https://t.me/tg_sms_changelog) for the latest news.(Use only Simplified Chinese)
 
-[Download](https://github.com/qwe7002/telegram-sms/releases)
+[Download](https://github.com/telegram-sms/telegram-sms/releases)
 
-[Android 5.0 or lower? Click here to download the latest and greatest.](https://github.com/qwe7002/telegram-sms-compat)
+We have discovered that some improper configured network devices can cause the connection to 1.1.1.1 via DNS-over-HTTPS (DoH) to fail. If you could not connect to `api.telegram.org` while we working on a fix, you can turn off DoH temporarily.
 
 **There may be unknown bugs in the pre-release version,Please use at your own risk.**
 
-## Features
-
-- Forward SMS to Telegram
-
-- Monitor missed calls
-
-- Monitor device battery power changes
-
-- Remote control via chat command or SMS.
-
-## Permission
-
-This app requires the following permissions:
-
-- SMS : Read and send a text message.
-
-- Phone : Get whether it is a dual card phone, card status and identifier ID.
-
-- Call log : Get the incoming number.
-
-- Contact : Get the contact information and automatically identify the incoming caller's number.
-
-You can set this app as the default SMS app, which will block all SMS notifications and automatically set the SMS to read.
-
-## User manual
-
-- [English](https://get-tg-sms.reall.uk/get/wiki/User_manual)
-- [简体中文](https://get-tg-sms.reall.uk/get/wiki/用户手册)
-- [繁體中文](https://get-tg-sms.reall.uk/get/wiki/用戶手冊)
-- [日本語](https://get-tg-sms.reall.uk/get/wiki/マニュアル)
 
 ## License
 
@@ -93,18 +58,6 @@ This software uses these open source libraries:
 - [okhttp](https://github.com/square/okhttp)
 
 - [Gson](https://github.com/google/gson)
-
-The birth of this software is inseparable from their help:
-
-- [@SumiMakito](https://github.com/SumiMakito)
-
-- [@zsxsoft](https://github.com/zsxsoft)
-
-Thanks for their translation and support of this project document:
-
-- En translate:[@tangbao](https://github.com/tangbao) Proofreading:[@jixunmoe](https://github.com/jixunmoe)
-
-- Ja translate:[@Lollycc](https://github.com/lollycc) Proofreading:[@AisakaMk2](https://github.com/AisakaMk2)
 
 The following organizations for providing image storage for this page:
 
