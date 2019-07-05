@@ -46,7 +46,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
-
 public class main_activity extends AppCompatActivity {
     Context context = null;
     Switch display_dual_sim_display_name;
@@ -173,6 +172,13 @@ public class main_activity extends AppCompatActivity {
             RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
+            progress_dialog.setOnKeyListener((dialogInterface, i, keyEvent) -> {
+                if (keyEvent.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK) {
+                    progress_dialog.cancel();
+                    call.cancel();
+                }
+                return false;
+            });
             final String error_head = "Get chat ID failed:";
             call.enqueue(new Callback() {
                 @Override
