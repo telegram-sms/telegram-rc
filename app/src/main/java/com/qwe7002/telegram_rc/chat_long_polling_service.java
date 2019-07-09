@@ -42,16 +42,16 @@ import okhttp3.Response;
 import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 
 public class chat_long_polling_service extends Service {
-    static int offset = 0;
-    static int magnification = 1;
-    static int error_magnification = 1;
-    String chat_id;
-    String bot_token;
-    Context context;
-    SharedPreferences sharedPreferences;
-    OkHttpClient okhttp_client;
+    private static int offset = 0;
+    private static int magnification = 1;
+    private static int error_magnification = 1;
+    private String chat_id;
+    private String bot_token;
+    private Context context;
+    private SharedPreferences sharedPreferences;
+    private OkHttpClient okhttp_client;
     private stop_broadcast_receiver stop_broadcast_receiver = null;
-    Boolean wakelock_switch;
+    private Boolean wakelock_switch;
     private PowerManager.WakeLock wakelock;
     private WifiManager.WifiLock wifiLock;
     @Override
@@ -106,7 +106,7 @@ public class chat_long_polling_service extends Service {
     }
 
 
-    void start_long_polling() {
+    private void start_long_polling() {
         int read_timeout = 5 * magnification;
         OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
                 .readTimeout((read_timeout + 5), TimeUnit.SECONDS)
@@ -396,7 +396,8 @@ public class chat_long_polling_service extends Service {
             }
         });
     }
-    boolean isWifiOpened(WifiManager wifiManager){
+
+    private boolean isWifiOpened(WifiManager wifiManager) {
         int status=wifiManager.getWifiState();
         return status == WifiManager.WIFI_STATE_ENABLED;
     }
