@@ -48,7 +48,6 @@ public class chat_long_polling_service extends Service {
     private String chat_id;
     private String bot_token;
     private Context context;
-    private SharedPreferences sharedPreferences;
     private OkHttpClient okhttp_client;
     private stop_broadcast_receiver stop_broadcast_receiver = null;
     private Boolean wakelock_switch;
@@ -66,7 +65,7 @@ public class chat_long_polling_service extends Service {
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
-        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
 
         IntentFilter intentFilter = new IntentFilter(public_func.broadcast_stop_service);
         stop_broadcast_receiver = new stop_broadcast_receiver();
