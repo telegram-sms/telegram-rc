@@ -27,7 +27,7 @@
             android:label="@string/app_name"
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
-            android:roundIcon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
             tools:ignore="GoogleAppIndexingWarning" tools:targetApi="n">
         <receiver android:name="com.qwe7002.telegram_rc.sim_status_receiver">
             <intent-filter>
