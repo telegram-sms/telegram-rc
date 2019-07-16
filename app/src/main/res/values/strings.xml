@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name" translatable="false">Telegram remote control</string>
+    <string name="app_name" translatable="false">Telegram SMS</string>
     <string name="content">Content: </string>
     <string name="from">From: </string>
     <string name="to">To: </string>
@@ -38,7 +38,7 @@
     <string name="chat_command_service_name">"Chat command "</string>
     <string name="success">Success</string>
     <string name="receive_sms_head">Receive SMS</string>
-    <string name="available_command">Available Commands:\n/getinfo - Get system information\n/log - Output the last 10 log records\n/switchap - Turn on/off wifi hotspot</string>
+    <string name="available_command">Available Commands:\n/getinfo - Get system information\n/log - Output the last 10 log records</string>
     <string name="restart_service">Background service has been restarted.</string>
     <string name="status">Status:</string>
     <string name="send_failed">Failed</string>

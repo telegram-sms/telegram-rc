@@ -290,17 +290,17 @@ class public_func {
             manager.createNotificationChannel(channel);
             notification = new Notification.Builder(context, notification_name)
                     .setAutoCancel(false)
-                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setSmallIcon(R.drawable.ic_stat)
                     .setOngoing(true)
                     .setTicker(context.getString(R.string.app_name))
                     .setWhen(System.currentTimeMillis())
                     .setContentTitle(context.getString(R.string.app_name))
                     .setContentText(notification_name + context.getString(R.string.service_is_running))
                     .build();
-        } else {//Notification generation method after O
+        } else {
             notification = new Notification.Builder(context)
                     .setAutoCancel(false)
-                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setSmallIcon(R.drawable.ic_stat)
                     .setOngoing(true)
                     .setTicker(context.getString(R.string.app_name))
                     .setWhen(System.currentTimeMillis())
@@ -325,17 +325,14 @@ class public_func {
     static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch) {
         Intent battery_service = new Intent(context, battery_monitoring_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_long_polling_service.class);
-        boolean foreground = false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            foreground = true;
             if (battery_switch) {
                 context.startForegroundService(battery_service);
             }
             if (chat_command_switch) {
                 context.startForegroundService(chat_long_polling_service);
             }
-        }
-        if (!foreground) {
+        } else {
             if (battery_switch) {
                 context.startService(battery_service);
             }
