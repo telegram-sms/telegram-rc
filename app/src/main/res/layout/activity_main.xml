@@ -3,157 +3,159 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingBottom="@dimen/activity_vertical_margin"
         tools:context=".main_activity">
 
     <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:alpha="0.3"
+            android:alpha="0.2"
             android:scaleType="fitEnd"
             android:src="@mipmap/character_set"
             tools:ignore="ContentDescription" />
 
-    <LinearLayout
+    <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            tools:ignore="UselessParent">
 
-        <ScrollView
+        <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" tools:ignore="UselessParent">
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingLeft="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:paddingRight="@dimen/activity_horizontal_margin"
+                android:paddingBottom="@dimen/activity_vertical_margin">
 
+            <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-            <LinearLayout
+                <EditText
+                        android:id="@+id/bot_token"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/bot_token"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        tools:ignore="TextFields" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                <EditText
+                        android:id="@+id/chat_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/chat_id"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        tools:ignore="TextFields" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                <EditText
+                        android:id="@+id/trusted_phone_number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/trusted_phone_number"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        tools:ignore="TextFields" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Switch
+                    android:id="@+id/fallback_sms"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:paddingStart="3dp"
+                    android:text="@string/network_error_falls_back_to_sms"
+                    tools:ignore="RtlSymmetry" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+            <Switch
+                    android:id="@+id/battery_monitoring"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/battery_monitoring"
+                    tools:ignore="RtlSymmetry" />
 
-                    <EditText
-                            android:id="@+id/bot_token"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/bot_token"
-                            android:inputType="textEmailAddress"
-                            android:maxLines="1"
-                            android:singleLine="true"
-                            tools:ignore="Autofill" />
+            <Switch
+                    android:id="@+id/charger_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/charger_status"
+                    tools:ignore="RtlSymmetry" />
 
-                </com.google.android.material.textfield.TextInputLayout>
+            <Switch
+                    android:id="@+id/chat_command"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/chat_command"
+                    tools:ignore="RtlSymmetry" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+            <Switch
+                    android:id="@+id/wakelock_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/wakelock"
+                    tools:ignore="RtlSymmetry" />
 
-                    <EditText
-                            android:id="@+id/chat_id"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/chat_id"
-                            android:maxLines="1"
-                            android:singleLine="true"
-                            tools:ignore="Autofill,TextFields" />
-                </com.google.android.material.textfield.TextInputLayout>
+            <Switch
+                    android:id="@+id/verification_code_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/using_verification_code_identification"
+                    tools:ignore="RtlSymmetry" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+            <Switch
+                    android:id="@+id/display_dual_sim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/display_sim_card_alias_in_dual_card_mode"
+                    tools:ignore="RtlSymmetry" />
 
-                    <EditText
-                            android:id="@+id/trusted_phone_number"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/trusted_phone_number"
-                            android:maxLines="1"
-                            android:singleLine="true"
-                            tools:ignore="Autofill,TextFields" />
-                </com.google.android.material.textfield.TextInputLayout>
+            <Switch
+                    android:id="@+id/doh_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="3dp"
+                    android:text="@string/using_doh"
+                    tools:ignore="RtlSymmetry" />
 
-                <Switch
-                        android:id="@+id/fallback_sms"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="3dp"
-                        android:text="@string/network_error_falls_back_to_sms" tools:ignore="RtlSymmetry"/>
+            <Button
+                    android:id="@+id/get_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.8"
+                    android:text="@string/get_recent_chat_id" />
 
-                <Switch
-                        android:id="@+id/battery_monitoring"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="3dp"
-                        android:text="@string/battery_monitoring" tools:ignore="RtlSymmetry"/>
+            <Button
+                    android:id="@+id/save"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.8"
+                    android:text="@string/test_and_save" />
 
-                <Switch
-                        android:id="@+id/charger_status"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="3dp"
-                        android:text="@string/charger_status"
-                        tools:ignore="RtlSymmetry" />
-
-                <Switch
-                        android:id="@+id/chat_command"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="3dp"
-                        android:text="@string/chat_command" tools:ignore="RtlSymmetry"/>
-
-                <Switch
-                        android:id="@+id/wakelock_switch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="3dp"
-                        android:text="@string/wakelock"
-                        tools:ignore="RtlSymmetry" />
-
-                <Switch
-                        android:id="@+id/verification_code_switch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="3dp"
-                        android:text="@string/using_verification_code_identification"
-                        tools:ignore="RtlSymmetry" />
-
-                <Switch
-                        android:id="@+id/display_dual_sim"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="3dp"
-                        android:text="@string/display_sim_card_alias_in_dual_card_mode" tools:ignore="RtlSymmetry"/>
-
-                <Switch
-                        android:id="@+id/doh_switch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingStart="3dp"
-                        android:text="@string/using_doh"
-                        tools:ignore="RtlSymmetry" />
-
-                <Button
-                        android:id="@+id/get_id"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:alpha="0.8"
-                        android:text="@string/get_recent_chat_id" />
-
-                <Button
-                        android:id="@+id/save"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:alpha="0.8"
-                        android:text="@string/test_and_save" />
-
-            </LinearLayout>
-        </ScrollView>
-</LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
 
 </FrameLayout>

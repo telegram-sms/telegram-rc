@@ -71,7 +71,7 @@ Thanks for their translation and support of this project document:
 
 - Translate:[@tangbao](https://github.com/tangbao)
 
-- Proofreading:[@jixunmoe](https://github.com/jixunmoe)
+- Proofreading:[@jixunmoe](https://github.com/jixunmoe) ([Paypal](https://paypal.me/jixun))
 
 #### Japanese
 
