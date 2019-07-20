@@ -36,9 +36,7 @@ android {
     }
 }
 
-play {
-    serviceAccountCredentials = file("play-service-key.json")
-}
+
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
