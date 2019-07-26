@@ -68,12 +68,15 @@ public class sms_receiver extends BroadcastReceiver {
             }
 
             if (is_default) {
-                ContentValues values = new ContentValues();
-                values.put(Telephony.Sms.ADDRESS, messages[i].getOriginatingAddress());
-                values.put(Telephony.Sms.BODY, messages[i].getMessageBody());
-                values.put(Telephony.Sms.SUBSCRIPTION_ID, String.valueOf(sub));
-                values.put(Telephony.Sms.READ, "1");
-                context.getContentResolver().insert(Telephony.Sms.CONTENT_URI, values);
+                final int final_i = i;
+                new Thread(() -> {
+                    ContentValues values = new ContentValues();
+                    values.put(Telephony.Sms.ADDRESS, messages[final_i].getOriginatingAddress());
+                    values.put(Telephony.Sms.BODY, messages[final_i].getMessageBody());
+                    values.put(Telephony.Sms.SUBSCRIPTION_ID, String.valueOf(sub));
+                    values.put(Telephony.Sms.READ, "1");
+                    context.getContentResolver().insert(Telephony.Sms.CONTENT_URI, values);
+                }).start();
             }
 
         }

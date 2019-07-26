@@ -292,7 +292,6 @@ public class chat_long_polling_service extends Service {
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
-                        return;
                     }
                     request_body.text = getString(R.string.system_message_head) + result;
                     break;
@@ -317,6 +316,12 @@ public class chat_long_polling_service extends Service {
                             catch(InterruptedException e){
                                 e.printStackTrace();
                             }
+                        }
+                        try {
+                            Thread.sleep(1000);//Wait 1 second to avoid startup failure
+
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
                         Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
                         intent.setPackage("be.mygod.vpnhotspot");
