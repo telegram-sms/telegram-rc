@@ -12,8 +12,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.telephony.SubscriptionManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -248,24 +250,24 @@ public class chat_long_polling_service extends Service {
                     if (public_func.get_active_card(context) == 2) {
                         dual_card = "\n" + getString(R.string.sendsms_dual);
                     }
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card;
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + "\n" + getString(R.string.switch_ap_message);
                     break;
                 case "/ping":
                 case "/getinfo":
-                    BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
                     String card_info = "";
                     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                         card_info = "\nSIM:" + public_func.get_sim_display_name(context, 0);
                         if (public_func.get_active_card(context) == 2) {
-                            card_info = "\nSIM1:" + public_func.get_sim_display_name(context, 0) + "\nSIM2:" + public_func.get_sim_display_name(context, 1);
+                            String data_card = "";
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                data_card = "\n" + getString(R.string.current_data_card) + ":SIM" + (SubscriptionManager.getSlotIndex(SubscriptionManager.getDefaultDataSubscriptionId()) + 1);
+                            }
+                            card_info = data_card + "\nSIM1:" + public_func.get_sim_display_name(context, 0) + "\nSIM2:" + public_func.get_sim_display_name(context, 1);
+
                         }
                     }
-                    assert batteryManager != null;
-                    int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-                    if (battery_level > 100) {
-                        battery_level = 100;
-                    }
-                    request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + battery_level + "%\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
+
+                    request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
                     break;
                 case "/log":
                     String result = "\n" + getString(R.string.no_logs);
@@ -296,6 +298,8 @@ public class chat_long_polling_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + result;
                     break;
                 case "/switchap":
+
+
                     boolean wifi_open=false;
                     WifiManager wifiManager=(WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
@@ -307,6 +311,8 @@ public class chat_long_polling_service extends Service {
                         wifi_open=true;
                         request_body.text = getString(R.string.system_message_head)+"\n"+getString(R.string.open_wifi);
                     }
+                    request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
+
                     if(wifi_open){
                         while(!isWifiOpened(wifiManager)){
                             try{
@@ -400,6 +406,19 @@ public class chat_long_polling_service extends Service {
         });
     }
 
+    private String get_battery_info(Context context) {
+        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+        assert batteryManager != null;
+        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        if (battery_level > 100) {
+            battery_level = 100;
+        }
+        String battery_level_string = battery_level + "%";
+        if (public_func.is_charging(context)) {
+            battery_level_string += "(" + context.getString(R.string.charging) + ")";
+        }
+        return battery_level_string;
+    }
     private boolean isWifiOpened(WifiManager wifiManager) {
         int status=wifiManager.getWifiState();
         return status == WifiManager.WIFI_STATE_ENABLED;

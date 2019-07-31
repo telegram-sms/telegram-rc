@@ -1,4 +1,6 @@
 <resources>
     <string name="close_wifi">Close WI-FI hotspot successfully.</string>
     <string name="open_wifi">Open WI-FI hotspot successfully.</string>
+    <string name="switch_ap_message">/switchap - Turn wifi hotspot on or off</string>
+    <string name="current_data_card">Current data card</string>
 </resources>
