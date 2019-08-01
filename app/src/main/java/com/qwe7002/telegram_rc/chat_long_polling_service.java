@@ -298,8 +298,6 @@ public class chat_long_polling_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + result;
                     break;
                 case "/switchap":
-
-
                     boolean wifi_open=false;
                     WifiManager wifiManager=(WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
@@ -415,7 +413,7 @@ public class chat_long_polling_service extends Service {
         }
         String battery_level_string = battery_level + "%";
         if (public_func.is_charging(context)) {
-            battery_level_string += "(" + context.getString(R.string.charging) + ")";
+            battery_level_string += " (" + context.getString(R.string.charging) + ")";
         }
         return battery_level_string;
     }
@@ -426,6 +424,7 @@ public class chat_long_polling_service extends Service {
     class stop_broadcast_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.i(public_func.log_tag, "Chat command:Received stop signal, quitting now...");
             stopSelf();
             android.os.Process.killProcess(android.os.Process.myPid());
         }
