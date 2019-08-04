@@ -54,6 +54,9 @@ public class chat_long_polling_service extends Service {
     private Boolean wakelock_switch;
     private PowerManager.WakeLock wakelock;
     private WifiManager.WifiLock wifiLock;
+    private int send_sms_status = -1;
+    private int send_slot_temp = -1;
+    private String send_to_temp;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.chat_command_service_name));
@@ -242,144 +245,206 @@ public class chat_long_polling_service extends Service {
                 }
             }
         }
+        boolean has_command = false;
         Log.d(public_func.log_tag, "receive_handle: " + command);
-            switch (command) {
-                case "/help":
-                case "/start":
-                    String dual_card = "\n" + getString(R.string.sendsms);
+        switch (command) {
+            case "/help":
+            case "/start":
+                String dual_card = "\n" + getString(R.string.sendsms);
+                if (public_func.get_active_card(context) == 2) {
+                    dual_card = "\n" + getString(R.string.sendsms_dual);
+                }
+                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + "\n" + getString(R.string.switch_ap_message);
+                has_command = true;
+                break;
+            case "/ping":
+            case "/getinfo":
+                String card_info = "";
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                    card_info = "\nSIM:" + public_func.get_sim_display_name(context, 0);
                     if (public_func.get_active_card(context) == 2) {
-                        dual_card = "\n" + getString(R.string.sendsms_dual);
-                    }
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + "\n" + getString(R.string.switch_ap_message);
-                    break;
-                case "/ping":
-                case "/getinfo":
-                    String card_info = "";
-                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                        card_info = "\nSIM:" + public_func.get_sim_display_name(context, 0);
-                        if (public_func.get_active_card(context) == 2) {
-                            String data_card = "";
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                data_card = "\n" + getString(R.string.current_data_card) + ":SIM" + (SubscriptionManager.getSlotIndex(SubscriptionManager.getDefaultDataSubscriptionId()) + 1);
-                            }
-                            card_info = data_card + "\nSIM1:" + public_func.get_sim_display_name(context, 0) + "\nSIM2:" + public_func.get_sim_display_name(context, 1);
+                        String data_card = "";
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            data_card = "\n" + getString(R.string.current_data_card) + ":SIM" + (SubscriptionManager.getSlotIndex(SubscriptionManager.getDefaultDataSubscriptionId()) + 1);
+                        }
+                        card_info = data_card + "\nSIM1:" + public_func.get_sim_display_name(context, 0) + "\nSIM2:" + public_func.get_sim_display_name(context, 1);
 
-                        }
                     }
+                }
 
-                    request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
-                    break;
-                case "/log":
-                    String result = "\n" + getString(R.string.no_logs);
-                    try {
-                        FileInputStream file_stream = context.openFileInput("error.log");
-                        FileChannel channel = file_stream.getChannel();
-                        ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-                        buffer.position((int) channel.size());
-                        int count = 0;
-                        StringBuilder builder = new StringBuilder();
-                        for (long i = channel.size() - 1; i >= 0; i--) {
-                            char c = (char) buffer.get((int) i);
-                            builder.insert(0, c);
-                            if (c == '\n') {
-                                if (count == 9) {
-                                    break;
-                                }
-                                count++;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
+                has_command = true;
+                break;
+            case "/log":
+                String result = "\n" + getString(R.string.no_logs);
+                try {
+                    FileInputStream file_stream = context.openFileInput("error.log");
+                    FileChannel channel = file_stream.getChannel();
+                    ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+                    buffer.position((int) channel.size());
+                    int count = 0;
+                    StringBuilder builder = new StringBuilder();
+                    for (long i = channel.size() - 1; i >= 0; i--) {
+                        char c = (char) buffer.get((int) i);
+                        builder.insert(0, c);
+                        if (c == '\n') {
+                            if (count == 9) {
+                                break;
                             }
+                            count++;
                         }
-                        channel.close();
-                        if (!builder.toString().isEmpty()) {
-                            result = builder.toString();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
-                    request_body.text = getString(R.string.system_message_head) + result;
-                    break;
-                case "/switchap":
-                    boolean wifi_open=false;
-                    WifiManager wifiManager=(WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                    assert wifiManager != null;
-                    if(wifiManager.isWifiEnabled()){
-                        wifiManager.setWifiEnabled(false);
-                        request_body.text = getString(R.string.system_message_head)+"\n"+getString(R.string.close_wifi);
-                    }else{
-                        wifiManager.setWifiEnabled(true);
-                        wifi_open=true;
-                        request_body.text = getString(R.string.system_message_head)+"\n"+getString(R.string.open_wifi);
+                    channel.close();
+                    if (!builder.toString().isEmpty()) {
+                        result = builder.toString();
                     }
-                    request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                request_body.text = getString(R.string.system_message_head) + result;
+                has_command = true;
+                break;
+            case "/switchap":
+                boolean wifi_open = false;
+                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                assert wifiManager != null;
+                if (wifiManager.isWifiEnabled()) {
+                    wifiManager.setWifiEnabled(false);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi);
+                } else {
+                    wifiManager.setWifiEnabled(true);
+                    wifi_open = true;
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi);
+                }
+                request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
 
-                    if(wifi_open){
-                        while(!isWifiOpened(wifiManager)){
-                            try{
-                                Thread.currentThread();
-                                Thread.sleep(100);
-                            }
-                            catch(InterruptedException e){
-                                e.printStackTrace();
-                            }
-                        }
+                if (wifi_open) {
+                    while (!isWifiOpened(wifiManager)) {
                         try {
-                            Thread.sleep(1000);//Wait 1 second to avoid startup failure
-
+                            Thread.currentThread();
+                            Thread.sleep(100);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
-                        intent.setPackage("be.mygod.vpnhotspot");
-                        sendBroadcast(intent);
                     }
-                    break;
-                case "/sendsms":
-                case "/sendsms1":
-                case "/sendsms2":
-                    request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.command_format_error) + "\n\n" + getString(R.string.command_error_tip);
-                    String[] msg_send_list = request_msg.split("\n");
-                    if (msg_send_list.length > 2) {
-                        String msg_send_to = public_func.get_send_phone_number(msg_send_list[1]);
-                        if (public_func.is_numeric(msg_send_to)) {
-                            StringBuilder msg_send_content = new StringBuilder();
-                            for (int i = 2; i < msg_send_list.length; i++) {
-                                if (msg_send_list.length != 3 && i != 2) {
-                                    msg_send_content.append("\n");
-                                }
-                                msg_send_content.append(msg_send_list[i]);
+                    try {
+                        Thread.sleep(1000);//Wait 1 second to avoid startup failure
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
+                    intent.setPackage("be.mygod.vpnhotspot");
+                    sendBroadcast(intent);
+                }
+                has_command = true;
+                break;
+            case "/sendsms":
+            case "/sendsms1":
+            case "/sendsms2":
+                String[] msg_send_list = request_msg.split("\n");
+                if (msg_send_list.length > 2) {
+                    String msg_send_to = public_func.get_send_phone_number(msg_send_list[1]);
+                    if (public_func.is_numeric(msg_send_to)) {
+                        StringBuilder msg_send_content = new StringBuilder();
+                        for (int i = 2; i < msg_send_list.length; i++) {
+                            if (msg_send_list.length != 3 && i != 2) {
+                                msg_send_content.append("\n");
                             }
-                            if (public_func.get_active_card(context) == 1) {
-                                public_func.send_sms(context, msg_send_to, msg_send_content.toString(), -1, -1);
-                                return;
-                            }
-                            int slot = -1;
-                            switch (command) {
-                                case "/sendsms":
-                                case "/sendsms1":
-                                    slot = 0;
-                                    break;
-                                case "/sendsms2":
-                                    slot = 1;
-                                    break;
-                            }
-                            request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.unable_to_get_information);
-                            int sub_id = public_func.get_sub_id(context, slot);
-                            if (sub_id != -1) {
-                                public_func.send_sms(context, msg_send_to, msg_send_content.toString(), slot, sub_id);
-                                return;
-                            }
+                            msg_send_content.append(msg_send_list[i]);
                         }
+                        if (public_func.get_active_card(context) == 1) {
+                            public_func.send_sms(context, msg_send_to, msg_send_content.toString(), -1, -1);
+                            return;
+                        }
+                        int slot = -1;
+                        switch (command) {
+                            case "/sendsms":
+                            case "/sendsms1":
+                                slot = 0;
+                                break;
+                            case "/sendsms2":
+                                slot = 1;
+                                break;
+                        }
+                        int sub_id = public_func.get_sub_id(context, slot);
+                        if (sub_id != -1) {
+                            public_func.send_sms(context, msg_send_to, msg_send_content.toString(), slot, sub_id);
+                            return;
+                        }
+                        request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                     }
 
+                }
+                has_command = true;
+                if (msg_send_list.length == 1) {
+                    send_sms_status = 0;
+                    send_slot_temp = -1;
+                    request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_number);
+                    has_command = false;
+                    if (public_func.get_active_card(context) == 1) {
+                        break;
+                    }
+                    switch (command) {
+                        case "/sendsms":
+                        case "/sendsms1":
+                            send_slot_temp = 0;
+                            break;
+                        case "/sendsms2":
+                            send_slot_temp = 1;
+                            break;
+                    }
+                }
+                break;
+            default:
+                if (!message_obj.get("chat").getAsJsonObject().get("type").getAsString().equals("private")) {
+                    Log.d(public_func.log_tag, "receive_handle: The conversation is not Private and does not prompt an error.");
+                    return;
+                }
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
+                break;
+        }
+        if (!has_command) {
+            switch (send_sms_status) {
+                case 0:
+                    send_sms_status = 1;
                     break;
-                default:
-                    if (!message_obj.get("chat").getAsJsonObject().get("type").getAsString().equals("private")) {
-                        Log.d(public_func.log_tag, "receive_handle: The conversation is not Private and does not prompt an error.");
+                case 1:
+                    String temp_to = public_func.get_send_phone_number(request_msg);
+                    Log.d(public_func.log_tag, "receive_handle: " + temp_to);
+                    if (public_func.is_numeric(temp_to)) {
+                        send_to_temp = temp_to;
+                        request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_content);
+                        send_sms_status = 2;
+                    } else {
+                        send_sms_status = -1;
+                        send_slot_temp = -1;
+                        send_to_temp = null;
+                        request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.unable_get_phone_number);
+
+                    }
+                    break;
+                case 2:
+                    if (public_func.get_active_card(context) == 1) {
+                        public_func.send_sms(context, send_to_temp, request_msg, -1, -1);
                         return;
                     }
-                    request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
+                    int sub_id = public_func.get_sub_id(context, send_slot_temp);
+                    if (sub_id != -1) {
+                        public_func.send_sms(context, send_to_temp, request_msg, send_slot_temp, sub_id);
+                        send_sms_status = -1;
+                        send_slot_temp = -1;
+                        send_to_temp = null;
+                        return;
+                    }
+                    request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                     break;
             }
-
+        } else {
+            send_sms_status = -1;
+            send_slot_temp = -1;
+            send_to_temp = null;
+        }
 
         String request_uri = public_func.get_url(bot_token, "sendMessage");
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
