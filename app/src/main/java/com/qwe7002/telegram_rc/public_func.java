@@ -400,39 +400,33 @@ class public_func {
     }
 
 
-    static void write_log(Context context, String log) {
-        Log.i(public_func.log_tag, log);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.UK);
-        Date ts = new Date(System.currentTimeMillis());
-        append_file(context, "error.log", "\n" + simpleDateFormat.format(ts) + " " + log);
-    }
 
     static String read_log(Context context) {
         return read_file(context, "error.log");
     }
 
-    static void add_message_list(Context context, String message_id, String phone, int slot, int sub_id) {
-        String message_list_raw = public_func.read_file(context, "message.json");
-        if (message_list_raw.length() == 0) {
-            message_list_raw = "{}";
+
+    static void write_log(Context context, String log) {
+        Log.i(public_func.log_tag, log);
+        int new_file_mode = Context.MODE_PRIVATE;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.UK);
+        Date ts = new Date(System.currentTimeMillis());
+        String write_string = "\n" + simpleDateFormat.format(ts) + " " + log;
+        try {
+            FileInputStream file_stream = context.openFileInput("error.log");
+            if (file_stream.available() <= 1048576) {
+                new_file_mode = Context.MODE_APPEND;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            write_string = "\n" + simpleDateFormat.format(ts) + " Create a new log file." + write_string;
         }
-        JsonObject message_list_obj = new JsonParser().parse(message_list_raw).getAsJsonObject();
-        JsonObject object = new JsonObject();
-        object.addProperty("phone", phone);
-        object.addProperty("card", slot);
-        object.addProperty("sub_id", sub_id);
-        message_list_obj.add(message_id, object);
-        public_func.write_file(context, "message.json", new Gson().toJson(message_list_obj));
+
+        write_file(context, "error.log", write_string, new_file_mode);
     }
 
-    private static void append_file(Context context, String file_name, String write_string) {
-        private_write_file(context,file_name,write_string,Context.MODE_APPEND);
-    }
-    static void write_file(Context context, String file_name, String write_string) {
-        private_write_file(context,file_name,write_string,Context.MODE_PRIVATE);
 
-    }
-    private static void private_write_file(Context context, String file_name, String write_string,int mode) {
+    static void write_file(Context context, String file_name, String write_string, int mode) {
         try {
             FileOutputStream file_stream = context.openFileOutput(file_name, mode);
             byte[] bytes = write_string.getBytes();
