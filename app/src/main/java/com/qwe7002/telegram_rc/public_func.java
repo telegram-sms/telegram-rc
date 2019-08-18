@@ -131,7 +131,7 @@ class public_func {
         for (int i = str.length(); --i >= 0; ) {
             char c = str.charAt(i);
             if (c == '+') {
-                continue; //Allowed characters +
+                continue;
             }
             if (!Character.isDigit(c)) {
                 return false;
