@@ -176,9 +176,13 @@ public class main_activity extends AppCompatActivity {
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    Looper.prepare();
                     progress_dialog.cancel();
+                    Looper.loop();
                     String error_message = error_head + e.getMessage();
+                    Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
+                    Looper.loop();
                     public_func.write_log(context, error_message);
                 }
 
@@ -186,20 +190,25 @@ public class main_activity extends AppCompatActivity {
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     Looper.prepare();
                     progress_dialog.cancel();
+                    Looper.loop();
                     assert response.body() != null;
                     if (response.code() != 200) {
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = new JsonParser().parse(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description").getAsString();
                         public_func.write_log(context, error_message);
+                        Looper.prepare();
                         Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
+                        Looper.loop();
                         return;
                     }
                     String result = Objects.requireNonNull(response.body()).string();
                     JsonObject result_obj = new JsonParser().parse(result).getAsJsonObject();
                     JsonArray chat_list = result_obj.getAsJsonArray("result");
                     if (chat_list.size() == 0) {
+                        Looper.prepare();
                         Snackbar.make(v, R.string.unable_get_recent, Snackbar.LENGTH_LONG).show();
+                        Looper.loop();
                         return;
                     }
                     final ArrayList<String> chat_name_list = new ArrayList<>();
@@ -239,7 +248,7 @@ public class main_activity extends AppCompatActivity {
                         }
                     }
                     main_activity.this.runOnUiThread(() -> new AlertDialog.Builder(v.getContext()).setTitle(R.string.select_chat).setItems(chat_name_list.toArray(new String[0]), (dialogInterface, i) -> chat_id.setText(chat_id_list.get(i))).setPositiveButton("Cancel", null).show());
-                    Looper.loop();
+
                 }
             });
         });
@@ -294,8 +303,10 @@ public class main_activity extends AppCompatActivity {
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     Looper.prepare();
                     progress_dialog.cancel();
+                    Looper.loop();
                     String error_message = error_head + e.getMessage();
                     public_func.write_log(context, error_message);
+                    Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG)
                             .show();
                     Looper.loop();
@@ -303,16 +314,19 @@ public class main_activity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    Looper.prepare();
                     String new_bot_token = bot_token.getText().toString().trim();
+                    Looper.prepare();
                     progress_dialog.cancel();
+                    Looper.loop();
                     if (response.code() != 200) {
                         assert response.body() != null;
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = new JsonParser().parse(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description");
                         public_func.write_log(context, error_message);
+                        Looper.prepare();
                         Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
+                        Looper.loop();
                         return;
                     }
                     if (!new_bot_token.equals(bot_token_save)) {
@@ -333,6 +347,7 @@ public class main_activity extends AppCompatActivity {
                     editor.apply();
                     public_func.stop_all_service(context);
                     public_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command.isChecked());
+                    Looper.prepare();
                     Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)
                             .show();
                     Looper.loop();
