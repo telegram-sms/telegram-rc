@@ -67,7 +67,6 @@ public class main_activity extends AppCompatActivity {
         final SharedPreferences sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
         final Switch charger_status = findViewById(R.id.charger_status);
         final Switch verification_code = findViewById(R.id.verification_code_switch);
-        final Switch wakelock_switch = findViewById(R.id.wakelock_switch);
         final Button save_button = findViewById(R.id.save);
         final Button get_id = findViewById(R.id.get_id);
         display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
@@ -102,11 +101,9 @@ public class main_activity extends AppCompatActivity {
 
         chat_command.setChecked(sharedPreferences.getBoolean("chat_command", false));
         verification_code.setChecked(sharedPreferences.getBoolean("verification_code", false));
-        wakelock_switch.setChecked(sharedPreferences.getBoolean("wakelock", false));
-        wakelock_switch.setEnabled(chat_command.isChecked());
+
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
 
-        chat_command.setOnClickListener(v -> wakelock_switch.setEnabled(chat_command.isChecked()));
 
         display_dual_sim_display_name.setOnClickListener(v -> {
             int checkPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
@@ -332,7 +329,6 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("display_dual_sim_display_name", display_dual_sim_display_name.isChecked());
                     editor.putBoolean("verification_code", verification_code.isChecked());
                     editor.putBoolean("doh_switch", doh_switch.isChecked());
-                    editor.putBoolean("wakelock", wakelock_switch.isChecked());
                     editor.putBoolean("initialized", true);
                     editor.apply();
                     public_func.stop_all_service(context);
