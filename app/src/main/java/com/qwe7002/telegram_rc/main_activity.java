@@ -167,7 +167,6 @@ public class main_activity extends AppCompatActivity {
             Call call = okhttp_client.newCall(request);
             progress_dialog.setOnKeyListener((dialogInterface, i, keyEvent) -> {
                 if (keyEvent.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK) {
-                    progress_dialog.cancel();
                     call.cancel();
                 }
                 return false;
@@ -176,9 +175,7 @@ public class main_activity extends AppCompatActivity {
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    Looper.prepare();
                     progress_dialog.cancel();
-                    Looper.loop();
                     String error_message = error_head + e.getMessage();
                     Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
@@ -188,9 +185,7 @@ public class main_activity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    Looper.prepare();
                     progress_dialog.cancel();
-                    Looper.loop();
                     assert response.body() != null;
                     if (response.code() != 200) {
                         String result = Objects.requireNonNull(response.body()).string();
@@ -301,9 +296,7 @@ public class main_activity extends AppCompatActivity {
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    Looper.prepare();
                     progress_dialog.cancel();
-                    Looper.loop();
                     String error_message = error_head + e.getMessage();
                     public_func.write_log(context, error_message);
                     Looper.prepare();
@@ -314,10 +307,8 @@ public class main_activity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    String new_bot_token = bot_token.getText().toString().trim();
-                    Looper.prepare();
                     progress_dialog.cancel();
-                    Looper.loop();
+                    String new_bot_token = bot_token.getText().toString().trim();
                     if (response.code() != 200) {
                         assert response.body() != null;
                         String result = Objects.requireNonNull(response.body()).string();
