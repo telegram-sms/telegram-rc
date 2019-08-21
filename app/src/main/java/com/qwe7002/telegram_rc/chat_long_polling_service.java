@@ -311,25 +311,26 @@ public class chat_long_polling_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi);
                 }
                 request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
-
                 if (wifi_open) {
-                    while (!isWifiOpened(wifiManager)) {
+                    new Thread(() -> {
+                        while (!isWifiOpened(wifiManager)) {
+                            try {
+                                Thread.currentThread();
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         try {
-                            Thread.currentThread();
-                            Thread.sleep(100);
+                            Thread.sleep(1000);//Wait 1 second to avoid startup failure
+
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                    }
-                    try {
-                        Thread.sleep(1000);//Wait 1 second to avoid startup failure
-
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
-                    intent.setPackage("be.mygod.vpnhotspot");
-                    sendBroadcast(intent);
+                        Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
+                        intent.setPackage("be.mygod.vpnhotspot");
+                        sendBroadcast(intent);
+                    }).start();
                 }
                 has_command = true;
                 break;

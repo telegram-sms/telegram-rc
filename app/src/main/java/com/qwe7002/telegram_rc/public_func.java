@@ -24,6 +24,7 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
 
+import com.github.sumimakito.codeauxlib.CodeauxLibPortable;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -50,14 +51,12 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.dnsoverhttps.DnsOverHttps;
 
-import static androidx.core.content.PermissionChecker.checkSelfPermission;
-
 class public_func {
     static final String log_tag = "telegram-rc";
     static final String network_error = "Send Message:No network connection.";
     static final String broadcast_stop_service = "com.qwe7002.telegram_sms.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    private static final code_aux_lib parser = new code_aux_lib();
+    private static final CodeauxLibPortable parser = new CodeauxLibPortable();
 
     static boolean is_charging(Context context) {
         IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -263,7 +262,7 @@ class public_func {
     }
 
     static void send_fallback_sms(Context context, String content, int sub_id) {
-        if (checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
+        if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             return;
         }
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
@@ -435,6 +434,20 @@ class public_func {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    static void add_message_list(Context context, String message_id, String phone, int slot, int sub_id) {
+        String message_list_raw = public_func.read_file(context, "message.json");
+        if (message_list_raw.length() == 0) {
+            message_list_raw = "{}";
+        }
+        JsonObject message_list_obj = new JsonParser().parse(message_list_raw).getAsJsonObject();
+        JsonObject object = new JsonObject();
+        object.addProperty("phone", phone);
+        object.addProperty("card", slot);
+        object.addProperty("sub_id", sub_id);
+        message_list_obj.add(message_id, object);
+        public_func.write_file(context, "message.json", new Gson().toJson(message_list_obj), Context.MODE_PRIVATE);
     }
 
     static String read_file(Context context, String file_name) {
