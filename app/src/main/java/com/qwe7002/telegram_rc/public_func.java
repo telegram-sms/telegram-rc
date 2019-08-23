@@ -197,6 +197,7 @@ class public_func {
     private static String get_data_sim_display_name(Context context) {
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(log_tag, "get_data_sim_carrier_name: No permission.");
             return result;
         }
         SubscriptionInfo info = null;
@@ -211,6 +212,10 @@ class public_func {
     }
 
     static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
+        if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
+            Log.d(log_tag, "send_sms: No permission.");
+            return;
+        }
         if (!is_numeric(send_to)) {
             write_log(context, "[" + send_to + "] is an illegal phone number");
             return;
@@ -263,6 +268,7 @@ class public_func {
 
     static void send_fallback_sms(Context context, String content, int sub_id) {
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
+            Log.d(log_tag, "send_fallback_sms: No permission.");
             return;
         }
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
