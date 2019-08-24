@@ -25,7 +25,7 @@ release_github:
         - /opt/github-release-upload.sh github_api_token=${github_key} owner=telegram-rc repo=telegram-sms tag=$(date "+%Y%m%d%H%M%S") filename="./app/build/outputs/apk/release/app-release.apk" pre_release="false"
 
 build:
-    image: preventis/docker-android-alpine:latest
+    image: jangrewe/gitlab-ci-android:latest
     stage: build
     only:
         - master
