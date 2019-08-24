@@ -124,7 +124,6 @@ class public_func {
             throw new RuntimeException(e);
         }
     }
-
     static boolean is_phone_number(String str) {
         for (int i = str.length(); --i >= 0; ) {
             char c = str.charAt(i);
