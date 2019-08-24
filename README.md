@@ -2,17 +2,7 @@
 
 A robot running on your Android device.
 
-The primary language used for commit messages are Chinese. You can use English or Chinese in commit messages.
-
-You can come [https://reall.uk](https://reall.uk) to submit an issue or discuss any issues with this project.
-
-You can follow the channel [Telegram 更新日志](https://t.me/tg_sms_changelog) for the latest news.(Use only Simplified Chinese)
-
-[Download](https://github.com/telegram-sms/telegram-sms/releases)
-
-We have discovered that some improper configured network devices can cause the connection to 1.1.1.1 via DNS-over-HTTPS (DoH) to fail. If you could not connect to `api.telegram.org` while we working on a fix, you can turn off DoH temporarily.
-
-**There may be unknown bugs in the pre-release version,Please use at your own risk.**
+[Download](https://github.com/telegram-sms/telegram_remote_control/releases)
 
 
 ## License
@@ -51,54 +41,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fqwe7002%2Ftelegram-sms.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fqwe7002%2Ftelegram-sms?ref=badge_large)
 
+CodeauxLib is licensed under [BSD 3-Clause License](https://github.com/telegram-sms/telegram-sms/blob/master/codeauxlib-license/LICENSE).
+
+Artworks used in Telegram SMS were created by [@walliant](https://www.pixiv.net/member.php?id=5600144).
+
+Copyright belongs to the original author.
+
+Licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+Download resource file: [mega.nz](https://mega.nz/#F!TmwQSYjD!XN-uVfciajwy3okjIdpCAQ)
+
 ## Acknowledgements
 
-This software uses these open source libraries:
+This APP uses the following open source libraries:
 
 - [okhttp](https://github.com/square/okhttp)
-
 - [Gson](https://github.com/google/gson)
-
 - [CodeauxLib](https://gist.github.com/SumiMakito/59992fd15a865c3b9709b8e2c3bc9cf1)
 
-The birth of this software is inseparable from their help:
+The creation of this APP would not be possible without help from the following people:
 
-- [@SumiMakito](https://github.com/SumiMakito)
-
+- [@SumiMakito](https://github.com/SumiMakito) ([Donate](https://paypal.me/makito))
 - [@zsxsoft](https://github.com/zsxsoft)
+- [@walliant](https://www.pixiv.net/member.php?id=5600144) ([weibo](https://www.weibo.com/p/1005053186671274))
 
-Thanks for their translation and support of this project document:
+I would also like to thank the following people for their hard work to localise this project:
 
-#### English
+- English
+  - [@tangbao](https://github.com/tangbao)
+  - [@jixunmoe](https://github.com/jixunmoe) ([Donate](https://paypal.me/jixun))
+- Japanese
+  - [@Lollycc](https://github.com/lollycc)
+  - [@AisakaMk2](https://github.com/AisakaMk2)
 
-- Translate:[@tangbao](https://github.com/tangbao)
-
-- Proofreading:[@jixunmoe](https://github.com/jixunmoe) ([Paypal](https://paypal.me/jixun))
-
-#### Japanese
-
-- Translate:[@Lollycc](https://github.com/lollycc)
-
-- Proofreading:[@AisakaMk2](https://github.com/AisakaMk2)
-
-This software uses the following public DNS service:
+This APP uses the following public DNS service:
 
 - [1.1.1.1](https://1.1.1.1/)
-
 - [Quad9](https://www.quad9.net/)
-
 - [dns.sb](https://dns.sb/)
 
-The following organizations for providing image storage for this page:
+And finally, [sm.ms](https://sm.ms) for hosting images used in this page.
 
-- [sm.ms](https://sm.ms)
+## Buy me a cup of coffee to help maintain this project further?
 
-## Give a cup of coffee and let me better maintain this project?
-
-- [Support me in Paypal](https://paypal.me/nicoranshi)
-
-- [Support me in Bitcoin](bitcoin:17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae) (**17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae**)
-
-- [Support me in Cloud QuickPass](https://static.reallct.com/2019/02/21/5c6d812840bac.png)
+- [via Paypal](https://paypal.me/nicoranshi)
+- [via Bitcoin](bitcoin:17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae) (**17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae**)
+- [via Cloud QuickPass](https://static.reallct.com/2019/02/21/5c6d812840bac.png)
 
 Your donation will make me work better for this project.
