@@ -66,6 +66,7 @@ class public_func {
         return status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL;
     }
+
     static String get_send_phone_number(String phone_number) {
         return phone_number.trim()
                 .replace(" ", "")
@@ -124,6 +125,7 @@ class public_func {
             throw new RuntimeException(e);
         }
     }
+
     static boolean is_phone_number(String str) {
         for (int i = str.length(); --i >= 0; ) {
             char c = str.charAt(i);
@@ -136,6 +138,7 @@ class public_func {
         }
         return true;
     }
+
     static String get_network_type(Context context) {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -403,7 +406,6 @@ class public_func {
         }
         return result;
     }
-
 
 
     static String read_log(Context context) {
