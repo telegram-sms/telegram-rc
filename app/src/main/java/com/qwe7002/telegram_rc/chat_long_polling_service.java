@@ -27,10 +27,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -79,13 +76,14 @@ public class chat_long_polling_service extends Service {
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
 
         wifiLock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL, "bot_command_polling_wifi");
-        wifiLock.acquire();
-
         wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
         wakelock.setReferenceCounted(false);
-        wakelock.acquire();
-
-
+        if (!wifiLock.isHeld()) {
+            wifiLock.acquire();
+        }
+        if (!wakelock.isHeld()) {
+            wakelock.acquire();
+        }
         new Thread(() -> {
             while (true) {
                 start_long_polling();
@@ -270,32 +268,7 @@ public class chat_long_polling_service extends Service {
                 has_command = true;
                 break;
             case "/log":
-                String result = "\n" + getString(R.string.no_logs);
-                try {
-                    FileInputStream file_stream = context.openFileInput("error.log");
-                    FileChannel channel = file_stream.getChannel();
-                    ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-                    buffer.position((int) channel.size());
-                    int count = 0;
-                    StringBuilder builder = new StringBuilder();
-                    for (long i = channel.size() - 1; i >= 0; i--) {
-                        char c = (char) buffer.get((int) i);
-                        builder.insert(0, c);
-                        if (c == '\n') {
-                            if (count == 9) {
-                                break;
-                            }
-                            count++;
-                        }
-                    }
-                    channel.close();
-                    if (!builder.toString().isEmpty()) {
-                        result = builder.toString();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                request_body.text = getString(R.string.system_message_head) + result;
+                request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
                 has_command = true;
                 break;
             case "/switchap":
@@ -313,17 +286,11 @@ public class chat_long_polling_service extends Service {
                 request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
                 if (wifi_open) {
                     new Thread(() -> {
-                        while (!isWifiOpened(wifiManager)) {
-                            try {
-                                Thread.currentThread();
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
                         try {
+                            while (!isWifiOpened(wifiManager)) {
+                                Thread.sleep(100);
+                            }
                             Thread.sleep(1000);//Wait 1 second to avoid startup failure
-
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -369,25 +336,21 @@ public class chat_long_polling_service extends Service {
                         }
                         request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                     }
-
-                }
-                has_command = true;
-                if (msg_send_list.length == 1) {
+                    has_command = true;
+                } else {
                     send_sms_status = 0;
                     send_slot_temp = -1;
-                    request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_number);
                     has_command = false;
-                    if (public_func.get_active_card(context) == 1) {
-                        break;
-                    }
-                    switch (command) {
-                        case "/sendsms":
-                        case "/sendsms1":
-                            send_slot_temp = 0;
-                            break;
-                        case "/sendsms2":
-                            send_slot_temp = 1;
-                            break;
+                    if (public_func.get_active_card(context) > 1) {
+                        switch (command) {
+                            case "/sendsms":
+                            case "/sendsms1":
+                                send_slot_temp = 0;
+                                break;
+                            case "/sendsms2":
+                                send_slot_temp = 1;
+                                break;
+                        }
                     }
                 }
                 break;
@@ -403,6 +366,8 @@ public class chat_long_polling_service extends Service {
             switch (send_sms_status) {
                 case 0:
                     send_sms_status = 1;
+                    request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_number);
+                    Log.i(public_func.log_tag, "receive_handle: Enter the interactive SMS sending mode.");
                     break;
                 case 1:
                     String temp_to = public_func.get_send_phone_number(request_msg);

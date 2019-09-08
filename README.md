@@ -78,8 +78,10 @@ And finally, [sm.ms](https://sm.ms) for hosting images used in this page.
 
 ## Buy me a cup of coffee to help maintain this project further?
 
+- [via Patreon](https://www.patreon.com/user?u=16899295)
 - [via Paypal](https://paypal.me/nicoranshi)
 - [via Bitcoin](bitcoin:17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae) (**17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae**)
-- [via Cloud QuickPass](https://static.reallct.com/2019/02/21/5c6d812840bac.png)
+- [via UnionPay(中国银联云闪付)](https://get-telegram-sms.reall.uk/donate/unionpay)
+- [via Alipay(支付宝)](https://get-telegram-sms.reall.uk/donate/alipay)
 
 Your donation will make me work better for this project.

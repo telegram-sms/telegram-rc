@@ -15,7 +15,7 @@ public class logcat_activity extends AppCompatActivity {
     private Context context;
     private file_observer observer;
     private TextView logcat;
-
+    private final int line = 10;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,7 +23,7 @@ public class logcat_activity extends AppCompatActivity {
         setContentView(R.layout.activity_logcat);
         logcat = findViewById(R.id.logcat_view);
         this.setTitle(R.string.logcat);
-        logcat.setText(public_func.read_log(context));
+        logcat.setText(public_func.read_log(context, line));
         observer = new file_observer(context, logcat);
 
     }
@@ -37,7 +37,7 @@ public class logcat_activity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        logcat.setText(public_func.read_log(context));
+        logcat.setText(public_func.read_log(context, line));
         observer.startWatching();
     }
 
@@ -66,8 +66,8 @@ public class logcat_activity extends AppCompatActivity {
 
         @Override
         public void onEvent(int event, String path) {
-            if (event == FileObserver.MODIFY) {
-                runOnUiThread(() -> logcat.setText(public_func.read_log(context)));
+            if (event == FileObserver.MODIFY && path.contains("error.log")) {
+                runOnUiThread(() -> logcat.setText(public_func.read_log(context, line)));
             }
         }
     }
