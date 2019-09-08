@@ -15,7 +15,7 @@ public class logcat_activity extends AppCompatActivity {
     private Context context;
     private file_observer observer;
     private TextView logcat;
-    private final int line = 10;
+    private final int line = 100;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

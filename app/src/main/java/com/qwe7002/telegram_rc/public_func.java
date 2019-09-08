@@ -417,7 +417,7 @@ class public_func {
         write_file(context, "error.log", write_string, new_file_mode);
     }
 
-    static String read_log(Context context, int line) {
+    static String read_log(Context context, @SuppressWarnings("SameParameterValue") int line) {
         String result = "\n" + context.getString(R.string.no_logs);
         String log_content = public_func.read_file_last_line(context, "error.log", line);
         if (!log_content.isEmpty()) {
@@ -427,7 +427,7 @@ class public_func {
     }
 
     @SuppressWarnings("WeakerAccess")
-    static String read_file_last_line(Context context, String file, int line) {
+    static String read_file_last_line(Context context, @SuppressWarnings("SameParameterValue") String file, int line) {
         StringBuilder builder = new StringBuilder();
         try {
             FileInputStream file_stream = context.openFileInput(file);
