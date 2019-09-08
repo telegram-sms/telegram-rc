@@ -15,7 +15,6 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.telephony.SubscriptionManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -37,6 +36,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import uk.reall.NADB.NADB;
 
 
 public class chat_long_polling_service extends Service {
@@ -168,6 +168,19 @@ public class chat_long_polling_service extends Service {
         return null;
     }
 
+    static boolean is_port_number(String str) {
+        for (int i = str.length(); --i >= 0; ) {
+            char c = str.charAt(i);
+            if (c == '-') {
+                continue;
+            }
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void receive_handle(JsonObject result_obj) {
         long update_id = result_obj.get("update_id").getAsLong();
         offset = update_id + 1;
@@ -256,20 +269,33 @@ public class chat_long_polling_service extends Service {
                     card_info = "\nSIM:" + public_func.get_sim_display_name(context, 0);
                     if (public_func.get_active_card(context) == 2) {
                         String data_card = "";
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            data_card = "\n" + getString(R.string.current_data_card) + ":SIM" + (SubscriptionManager.getSlotIndex(SubscriptionManager.getDefaultDataSubscriptionId()) + 1);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            data_card = "\n" + getString(R.string.current_data_card) + ":SIM" + public_func.get_data_sim_id(context);
                         }
                         card_info = data_card + "\nSIM1:" + public_func.get_sim_display_name(context, 0) + "\nSIM2:" + public_func.get_sim_display_name(context, 1);
 
                     }
                 }
-
                 request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
                 has_command = true;
                 break;
             case "/log":
                 request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
                 has_command = true;
+                break;
+            case "/configadb":
+                final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
+                if (sharedPreferences.getBoolean("root", false)) {
+                    NADB nadb = new NADB();
+                    String[] command_list = request_msg.split(" ");
+                    if (command_list.length > 1 && is_port_number(command_list[1]) && nadb.set_NADB(command_list[1])) {
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_success);
+                    } else {
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_failed);
+                    }
+                } else {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                }
                 break;
             case "/switchap":
                 boolean wifi_open = false;
@@ -429,6 +455,11 @@ public class chat_long_polling_service extends Service {
         });
     }
 
+    private boolean isWifiOpened(WifiManager wifiManager) {
+        int status = wifiManager.getWifiState();
+        return status == WifiManager.WIFI_STATE_ENABLED;
+    }
+
     private String get_battery_info(Context context) {
         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
@@ -437,14 +468,17 @@ public class chat_long_polling_service extends Service {
             battery_level = 100;
         }
         String battery_level_string = battery_level + "%";
-        if (public_func.is_charging(context)) {
-            battery_level_string += " (" + context.getString(R.string.charging) + ")";
+        switch (public_func.charging_status(context)) {
+            case BatteryManager.BATTERY_STATUS_CHARGING:
+            case BatteryManager.BATTERY_STATUS_FULL:
+                battery_level_string += " (" + context.getString(R.string.charging) + ")";
+                break;
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                battery_level_string += " (" + getString(R.string.not_charging) + ")";
+                break;
+
         }
         return battery_level_string;
-    }
-    private boolean isWifiOpened(WifiManager wifiManager) {
-        int status=wifiManager.getWifiState();
-        return status == WifiManager.WIFI_STATE_ENABLED;
     }
     class stop_broadcast_receiver extends BroadcastReceiver {
         @Override

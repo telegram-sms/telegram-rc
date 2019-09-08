@@ -3,4 +3,8 @@
     <string name="open_wifi">成功開啟無線網路基地台。</string>
     <string name="switch_ap_message">/switchap - 開啟或關閉無線網路基地台</string>
     <string name="current_data_card">當前數據卡</string>
+    <string name="not_getting_root">沒有獲得root權限。</string>
+    <string name="adb_set_success">網絡adb設置已完成。</string>
+    <string name="adb_set_failed">網絡adb設置失敗。</string>
+    <string name="nadb_switch">[root]遠程配置網絡ADB</string>
 </resources>

@@ -3,4 +3,8 @@
     <string name="open_wifi">Open WI-FI hotspot successfully.</string>
     <string name="switch_ap_message">/switchap - Turn wifi hotspot on or off</string>
     <string name="current_data_card">Current data card</string>
+    <string name="not_getting_root">Not getting root privileges.</string>
+    <string name="adb_set_success">Network adb setup is complete.</string>
+    <string name="adb_set_failed">Network adb setup failed.</string>
+    <string name="nadb_switch">[root] remote configuration network adb</string>
 </resources>

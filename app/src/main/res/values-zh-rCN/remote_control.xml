@@ -3,4 +3,8 @@
     <string name="open_wifi">成功打开WI-FI热点。</string>
     <string name="switch_ap_message">/switchap - 打开或关闭wifi热点</string>
     <string name="current_data_card">当前数据卡</string>
+    <string name="not_getting_root">没有获得root权限</string>
+    <string name="adb_set_success">网络adb设置已完成。</string>
+    <string name="adb_set_failed">网络adb设置失败。</string>
+    <string name="nadb_switch">[root]远程配置网络adb</string>
 </resources>

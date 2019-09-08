@@ -46,6 +46,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import uk.reall.NADB.NADB;
 
 
 public class main_activity extends AppCompatActivity {
@@ -68,6 +69,7 @@ public class main_activity extends AppCompatActivity {
         final SharedPreferences sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
         final Switch charger_status = findViewById(R.id.charger_status);
         final Switch verification_code = findViewById(R.id.verification_code_switch);
+        final Switch config_adb_switch = findViewById(R.id.nadb_switch_root);
         final Button save_button = findViewById(R.id.save);
         final Button get_id = findViewById(R.id.get_id);
         display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
@@ -85,7 +87,7 @@ public class main_activity extends AppCompatActivity {
             }
             display_dual_sim_display_name.setChecked(display_dual_sim_display_name_config);
         }
-
+        config_adb_switch.setChecked(sharedPreferences.getBoolean("root", false));
         bot_token.setText(bot_token_save);
         chat_id.setText(chat_id_save);
 
@@ -142,6 +144,13 @@ public class main_activity extends AppCompatActivity {
         });
         battery_monitoring_switch.setOnClickListener(v -> charger_status.setEnabled(battery_monitoring_switch.isChecked()));
 
+        config_adb_switch.setOnClickListener(view -> new Thread(() -> {
+            NADB nadb = new NADB();
+            if (!nadb.check_root()) {
+                runOnUiThread(() -> config_adb_switch.setChecked(false));
+
+            }
+        }).start());
         get_id.setOnClickListener(v -> {
             if (bot_token.getText().toString().isEmpty()) {
                 Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show();
@@ -334,6 +343,7 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("charger_status", charger_status.isChecked());
                     editor.putBoolean("display_dual_sim_display_name", display_dual_sim_display_name.isChecked());
                     editor.putBoolean("verification_code", verification_code.isChecked());
+                    editor.putBoolean("root", config_adb_switch.isChecked());
                     editor.putBoolean("doh_switch", doh_switch.isChecked());
                     editor.putBoolean("initialized", true);
                     editor.apply();

@@ -126,6 +126,13 @@
                     tools:ignore="RtlSymmetry" />
 
             <Switch
+                android:id="@+id/nadb_switch_root"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="3dp"
+                android:text="@string/nadb_switch"
+                tools:ignore="RtlSymmetry" />
+            <Switch
                     android:id="@+id/doh_switch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

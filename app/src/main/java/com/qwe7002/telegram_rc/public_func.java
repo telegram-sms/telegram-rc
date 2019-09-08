@@ -60,13 +60,11 @@ class public_func {
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final CodeauxLibPortable parser = new CodeauxLibPortable();
 
-    static boolean is_charging(Context context) {
+    static int charging_status(Context context) {
         IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = context.registerReceiver(null, intentfilter);
         assert batteryStatus != null;
-        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        return status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                status == BatteryManager.BATTERY_STATUS_FULL;
+        return batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
     }
 
     static String get_send_phone_number(String phone_number) {
@@ -212,6 +210,23 @@ class public_func {
             return result;
         }
         result = info.getCarrierName().toString();
+        return result;
+    }
+
+    static String get_data_sim_id(Context context) {
+        String result = "Unknown";
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(log_tag, "get_data_sim_carrier_name: No permission.");
+            return result;
+        }
+        SubscriptionInfo info = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
+        }
+        if (info == null) {
+            return result;
+        }
+        result = String.valueOf(info.getSimSlotIndex() + 1);
         return result;
     }
 
@@ -399,7 +414,6 @@ class public_func {
                 return result;
             }
         }
-
         result = info.getDisplayName().toString();
         if (info.getDisplayName().toString().contains("CARD") || info.getDisplayName().toString().contains("SUB")) {
             result = info.getCarrierName().toString();
