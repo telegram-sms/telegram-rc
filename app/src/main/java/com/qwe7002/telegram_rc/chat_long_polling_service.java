@@ -36,7 +36,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import uk.reall.NADB.NADB;
 
 
 public class chat_long_polling_service extends Service {
@@ -286,7 +285,7 @@ public class chat_long_polling_service extends Service {
             case "/configadb":
                 final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
                 if (sharedPreferences.getBoolean("root", false)) {
-                    NADB nadb = new NADB();
+                    uk.reall.NADB.NADB nadb = new uk.reall.NADB.NADB();
                     String[] command_list = request_msg.split(" ");
                     if (command_list.length > 1 && is_port_number(command_list[1]) && nadb.set_NADB(command_list[1])) {
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_success);
@@ -478,12 +477,12 @@ public class chat_long_polling_service extends Service {
                 battery_level_string += " (" + context.getString(R.string.charging) + ")";
                 break;
             case BatteryManager.BATTERY_STATUS_DISCHARGING:
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
                 int plug_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
                 if (plug_status == BatteryManager.BATTERY_PLUGGED_AC || plug_status == BatteryManager.BATTERY_PLUGGED_USB || plug_status == BatteryManager.BATTERY_PLUGGED_WIRELESS) {
                     battery_level_string += " (" + getString(R.string.not_charging) + ")";
                 }
                 break;
-
         }
         return battery_level_string;
     }
