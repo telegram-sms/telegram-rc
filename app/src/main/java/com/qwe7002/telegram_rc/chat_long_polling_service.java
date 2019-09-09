@@ -468,13 +468,20 @@ public class chat_long_polling_service extends Service {
             battery_level = 100;
         }
         String battery_level_string = battery_level + "%";
-        switch (public_func.charging_status(context)) {
+        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, intentfilter);
+        assert batteryStatus != null;
+        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        switch (charge_status) {
             case BatteryManager.BATTERY_STATUS_CHARGING:
             case BatteryManager.BATTERY_STATUS_FULL:
                 battery_level_string += " (" + context.getString(R.string.charging) + ")";
                 break;
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                battery_level_string += " (" + getString(R.string.not_charging) + ")";
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:
+                int plug_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                if (plug_status == BatteryManager.BATTERY_PLUGGED_AC || plug_status == BatteryManager.BATTERY_PLUGGED_USB || plug_status == BatteryManager.BATTERY_PLUGGED_WIRELESS) {
+                    battery_level_string += " (" + getString(R.string.not_charging) + ")";
+                }
                 break;
 
         }

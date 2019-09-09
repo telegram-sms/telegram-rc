@@ -13,7 +13,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.BatteryManager;
 import android.os.Build;
 import android.telephony.SmsManager;
 import android.telephony.SubscriptionInfo;
@@ -60,12 +59,6 @@ class public_func {
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final CodeauxLibPortable parser = new CodeauxLibPortable();
 
-    static int charging_status(Context context) {
-        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = context.registerReceiver(null, intentfilter);
-        assert batteryStatus != null;
-        return batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-    }
 
     static String get_send_phone_number(String phone_number) {
         return phone_number.trim()
