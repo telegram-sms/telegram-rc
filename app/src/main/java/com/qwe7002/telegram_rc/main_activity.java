@@ -252,7 +252,6 @@ public class main_activity extends AppCompatActivity {
                         }
                     }
                     main_activity.this.runOnUiThread(() -> new AlertDialog.Builder(v.getContext()).setTitle(R.string.select_chat).setItems(chat_name_list.toArray(new String[0]), (dialogInterface, i) -> chat_id.setText(chat_id_list.get(i))).setPositiveButton("Cancel", null).show());
-
                 }
             });
         });
