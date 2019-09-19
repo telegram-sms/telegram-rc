@@ -1,7 +1,8 @@
 <resources>
     <string name="close_wifi">成功关闭WI-FI热点。</string>
     <string name="open_wifi">成功打开WI-FI热点。</string>
-    <string name="switch_ap_message">/switchap - 打开或关闭wifi热点</string>
+    <string name="switch_ap_message">/switch_ap - 打开或关闭wifi热点</string>
+    <string name="config_adb_message">/config_adb - 配置网络adb端口</string>
     <string name="current_data_card">当前数据卡</string>
     <string name="not_getting_root">没有获得root权限</string>
     <string name="adb_set_success">网络adb设置已完成。</string>

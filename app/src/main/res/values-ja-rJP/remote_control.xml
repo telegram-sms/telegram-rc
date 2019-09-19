@@ -1,7 +1,8 @@
 <resources>
     <string name="close_wifi">WI-FIホットスポットを閉じます。</string>
     <string name="open_wifi">WI-FIホットスポットを正常に開きます。</string>
-    <string name="switch_ap_message">/switchap - WiFiホットスポットをオンまたはオフにする</string>
+    <string name="switch_ap_message">/switch_ap - WiFiホットスポットをオンまたはオフにする</string>
+    <string name="config_adb_message">/config_adb - 構成ネットワークadbポート</string>
     <string name="current_data_card">現在のデータカード</string>
     <string name="not_getting_root">ルート権限を取得していません。</string>
     <string name="adb_set_success">ネットワークadbのセットアップが完了しました。</string>

@@ -1,7 +1,8 @@
 <resources>
     <string name="close_wifi">成功關閉無線網路基地台。</string>
     <string name="open_wifi">成功開啟無線網路基地台。</string>
-    <string name="switch_ap_message">/switchap - 開啟或關閉無線網路基地台</string>
+    <string name="switch_ap_message">/switch_ap - 開啟或關閉無線網路基地台</string>
+    <string name="config_adb_message">/config_adb - 配置網絡adb端口</string>
     <string name="current_data_card">當前數據卡</string>
     <string name="not_getting_root">沒有獲得root權限。</string>
     <string name="adb_set_success">網絡adb設置已完成。</string>

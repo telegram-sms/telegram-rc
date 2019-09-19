@@ -52,6 +52,7 @@ public class chat_long_polling_service extends Service {
     private int send_sms_status = -1;
     private int send_slot_temp = -1;
     private String send_to_temp;
+    SharedPreferences sharedPreferences;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.chat_command_service_name));
@@ -64,7 +65,7 @@ public class chat_long_polling_service extends Service {
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
-        SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
 
         IntentFilter intentFilter = new IntentFilter(public_func.broadcast_stop_service);
         stop_broadcast_receiver = new stop_broadcast_receiver();
@@ -259,7 +260,11 @@ public class chat_long_polling_service extends Service {
                 if (public_func.get_active_card(context) == 2) {
                     dual_card = "\n" + getString(R.string.sendsms_dual);
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + "\n" + getString(R.string.switch_ap_message);
+                String config_adb = "";
+                if (sharedPreferences.getBoolean("root", false)) {
+                    config_adb = "\n" + context.getString(R.string.config_adb_message);
+                }
+                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + "\n" + getString(R.string.switch_ap_message) + config_adb;
                 has_command = true;
                 break;
             case "/ping":
@@ -283,8 +288,8 @@ public class chat_long_polling_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
                 has_command = true;
                 break;
+            case "/config_adb":
             case "/configadb":
-                final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
                 if (sharedPreferences.getBoolean("root", false)) {
                     uk.reall.NADB.NADB nadb = new uk.reall.NADB.NADB();
                     String[] command_list = request_msg.split(" ");
@@ -297,6 +302,7 @@ public class chat_long_polling_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                 }
                 break;
+            case "/switch_ap":
             case "/switchap":
                 boolean wifi_open = false;
                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
