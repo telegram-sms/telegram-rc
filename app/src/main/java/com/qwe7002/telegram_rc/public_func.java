@@ -306,35 +306,25 @@ class public_func {
     }
 
     static Notification get_notification_obj(Context context, String notification_name) {
-        Notification notification;
+        Notification.Builder notification;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(notification_name, public_func.log_tag,
                     NotificationManager.IMPORTANCE_MIN);
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             assert manager != null;
             manager.createNotificationChannel(channel);
-            notification = new Notification.Builder(context, notification_name)
-                    .setAutoCancel(false)
-                    .setSmallIcon(R.drawable.ic_stat)
-                    .setOngoing(true)
-                    .setTicker(context.getString(R.string.app_name))
-                    .setWhen(System.currentTimeMillis())
-                    .setContentTitle(context.getString(R.string.app_name))
-                    .setContentText(notification_name + context.getString(R.string.service_is_running))
-                    .build();
+            notification = new Notification.Builder(context, notification_name);
         } else {
-            notification = new Notification.Builder(context)
-                    .setAutoCancel(false)
-                    .setSmallIcon(R.drawable.ic_stat)
-                    .setOngoing(true)
-                    .setTicker(context.getString(R.string.app_name))
-                    .setWhen(System.currentTimeMillis())
-                    .setContentTitle(context.getString(R.string.app_name))
-                    .setContentText(notification_name + context.getString(R.string.service_is_running))
-                    .setPriority(Notification.PRIORITY_MIN)
-                    .build();
+            notification = new Notification.Builder(context);
         }
-        return notification;
+        return notification.setAutoCancel(false)
+                .setSmallIcon(R.drawable.ic_stat)
+                .setOngoing(true)
+                .setTicker(context.getString(R.string.app_name))
+                .setWhen(System.currentTimeMillis())
+                .setContentTitle(context.getString(R.string.app_name))
+                .setContentText(notification_name + context.getString(R.string.service_is_running))
+                .build();
     }
 
     static void stop_all_service(Context context) {
