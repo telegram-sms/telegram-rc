@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
@@ -264,7 +265,11 @@ public class chat_long_polling_service extends Service {
                 if (sharedPreferences.getBoolean("root", false)) {
                     config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + "\n" + getString(R.string.switch_ap_message) + config_adb;
+                String switch_ap = "";
+                if (is_vpnhotsport_exist()) {
+                    switch_ap = "\n" + getString(R.string.switch_ap_message);
+                }
+                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + switch_ap + config_adb;
                 has_command = true;
                 break;
             case "/ping":
@@ -304,6 +309,7 @@ public class chat_long_polling_service extends Service {
                 break;
             case "/switch_ap":
             case "/switchap":
+                if(!is_vpnhotsport_exist()){break;}
                 boolean wifi_open = false;
                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 assert wifiManager != null;
@@ -493,6 +499,19 @@ public class chat_long_polling_service extends Service {
         }
         return battery_level_string;
     }
+
+    boolean is_vpnhotsport_exist() {
+        ApplicationInfo info;
+        try {
+            info = getPackageManager().getApplicationInfo("be.mygod.vpnhotspot", 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            info = null;
+        }
+
+        return info != null;
+    }
+
     class stop_broadcast_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
