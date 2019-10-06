@@ -314,17 +314,16 @@ class public_func {
             assert manager != null;
             manager.createNotificationChannel(channel);
             notification = new Notification.Builder(context, notification_name);
-        } else {
-            notification = new Notification.Builder(context);
+        } else {//Notification generation method after O
+            notification = new Notification.Builder(context).setPriority(Notification.PRIORITY_MIN);
         }
-        return notification.setAutoCancel(false)
+        notification.setAutoCancel(false)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setOngoing(true)
                 .setTicker(context.getString(R.string.app_name))
-                .setWhen(System.currentTimeMillis())
                 .setContentTitle(context.getString(R.string.app_name))
-                .setContentText(notification_name + context.getString(R.string.service_is_running))
-                .build();
+                .setContentText(notification_name + context.getString(R.string.service_is_running));
+        return notification.build();
     }
 
     static void stop_all_service(Context context) {

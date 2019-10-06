@@ -13,10 +13,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -105,15 +108,22 @@ public class main_activity extends AppCompatActivity {
         verification_code.setChecked(sharedPreferences.getBoolean("verification_code", false));
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
-
-
+        int checkPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
+        if (checkPermission == PackageManager.PERMISSION_GRANTED) {
+            TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+            assert tm != null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Log.d(public_func.log_tag, "onCreate: " + tm.getPhoneCount());
+                if (tm.getPhoneCount() == 1) {
+                    display_dual_sim_display_name.setVisibility(View.GONE);
+                }
+            }
+        }
         display_dual_sim_display_name.setOnClickListener(v -> {
-            int checkPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
             if (checkPermission != PackageManager.PERMISSION_GRANTED) {
                 display_dual_sim_display_name.setChecked(false);
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 2);
-            }
-            if (checkPermission == PackageManager.PERMISSION_GRANTED) {
+            } else {
                 if (public_func.get_active_card(context) < 2) {
                     display_dual_sim_display_name.setEnabled(false);
                     display_dual_sim_display_name.setChecked(false);
@@ -184,6 +194,7 @@ public class main_activity extends AppCompatActivity {
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    e.printStackTrace();
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
                     Looper.prepare();
@@ -304,6 +315,7 @@ public class main_activity extends AppCompatActivity {
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    e.printStackTrace();
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
                     public_func.write_log(context, error_message);
@@ -364,6 +376,11 @@ public class main_activity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                assert tm != null;
+                if (tm.getPhoneCount() == 1) {
+                    display_dual_sim_display_name.setVisibility(View.GONE);
+                }
                 if (public_func.get_active_card(context) < 2) {
                     display_dual_sim_display_name.setEnabled(false);
                     display_dual_sim_display_name.setChecked(false);
