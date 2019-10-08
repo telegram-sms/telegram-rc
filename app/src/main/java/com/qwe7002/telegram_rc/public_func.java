@@ -53,9 +53,8 @@ import okhttp3.Response;
 import okhttp3.dnsoverhttps.DnsOverHttps;
 
 class public_func {
-    static final String log_tag = "telegram-rc";
     static final String network_error = "Send Message:No network connection.";
-    static final String broadcast_stop_service = "com.qwe7002.telegram_sms.stop_all";
+    static final String broadcast_stop_service = "com.qwe7002.telegram_rc.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final CodeauxLibPortable parser = new CodeauxLibPortable();
 
@@ -146,7 +145,7 @@ class public_func {
                 net_type = "WIFI";
                 break;
             case ConnectivityManager.TYPE_MOBILE:
-                boolean is_att = get_data_sim_display_name(context).contains("AT&T");
+                boolean is_att = get_data_sim_name(context).contains("AT&T");
                 switch (network_info.getSubtype()) {
                     case TelephonyManager.NETWORK_TYPE_NR:
                         net_type = "5G";
@@ -189,10 +188,10 @@ class public_func {
         return net_type;
     }
 
-    private static String get_data_sim_display_name(Context context) {
+    private static String get_data_sim_name(Context context) {
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(log_tag, "get_data_sim_carrier_name: No permission.");
+            Log.d("get_data_sim_name", "No permission.");
             return result;
         }
         SubscriptionInfo info = null;
@@ -209,7 +208,7 @@ class public_func {
     static String get_data_sim_id(Context context) {
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(log_tag, "get_data_sim_carrier_name: No permission.");
+            Log.d("get_data_sim_id", "No permission.");
             return result;
         }
         SubscriptionInfo info = null;
@@ -225,7 +224,7 @@ class public_func {
 
     static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
-            Log.d(log_tag, "send_sms: No permission.");
+            Log.d("send_sms", "No permission.");
             return;
         }
         if (!is_phone_number(send_to)) {
@@ -279,8 +278,9 @@ class public_func {
     }
 
     static void send_fallback_sms(Context context, String content, int sub_id) {
+        final String log_tag = "send_fallback_sms";
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
-            Log.d(log_tag, "send_fallback_sms: No permission.");
+            Log.d(log_tag, ": No permission.");
             return;
         }
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
@@ -308,7 +308,7 @@ class public_func {
     static Notification get_notification_obj(Context context, String notification_name) {
         Notification.Builder notification;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(notification_name, public_func.log_tag,
+            NotificationChannel channel = new NotificationChannel(notification_name, "telegram_rc",
                     NotificationManager.IMPORTANCE_MIN);
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             assert manager != null;
@@ -337,8 +337,8 @@ class public_func {
     }
 
     static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch) {
-        Intent battery_service = new Intent(context, battery_monitoring_service.class);
-        Intent chat_long_polling_service = new Intent(context, chat_long_polling_service.class);
+        Intent battery_service = new Intent(context, com.qwe7002.telegram_rc.battery_service.class);
+        Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (battery_switch) {
                 context.startForegroundService(battery_service);
@@ -405,7 +405,7 @@ class public_func {
 
 
     static void write_log(Context context, String log) {
-        Log.i(public_func.log_tag, log);
+        Log.i("write_log", log);
         int new_file_mode = Context.MODE_APPEND;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.UK);
         Date ts = new Date(System.currentTimeMillis());

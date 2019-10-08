@@ -26,7 +26,6 @@ public class NADB {
         } catch (Exception e) {
             e.printStackTrace();
             Log.d("NADB", Objects.requireNonNull(e.getMessage()));
-
             return false;
         }
     }

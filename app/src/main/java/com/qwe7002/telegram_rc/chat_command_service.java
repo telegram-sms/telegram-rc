@@ -41,7 +41,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
-public class chat_long_polling_service extends Service {
+public class chat_command_service extends Service {
     private static long offset = 0;
     private static int magnification = 1;
     private static int error_magnification = 1;
@@ -57,7 +57,8 @@ public class chat_long_polling_service extends Service {
     private String send_to_temp;
     private SharedPreferences sharedPreferences;
     private String bot_username = "";
-
+    final String log_tag = "chat_command";
+    private final String VPN_HOTSPORT_PACKAGE_NAME = "be.mygod.vpnhotspot";
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.chat_command_service_name));
@@ -115,7 +116,7 @@ public class chat_long_polling_service extends Service {
                     JsonObject result_obj = new JsonParser().parse(Objects.requireNonNull(response.body()).string()).getAsJsonObject();
                     if (result_obj.get("ok").getAsBoolean()) {
                         bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                        Log.d(public_func.log_tag, "bot_username: " + bot_username);
+                        Log.d(log_tag, "bot_username: " + bot_username);
                     }
                 }
             });
@@ -241,7 +242,7 @@ public class chat_long_polling_service extends Service {
         if (message_obj.has("from")) {
             from_obj = message_obj.get("from").getAsJsonObject();
             if (message_type_is_group && from_obj.get("is_bot").getAsBoolean()) {
-                Log.d(public_func.log_tag, "receive from bot.");
+                Log.d(log_tag, "receive_handle: receive from bot.");
                 return;
             }
         }
@@ -282,7 +283,7 @@ public class chat_long_polling_service extends Service {
                 return;
             }
             if (message_type_is_group) {
-                Log.d(public_func.log_tag, "receive_handle: The message id could not be found, ignored.");
+                Log.d(log_tag, "receive_handle: The message id could not be found, ignored.");
                 return;
             }
         }
@@ -304,7 +305,7 @@ public class chat_long_polling_service extends Service {
             }
         }
         if (message_type_is_group && !command_bot_username.equals(bot_username)) {
-            Log.i(public_func.log_tag, "This is a Group conversation, but no conversation object was found.");
+            Log.i(log_tag, "receive_handle: This is a Group conversation, but no conversation object was found.");
             return;
 
         }
@@ -322,7 +323,7 @@ public class chat_long_polling_service extends Service {
                     config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
                 String switch_ap = "";
-                if (is_vpnhotsport_exist()) {
+                if (is_vpn_hotsport_exist()) {
                     switch_ap = "\n" + getString(R.string.switch_ap_message);
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + switch_ap + config_adb;
@@ -368,7 +369,9 @@ public class chat_long_polling_service extends Service {
                 break;
             case "/switch_ap":
             case "/switchap":
-                if(!is_vpnhotsport_exist()){break;}
+                if (!is_vpn_hotsport_exist()) {
+                    break;
+                }
                 boolean wifi_open = false;
                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 assert wifiManager != null;
@@ -384,7 +387,7 @@ public class chat_long_polling_service extends Service {
                 if (wifi_open) {
                     new Thread(() -> {
                         try {
-                            while (!isWifiOpened(wifiManager)) {
+                            while (!is_wifi_opened(wifiManager)) {
                                 Thread.sleep(100);
                             }
                             Thread.sleep(1000);//Wait 1 second to avoid startup failure
@@ -392,7 +395,7 @@ public class chat_long_polling_service extends Service {
                             e.printStackTrace();
                         }
                         Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
-                        intent.setPackage("be.mygod.vpnhotspot");
+                        intent.setPackage(VPN_HOTSPORT_PACKAGE_NAME);
                         sendBroadcast(intent);
                     }).start();
                 }
@@ -404,7 +407,6 @@ public class chat_long_polling_service extends Service {
                 has_command = true;
                 String[] msg_send_list = request_msg.split("\n");
                 if (msg_send_list.length > 2) {
-                    Log.d("test", "receive_handle: ");
                     String msg_send_to = public_func.get_send_phone_number(msg_send_list[1]);
                     if (public_func.is_phone_number(msg_send_to)) {
                         StringBuilder msg_send_content = new StringBuilder();
@@ -456,7 +458,7 @@ public class chat_long_polling_service extends Service {
                 break;
             default:
                 if (!message_obj.get("chat").getAsJsonObject().get("type").getAsString().equals("private")) {
-                    Log.d(public_func.log_tag, "receive_handle: The conversation is not Private and does not prompt an error.");
+                    Log.d(log_tag, "receive_handle: The conversation is not Private and does not prompt an error.");
                     return;
                 }
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
@@ -467,11 +469,11 @@ public class chat_long_polling_service extends Service {
                 case 0:
                     send_sms_status = 1;
                     request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_number);
-                    Log.i(public_func.log_tag, "receive_handle: Enter the interactive SMS sending mode.");
+                    Log.i(log_tag, "receive_handle: Enter the interactive SMS sending mode.");
                     break;
                 case 1:
                     String temp_to = public_func.get_send_phone_number(request_msg);
-                    Log.d(public_func.log_tag, "receive_handle: " + temp_to);
+                    Log.d(log_tag, "receive_handle: " + temp_to);
                     if (public_func.is_phone_number(temp_to)) {
                         send_to_temp = temp_to;
                         request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_content);
@@ -530,7 +532,7 @@ public class chat_long_polling_service extends Service {
         });
     }
 
-    private boolean isWifiOpened(WifiManager wifiManager) {
+    private boolean is_wifi_opened(WifiManager wifiManager) {
         int status = wifiManager.getWifiState();
         return status == WifiManager.WIFI_STATE_ENABLED;
     }
@@ -555,18 +557,22 @@ public class chat_long_polling_service extends Service {
             case BatteryManager.BATTERY_STATUS_DISCHARGING:
             case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
                 int plug_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-                if (plug_status == BatteryManager.BATTERY_PLUGGED_AC || plug_status == BatteryManager.BATTERY_PLUGGED_USB || plug_status == BatteryManager.BATTERY_PLUGGED_WIRELESS) {
-                    battery_level_string += " (" + getString(R.string.not_charging) + ")";
+                switch (plug_status) {
+                    case BatteryManager.BATTERY_PLUGGED_AC:
+                    case BatteryManager.BATTERY_PLUGGED_USB:
+                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                        battery_level_string += " (" + getString(R.string.not_charging) + ")";
+                        break;
                 }
                 break;
         }
         return battery_level_string;
     }
 
-    boolean is_vpnhotsport_exist() {
+    boolean is_vpn_hotsport_exist() {
         ApplicationInfo info;
         try {
-            info = getPackageManager().getApplicationInfo("be.mygod.vpnhotspot", 0);
+            info = getPackageManager().getApplicationInfo(VPN_HOTSPORT_PACKAGE_NAME, 0);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             info = null;
@@ -578,7 +584,7 @@ public class chat_long_polling_service extends Service {
     class stop_broadcast_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.i(public_func.log_tag, "Chat command:Received stop signal, quitting now...");
+            Log.i(log_tag, "Received stop signal, quitting now...");
             stopSelf();
             android.os.Process.killProcess(android.os.Process.myPid());
         }
