@@ -79,7 +79,6 @@ class public_func {
         return dual_sim;
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     static boolean check_network_status(Context context) {
         ConnectivityManager manager = (ConnectivityManager) context
                 .getApplicationContext().getSystemService(
