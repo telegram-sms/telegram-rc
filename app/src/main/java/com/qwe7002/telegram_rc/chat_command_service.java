@@ -131,7 +131,8 @@ public class chat_command_service extends Service {
             return;
         }
         JsonObject from_obj = null;
-        boolean message_type_is_group = message_type.contains("group");
+        final boolean message_type_is_group = message_type.contains("group");
+        final boolean message_type_is_private = message_type.contains("private");
         if (message_type_is_group && !have_bot_username) {
             Log.i(log_tag, "receive_handle: Did not successfully get bot_username.");
             get_me();
@@ -334,7 +335,7 @@ public class chat_command_service extends Service {
                         }
                     }
                 } else {
-                    if (!message_type_is_group) {
+                    if (message_type_is_private) {
                         send_sms_status = 0;
                         send_slot_temp = -1;
                         if (public_func.get_active_card(context) > 1) {
@@ -354,7 +355,7 @@ public class chat_command_service extends Service {
                 request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                 break;
             default:
-                if (!message_obj.get("chat").getAsJsonObject().get("type").getAsString().equals("private")) {
+                if (!message_type_is_private) {
                     Log.i(log_tag, "receive_handle: The conversation is not Private and does not prompt an error.");
                     return;
                 }
