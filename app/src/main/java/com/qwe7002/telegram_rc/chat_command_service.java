@@ -113,120 +113,6 @@ public class chat_command_service extends Service {
         super.onDestroy();
     }
 
-    class thread_handle implements Runnable {
-        @Override
-        public void run() {
-            Log.d(log_tag, "run: thread handle start");
-            int chat_int_id = 0;
-            try {
-                chat_int_id = Integer.parseInt(chat_id);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                //Avoid errors caused by unconvertible inputs.
-            }
-            if (chat_int_id < 0 && !have_bot_username) {
-                OkHttpClient okhttp_client_new = okhttp_client;
-                String request_uri = public_func.get_url(bot_token, "getMe");
-                Request request = new Request.Builder().url(request_uri).build();
-                Call call = okhttp_client_new.newCall(request);
-                call.enqueue(new Callback() {
-                    @Override
-                    public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                        e.printStackTrace();
-                        public_func.write_log(context, "Get username failed:" + e.getMessage());
-                    }
-
-                    @Override
-                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                        JsonObject result_obj = new JsonParser().parse(Objects.requireNonNull(response.body()).string()).getAsJsonObject();
-                        if (result_obj.get("ok").getAsBoolean()) {
-                            bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                            have_bot_username = true;
-                            Log.d(log_tag, "bot_username: " + bot_username);
-                        }
-                    }
-                });
-            }
-            while (true) {
-                int read_timeout = 5 * magnification;
-                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
-                        .readTimeout((read_timeout + 5), TimeUnit.SECONDS)
-                        .writeTimeout((read_timeout + 5), TimeUnit.SECONDS)
-                        .build();
-                String request_uri = public_func.get_url(bot_token, "getUpdates");
-                polling_json request_body = new polling_json();
-                request_body.offset = offset;
-                request_body.timeout = read_timeout;
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
-                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-                Call call = okhttp_client_new.newCall(request);
-                Response response;
-                try {
-                    response = call.execute();
-                    error_magnification = 1;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (!public_func.check_network_status(context)) {
-                        public_func.write_log(context, "No network connections available. ");
-                        break;
-                    }
-                    int sleep_time = 5 * error_magnification;
-                    public_func.write_log(context, "No network service,try again after " + sleep_time + " seconds.");
-                    magnification = 1;
-                    if (error_magnification <= 59) {
-                        error_magnification++;
-                    }
-                    try {
-                        Thread.sleep(sleep_time * 1000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                    continue;
-
-                }
-                if (response.code() == 200) {
-                    assert response.body() != null;
-                    String result;
-                    try {
-                        result = Objects.requireNonNull(response.body()).string();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        continue;
-                    }
-                    JsonObject result_obj = new JsonParser().parse(result).getAsJsonObject();
-                    if (result_obj.get("ok").getAsBoolean()) {
-                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
-                        for (JsonElement item : result_array) {
-                            receive_handle(item.getAsJsonObject());
-                        }
-                    }
-                    if (magnification <= 11) {
-                        magnification++;
-                    }
-                }
-            }
-        }
-    }
-
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    static boolean is_port_number(String str) {
-        for (int i = str.length(); --i >= 0; ) {
-            char c = str.charAt(i);
-            if (c == '-') {
-                continue;
-            }
-            if (!Character.isDigit(c)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private void receive_handle(JsonObject result_obj) {
         String message_type = "";
         long update_id = result_obj.get("update_id").getAsLong();
@@ -276,7 +162,7 @@ public class chat_command_service extends Service {
             JsonObject reply_obj = message_obj.get("reply_to_message").getAsJsonObject();
             String reply_id = reply_obj.get("message_id").getAsString();
             String message_list_raw = public_func.read_file(context, "message.json");
-            JsonObject message_list = new JsonParser().parse(message_list_raw).getAsJsonObject();
+            JsonObject message_list = JsonParser.parseString(message_list_raw).getAsJsonObject();
             if (message_list.has(reply_id)) {
                 JsonObject message_item_obj = message_list.get(reply_id).getAsJsonObject();
                 String phone_number = message_item_obj.get("phone").getAsString();
@@ -539,6 +425,121 @@ public class chat_command_service extends Service {
                 }
             }
         });
+    }
+
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    static boolean is_port_number(String str) {
+        for (int i = str.length(); --i >= 0; ) {
+            char c = str.charAt(i);
+            if (c == '-') {
+                continue;
+            }
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    class thread_handle implements Runnable {
+        @Override
+        public void run() {
+            Log.d(log_tag, "run: thread handle start");
+            int chat_int_id = 0;
+            try {
+                chat_int_id = Integer.parseInt(chat_id);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                //Avoid errors caused by unconvertible inputs.
+            }
+            if (chat_int_id < 0 && !have_bot_username) {
+                OkHttpClient okhttp_client_new = okhttp_client;
+                String request_uri = public_func.get_url(bot_token, "getMe");
+                Request request = new Request.Builder().url(request_uri).build();
+                Call call = okhttp_client_new.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                        e.printStackTrace();
+                        public_func.write_log(context, "Get username failed:" + e.getMessage());
+                    }
+
+                    @Override
+                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                        String result = Objects.requireNonNull(response.body()).string();
+                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                        if (result_obj.get("ok").getAsBoolean()) {
+                            bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
+                            have_bot_username = true;
+                            Log.d(log_tag, "bot_username: " + bot_username);
+                        }
+                    }
+                });
+            }
+            while (true) {
+                int read_timeout = 5 * magnification;
+                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
+                        .readTimeout((read_timeout + 5), TimeUnit.SECONDS)
+                        .writeTimeout((read_timeout + 5), TimeUnit.SECONDS)
+                        .build();
+                String request_uri = public_func.get_url(bot_token, "getUpdates");
+                polling_json request_body = new polling_json();
+                request_body.offset = offset;
+                request_body.timeout = read_timeout;
+                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+                Call call = okhttp_client_new.newCall(request);
+                Response response;
+                try {
+                    response = call.execute();
+                    error_magnification = 1;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if (!public_func.check_network_status(context)) {
+                        public_func.write_log(context, "No network connections available. ");
+                        break;
+                    }
+                    int sleep_time = 5 * error_magnification;
+                    public_func.write_log(context, "No network service,try again after " + sleep_time + " seconds.");
+                    magnification = 1;
+                    if (error_magnification <= 59) {
+                        error_magnification++;
+                    }
+                    try {
+                        Thread.sleep(sleep_time * 1000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    continue;
+
+                }
+                if (response.code() == 200) {
+                    assert response.body() != null;
+                    String result;
+                    try {
+                        result = Objects.requireNonNull(response.body()).string();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                    if (result_obj.get("ok").getAsBoolean()) {
+                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
+                        for (JsonElement item : result_array) {
+                            receive_handle(item.getAsJsonObject());
+                        }
+                    }
+                    if (magnification <= 11) {
+                        magnification++;
+                    }
+                }
+            }
+        }
     }
 
     private boolean is_wifi_opened(WifiManager wifiManager) {

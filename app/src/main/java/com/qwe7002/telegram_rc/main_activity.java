@@ -207,7 +207,7 @@ public class main_activity extends AppCompatActivity {
                     assert response.body() != null;
                     if (response.code() != 200) {
                         String result = Objects.requireNonNull(response.body()).string();
-                        JsonObject result_obj = new JsonParser().parse(result).getAsJsonObject();
+                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description").getAsString();
                         public_func.write_log(context, error_message);
                         Looper.prepare();
@@ -216,7 +216,7 @@ public class main_activity extends AppCompatActivity {
                         return;
                     }
                     String result = Objects.requireNonNull(response.body()).string();
-                    JsonObject result_obj = new JsonParser().parse(result).getAsJsonObject();
+                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                     JsonArray chat_list = result_obj.getAsJsonArray("result");
                     if (chat_list.size() == 0) {
                         Looper.prepare();
@@ -330,7 +330,7 @@ public class main_activity extends AppCompatActivity {
                     if (response.code() != 200) {
                         assert response.body() != null;
                         String result = Objects.requireNonNull(response.body()).string();
-                        JsonObject result_obj = new JsonParser().parse(result).getAsJsonObject();
+                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description");
                         public_func.write_log(context, error_message);
                         Looper.prepare();
