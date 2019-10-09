@@ -90,7 +90,7 @@ public class chat_command_service extends Service {
         if (!wakelock.isHeld()) {
             wakelock.acquire();
         }
-        thread_main = new Thread(new thread_handle());
+        thread_main = new Thread(new thread_main_runnable());
         thread_main.start();
         IntentFilter intentFilter = new IntentFilter(public_func.broadcast_stop_service);
         stop_broadcast_receiver = new stop_broadcast_receiver();
@@ -101,6 +101,80 @@ public class chat_command_service extends Service {
 
     }
 
+    class thread_main_runnable implements Runnable {
+        @Override
+        public void run() {
+            Log.d(log_tag, "run: thread main start");
+            int chat_int_id = 0;
+            try {
+                chat_int_id = Integer.parseInt(chat_id);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                //Avoid errors caused by unconvertible inputs.
+            }
+            if (chat_int_id < 0 && !have_bot_username) {
+                new Thread(chat_command_service.this::get_me).start();
+            }
+            while (true) {
+                int read_timeout = 5 * magnification;
+                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
+                        .readTimeout((read_timeout + 5), TimeUnit.SECONDS)
+                        .writeTimeout((read_timeout + 5), TimeUnit.SECONDS)
+                        .build();
+                String request_uri = public_func.get_url(bot_token, "getUpdates");
+                polling_json request_body = new polling_json();
+                request_body.offset = offset;
+                request_body.timeout = read_timeout;
+                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+                Call call = okhttp_client_new.newCall(request);
+                Response response;
+                try {
+                    response = call.execute();
+                    error_magnification = 1;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if (!public_func.check_network_status(context)) {
+                        public_func.write_log(context, "No network connections available. ");
+                        break;
+                    }
+                    int sleep_time = 5 * error_magnification;
+                    public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
+                    magnification = 1;
+                    if (error_magnification <= 59) {
+                        error_magnification++;
+                    }
+                    try {
+                        Thread.sleep(sleep_time * 1000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    continue;
+
+                }
+                if (response.code() == 200) {
+                    assert response.body() != null;
+                    String result;
+                    try {
+                        result = Objects.requireNonNull(response.body()).string();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                    if (result_obj.get("ok").getAsBoolean()) {
+                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
+                        for (JsonElement item : result_array) {
+                            receive_handle(item.getAsJsonObject());
+                        }
+                    }
+                    if (magnification <= 11) {
+                        magnification++;
+                    }
+                }
+            }
+        }
+    }
     @Override
     public void onDestroy() {
         wifiLock.release();
@@ -480,80 +554,7 @@ public class chat_command_service extends Service {
 
     }
 
-    class thread_handle implements Runnable {
-        @Override
-        public void run() {
-            Log.d(log_tag, "run: thread handle start");
-            int chat_int_id = 0;
-            try {
-                chat_int_id = Integer.parseInt(chat_id);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                //Avoid errors caused by unconvertible inputs.
-            }
-            if (chat_int_id < 0 && !have_bot_username) {
-                new Thread(chat_command_service.this::get_me).start();
-            }
-            while (true) {
-                int read_timeout = 5 * magnification;
-                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
-                        .readTimeout((read_timeout + 5), TimeUnit.SECONDS)
-                        .writeTimeout((read_timeout + 5), TimeUnit.SECONDS)
-                        .build();
-                String request_uri = public_func.get_url(bot_token, "getUpdates");
-                polling_json request_body = new polling_json();
-                request_body.offset = offset;
-                request_body.timeout = read_timeout;
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
-                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-                Call call = okhttp_client_new.newCall(request);
-                Response response;
-                try {
-                    response = call.execute();
-                    error_magnification = 1;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (!public_func.check_network_status(context)) {
-                        public_func.write_log(context, "No network connections available. ");
-                        break;
-                    }
-                    int sleep_time = 5 * error_magnification;
-                    public_func.write_log(context, "No network service,try again after " + sleep_time + " seconds.");
-                    magnification = 1;
-                    if (error_magnification <= 59) {
-                        error_magnification++;
-                    }
-                    try {
-                        Thread.sleep(sleep_time * 1000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                    continue;
 
-                }
-                if (response.code() == 200) {
-                    assert response.body() != null;
-                    String result;
-                    try {
-                        result = Objects.requireNonNull(response.body()).string();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        continue;
-                    }
-                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                    if (result_obj.get("ok").getAsBoolean()) {
-                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
-                        for (JsonElement item : result_array) {
-                            receive_handle(item.getAsJsonObject());
-                        }
-                    }
-                    if (magnification <= 11) {
-                        magnification++;
-                    }
-                }
-            }
-        }
-    }
 
     private boolean is_wifi_opened(WifiManager wifiManager) {
         int status = wifiManager.getWifiState();
@@ -619,7 +620,7 @@ public class chat_command_service extends Service {
             if (public_func.check_network_status(context)) {
                 if (!thread_main.isAlive()) {
                     public_func.write_log(context, "Network connections has been restored.");
-                    thread_main = new Thread(new thread_handle());
+                    thread_main = new Thread(new thread_main_runnable());
                     thread_main.start();
                 }
             }
