@@ -38,6 +38,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import uk.reall.root_kit.nadb;
 
 
 public class chat_command_service extends Service {
@@ -328,7 +329,7 @@ public class chat_command_service extends Service {
             case "/config_adb":
             case "/configadb":
                 if (sharedPreferences.getBoolean("root", false)) {
-                    uk.reall.NADB.NADB nadb = new uk.reall.NADB.NADB();
+                    nadb nadb = new nadb();
                     String[] command_list = request_msg.split(" ");
                     if (command_list.length > 1 && is_port_number(command_list[1]) && nadb.set_NADB(command_list[1])) {
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_success);
@@ -372,6 +373,17 @@ public class chat_command_service extends Service {
                     }).start();
                 }
                 has_command = true;
+                break;
+            case "/switch_data":
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(15000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    uk.reall.root_kit.data_switch.set_data_enabled(context);
+                }).start();
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                 break;
             case "/sendsms":
             case "/sendsms1":

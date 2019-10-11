@@ -48,6 +48,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import uk.reall.root_kit.nadb;
 
 
 public class main_activity extends AppCompatActivity {
@@ -152,7 +153,7 @@ public class main_activity extends AppCompatActivity {
         battery_monitoring_switch.setOnClickListener(v -> charger_status.setEnabled(battery_monitoring_switch.isChecked()));
 
         config_adb_switch.setOnClickListener(view -> new Thread(() -> {
-            uk.reall.NADB.NADB nadb = new uk.reall.NADB.NADB();
+            nadb nadb = new nadb();
             if (!nadb.check_root()) {
                 runOnUiThread(() -> config_adb_switch.setChecked(false));
 

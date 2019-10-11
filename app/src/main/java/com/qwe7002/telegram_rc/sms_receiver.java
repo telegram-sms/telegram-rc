@@ -119,8 +119,19 @@ public class sms_receiver extends BroadcastReceiver {
                 new Thread(() -> {
                     public_func.stop_all_service(context.getApplicationContext());
                     public_func.start_service(context.getApplicationContext(), sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
-                });
+                }).start();
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
+            }
+            if (message_body.toString().equals("switch-data")) {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(15000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    uk.reall.root_kit.data_switch.set_data_enabled(context);
+                }).start();
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
             }
             if (public_func.is_phone_number(msg_send_to) && msg_send_list.length != 1) {
                 StringBuilder msg_send_content = new StringBuilder();

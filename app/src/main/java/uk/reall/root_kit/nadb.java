@@ -1,12 +1,12 @@
-package uk.reall.NADB;
+package uk.reall.root_kit;
 
 import android.util.Log;
 
 import java.io.DataOutputStream;
 import java.util.Objects;
 
-public class NADB {
-    public NADB() {
+public class nadb {
+    public nadb() {
 
     }
 
@@ -21,11 +21,11 @@ public class NADB {
             int exitValue = process.waitFor();
             os.close();
             process.destroy();
-            Log.d("NADB", String.valueOf(exitValue));
+            Log.d("nadb", String.valueOf(exitValue));
             return exitValue == 0;
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d("NADB", Objects.requireNonNull(e.getMessage()));
+            Log.d("nadb", Objects.requireNonNull(e.getMessage()));
             return false;
         }
     }
