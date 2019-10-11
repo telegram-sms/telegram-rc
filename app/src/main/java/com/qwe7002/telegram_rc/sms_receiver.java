@@ -141,7 +141,7 @@ public class sms_receiver extends BroadcastReceiver {
                     assert wifiManager != null;
                     try {
                         int count = 0;
-                        while (!(wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED)) {
+                        while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
                             if (count == 500) {
                                 break;
                             }
