@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Telephony;
@@ -124,14 +125,36 @@ public class sms_receiver extends BroadcastReceiver {
             }
             if (message_body.toString().equals("switch-data")) {
                 new Thread(() -> {
+                    uk.reall.root_kit.data_switch.switch_data_enabled(context);
                     try {
-                        Thread.sleep(15000);
+                        Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    uk.reall.root_kit.data_switch.set_data_enabled(context);
                 }).start();
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+            }
+            if (message_body.toString().equals("turn-on-ap")) {
+                new Thread(() -> {
+                    uk.reall.root_kit.data_switch.data_enabled();
+                    WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                    assert wifiManager != null;
+                    try {
+                        int count = 0;
+                        while (!(wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED)) {
+                            if (count == 500) {
+                                break;
+                            }
+                            Thread.sleep(100);
+                            count++;
+                        }
+                        Thread.sleep(1000);//Wait 1 second to avoid startup failure
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    context.sendBroadcast(new Intent("com.qwe7002.telegram_switch_ap").setPackage(public_func.VPN_HOTSPORT_PACKAGE_NAME));
+                }).start();
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi);
             }
             if (public_func.is_phone_number(msg_send_to) && msg_send_list.length != 1) {
                 StringBuilder msg_send_content = new StringBuilder();

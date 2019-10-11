@@ -55,6 +55,7 @@ import okhttp3.dnsoverhttps.DnsOverHttps;
 class public_func {
     static final String network_error = "Send Message:No network connection.";
     static final String broadcast_stop_service = "com.qwe7002.telegram_rc.stop_all";
+    static final String VPN_HOTSPORT_PACKAGE_NAME = "be.mygod.vpnhotspot";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final CodeauxLibPortable parser = new CodeauxLibPortable();
 

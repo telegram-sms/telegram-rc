@@ -38,9 +38,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import uk.reall.root_kit.nadb;
 
 
+@SuppressWarnings("SpellCheckingInspection")
 public class chat_command_service extends Service {
     private static long offset = 0;
     private static int magnification = 1;
@@ -58,7 +58,7 @@ public class chat_command_service extends Service {
     private SharedPreferences sharedPreferences;
     private String bot_username = "";
     final String log_tag = "chat_command";
-    private final String VPN_HOTSPORT_PACKAGE_NAME = "be.mygod.vpnhotspot";
+
     static Thread thread_main;
     private network_changed_receiver network_changed_receiver;
     private boolean have_bot_username = false;
@@ -176,6 +176,7 @@ public class chat_command_service extends Service {
             }
         }
     }
+
     @Override
     public void onDestroy() {
         wifiLock.release();
@@ -329,9 +330,8 @@ public class chat_command_service extends Service {
             case "/config_adb":
             case "/configadb":
                 if (sharedPreferences.getBoolean("root", false)) {
-                    nadb nadb = new nadb();
                     String[] command_list = request_msg.split(" ");
-                    if (command_list.length > 1 && is_port_number(command_list[1]) && nadb.set_NADB(command_list[1])) {
+                    if (command_list.length > 1 && is_port_number(command_list[1]) && uk.reall.root_kit.nadb.set_nadb(command_list[1])) {
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_success);
                     } else {
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_failed);
@@ -360,28 +360,34 @@ public class chat_command_service extends Service {
                 if (wifi_open) {
                     new Thread(() -> {
                         try {
-                            while (!is_wifi_opened(wifiManager)) {
+                            int count = 0;
+                            while (!(wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED)) {
+                                if (count == 500) {
+                                    break;
+                                }
                                 Thread.sleep(100);
+                                count++;
                             }
                             Thread.sleep(1000);//Wait 1 second to avoid startup failure
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
-                        intent.setPackage(VPN_HOTSPORT_PACKAGE_NAME);
+                        intent.setPackage(public_func.VPN_HOTSPORT_PACKAGE_NAME);
                         sendBroadcast(intent);
                     }).start();
                 }
                 has_command = true;
                 break;
             case "/switch_data":
+            case "/switchdata":
                 new Thread(() -> {
+                    uk.reall.root_kit.data_switch.switch_data_enabled(context);
                     try {
-                        Thread.sleep(15000);
+                        Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    uk.reall.root_kit.data_switch.set_data_enabled(context);
                 }).start();
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                 break;
@@ -567,12 +573,6 @@ public class chat_command_service extends Service {
     }
 
 
-
-    private boolean is_wifi_opened(WifiManager wifiManager) {
-        int status = wifiManager.getWifiState();
-        return status == WifiManager.WIFI_STATE_ENABLED;
-    }
-
     private String get_battery_info(Context context) {
         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
@@ -608,7 +608,7 @@ public class chat_command_service extends Service {
     boolean is_vpn_hotsport_exist() {
         ApplicationInfo info;
         try {
-            info = getPackageManager().getApplicationInfo(VPN_HOTSPORT_PACKAGE_NAME, 0);
+            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPORT_PACKAGE_NAME, 0);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             info = null;

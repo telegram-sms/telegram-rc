@@ -48,7 +48,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import uk.reall.root_kit.nadb;
 
 
 public class main_activity extends AppCompatActivity {
@@ -153,8 +152,7 @@ public class main_activity extends AppCompatActivity {
         battery_monitoring_switch.setOnClickListener(v -> charger_status.setEnabled(battery_monitoring_switch.isChecked()));
 
         config_adb_switch.setOnClickListener(view -> new Thread(() -> {
-            nadb nadb = new nadb();
-            if (!nadb.check_root()) {
+            if (!uk.reall.root_kit.root_kit.check_root()) {
                 runOnUiThread(() -> config_adb_switch.setChecked(false));
 
             }
@@ -233,19 +231,19 @@ public class main_activity extends AppCompatActivity {
                             JsonObject message_obj = item_obj.get("message").getAsJsonObject();
                             JsonObject chat_obj = message_obj.get("chat").getAsJsonObject();
                             if (!chat_id_list.contains(chat_obj.get("id").getAsString())) {
-                                String username = "";
+                                StringBuilder username = new StringBuilder();
                                 if (chat_obj.has("username")) {
-                                    username = chat_obj.get("username").getAsString();
+                                    username = new StringBuilder(chat_obj.get("username").getAsString());
                                 }
                                 if (chat_obj.has("title")) {
-                                    username = chat_obj.get("title").getAsString();
+                                    username = new StringBuilder(chat_obj.get("title").getAsString());
                                 }
-                                if (username.equals("") && !chat_obj.has("username")) {
+                                if (username.toString().equals("") && !chat_obj.has("username")) {
                                     if (chat_obj.has("first_name")) {
-                                        username = chat_obj.get("first_name").getAsString();
+                                        username = new StringBuilder(chat_obj.get("first_name").getAsString());
                                     }
                                     if (chat_obj.has("last_name")) {
-                                        username += " " + chat_obj.get("last_name").getAsString();
+                                        username.append(" ").append(chat_obj.get("last_name").getAsString());
                                     }
                                 }
                                 chat_name_list.add(username + "(" + chat_obj.get("type").getAsString() + ")");
