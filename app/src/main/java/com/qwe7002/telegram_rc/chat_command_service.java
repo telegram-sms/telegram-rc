@@ -362,7 +362,7 @@ public class chat_command_service extends Service {
                         try {
                             int count = 0;
                             while (!(wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED)) {
-                                if (count == 500) {
+                                if (count == 600) {
                                     break;
                                 }
                                 Thread.sleep(100);
