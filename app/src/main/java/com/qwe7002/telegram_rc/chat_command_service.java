@@ -372,9 +372,7 @@ public class chat_command_service extends Service {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        Intent intent = new Intent("com.qwe7002.telegram_switch_ap");
-                        intent.setPackage(public_func.VPN_HOTSPORT_PACKAGE_NAME);
-                        sendBroadcast(intent);
+                        sendBroadcast(new Intent("com.qwe7002.telegram_switch_ap").setPackage(public_func.VPN_HOTSPORT_PACKAGE_NAME));
                     }).start();
                 }
                 has_command = true;
