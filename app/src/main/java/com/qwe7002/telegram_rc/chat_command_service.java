@@ -379,15 +379,19 @@ public class chat_command_service extends Service {
                 break;
             case "/switch_data":
             case "/switchdata":
-                new Thread(() -> {
-                    uk.reall.root_kit.data_switch.switch_data_enabled(context);
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }).start();
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                if (sharedPreferences.getBoolean("root", false)) {
+                    new Thread(() -> {
+                        uk.reall.root_kit.data_switch.switch_data_enabled(context);
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                    request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                } else {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                }
                 break;
             case "/sendsms":
             case "/sendsms1":

@@ -8,5 +8,5 @@
     <string name="not_getting_root">没有获得root权限</string>
     <string name="adb_set_success">网络adb设置已完成。</string>
     <string name="adb_set_failed">网络adb设置失败。</string>
-    <string name="nadb_switch">[root]远程配置网络adb</string>
+    <string name="root_switch">允许Root高级功能</string>
 </resources>

@@ -8,5 +8,5 @@
     <string name="not_getting_root">ルート権限を取得していません。</string>
     <string name="adb_set_success">ネットワークadbのセットアップが完了しました。</string>
     <string name="adb_set_failed">ネットワークadbのセットアップに失敗しました。</string>
-    <string name="nadb_switch">[ルート]リモート構成ネットワークadb</string>
+    <string name="root_switch">ルートの高度な機能を許可する</string>
 </resources>

@@ -131,7 +131,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingStart="3dp"
-                android:text="@string/nadb_switch"
+                android:text="@string/root_switch"
                 tools:ignore="RtlSymmetry" />
             <Switch
                     android:id="@+id/doh_switch"

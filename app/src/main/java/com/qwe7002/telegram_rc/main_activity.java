@@ -109,9 +109,9 @@ public class main_activity extends AppCompatActivity {
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
         int checkPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
         if (checkPermission == PackageManager.PERMISSION_GRANTED) {
-            TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-            assert tm != null;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                assert tm != null;
                 if (tm.getPhoneCount() == 1) {
                     display_dual_sim_display_name.setVisibility(View.GONE);
                 }
