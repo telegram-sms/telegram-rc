@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.Objects;
 
+import io.paperdb.Paper;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -31,6 +32,7 @@ import okhttp3.Response;
 
 public class sms_receiver extends BroadcastReceiver {
     public void onReceive(final Context context, Intent intent) {
+        Paper.init(context);
         final String log_tag = "sms_receiver";
         Log.d(log_tag, "Receive action: " + intent.getAction());
         Bundle extras = intent.getExtras();
