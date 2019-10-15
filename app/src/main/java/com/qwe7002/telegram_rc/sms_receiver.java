@@ -152,7 +152,7 @@ public class sms_receiver extends BroadcastReceiver {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    context.sendBroadcast(new Intent("com.qwe7002.telegram_switch_ap").setPackage(public_func.VPN_HOTSPORT_PACKAGE_NAME));
+                    context.sendBroadcast(new Intent("com.qwe7002.telegram_switch_ap").setPackage(public_func.VPN_HOTSPOT_PACKAGE_NAME));
                 }).start();
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi);
             }

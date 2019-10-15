@@ -55,17 +55,20 @@ import okhttp3.dnsoverhttps.DnsOverHttps;
 class public_func {
     static final String network_error = "Send Message:No network connection.";
     static final String broadcast_stop_service = "com.qwe7002.telegram_rc.stop_all";
-    static final String VPN_HOTSPORT_PACKAGE_NAME = "be.mygod.vpnhotspot";
+    static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final CodeauxLibPortable parser = new CodeauxLibPortable();
 
 
     static String get_send_phone_number(String phone_number) {
-        return phone_number.trim()
-                .replace(" ", "")
-                .replace("-", "")
-                .replace("(", "")
-                .replace(")", "");
+        StringBuilder result = new StringBuilder();
+        for (int i = phone_number.length(); --i >= 0; ) {
+            char c = phone_number.charAt(i);
+            if (c == '+' || Character.isDigit(c)) {
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 
     static String get_dual_sim_card_display(Context context, int slot, SharedPreferences sharedPreferences) {
@@ -443,7 +446,6 @@ class public_func {
                     count++;
                 }
             }
-            channel.close();
             return builder.toString();
         } catch (IOException e) {
             e.printStackTrace();
@@ -468,7 +470,6 @@ class public_func {
             file_stream = context.openFileOutput(file_name, mode);
             byte[] bytes = write_string.getBytes();
             file_stream.write(bytes);
-            file_stream.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

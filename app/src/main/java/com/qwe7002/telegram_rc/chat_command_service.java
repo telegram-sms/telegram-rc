@@ -372,7 +372,7 @@ public class chat_command_service extends Service {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        sendBroadcast(new Intent("com.qwe7002.telegram_switch_ap").setPackage(public_func.VPN_HOTSPORT_PACKAGE_NAME));
+                        sendBroadcast(new Intent("com.qwe7002.telegram_switch_ap").setPackage(public_func.VPN_HOTSPOT_PACKAGE_NAME));
                     }).start();
                 }
                 has_command = true;
@@ -610,7 +610,7 @@ public class chat_command_service extends Service {
     boolean is_vpn_hotsport_exist() {
         ApplicationInfo info;
         try {
-            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPORT_PACKAGE_NAME, 0);
+            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             info = null;
