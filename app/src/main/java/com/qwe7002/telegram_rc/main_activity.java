@@ -16,6 +16,7 @@ import android.os.PowerManager;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,6 +40,7 @@ import com.google.gson.JsonParser;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +56,7 @@ import okhttp3.Response;
 public class main_activity extends AppCompatActivity {
     private Context context = null;
     private Switch display_dual_sim_display_name;
-
+    private final String log_tag = "main_activity";
     @SuppressLint("BatteryLife")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +85,27 @@ public class main_activity extends AppCompatActivity {
         String chat_id_save = sharedPreferences.getString("chat_id", "");
         if (sharedPreferences.getBoolean("initialized", false)) {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+            if (!sharedPreferences.getBoolean("conversion_data_structure", false)) {
+                new Thread(() -> {
+                    String message_list_raw = public_func.read_file(context, "message.json");
+                    if (message_list_raw.length() == 0) {
+                        message_list_raw = "{}";
+                    }
+                    JsonObject message_list = JsonParser.parseString(message_list_raw).getAsJsonObject();
+                    for (Map.Entry<String, JsonElement> entry_set : message_list.entrySet()) {
+                        JsonObject json_item = entry_set.getValue().getAsJsonObject();
+                        message_item item = new message_item();
+                        item.phone = json_item.get("phone").getAsString();
+                        item.card = json_item.get("card").getAsInt();
+                        item.sub_id = json_item.get("sub_id").getAsInt();
+                        Paper.book().write(entry_set.getKey(), item);
+                        Log.d(log_tag, "add_message_list: " + entry_set.getKey());
+                    }
+                    Log.d(log_tag, "The conversion is complete.");
+                    public_func.write_file(context, "message.json", "", Context.MODE_PRIVATE);
+                    sharedPreferences.edit().putBoolean("conversion_data_structure", true).apply();
+                }).start();
+            }
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -359,6 +382,7 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("root", config_adb_switch.isChecked());
                     editor.putBoolean("doh_switch", doh_switch.isChecked());
                     editor.putBoolean("initialized", true);
+                    editor.putBoolean("conversion_data_structure", true);
                     editor.apply();
                     new Thread(() -> {
                         public_func.stop_all_service(context);
