@@ -243,7 +243,7 @@ public class chat_command_service extends Service {
             case "/configadb":
                 if (sharedPreferences.getBoolean("root", false)) {
                     String[] command_list = request_msg.split(" ");
-                    if (command_list.length > 1 && is_port_number(command_list[1]) && uk.reall.root_kit.nadb.set_nadb(command_list[1])) {
+                    if (command_list.length > 1 && uk.reall.root_kit.nadb.set_nadb(command_list[1])) {
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_success);
                     } else {
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_failed);
@@ -498,18 +498,7 @@ public class chat_command_service extends Service {
         return null;
     }
 
-    static boolean is_port_number(String str) {
-        for (int i = str.length(); --i >= 0; ) {
-            char c = str.charAt(i);
-            if (c == '-') {
-                continue;
-            }
-            if (!Character.isDigit(c)) {
-                return false;
-            }
-        }
-        return true;
-    }
+
 
     class thread_main_runnable implements Runnable {
         @Override
@@ -584,6 +573,37 @@ public class chat_command_service extends Service {
                     }
                     if (magnification <= 11) {
                         magnification++;
+                    }
+                } else {
+                    switch (response.code()) {
+                        case 401:
+                        case 409:
+                            String result;
+                            try {
+                                result = Objects.requireNonNull(response.body()).string();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                result = "{\"description\":\"Unknown\"}";
+                            }
+                            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                            message_json error_request_body = new message_json();
+                            error_request_body.chat_id = chat_id;
+                            error_request_body.text = "[ERROR MESSAGE]\nA serious problem has occurred and the program has stopped running.\nError code: " + response.code() + "\nError message: " + result_obj.get("description").getAsString();
+
+                            RequestBody error_request = RequestBody.create(new Gson().toJson(error_request_body), public_func.JSON);
+                            Request send_request = new Request.Builder().url(public_func.get_url(bot_token, "sendMessage")).method("POST", error_request).build();
+                            Call error_call = okhttp_client.newCall(send_request);
+                            try {
+                                error_call.execute();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            Log.d(log_tag, "run: Serious failure, Stop self");
+                            stopSelf();
+                            android.os.Process.killProcess(android.os.Process.myPid());
+                            return;//break while
+                        default:
+                            public_func.write_log(context, "response code:" + response.code());
                     }
                 }
             }
