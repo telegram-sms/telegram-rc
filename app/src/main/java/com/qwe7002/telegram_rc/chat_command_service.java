@@ -39,6 +39,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import uk.reall.root_kit.network;
 
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -62,7 +63,6 @@ public class chat_command_service extends Service {
 
     static Thread thread_main;
     private network_changed_receiver network_changed_receiver;
-    private boolean have_bot_username = false;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -106,91 +106,6 @@ public class chat_command_service extends Service {
 
     }
 
-    class thread_main_runnable implements Runnable {
-        @Override
-        public void run() {
-            Log.d(log_tag, "run: thread main start");
-            int chat_int_id = 0;
-            try {
-                chat_int_id = Integer.parseInt(chat_id);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                //Avoid errors caused by unconvertible inputs.
-            }
-            if (chat_int_id < 0 && !have_bot_username) {
-                new Thread(chat_command_service.this::get_me).start();
-            }
-            while (true) {
-                int read_timeout = 5 * magnification;
-                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
-                        .readTimeout((read_timeout + 5), TimeUnit.SECONDS)
-                        .writeTimeout((read_timeout + 5), TimeUnit.SECONDS)
-                        .build();
-                String request_uri = public_func.get_url(bot_token, "getUpdates");
-                polling_json request_body = new polling_json();
-                request_body.offset = offset;
-                request_body.timeout = read_timeout;
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
-                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-                Call call = okhttp_client_new.newCall(request);
-                Response response;
-                try {
-                    response = call.execute();
-                    error_magnification = 1;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (!public_func.check_network_status(context)) {
-                        public_func.write_log(context, "No network connections available. ");
-                        break;
-                    }
-                    int sleep_time = 5 * error_magnification;
-                    public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
-                    magnification = 1;
-                    if (error_magnification <= 59) {
-                        error_magnification++;
-                    }
-                    try {
-                        Thread.sleep(sleep_time * 1000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                    continue;
-
-                }
-                if (response.code() == 200) {
-                    assert response.body() != null;
-                    String result;
-                    try {
-                        result = Objects.requireNonNull(response.body()).string();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        continue;
-                    }
-                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                    if (result_obj.get("ok").getAsBoolean()) {
-                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
-                        for (JsonElement item : result_array) {
-                            receive_handle(item.getAsJsonObject());
-                        }
-                    }
-                    if (magnification <= 11) {
-                        magnification++;
-                    }
-                }
-            }
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        wifiLock.release();
-        wakelock.release();
-        unregisterReceiver(stop_broadcast_receiver);
-        unregisterReceiver(network_changed_receiver);
-        stopForeground(true);
-        super.onDestroy();
-    }
-
     private void receive_handle(JsonObject result_obj) {
         String message_type = "";
         long update_id = result_obj.get("update_id").getAsLong();
@@ -213,7 +128,7 @@ public class chat_command_service extends Service {
         JsonObject from_obj = null;
         final boolean message_type_is_group = message_type.contains("group");
         final boolean message_type_is_private = message_type.equals("private");
-        if (message_type_is_group && !have_bot_username) {
+        if (message_type_is_group && bot_username == null) {
             Log.i(log_tag, "receive_handle: Did not successfully get bot_username.");
             get_me();
         }
@@ -378,12 +293,27 @@ public class chat_command_service extends Service {
             case "/switchdata":
                 if (sharedPreferences.getBoolean("root", false)) {
                     new Thread(() -> {
-                        uk.reall.root_kit.data_switch.switch_data_enabled(context);
                         try {
-                            Thread.sleep(5000);
+                            Thread.sleep(10000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+                        network.switch_data_enabled(context);
+                    }).start();
+                    request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                } else {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                }
+                break;
+            case "/restart_network":
+                if (sharedPreferences.getBoolean("root", false)) {
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        uk.reall.root_kit.network.restart_network();
                     }).start();
                     request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                 } else {
@@ -521,23 +451,14 @@ public class chat_command_service extends Service {
         });
     }
 
-
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    static boolean is_port_number(String str) {
-        for (int i = str.length(); --i >= 0; ) {
-            char c = str.charAt(i);
-            if (c == '-') {
-                continue;
-            }
-            if (!Character.isDigit(c)) {
-                return false;
-            }
-        }
-        return true;
+    public void onDestroy() {
+        wifiLock.release();
+        wakelock.release();
+        unregisterReceiver(stop_broadcast_receiver);
+        unregisterReceiver(network_changed_receiver);
+        stopForeground(true);
+        super.onDestroy();
     }
 
     private void get_me() {
@@ -564,11 +485,109 @@ public class chat_command_service extends Service {
             JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
             if (result_obj.get("ok").getAsBoolean()) {
                 bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                have_bot_username = true;
+                sharedPreferences.edit().putString("bot_username", bot_username).apply();
                 Log.d(log_tag, "bot_username: " + bot_username);
             }
         }
 
+    }
+
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    static boolean is_port_number(String str) {
+        for (int i = str.length(); --i >= 0; ) {
+            char c = str.charAt(i);
+            if (c == '-') {
+                continue;
+            }
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    class thread_main_runnable implements Runnable {
+        @Override
+        public void run() {
+            Log.d(log_tag, "run: thread main start");
+            int chat_int_id = 0;
+            try {
+                chat_int_id = Integer.parseInt(chat_id);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                //Avoid errors caused by unconvertible inputs.
+            }
+            if (chat_int_id < 0) {
+                bot_username = sharedPreferences.getString("bot_username", null);
+                Log.d(log_tag, "Load bot_username from storage: " + bot_username);
+                if (bot_username == null) {
+                    new Thread(chat_command_service.this::get_me).start();
+                }
+            }
+            while (true) {
+                int read_timeout = 5 * magnification;
+                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
+                        .readTimeout((read_timeout + 5), TimeUnit.SECONDS)
+                        .writeTimeout((read_timeout + 5), TimeUnit.SECONDS)
+                        .build();
+                String request_uri = public_func.get_url(bot_token, "getUpdates");
+                polling_json request_body = new polling_json();
+                request_body.offset = offset;
+                request_body.timeout = read_timeout;
+                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+                Call call = okhttp_client_new.newCall(request);
+                Response response;
+                try {
+                    response = call.execute();
+                    error_magnification = 1;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if (!public_func.check_network_status(context)) {
+                        public_func.write_log(context, "No network connections available. ");
+                        break;
+                    }
+                    int sleep_time = 5 * error_magnification;
+                    public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
+                    magnification = 1;
+                    if (error_magnification <= 59) {
+                        error_magnification++;
+                    }
+                    try {
+                        Thread.sleep(sleep_time * 1000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    continue;
+
+                }
+                if (response.code() == 200) {
+                    assert response.body() != null;
+                    String result;
+                    try {
+                        result = Objects.requireNonNull(response.body()).string();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                    if (result_obj.get("ok").getAsBoolean()) {
+                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
+                        for (JsonElement item : result_array) {
+                            receive_handle(item.getAsJsonObject());
+                        }
+                    }
+                    if (magnification <= 11) {
+                        magnification++;
+                    }
+                }
+            }
+        }
     }
 
 
