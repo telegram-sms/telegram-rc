@@ -657,7 +657,7 @@ public class chat_command_service extends Service {
         return info != null;
     }
 
-    class stop_broadcast_receiver extends BroadcastReceiver {
+    private class stop_broadcast_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.i(log_tag, "Received stop signal, quitting now...");
@@ -666,7 +666,7 @@ public class chat_command_service extends Service {
         }
     }
 
-    class network_changed_receiver extends BroadcastReceiver {
+    private class network_changed_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (public_func.check_network_status(context)) {
