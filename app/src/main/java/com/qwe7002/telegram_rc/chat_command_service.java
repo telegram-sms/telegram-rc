@@ -539,6 +539,8 @@ public class chat_command_service extends Service {
                     e.printStackTrace();
                     if (!public_func.check_network_status(context)) {
                         public_func.write_log(context, "No network connections available. ");
+                        error_magnification = 1;
+                        magnification = 1;
                         break;
                     }
                     int sleep_time = 5 * error_magnification;
