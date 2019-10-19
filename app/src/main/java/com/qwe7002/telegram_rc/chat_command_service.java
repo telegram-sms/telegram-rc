@@ -59,7 +59,7 @@ public class chat_command_service extends Service {
     private String send_to_temp;
     private SharedPreferences sharedPreferences;
     private String bot_username = "";
-    final String log_tag = "chat_command";
+    final String TAG = "chat_command";
 
     static Thread thread_main;
     private network_changed_receiver network_changed_receiver;
@@ -129,13 +129,13 @@ public class chat_command_service extends Service {
         final boolean message_type_is_group = message_type.contains("group");
         final boolean message_type_is_private = message_type.equals("private");
         if (message_type_is_group && bot_username == null) {
-            Log.i(log_tag, "receive_handle: Did not successfully get bot_username.");
+            Log.i(TAG, "receive_handle: Did not successfully get bot_username.");
             get_me();
         }
         if (message_obj.has("from")) {
             from_obj = message_obj.get("from").getAsJsonObject();
             if (message_type_is_group && from_obj.get("is_bot").getAsBoolean()) {
-                Log.i(log_tag, "receive_handle: receive from bot.");
+                Log.i(TAG, "receive_handle: receive from bot.");
                 return;
             }
         }
@@ -169,7 +169,7 @@ public class chat_command_service extends Service {
                 return;
             }
             if (message_type_is_group) {
-                Log.i(log_tag, "receive_handle: The message id could not be found, ignored.");
+                Log.i(TAG, "receive_handle: The message id could not be found, ignored.");
                 return;
             }
         }
@@ -191,7 +191,7 @@ public class chat_command_service extends Service {
             }
         }
         if (message_type_is_group && !command_bot_username.equals(bot_username)) {
-            Log.i(log_tag, "receive_handle: This is a Group conversation, but no conversation object was found.");
+            Log.i(TAG, "receive_handle: This is a Group conversation, but no conversation object was found.");
             return;
 
         }
@@ -377,7 +377,7 @@ public class chat_command_service extends Service {
                 break;
             default:
                 if (!message_type_is_private) {
-                    Log.i(log_tag, "receive_handle: The conversation is not Private and does not prompt an error.");
+                    Log.i(TAG, "receive_handle: The conversation is not Private and does not prompt an error.");
                     return;
                 }
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
@@ -388,11 +388,11 @@ public class chat_command_service extends Service {
                 case 0:
                     send_sms_status = 1;
                     request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_number);
-                    Log.i(log_tag, "receive_handle: Enter the interactive SMS sending mode.");
+                    Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.");
                     break;
                 case 1:
                     String temp_to = public_func.get_send_phone_number(request_msg);
-                    Log.d(log_tag, "receive_handle: " + temp_to);
+                    Log.d(TAG, "receive_handle: " + temp_to);
                     if (public_func.is_phone_number(temp_to)) {
                         send_to_temp = temp_to;
                         request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_content);
@@ -486,7 +486,7 @@ public class chat_command_service extends Service {
             if (result_obj.get("ok").getAsBoolean()) {
                 bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
                 sharedPreferences.edit().putString("bot_username", bot_username).apply();
-                Log.d(log_tag, "bot_username: " + bot_username);
+                Log.d(TAG, "bot_username: " + bot_username);
             }
         }
 
@@ -503,7 +503,7 @@ public class chat_command_service extends Service {
     class thread_main_runnable implements Runnable {
         @Override
         public void run() {
-            Log.d(log_tag, "run: thread main start");
+            Log.d(TAG, "run: thread main start");
             int chat_int_id = 0;
             try {
                 chat_int_id = Integer.parseInt(chat_id);
@@ -513,7 +513,7 @@ public class chat_command_service extends Service {
             }
             if (chat_int_id < 0) {
                 bot_username = sharedPreferences.getString("bot_username", null);
-                Log.d(log_tag, "Load bot_username from storage: " + bot_username);
+                Log.d(TAG, "Load bot_username from storage: " + bot_username);
                 if (bot_username == null) {
                     new Thread(chat_command_service.this::get_me).start();
                 }
@@ -600,7 +600,7 @@ public class chat_command_service extends Service {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            Log.d(log_tag, "run: Serious failure, Stop self");
+                            Log.d(TAG, "run: Serious failure, Stop self");
                             stopSelf();
                             android.os.Process.killProcess(android.os.Process.myPid());
                             return;//break while
@@ -660,7 +660,7 @@ public class chat_command_service extends Service {
     private class stop_broadcast_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.i(log_tag, "Received stop signal, quitting now...");
+            Log.i(TAG, "Received stop signal, quitting now...");
             stopSelf();
             android.os.Process.killProcess(android.os.Process.myPid());
         }

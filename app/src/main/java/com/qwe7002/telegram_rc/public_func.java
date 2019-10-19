@@ -71,14 +71,17 @@ class public_func {
         return result.toString();
     }
 
-    static String get_dual_sim_card_display(Context context, int slot, SharedPreferences sharedPreferences) {
+    static String get_dual_sim_card_display(Context context, int slot, boolean show_name) {
         String dual_sim = "";
         if (slot == -1) {
             return dual_sim;
         }
         if (public_func.get_active_card(context) >= 2) {
-            String display_name = public_func.get_sim_name_title(context, sharedPreferences, slot);
-            dual_sim = "SIM" + (slot + 1) + display_name + " ";
+            String result = "";
+            if (show_name) {
+                result = "(" + get_sim_display_name(context, slot) + ")";
+            }
+            dual_sim = "SIM" + (slot + 1) + result + " ";
         }
         return dual_sim;
     }
@@ -246,7 +249,7 @@ class public_func {
         } else {
             sms_manager = SmsManager.getSmsManagerForSubscriptionId(sub_id);
         }
-        String dual_sim = get_dual_sim_card_display(context, slot, sharedPreferences);
+        String dual_sim = get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
         String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + send_to + "\n" + context.getString(R.string.content) + content;
         String message_id = "-1";
         request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.sending);
@@ -281,14 +284,14 @@ class public_func {
     }
 
     static void send_fallback_sms(Context context, String content, int sub_id) {
-        final String log_tag = "send_fallback_sms";
+        final String TAG = "send_fallback_sms";
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
-            Log.d(log_tag, ": No permission.");
+            Log.d(TAG, ": No permission.");
             return;
         }
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         if (!sharedPreferences.getBoolean("fallback_sms", false)) {
-            Log.d(log_tag, "send_fallback_sms: Fallback SMS is not enabled.");
+            Log.d(TAG, "send_fallback_sms: Fallback SMS is not enabled.");
             return;
         }
         android.telephony.SmsManager sms_manager;
@@ -377,27 +380,21 @@ class public_func {
         return SubscriptionManager.from(context).getActiveSubscriptionInfoCount();
     }
 
-    private static String get_sim_name_title(Context context, SharedPreferences sharedPreferences, int slot) {
-        String result = "";
-        if (sharedPreferences.getBoolean("display_dual_sim_display_name", false)) {
-            result = "(" + get_sim_display_name(context, slot) + ")";
-        }
-        return result;
-    }
-
     static String get_sim_display_name(Context context, int slot) {
+        final String TAG = "get_sim_display_name";
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "No permission.");
             return result;
+        }
+        if (get_active_card(context) == 1) {
+            slot = -1;
+            Log.d(TAG, "There is only one active card.");
         }
         SubscriptionInfo info = SubscriptionManager.from(context).getActiveSubscriptionInfoForSimSlotIndex(slot);
         if (info == null) {
-            if (get_active_card(context) == 1 && slot == 0) {
-                info = SubscriptionManager.from(context).getActiveSubscriptionInfoForSimSlotIndex(1);
-            }
-            if (info == null) {
-                return result;
-            }
+            Log.d(TAG, "get_sim_display_name: ");
+            return result;
         }
         result = info.getDisplayName().toString();
         if (info.getDisplayName().toString().contains("CARD") || info.getDisplayName().toString().contains("SUB")) {
