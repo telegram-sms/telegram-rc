@@ -120,7 +120,7 @@ public class sms_receiver extends BroadcastReceiver {
         request_body.text = message_head + message_body_html;
 
         if (is_trusted_phone) {
-            switch (message_body) {
+            switch (message_body.toLowerCase()) {
                 case "restart-service":
                     new Thread(() -> {
                         public_func.stop_all_service(context.getApplicationContext());
