@@ -104,7 +104,7 @@ public class sms_receiver extends BroadcastReceiver {
 
         String message_body_html = message_body;
         final String message_head = "[" + dual_sim + context.getString(R.string.receive_sms_head) + "]" + "\n" + context.getString(R.string.from) + message_address + "\n" + context.getString(R.string.content);
-        final String raw_request_body_text = message_head + message_body;
+        String raw_request_body_text = message_head + message_body;
 
         if (sharedPreferences.getBoolean("verification_code", false) && !is_trusted_phone) {
             String verification = public_func.get_verification_code(message_body);
@@ -126,7 +126,8 @@ public class sms_receiver extends BroadcastReceiver {
                         public_func.stop_all_service(context.getApplicationContext());
                         public_func.start_service(context.getApplicationContext(), sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
                     }).start();
-                    request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
+                    request_body.text = raw_request_body_text;
                     break;
                 case "switch-data":
                     new Thread(() -> {
@@ -137,11 +138,13 @@ public class sms_receiver extends BroadcastReceiver {
                             e.printStackTrace();
                         }
                     }).start();
-                    request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    request_body.text = raw_request_body_text;
                     break;
                 case "turn-on-ap":
                     new Thread(() -> {
                         network.data_enabled();
+                        network.wifi_enabled();
                         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         assert wifiManager != null;
                         try {
@@ -159,7 +162,8 @@ public class sms_receiver extends BroadcastReceiver {
                         }
                         context.sendBroadcast(new Intent("com.qwe7002.telegram_switch_ap").setPackage(public_func.VPN_HOTSPOT_PACKAGE_NAME));
                     }).start();
-                    request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi);
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi);
+                    request_body.text = raw_request_body_text;
                     break;
                 case "restart_network":
                     new Thread(() -> {
@@ -170,7 +174,8 @@ public class sms_receiver extends BroadcastReceiver {
                         }
                         uk.reall.root_kit.network.restart_network();
                     }).start();
-                    request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    request_body.text = raw_request_body_text;
                     break;
                 default:
                     if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
@@ -204,13 +209,14 @@ public class sms_receiver extends BroadcastReceiver {
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS forward failed:";
+        final String final_raw_request_body_text = raw_request_body_text;
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
                 String error_message = error_head + e.getMessage();
                 public_func.write_log(context, error_message);
-                public_func.send_fallback_sms(context, raw_request_body_text, sub);
+                public_func.send_fallback_sms(context, final_raw_request_body_text, sub);
             }
 
             @Override
@@ -220,7 +226,7 @@ public class sms_receiver extends BroadcastReceiver {
                 if (response.code() != 200) {
                     String error_message = error_head + response.code() + " " + result;
                     public_func.write_log(context, error_message);
-                    public_func.send_fallback_sms(context, raw_request_body_text, sub);
+                    public_func.send_fallback_sms(context, final_raw_request_body_text, sub);
                 } else {
                     if (!public_func.is_phone_number(message_address)) {
                         public_func.write_log(context, "[" + message_address + "] Not a regular phone number.");
