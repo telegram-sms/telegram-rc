@@ -260,11 +260,25 @@ public class chat_command_service extends Service {
                 boolean wifi_open = false;
                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 assert wifiManager != null;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !sharedPreferences.getBoolean("root", false)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
+
+                }
                 if (wifiManager.isWifiEnabled()) {
-                    wifiManager.setWifiEnabled(false);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        uk.reall.root_kit.network.wifi_disable();
+                    } else {
+                        wifiManager.setWifiEnabled(false);
+                    }
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi);
                 } else {
-                    wifiManager.setWifiEnabled(true);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        uk.reall.root_kit.network.wifi_enabled();
+                    } else {
+                        wifiManager.setWifiEnabled(true);
+                    }
                     wifi_open = true;
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi);
                 }

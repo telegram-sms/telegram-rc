@@ -26,6 +26,13 @@ public class network {
         return result;
     }
 
+    public static boolean wifi_enabled() {
+        return root_kit.run_shell_command("svc wifi enable\n");
+    }
+
+    public static boolean wifi_disable() {
+        return root_kit.run_shell_command("svc wifi disable\n");
+    }
     public static boolean data_enabled() {
         return root_kit.run_shell_command("svc data enable\n");
     }
