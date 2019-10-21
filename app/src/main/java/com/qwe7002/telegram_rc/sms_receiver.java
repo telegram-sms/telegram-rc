@@ -142,11 +142,17 @@ public class sms_receiver extends BroadcastReceiver {
                     request_body.text = raw_request_body_text;
                     break;
                 case "turn-on-ap":
-                    new Thread(() -> {
-                        network.data_enabled();
+                    WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                    assert wifiManager != null;
+
+                    network.data_enabled();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         network.wifi_enabled();
-                        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                        assert wifiManager != null;
+                    } else {
+                        wifiManager.setWifiEnabled(true);
+                    }
+                    new Thread(() -> {
+
                         try {
                             int count = 0;
                             while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
