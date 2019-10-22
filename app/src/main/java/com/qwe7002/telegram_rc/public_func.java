@@ -60,6 +60,17 @@ class public_func {
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final CodeauxLibPortable parser = new CodeauxLibPortable();
 
+    static int parse_int(String int_str) {
+        int result = 0;
+        try {
+            result = Integer.parseInt(int_str);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            //Avoid errors caused by unconvertible inputs.
+        }
+        return result;
+    }
+
     static String get_send_phone_number(String phone_number) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < phone_number.length(); i++) {

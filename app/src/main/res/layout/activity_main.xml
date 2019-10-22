@@ -126,11 +126,19 @@
                     tools:ignore="RtlSymmetry" />
 
             <Switch
-                android:id="@+id/nadb_switch_root"
+                android:id="@+id/root_switch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingStart="3dp"
                 android:text="@string/root_switch"
+                tools:ignore="RtlSymmetry" />
+
+            <Switch
+                android:id="@+id/privacy_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="3dp"
+                android:text="@string/using_privacy_mode"
                 tools:ignore="RtlSymmetry" />
             <Switch
                     android:id="@+id/doh_switch"

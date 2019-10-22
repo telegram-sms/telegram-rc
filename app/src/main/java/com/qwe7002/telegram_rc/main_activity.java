@@ -76,13 +76,21 @@ public class main_activity extends AppCompatActivity {
         final SharedPreferences sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
         final Switch charger_status = findViewById(R.id.charger_status);
         final Switch verification_code = findViewById(R.id.verification_code_switch);
-        final Switch config_adb_switch = findViewById(R.id.nadb_switch_root);
+        final Switch root_switch = findViewById(R.id.root_switch);
+        final Switch privacy_mode_switch = findViewById(R.id.privacy_switch);
         final Button save_button = findViewById(R.id.save);
         final Button get_id = findViewById(R.id.get_id);
         display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
 
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
+
+        if (public_func.parse_int(chat_id_save) < 0) {
+            privacy_mode_switch.setVisibility(View.VISIBLE);
+        } else {
+            privacy_mode_switch.setVisibility(View.GONE);
+        }
+
         if (sharedPreferences.getBoolean("initialized", false)) {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
             if (!sharedPreferences.getBoolean("conversion_data_structure", false)) {
@@ -115,7 +123,7 @@ public class main_activity extends AppCompatActivity {
             }
             display_dual_sim_display_name.setChecked(display_dual_sim_display_name_config);
         }
-        config_adb_switch.setChecked(sharedPreferences.getBoolean("root", false));
+        root_switch.setChecked(sharedPreferences.getBoolean("root", false));
         bot_token.setText(bot_token_save);
         chat_id.setText(chat_id_save);
 
@@ -156,6 +164,26 @@ public class main_activity extends AppCompatActivity {
             }
         });
 
+        chat_id.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (public_func.parse_int(chat_id.toString()) < 0) {
+                    privacy_mode_switch.setVisibility(View.VISIBLE);
+                } else {
+                    privacy_mode_switch.setVisibility(View.GONE);
+                }
+            }
+        });
+
         trusted_phone_number.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -178,9 +206,9 @@ public class main_activity extends AppCompatActivity {
         });
         battery_monitoring_switch.setOnClickListener(v -> charger_status.setEnabled(battery_monitoring_switch.isChecked()));
 
-        config_adb_switch.setOnClickListener(view -> new Thread(() -> {
+        root_switch.setOnClickListener(view -> new Thread(() -> {
             if (!uk.reall.root_kit.root_kit.check_root()) {
-                runOnUiThread(() -> config_adb_switch.setChecked(false));
+                runOnUiThread(() -> root_switch.setChecked(false));
 
             }
         }).start());
@@ -379,8 +407,9 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("charger_status", charger_status.isChecked());
                     editor.putBoolean("display_dual_sim_display_name", display_dual_sim_display_name.isChecked());
                     editor.putBoolean("verification_code", verification_code.isChecked());
-                    editor.putBoolean("root", config_adb_switch.isChecked());
+                    editor.putBoolean("root", root_switch.isChecked());
                     editor.putBoolean("doh_switch", doh_switch.isChecked());
+                    editor.putBoolean("privacy_mode", privacy_mode_switch.isChecked());
                     editor.putBoolean("initialized", true);
                     editor.putBoolean("conversion_data_structure", true);
                     editor.apply();
