@@ -129,21 +129,19 @@ public class sms_receiver extends BroadcastReceiver {
                     request_body.text = raw_request_body_text;
                     break;
                 case "switch-data":
-                    new Thread(() -> {
-                        network.switch_data_enabled(context);
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }).start();
+                    network.switch_data_enabled(context);
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                     request_body.text = raw_request_body_text;
                     break;
                 case "restart_network":
                     new Thread(() -> {
                         try {
-                            Thread.sleep(10000);
+                            Thread.sleep(3000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }

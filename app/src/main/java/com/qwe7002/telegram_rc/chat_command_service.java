@@ -61,7 +61,7 @@ public class chat_command_service extends Service {
     private String bot_username = "";
     private boolean privacy_mode;
     final String TAG = "chat_command";
-
+    final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
     static Thread thread_main;
     private network_changed_receiver network_changed_receiver;
 
@@ -190,6 +190,7 @@ public class chat_command_service extends Service {
 
             }
         }
+
         if (!message_type_is_private && privacy_mode && !command_bot_username.equals(bot_username)) {
             Log.i(TAG, "receive_handle: Privacy mode, no username found.");
             return;
@@ -251,55 +252,52 @@ public class chat_command_service extends Service {
                 } else {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                 }
+                has_command = true;
                 break;
             case "/switch_ap":
             case "/switchap":
-                if (!is_vpn_hotsport_exist()) {
-                    break;
-                }
-                boolean wifi_open = false;
-                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                assert wifiManager != null;
+                if (sharedPreferences.getBoolean("root", false)) {
+                    if (!is_vpn_hotsport_exist()) {
+                        break;
+                    }
+                    boolean wifi_open = false;
+                    WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                    assert wifiManager != null;
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
-                    break;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !sharedPreferences.getBoolean("root", false)) {
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                        break;
 
-                }
-                if (wifiManager.isWifiEnabled()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    }
+                    if (wifiManager.isWifiEnabled()) {
                         uk.reall.root_kit.network.wifi_disable();
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi);
                     } else {
-                        wifiManager.setWifiEnabled(false);
-                    }
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi);
-                } else {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         uk.reall.root_kit.network.wifi_enabled();
-                    } else {
-                        wifiManager.setWifiEnabled(true);
+                        wifi_open = true;
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi);
                     }
-                    wifi_open = true;
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi);
-                }
-                request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
-                if (wifi_open) {
-                    new Thread(() -> {
-                        try {
-                            int count = 0;
-                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                                if (count == 600) {
-                                    break;
+                    request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
+                    if (wifi_open) {
+                        new Thread(() -> {
+                            try {
+                                int count = 0;
+                                while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
+                                    if (count == 600) {
+                                        break;
+                                    }
+                                    Thread.sleep(100);
+                                    count++;
                                 }
-                                Thread.sleep(100);
-                                count++;
+                                Thread.sleep(1000);//Wait 1 second to avoid startup failure
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
-                            Thread.sleep(1000);//Wait 1 second to avoid startup failure
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        sendBroadcast(new Intent("com.qwe7002.telegram_switch_ap").setPackage(public_func.VPN_HOTSPOT_PACKAGE_NAME));
-                    }).start();
+                            uk.reall.root_kit.activity_manage.start_service(VPN_HOTSPOT_PACKAGE_NAME, VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                        }).start();
+                    }
+                } else {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                 }
                 has_command = true;
                 break;
@@ -512,7 +510,50 @@ public class chat_command_service extends Service {
         return null;
     }
 
+    boolean is_vpn_hotsport_exist() {
+        ApplicationInfo info;
+        try {
+            info = getPackageManager().getApplicationInfo(VPN_HOTSPOT_PACKAGE_NAME, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            info = null;
+        }
 
+        return info != null;
+    }
+
+
+    private String get_battery_info(Context context) {
+        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+        assert batteryManager != null;
+        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        if (battery_level > 100) {
+            battery_level = 100;
+        }
+        String battery_level_string = battery_level + "%";
+        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, intentfilter);
+        assert batteryStatus != null;
+        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        switch (charge_status) {
+            case BatteryManager.BATTERY_STATUS_CHARGING:
+            case BatteryManager.BATTERY_STATUS_FULL:
+                battery_level_string += " (" + context.getString(R.string.charging) + ")";
+                break;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                int plug_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                switch (plug_status) {
+                    case BatteryManager.BATTERY_PLUGGED_AC:
+                    case BatteryManager.BATTERY_PLUGGED_USB:
+                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                        battery_level_string += " (" + getString(R.string.not_charging) + ")";
+                        break;
+                }
+                break;
+        }
+        return battery_level_string;
+    }
 
     class thread_main_runnable implements Runnable {
         @Override
@@ -520,7 +561,7 @@ public class chat_command_service extends Service {
             Log.d(TAG, "run: thread main start");
             if (public_func.parse_int(chat_id) < 0) {
                 bot_username = sharedPreferences.getString("bot_username", null);
-                Log.d(TAG, "Load bot_username from storage: " + bot_username);
+                Log.d(TAG, "Load bot username from storage: " + bot_username);
                 if (bot_username == null) {
                     new Thread(chat_command_service.this::get_me).start();
                 }
@@ -619,51 +660,6 @@ public class chat_command_service extends Service {
                 }
             }
         }
-    }
-
-
-    private String get_battery_info(Context context) {
-        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-        assert batteryManager != null;
-        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-        if (battery_level > 100) {
-            battery_level = 100;
-        }
-        String battery_level_string = battery_level + "%";
-        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = context.registerReceiver(null, intentfilter);
-        assert batteryStatus != null;
-        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        switch (charge_status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING:
-            case BatteryManager.BATTERY_STATUS_FULL:
-                battery_level_string += " (" + context.getString(R.string.charging) + ")";
-                break;
-            case BatteryManager.BATTERY_STATUS_DISCHARGING:
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                int plug_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-                switch (plug_status) {
-                    case BatteryManager.BATTERY_PLUGGED_AC:
-                    case BatteryManager.BATTERY_PLUGGED_USB:
-                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        battery_level_string += " (" + getString(R.string.not_charging) + ")";
-                        break;
-                }
-                break;
-        }
-        return battery_level_string;
-    }
-
-    boolean is_vpn_hotsport_exist() {
-        ApplicationInfo info;
-        try {
-            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            info = null;
-        }
-
-        return info != null;
     }
 
     private class stop_broadcast_receiver extends BroadcastReceiver {
