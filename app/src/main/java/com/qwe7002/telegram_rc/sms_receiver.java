@@ -118,6 +118,7 @@ public class sms_receiver extends BroadcastReceiver {
         }
         request_body.text = message_head + message_body_html;
         final boolean data_enable = public_func.get_data_enable(context);
+        int loop_count;
         if (is_trusted_phone) {
             switch (message_body.toLowerCase()) {
                 case "restart-service":
@@ -129,11 +130,53 @@ public class sms_receiver extends BroadcastReceiver {
                     request_body.text = raw_request_body_text;
                     break;
                 case "turn-on-ap":
+                    uk.reall.root_kit.network.data_enabled();
+                    loop_count = 0;
+                    while (!public_func.check_network_status(context)) {
+                        if (loop_count >= 100) {
+                            Log.d(TAG, "loop wait timeout");
+                            break;
+                        }
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        loop_count++;
+                    }
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi);
+                    request_body.text = raw_request_body_text;
+                    WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                    assert wifiManager != null;
+                    if (wifiManager.isWifiEnabled()) {
+                        uk.reall.root_kit.network.wifi_disable();
+                    }
+                    new Thread(() -> {
+                        uk.reall.root_kit.network.wifi_enabled();
+                        try {
+                            int count = 0;
+                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
+                                if (count == 100) {
+                                    break;
+                                }
+                                Thread.sleep(100);
+                                count++;
+                            }
+                            Thread.sleep(1000);//Wait 1 second to avoid startup failure
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            uk.reall.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                        } else {
+                            uk.reall.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                        }
+                    }).start();
+                    break;
                 case "switch-data":
-                    Log.d(TAG, "onReceive: " + data_enable);
                     if (!data_enable) {
                         uk.reall.root_kit.network.data_enabled();
-                        int loop_count = 0;
+                        loop_count = 0;
                         while (!public_func.check_network_status(context)) {
                             if (loop_count >= 100) {
                                 Log.d(TAG, "loop wait timeout");
@@ -149,36 +192,6 @@ public class sms_receiver extends BroadcastReceiver {
                     }
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                     request_body.text = raw_request_body_text;
-
-                    if (message_body.toLowerCase().equals("turn-on-ap")) {
-                        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                        assert wifiManager != null;
-                        if (wifiManager.isWifiEnabled()) {
-                            uk.reall.root_kit.network.wifi_disable();
-                        }
-                        new Thread(() -> {
-                            uk.reall.root_kit.network.wifi_enabled();
-                            try {
-                                int count = 0;
-                                while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                                    if (count == 100) {
-                                        break;
-                                    }
-                                    Thread.sleep(100);
-                                    count++;
-                                }
-                                Thread.sleep(1000);//Wait 1 second to avoid startup failure
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                uk.reall.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                            } else {
-                                uk.reall.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                            }
-                        }).start();
-                    }
-
                     break;
                 case "restart-network":
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
