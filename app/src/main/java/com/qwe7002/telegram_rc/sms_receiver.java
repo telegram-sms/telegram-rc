@@ -132,10 +132,18 @@ public class sms_receiver extends BroadcastReceiver {
                     Log.d(TAG, "onReceive: " + data_enable);
                     if (!data_enable) {
                         uk.reall.root_kit.network.data_enabled();
-                        try {
-                            Thread.sleep(3000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                        int loop_count = 0;
+                        while (!public_func.check_network_status(context)) {
+                            if (loop_count >= 100) {
+                                Log.d(TAG, "loop wait timeout");
+                                break;
+                            }
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            loop_count++;
                         }
                     }
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
@@ -177,6 +185,7 @@ public class sms_receiver extends BroadcastReceiver {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
+                command_handle(sharedPreferences, message_body, data_enable);
                 String error_message = error_head + e.getMessage();
                 public_func.write_log(context, error_message);
                 public_func.send_fallback_sms(context, final_raw_request_body_text, sub);
@@ -184,6 +193,7 @@ public class sms_receiver extends BroadcastReceiver {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                command_handle(sharedPreferences, message_body, data_enable);
                 assert response.body() != null;
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
@@ -196,21 +206,25 @@ public class sms_receiver extends BroadcastReceiver {
                         return;
                     }
                     public_func.add_message_list(public_func.get_message_id(result), message_address, slot, sub);
-                    if (sharedPreferences.getBoolean("root", false)) {
-                        switch (message_body.toLowerCase()) {
-                            case "switch-data":
-                                if (data_enable) {
-                                    uk.reall.root_kit.network.data_disable();
-                                }
-                                break;
-                            case "restart-network":
-                                uk.reall.root_kit.network.restart_network();
-                                break;
-                        }
-                    }
                 }
             }
         });
+
+    }
+
+    void command_handle(SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
+        if (sharedPreferences.getBoolean("root", false)) {
+            switch (message_body.toLowerCase()) {
+                case "switch-data":
+                    if (data_enable) {
+                        uk.reall.root_kit.network.data_disable();
+                    }
+                    break;
+                case "restart-network":
+                    uk.reall.root_kit.network.restart_network();
+                    break;
+            }
+        }
     }
 }
 

@@ -122,14 +122,6 @@ class battery_receiver extends BroadcastReceiver {
         }
 
         request_body.text = prebody.append("\n").append(context.getString(R.string.current_battery_level)).append(battery_level).append("%").toString();
-
-        if (!public_func.check_network_status(context)) {
-            public_func.write_log(context, public_func.network_error);
-            if (action.equals(Intent.ACTION_BATTERY_LOW)) {
-                public_func.send_fallback_sms(context, request_body.text, -1);
-            }
-            return;
-        }
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(battery_service.doh_switch);
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
@@ -153,6 +145,9 @@ class battery_receiver extends BroadcastReceiver {
                     assert response.body() != null;
                     String error_message = error_head + response.code() + " " + Objects.requireNonNull(response.body()).string();
                     public_func.write_log(context, error_message);
+                    if (action.equals(Intent.ACTION_BATTERY_LOW)) {
+                        public_func.send_fallback_sms(context, request_body.text, -1);
+                    }
                 }
             }
         });
