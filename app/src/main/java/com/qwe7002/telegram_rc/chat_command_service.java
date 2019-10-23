@@ -17,6 +17,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -39,7 +40,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import uk.reall.root_kit.network;
 
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -254,7 +254,6 @@ public class chat_command_service extends Service {
                 }
                 has_command = true;
                 break;
-            case "/switch_ap":
             case "/switchap":
                 if (sharedPreferences.getBoolean("root", false)) {
                     if (!is_vpn_hotsport_exist()) {
@@ -301,34 +300,13 @@ public class chat_command_service extends Service {
                 break;
             case "/switch_data":
             case "/switchdata":
-                if (sharedPreferences.getBoolean("root", false)) {
-                    new Thread(() -> {
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        network.switch_data_enabled(context);
-                    }).start();
-                    request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
-                } else {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
-                }
-                break;
             case "/restart_network":
                 if (sharedPreferences.getBoolean("root", false)) {
-                    new Thread(() -> {
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        uk.reall.root_kit.network.restart_network();
-                    }).start();
                     request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                 } else {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                 }
+                has_command = true;
                 break;
             case "/sendsms":
             case "/sendsms1":
@@ -442,6 +420,8 @@ public class chat_command_service extends Service {
         Request send_request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(send_request);
         final String error_head = "Send reply failed:";
+        final boolean final_has_command = has_command;
+        final String final_command = command;
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -456,6 +436,23 @@ public class chat_command_service extends Service {
                     assert response.body() != null;
                     String error_message = error_head + response.code() + " " + Objects.requireNonNull(response.body()).string();
                     public_func.write_log(context, error_message);
+                }
+                if (final_has_command && sharedPreferences.getBoolean("root", false)) {
+                    switch (final_command) {
+                        case "/switch_data":
+                        case "/switchdata":
+                            TelephonyManager teleManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                            assert teleManager != null;
+                            if (teleManager.getDataState() == TelephonyManager.DATA_DISCONNECTED) {
+                                uk.reall.root_kit.network.data_enabled();
+                            } else {
+                                uk.reall.root_kit.network.data_disable();
+                            }
+                            break;
+                        case "/restart_network":
+                            uk.reall.root_kit.network.restart_network();
+                            break;
+                    }
                 }
             }
         });

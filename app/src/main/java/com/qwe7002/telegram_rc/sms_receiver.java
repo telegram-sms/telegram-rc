@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -27,7 +28,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import uk.reall.root_kit.network;
 
 
 public class sms_receiver extends BroadcastReceiver {
@@ -117,7 +117,7 @@ public class sms_receiver extends BroadcastReceiver {
             }
         }
         request_body.text = message_head + message_body_html;
-
+        boolean is_data_off = false;
         if (is_trusted_phone) {
             switch (message_body.toLowerCase()) {
                 case "restart-service":
@@ -129,24 +129,22 @@ public class sms_receiver extends BroadcastReceiver {
                     request_body.text = raw_request_body_text;
                     break;
                 case "switch-data":
-                    network.switch_data_enabled(context);
-                    try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
-                    request_body.text = raw_request_body_text;
-                    break;
-                case "restart_network":
-                    new Thread(() -> {
+                    TelephonyManager teleManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                    assert teleManager != null;
+                    is_data_off = (teleManager.getDataState() == TelephonyManager.DATA_DISCONNECTED);
+                    Log.d(TAG, "onReceive: " + is_data_off);
+                    if (is_data_off) {
+                        uk.reall.root_kit.network.data_enabled();
                         try {
                             Thread.sleep(3000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        uk.reall.root_kit.network.restart_network();
-                    }).start();
+                    }
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    request_body.text = raw_request_body_text;
+                    break;
+                case "restart-network":
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                     request_body.text = raw_request_body_text;
                     break;
@@ -172,17 +170,13 @@ public class sms_receiver extends BroadcastReceiver {
             }
 
         }
-        if (!public_func.check_network_status(context)) {
-            public_func.write_log(context, public_func.network_error);
-            public_func.send_fallback_sms(context, raw_request_body_text, sub);
-            return;
-        }
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS forward failed:";
         final String final_raw_request_body_text = raw_request_body_text;
+        boolean final_is_data_off = is_data_off;
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -206,6 +200,18 @@ public class sms_receiver extends BroadcastReceiver {
                         return;
                     }
                     public_func.add_message_list(public_func.get_message_id(result), message_address, slot, sub);
+                    if (sharedPreferences.getBoolean("root", false)) {
+                        switch (message_body.toLowerCase()) {
+                            case "switch-data":
+                                if (!final_is_data_off) {
+                                    uk.reall.root_kit.network.data_disable();
+                                }
+                                break;
+                            case "restart-network":
+                                uk.reall.root_kit.network.restart_network();
+                                break;
+                        }
+                    }
                 }
             }
         });

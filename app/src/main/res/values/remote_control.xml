@@ -8,5 +8,5 @@
     <string name="not_getting_root">Not getting root privileges.</string>
     <string name="adb_set_success">Network adb setup is complete.</string>
     <string name="adb_set_failed">Network adb setup failed.</string>
-    <string name="root_switch">[Root] Allow advanced features</string>
+    <string name="root_switch">[Root] Allow advanced features</string>\
 </resources>
