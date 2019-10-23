@@ -263,12 +263,6 @@ public class chat_command_service extends Service {
                     boolean wifi_open = false;
                     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !sharedPreferences.getBoolean("root", false)) {
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
-                        break;
-
-                    }
                     if (wifiManager.isWifiEnabled()) {
                         uk.reall.root_kit.network.wifi_disable();
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi);
@@ -293,7 +287,11 @@ public class chat_command_service extends Service {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            uk.reall.root_kit.activity_manage.start_service(VPN_HOTSPOT_PACKAGE_NAME, VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                uk.reall.root_kit.activity_manage.start_foreground_service(VPN_HOTSPOT_PACKAGE_NAME, VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                            } else {
+                                uk.reall.root_kit.activity_manage.start_service(VPN_HOTSPOT_PACKAGE_NAME, VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                            }
                         }).start();
                     }
                 } else {

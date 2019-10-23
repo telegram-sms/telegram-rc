@@ -3,6 +3,7 @@ package com.qwe7002.telegram_rc;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.FileObserver;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -13,11 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import io.paperdb.Paper;
 
 public class logcat_activity extends AppCompatActivity {
-
     private Context context;
     private file_observer observer;
     private TextView logcat;
     private final int line = 100;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,7 +28,7 @@ public class logcat_activity extends AppCompatActivity {
         this.setTitle(R.string.logcat);
         logcat.setText(public_func.read_log(context, line));
         observer = new file_observer(context, logcat);
-
+        logcat.setGravity(Gravity.BOTTOM);
     }
 
     @Override
@@ -73,7 +74,6 @@ public class logcat_activity extends AppCompatActivity {
             }
         }
     }
-
 }
 
 
