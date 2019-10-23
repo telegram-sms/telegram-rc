@@ -59,6 +59,14 @@ class public_func {
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final CodeauxLibPortable parser = new CodeauxLibPortable();
 
+    static boolean get_data_enable(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        assert connectivityManager != null;
+        NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        assert networkInfo != null;
+        return networkInfo.isConnectedOrConnecting();
+    }
     static int parse_int(String int_str) {
         int result = 0;
         try {

@@ -11,7 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -117,7 +116,7 @@ public class sms_receiver extends BroadcastReceiver {
             }
         }
         request_body.text = message_head + message_body_html;
-        boolean is_data_off = false;
+        final boolean data_enable = public_func.get_data_enable(context);
         if (is_trusted_phone) {
             switch (message_body.toLowerCase()) {
                 case "restart-service":
@@ -129,11 +128,9 @@ public class sms_receiver extends BroadcastReceiver {
                     request_body.text = raw_request_body_text;
                     break;
                 case "switch-data":
-                    TelephonyManager teleManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                    assert teleManager != null;
-                    is_data_off = (teleManager.getDataState() == TelephonyManager.DATA_DISCONNECTED);
-                    Log.d(TAG, "onReceive: " + is_data_off);
-                    if (is_data_off) {
+
+                    Log.d(TAG, "onReceive: " + data_enable);
+                    if (!data_enable) {
                         uk.reall.root_kit.network.data_enabled();
                         try {
                             Thread.sleep(3000);
@@ -176,7 +173,6 @@ public class sms_receiver extends BroadcastReceiver {
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS forward failed:";
         final String final_raw_request_body_text = raw_request_body_text;
-        boolean final_is_data_off = is_data_off;
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -203,7 +199,7 @@ public class sms_receiver extends BroadcastReceiver {
                     if (sharedPreferences.getBoolean("root", false)) {
                         switch (message_body.toLowerCase()) {
                             case "switch-data":
-                                if (!final_is_data_off) {
+                                if (data_enable) {
                                     uk.reall.root_kit.network.data_disable();
                                 }
                                 break;

@@ -17,7 +17,6 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -441,9 +440,7 @@ public class chat_command_service extends Service {
                     switch (final_command) {
                         case "/switch_data":
                         case "/switchdata":
-                            TelephonyManager teleManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                            assert teleManager != null;
-                            if (teleManager.getDataState() == TelephonyManager.DATA_DISCONNECTED) {
+                            if (!public_func.get_data_enable(context)) {
                                 uk.reall.root_kit.network.data_enabled();
                             } else {
                                 uk.reall.root_kit.network.data_disable();
