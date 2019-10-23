@@ -60,7 +60,7 @@ public class chat_command_service extends Service {
     private String bot_username = "";
     private boolean privacy_mode;
     final String TAG = "chat_command";
-    final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
+
     static Thread thread_main;
     private network_changed_receiver network_changed_receiver;
 
@@ -253,6 +253,7 @@ public class chat_command_service extends Service {
                 }
                 has_command = true;
                 break;
+            case "/switch_ap":
             case "/switchap":
                 if (sharedPreferences.getBoolean("root", false)) {
                     if (!is_vpn_hotsport_exist()) {
@@ -286,9 +287,9 @@ public class chat_command_service extends Service {
                                 e.printStackTrace();
                             }
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                uk.reall.root_kit.activity_manage.start_foreground_service(VPN_HOTSPOT_PACKAGE_NAME, VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                                uk.reall.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
                             } else {
-                                uk.reall.root_kit.activity_manage.start_service(VPN_HOTSPOT_PACKAGE_NAME, VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                                uk.reall.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
                             }
                         }).start();
                     }
@@ -505,7 +506,7 @@ public class chat_command_service extends Service {
     boolean is_vpn_hotsport_exist() {
         ApplicationInfo info;
         try {
-            info = getPackageManager().getApplicationInfo(VPN_HOTSPOT_PACKAGE_NAME, 0);
+            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             info = null;
