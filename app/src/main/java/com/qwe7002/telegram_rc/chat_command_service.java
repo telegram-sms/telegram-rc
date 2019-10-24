@@ -282,7 +282,7 @@ public class chat_command_service extends Service {
                                     Thread.sleep(100);
                                     count++;
                                 }
-                                Thread.sleep(1000);//Wait 1 second to avoid startup failure
+                                Thread.sleep(1000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }

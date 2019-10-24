@@ -150,6 +150,11 @@ public class sms_receiver extends BroadcastReceiver {
                     assert wifiManager != null;
                     if (wifiManager.isWifiEnabled()) {
                         uk.reall.root_kit.network.wifi_disable();
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                     new Thread(() -> {
                         uk.reall.root_kit.network.wifi_enabled();
@@ -162,7 +167,7 @@ public class sms_receiver extends BroadcastReceiver {
                                 Thread.sleep(100);
                                 count++;
                             }
-                            Thread.sleep(1000);//Wait 1 second to avoid startup failure
+                            Thread.sleep(1000);//Wait 3   second to avoid startup failure
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
