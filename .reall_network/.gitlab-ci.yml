@@ -25,17 +25,16 @@ release_github:
         - /opt/github-release-upload.sh github_api_token=${github_key} owner=telegram-rc repo=telegram-sms tag=$(date "+%Y%m%d%H%M%S") filename="./app/build/outputs/apk/release/app-release.apk" pre_release="false"
 
 build:
-    image: jangrewe/gitlab-ci-android:latest
+    image: alvrme/alpine-android:android-29
     stage: build
-    only:
-        - master
     script:
         - export VERSION_CODE=${CI_PIPELINE_ID}
         - export VERSION_NAME=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}
-        - curl https://keystore.reallserver.cn/android/telegram-sms/keys.jks  -o app/keys.jks -u gitlab:${key_store_passwd}
+        - wget https://keystore.reallserver.cn/android/telegram-sms/keys.jks -O app/keys.jks --http-user=gitlab --http-passwd=${key_store_passwd}
+        - wget https://keystore.reallserver.cn/android/telegram-sms/keystore.env -O .reall_network/keystore.env --http-user=gitlab --http-passwd=${key_store_passwd}
+        - . .reall_network/keystore.env
         - export GRADLE_USER_HOME=$(pwd)/.gradle
-        - touch $(pwd)/.gradle/gradle.properties && echo "org.gradle.daemon=true" >> $(pwd)/.gradle/gradle.properties
-        - echo -e "systemProp.http.nonProxyHosts=dl.google.com\n systemProp.http.proxyHost=192.168.3.8\n systemProp.http.proxyPort=1080\n systemProp.https.proxyHost=192.168.3.8\n systemProp.https.proxyPort=1080\n org.gradle.jvmargs=-Xmx1536m\n org.gradle.parallel=true\n android.enableJetifier=true\n android.useAndroidX=true" >> gradle.properties
+        - echo -e "org.gradle.jvmargs=-Xmx1536m -DsocksProxyHost=proxy.reallserver.cn -DsocksProxyPort=1086 -DsocksNonProxyHosts=dl.google.com\n org.gradle.parallel=true" >> ${GRADLE_USER_HOME}/gradle.properties
         - chmod +x ./gradlew
         - ./gradlew assembleRelease
     artifacts:
