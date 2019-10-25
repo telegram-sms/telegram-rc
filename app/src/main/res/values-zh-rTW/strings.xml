@@ -65,4 +65,5 @@
     <string name="donate">捐助</string>
     <string name="not_charging">不在充電</string>
     <string name="using_privacy_mode">僅響應包含機器人用戶名的命令</string>
+    <string name="scan_title">掃描二維碼</string>
 </resources>

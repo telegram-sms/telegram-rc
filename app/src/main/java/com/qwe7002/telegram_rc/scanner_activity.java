@@ -21,7 +21,7 @@ public class scanner_activity extends Activity implements ZXingScannerView.Resul
         super.onCreate(state);
         setContentView(R.layout.scanner_activity);
         Toolbar toolbar = findViewById(R.id.scan_toolbar);
-        toolbar.setTitle("test");
+        toolbar.setTitle(R.string.scan_title);
         ViewGroup contentFrame = findViewById(R.id.content_frame);
         scanner_view = new ZXingScannerView(this);
         contentFrame.addView(scanner_view);
