@@ -7,7 +7,10 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.MODIFY_PHONE_STATE" />
+    <uses-permission
+        android:name="android.permission.MODIFY_PHONE_STATE"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
@@ -18,9 +21,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="com.qwe7002.telegram_rc.broadcast.permission" />
-
-    <permission android:name="com.qwe7002.telegram_rc.broadcast.permission" />
     <application
             android:allowBackup="false"
             android:icon="@mipmap/ic_launcher"
@@ -102,6 +102,7 @@
             </intent-filter>
         </receiver>
 
+        <activity android:name="com.qwe7002.telegram_rc.scanner_activity" />
         <activity
                 android:name="com.qwe7002.telegram_rc.main_activity"
                 android:label="@string/app_name"

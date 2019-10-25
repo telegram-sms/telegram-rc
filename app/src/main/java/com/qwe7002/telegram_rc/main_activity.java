@@ -57,6 +57,7 @@ public class main_activity extends AppCompatActivity {
     private Context context = null;
     private Switch display_dual_sim_display_name;
     private final String TAG = "main_activity";
+    EditText bot_token;
     @SuppressLint("BatteryLife")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +68,7 @@ public class main_activity extends AppCompatActivity {
         Paper.init(context);
 
         final EditText chat_id = findViewById(R.id.chat_id);
-        final EditText bot_token = findViewById(R.id.bot_token);
+        bot_token = findViewById(R.id.bot_token);
         final EditText trusted_phone_number = findViewById(R.id.trusted_phone_number);
         final Switch chat_command = findViewById(R.id.chat_command);
         final Switch fallback_sms = findViewById(R.id.fallback_sms);
@@ -428,17 +429,42 @@ public class main_activity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-                assert tm != null;
-                if (tm.getPhoneCount() == 1) {
-                    display_dual_sim_display_name.setVisibility(View.GONE);
+        switch (requestCode) {
+            case 1:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                        TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                        assert tm != null;
+                        if (tm.getPhoneCount() == 1) {
+                            display_dual_sim_display_name.setVisibility(View.GONE);
+                        }
+                        if (public_func.get_active_card(context) < 2) {
+                            display_dual_sim_display_name.setEnabled(false);
+                            display_dual_sim_display_name.setChecked(false);
+                        }
+                    }
                 }
-                if (public_func.get_active_card(context) < 2) {
-                    display_dual_sim_display_name.setEnabled(false);
-                    display_dual_sim_display_name.setChecked(false);
+                break;
+            case 2:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
                 }
+                Intent intent = new Intent(context, scanner_activity.class);
+                startActivityForResult(intent, 1);
+                break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                bot_token.setText(data.getStringExtra("bot_token"));
             }
         }
     }
@@ -459,12 +485,17 @@ public class main_activity extends AppCompatActivity {
             case R.id.privacy_policy:
                 file_name = "/wiki/" + context.getString(R.string.privacy_policy_url);
                 break;
+            case R.id.donate:
+                file_name = "/donate";
+                break;
+            case R.id.scan:
+                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 2);
+                return true;
             case R.id.logcat:
                 Intent logcat_intent = new Intent(main_activity.this, logcat_activity.class);
                 startActivity(logcat_intent);
                 return true;
-            case R.id.donate:
-                file_name = "/donate";
+
         }
         assert file_name != null;
         Uri uri = Uri.parse("https://get-telegram-sms.reall.uk" + file_name);

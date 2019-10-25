@@ -2,9 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-            android:id="@+id/user_manual"
-            android:title="@string/user_manual"
-            app:showAsAction="never" />
+        android:id="@+id/scan"
+        android:icon="@drawable/ic_scan_code"
+        android:title="@string/scan_qrcode"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/user_manual"
+        android:title="@string/user_manual"
+        app:showAsAction="never" />
     <item
             android:id="@+id/privacy_policy"
             android:title="@string/privacy_policy"
