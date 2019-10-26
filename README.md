@@ -12,14 +12,13 @@ You can follow the Telegram channel [Telegram SMS 更新日志 (tg_sms_changelog
 
 ## Risk warning | 风险警告 | 風險警告 | リスク警告
 
-**This is a sub-version of Telegram SMS that has more experimental features.No warranty expressed or implied. Use at your own risk. You have been warned.**
+**This is a sub-version of Telegram SMS that has more experimental features. No warranty expressed or implied. Use at your own risk. You have been warned.**
 
-**这是Telegram SMS的子版本，具有更多实验功能。没有明示或暗示的担保。使用风险自负。**
+**这是Telegram SMS的子版本，具有更多实验功能。没有明示或暗示的担保，使用风险自负。**
 
-**這是Telegram SMS的子版本，具有更多實驗功能。沒有明示或暗示的擔保。使用風險自負。**
+**這是Telegram SMS的子版本，具有更多實驗功能。沒有明示或暗示的擔保，使用風險自負。**
 
-**これは、より実験的な機能を備えたTelegram SMSのサブバージョンです。明示的または暗示的な保証はありません。ご自身の責任で使用してください。**
-
+**これは、より実験的な機能を備えたTelegram SMSのサブバージョンです。明示的または暗示的な保証はありません，ご自身の責任で使用してください。**
 
 ## License
 
