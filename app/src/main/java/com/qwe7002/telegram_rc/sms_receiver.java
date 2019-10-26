@@ -130,7 +130,7 @@ public class sms_receiver extends BroadcastReceiver {
                     request_body.text = raw_request_body_text;
                     break;
                 case "turn-on-ap":
-                    uk.reall.root_kit.network.data_enabled();
+                    uk.reall.root_kit.network.data_set_enable(true);
                     loop_count = 0;
                     while (!public_func.check_network_status(context)) {
                         if (loop_count >= 100) {
@@ -149,7 +149,7 @@ public class sms_receiver extends BroadcastReceiver {
                     WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     if (wifiManager.isWifiEnabled()) {
-                        uk.reall.root_kit.network.wifi_disable();
+                        uk.reall.root_kit.network.wifi_set_enable(false);
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
@@ -157,7 +157,7 @@ public class sms_receiver extends BroadcastReceiver {
                         }
                     }
                     new Thread(() -> {
-                        uk.reall.root_kit.network.wifi_enabled();
+                        uk.reall.root_kit.network.wifi_set_enable(true);
                         try {
                             int count = 0;
                             while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
@@ -180,7 +180,7 @@ public class sms_receiver extends BroadcastReceiver {
                     break;
                 case "switch-data":
                     if (!data_enable) {
-                        uk.reall.root_kit.network.data_enabled();
+                        uk.reall.root_kit.network.data_set_enable(true);
                         loop_count = 0;
                         while (!public_func.check_network_status(context)) {
                             if (loop_count >= 100) {
@@ -266,11 +266,11 @@ public class sms_receiver extends BroadcastReceiver {
             switch (message_body.toLowerCase()) {
                 case "switch-data":
                     if (data_enable) {
-                        uk.reall.root_kit.network.data_disable();
+                        uk.reall.root_kit.network.data_set_enable(false);
                     }
                     break;
                 case "restart-network":
-                    uk.reall.root_kit.network.restart_network();
+                    public_func.restart_network();
                     break;
             }
         }

@@ -5,9 +5,9 @@ import android.util.Log;
 import java.io.DataOutputStream;
 import java.util.Objects;
 
-public class root_kit {
+public class shell {
     static boolean run_shell_command(String command) {
-        final String TAG = "root_kit";
+        final String TAG = "shell";
         Process process;
         DataOutputStream os;
         try {
@@ -29,6 +29,6 @@ public class root_kit {
     }
 
     public static boolean check_root() {
-        return root_kit.run_shell_command("");
+        return shell.run_shell_command("");
     }
 }

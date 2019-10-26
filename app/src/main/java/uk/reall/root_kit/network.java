@@ -1,30 +1,30 @@
 package uk.reall.root_kit;
 
-@SuppressWarnings({"UnusedReturnValue"})
+@SuppressWarnings("ALL")
 public class network {
-    public static void restart_network() {
-        root_kit.run_shell_command("settings put global airplane_mode_on 1 \nam broadcast -a android.intent.action.AIRPLANE_MODE --ez state true\n");
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    public static boolean set_airplane_mode(boolean enable) {
+        int set = 0;
+        String state = "true";
+        if (enable) {
+            set = 1;
+            state = "false";
         }
-        root_kit.run_shell_command("settings put global airplane_mode_on 0\nam broadcast -a android.intent.action.AIRPLANE_MODE --ez state false\n");
+        return shell.run_shell_command("settings put global airplane_mode_on " + set + " \nam broadcast -a android.intent.action.AIRPLANE_MODE --ez state " + state);
     }
 
-    public static boolean wifi_enabled() {
-        return root_kit.run_shell_command("svc wifi enable\n");
+    public static boolean wifi_set_enable(boolean enable) {
+        String state = "disable";
+        if (!enable) {
+            state = "enable";
+        }
+        return shell.run_shell_command("svc wifi " + state);
     }
 
-    public static boolean wifi_disable() {
-        return root_kit.run_shell_command("svc wifi disable\n");
-    }
-
-    public static boolean data_enabled() {
-        return root_kit.run_shell_command("svc data enable\n");
-    }
-
-    public static boolean data_disable() {
-        return root_kit.run_shell_command("svc data disable\n");
+    public static boolean data_set_enable(boolean enable) {
+        String state = "disable";
+        if (!enable) {
+            state = "enable";
+        }
+        return shell.run_shell_command("svc data " + enable);
     }
 }

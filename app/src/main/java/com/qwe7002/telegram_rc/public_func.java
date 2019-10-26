@@ -67,6 +67,17 @@ class public_func {
         assert networkInfo != null;
         return networkInfo.isConnectedOrConnecting();
     }
+
+    static void restart_network() {
+        uk.reall.root_kit.network.set_airplane_mode(true);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        uk.reall.root_kit.network.set_airplane_mode(false);
+    }
+
     static int parse_int(String int_str) {
         int result = 0;
         try {

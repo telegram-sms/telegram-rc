@@ -40,7 +40,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-
 @SuppressWarnings("SpellCheckingInspection")
 public class chat_command_service extends Service {
     private static long offset = 0;
@@ -263,10 +262,10 @@ public class chat_command_service extends Service {
                     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     if (wifiManager.isWifiEnabled()) {
-                        uk.reall.root_kit.network.wifi_disable();
+                        uk.reall.root_kit.network.wifi_set_enable(false);
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi);
                     } else {
-                        uk.reall.root_kit.network.wifi_enabled();
+                        uk.reall.root_kit.network.wifi_set_enable(true);
                         wifi_open = true;
                         request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi);
                     }
@@ -442,13 +441,13 @@ public class chat_command_service extends Service {
                         case "/switch_data":
                         case "/switchdata":
                             if (!public_func.get_data_enable(context)) {
-                                uk.reall.root_kit.network.data_enabled();
+                                uk.reall.root_kit.network.data_set_enable(true);
                             } else {
-                                uk.reall.root_kit.network.data_disable();
+                                uk.reall.root_kit.network.data_set_enable(false);
                             }
                             break;
                         case "/restart_network":
-                            uk.reall.root_kit.network.restart_network();
+                            public_func.restart_network();
                             break;
                     }
                 }

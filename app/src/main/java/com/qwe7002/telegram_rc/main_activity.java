@@ -51,6 +51,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import uk.reall.root_kit.shell;
 
 
 public class main_activity extends AppCompatActivity {
@@ -208,7 +209,7 @@ public class main_activity extends AppCompatActivity {
         battery_monitoring_switch.setOnClickListener(v -> charger_status.setEnabled(battery_monitoring_switch.isChecked()));
 
         root_switch.setOnClickListener(view -> new Thread(() -> {
-            if (!uk.reall.root_kit.root_kit.check_root()) {
+            if (!shell.check_root()) {
                 runOnUiThread(() -> root_switch.setChecked(false));
 
             }
@@ -430,6 +431,15 @@ public class main_activity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
+            case 0:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                }
+                Intent intent = new Intent(context, scanner_activity.class);
+                startActivityForResult(intent, 1);
+                break;
             case 1:
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -445,15 +455,7 @@ public class main_activity extends AppCompatActivity {
                     }
                 }
                 break;
-            case 2:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                        return;
-                    }
-                }
-                Intent intent = new Intent(context, scanner_activity.class);
-                startActivityForResult(intent, 1);
-                break;
+
         }
     }
 
@@ -489,7 +491,7 @@ public class main_activity extends AppCompatActivity {
                 file_name = "/donate";
                 break;
             case R.id.scan:
-                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 2);
+                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 0);
                 return true;
             case R.id.logcat:
                 Intent logcat_intent = new Intent(main_activity.this, logcat_activity.class);
