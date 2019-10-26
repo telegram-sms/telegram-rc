@@ -432,10 +432,10 @@ public class main_activity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case 0:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "onRequestPermissionsResult: No camera permissions.");
+                    Snackbar.make(bot_token, R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
                         return;
-                    }
                 }
                 Intent intent = new Intent(context, scanner_activity.class);
                 startActivityForResult(intent, 1);
@@ -455,7 +455,6 @@ public class main_activity extends AppCompatActivity {
                     }
                 }
                 break;
-
         }
     }
 

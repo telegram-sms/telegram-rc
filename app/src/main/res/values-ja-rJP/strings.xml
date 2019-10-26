@@ -65,5 +65,6 @@
     <string name="donate">寄付する</string>
     <string name="not_charging">充電していません</string>
     <string name="using_privacy_mode">ロボットのユーザー名を含むコマンドにのみ応答する</string>
-    <string name="scan_title">QRCodeをスキャン</string>
+    <string name="scan_title">QRコードをスキャン</string>
+    <string name="no_camera_permission">QRコードスキャン用のカメラアクセスを許可してください。</string>
 </resources>

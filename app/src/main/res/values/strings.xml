@@ -66,5 +66,6 @@
     <string name="donate">Donate</string>
     <string name="not_charging">Not charging</string>
     <string name="using_privacy_mode">Respond only to commands containing the Bot username</string>
-    <string name="scan_title">Scan QRCode</string>
+    <string name="scan_title">Scan QR code</string>
+    <string name="no_camera_permission">Please allow camera access for QR code scanning.</string>
 </resources>

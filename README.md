@@ -2,7 +2,23 @@
 
 A robot running on your Android device.
 
+The primary language used for commit messages is Simplified Chinese. However, you're welcome to use English in commit messages when making contributions.
+
+Please visit [https://reall.uk](https://reall.uk) to submit and discuss issues regarding this project.
+
+You can follow the Telegram channel [Telegram SMS 更新日志 (tg_sms_changelog)](https://t.me/tg_sms_changelog) for the latest news. (Simplified Chinese only)
+
 [Download](https://github.com/telegram-sms/telegram_remote_control/releases)
+
+## Risk warning | 风险警告 | 風險警告 | リスク警告
+
+**This is a sub-version of Telegram SMS that has more experimental features.No warranty expressed or implied. Use at your own risk. You have been warned.**
+
+**这是Telegram SMS的子版本，具有更多实验功能。没有明示或暗示的担保。使用风险自负。**
+
+**這是Telegram SMS的子版本，具有更多實驗功能。沒有明示或暗示的擔保。使用風險自負。**
+
+**これは、より実験的な機能を備えたTelegram SMSのサブバージョンです。明示的または暗示的な保証はありません。ご自身の責任で使用してください。**
 
 
 ## License
@@ -53,6 +69,7 @@ This APP uses the following open source libraries:
 - [Gson](https://github.com/google/gson)
 - [CodeauxLib](https://gist.github.com/SumiMakito/59992fd15a865c3b9709b8e2c3bc9cf1)
 - [Paper](https://github.com/pilgr/Paper)
+- [barcodescanner](https://github.com/dm77/barcodescanner)
 
 The creation of this APP would not be possible without help from the following people:
 
