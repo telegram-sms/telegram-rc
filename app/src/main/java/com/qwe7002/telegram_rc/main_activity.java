@@ -58,7 +58,7 @@ public class main_activity extends AppCompatActivity {
     private Context context = null;
     private Switch display_dual_sim_display_name;
     private final String TAG = "main_activity";
-    EditText bot_token;
+
     @SuppressLint("BatteryLife")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +68,8 @@ public class main_activity extends AppCompatActivity {
 
         Paper.init(context);
 
+        final EditText bot_token = findViewById(R.id.bot_token);
         final EditText chat_id = findViewById(R.id.chat_id);
-        bot_token = findViewById(R.id.bot_token);
         final EditText trusted_phone_number = findViewById(R.id.trusted_phone_number);
         final Switch chat_command = findViewById(R.id.chat_command);
         final Switch fallback_sms = findViewById(R.id.fallback_sms);
@@ -434,7 +434,7 @@ public class main_activity extends AppCompatActivity {
             case 0:
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "onRequestPermissionsResult: No camera permissions.");
-                    Snackbar.make(bot_token, R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(findViewById(R.id.bot_token), R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
                         return;
                 }
                 Intent intent = new Intent(context, scanner_activity.class);
@@ -463,7 +463,7 @@ public class main_activity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
-                bot_token.setText(data.getStringExtra("bot_token"));
+                ((EditText) findViewById(R.id.bot_token)).setText(data.getStringExtra("bot_token"));
             }
         }
     }
