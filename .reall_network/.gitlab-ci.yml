@@ -5,15 +5,6 @@ cache:
     key: ${CI_PROJECT_ID}
     paths:
         - .gradle/
-
-push_github:
-    stage: deploy
-    only:
-        - nightly
-    script:
-        - eval $(ssh-agent -s)
-        - ssh-add - <<< $(curl https://keystore.reallserver.cn/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
-        - git push -f --set-upstream git@github.com:telegram-sms/telegram-rc.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
 release_github:
     dependencies:
         - build
