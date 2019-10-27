@@ -11,11 +11,11 @@ public class nadb {
             port_number = Integer.parseInt(port);
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            Log.d(TAG, "set_nadb: [" + port + "]Not a correct port number.");
+            Log.d(TAG, "[" + port + "]Not a correct port number.");
             return false;
         }
         if (port_number > 65535) {
-            Log.i(TAG, "set_nadb: The port number is greater than 65535.");
+            Log.i(TAG, "The port number is greater than 65535.");
             return false;
         }
         return shell.run_shell_command("setprop service.adb.tcp.port " + port + "\nstop adbd\nstart adbd");
