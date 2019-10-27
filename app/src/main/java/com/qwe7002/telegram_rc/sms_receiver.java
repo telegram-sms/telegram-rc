@@ -129,6 +129,7 @@ public class sms_receiver extends BroadcastReceiver {
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
                     request_body.text = raw_request_body_text;
                     break;
+
                 case "open-ap":
                     uk.reall.root_kit.network.data_set_enable(true);
                     loop_count = 0;

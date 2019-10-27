@@ -242,11 +242,14 @@ public class chat_command_service extends Service {
             case "/configadb":
                 if (sharedPreferences.getBoolean("root", false)) {
                     String[] command_list = request_msg.split(" ");
+                    StringBuilder result = new StringBuilder();
+                    result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
                     if (command_list.length > 1 && uk.reall.root_kit.nadb.set_nadb(command_list[1])) {
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_success) + context.getString(R.string.action_success);
+                        result.append(getString(R.string.action_success));
                     } else {
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_failed) + context.getString(R.string.action_failed);
+                        result.append(getString(R.string.action_failed));
                     }
+                    request_body.text = result.toString();
                 } else {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                 }
