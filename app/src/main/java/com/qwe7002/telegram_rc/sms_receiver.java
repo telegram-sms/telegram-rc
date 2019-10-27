@@ -123,13 +123,13 @@ public class sms_receiver extends BroadcastReceiver {
             switch (message_body.toLowerCase()) {
                 case "restart-service":
                     new Thread(() -> {
-                        public_func.stop_all_service(context.getApplicationContext());
-                        public_func.start_service(context.getApplicationContext(), sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+                        public_func.stop_all_service(context);
+                        public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
                     }).start();
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
                     request_body.text = raw_request_body_text;
                     break;
-                case "turn-on-ap":
+                case "open-ap":
                     uk.reall.root_kit.network.data_set_enable(true);
                     loop_count = 0;
                     while (!public_func.check_network_status(context)) {
@@ -202,11 +202,12 @@ public class sms_receiver extends BroadcastReceiver {
                     request_body.text = raw_request_body_text;
                     break;
                 case "restart-network":
-                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network);
                     request_body.text = raw_request_body_text;
                     break;
                 default:
                     if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+                        Log.d(TAG, "No SMS permission.");
                         break;
                     }
                     String[] msg_send_list = message_body.split("\n");

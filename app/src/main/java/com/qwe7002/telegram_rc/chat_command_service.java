@@ -308,7 +308,11 @@ public class chat_command_service extends Service {
             case "/switchdata":
             case "/restart_network":
                 if (sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    if (command.equals("/restart_network")) {
+                        request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network);
+                    } else {
+                        request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    }
                 } else {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                 }

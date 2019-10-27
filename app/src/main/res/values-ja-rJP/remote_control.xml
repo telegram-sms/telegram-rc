@@ -3,7 +3,8 @@
     <string name="action_failed">失敗。</string>
     <string name="close_wifi">WI-FIホットスポットを閉じる</string>
     <string name="open_wifi">WI-FIホットスポットを開く</string>
-    <string name="switch_data">モバイルネットワークを変更する。</string>
+    <string name="switch_data">モバイルネットワークのステータスを切り替えます。</string>
+    <string name="restart_network">モバイルネットワークを再起動します。</string>
     <string name="switch_ap_message">/switch_ap - WiFiホットスポットをオンまたはオフにする</string>
     <string name="config_adb_message">/config_adb - 構成ネットワーク adb ポート</string>
     <string name="current_data_card">現在のデータカード</string>

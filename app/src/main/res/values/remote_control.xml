@@ -3,7 +3,8 @@
     <string name="action_failed">failed.</string>
     <string name="close_wifi">Close WI-FI hotspot </string>
     <string name="open_wifi">Open WI-FI hotspot </string>
-    <string name="switch_data">Modify the mobile network.</string>
+    <string name="switch_data">Switching mobile network status.</string>
+    <string name="restart_network">Restarting the mobile network.</string>
     <string name="switch_ap_message">/switch_ap - Turn wifi hotspot on or off</string>
     <string name="config_adb_message">/config_adb - Config network adb port</string>
     <string name="current_data_card">Current data card</string>

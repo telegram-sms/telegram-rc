@@ -14,7 +14,7 @@ public class network {
 
     public static boolean wifi_set_enable(boolean enable) {
         String state = "disable";
-        if (!enable) {
+        if (enable) {
             state = "enable";
         }
         return shell.run_shell_command("svc wifi " + state);
@@ -22,7 +22,7 @@ public class network {
 
     public static void data_set_enable(boolean enable) {
         String state = "disable";
-        if (!enable) {
+        if (enable) {
             state = "enable";
         }
         shell.run_shell_command("svc data " + state);

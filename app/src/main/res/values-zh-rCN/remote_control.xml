@@ -4,6 +4,7 @@
     <string name="close_wifi">关闭无线热点</string>
     <string name="open_wifi">打开无线热点</string>
     <string name="switch_data">正在切换移动网络状态。</string>
+    <string name="restart_network">重新启动移动网络。</string>
     <string name="switch_ap_message">/switch_ap - 打开或关闭无线热点</string>
     <string name="config_adb_message">/config_adb - 配置网络 adb 端口</string>
     <string name="current_data_card">当前数据卡</string>

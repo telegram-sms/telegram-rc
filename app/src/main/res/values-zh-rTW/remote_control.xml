@@ -3,7 +3,8 @@
     <string name="action_failed">失敗。</string>
     <string name="close_wifi">關閉無線網路基地台</string>
     <string name="open_wifi">開啟無線網路基地台</string>
-    <string name="switch_data">正在切換移動網絡狀態。</string>
+    <string name="switch_data">正在切換行動網路狀態。</string>
+    <string name="restart_network">重新啟動行動網路。</string>
     <string name="switch_ap_message">/switch_ap - 開啟或關閉無線網路基地台</string>
     <string name="config_adb_message">/config_adb - 配置網絡 adb 端口</string>
     <string name="current_data_card">當前數據卡</string>

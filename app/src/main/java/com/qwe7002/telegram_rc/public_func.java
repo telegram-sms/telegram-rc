@@ -59,6 +59,7 @@ class public_func {
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final CodeauxLibPortable parser = new CodeauxLibPortable();
     static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
+
     static boolean get_data_enable(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
