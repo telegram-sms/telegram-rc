@@ -178,7 +178,7 @@ public class main_activity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (public_func.parse_int(chat_id.toString()) < 0) {
+                if (public_func.parse_int(chat_id.getText().toString()) < 0) {
                     privacy_mode_switch.setVisibility(View.VISIBLE);
                 } else {
                     privacy_mode_switch.setVisibility(View.GONE);
