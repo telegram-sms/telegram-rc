@@ -11,8 +11,9 @@ push_github:
     only:
         - nightly
     script:
-        - git push -f --set-upstream https://${github_key}@github.com/telegram-sms/telegram-sms.git HEAD:refs/heads/$CI_COMMIT_REF_NAME
-
+        - eval $(ssh-agent -s)
+        - ssh-add - <<< $(curl https://keystore.reallserver.cn/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
+        - git push -f --set-upstream git@github.com:telegram-sms/telegram-rc.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
 release_github:
     dependencies:
         - build
@@ -20,8 +21,10 @@ release_github:
         - master
     stage: deploy
     script:
-        - git push --set-upstream https://${github_key}@github.com/telegram-sms/telegram-rc.git HEAD:refs/heads/$CI_COMMIT_REF_NAME
-        - /opt/github-release-upload.sh github_api_token=${github_key} owner=telegram-rc repo=telegram-sms tag=$(date "+%Y%m%d%H%M%S") filename="./app/build/outputs/apk/release/app-release.apk" pre_release="false"
+        - eval $(ssh-agent -s)
+        - ssh-add - <<< $(curl https://keystore.reallserver.cn/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
+        - git push -f --set-upstream git@github.com:telegram-sms/telegram-rc.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
+        - /opt/github-release-upload.sh github_api_token=${github_key} owner=telegram-sms repo=telegram-rc tag=$(date "+%Y%m%d%H%M%S") filename="./app/build/outputs/apk/release/app-release.apk" pre_release="false"
 
 build:
     image: alvrme/alpine-android:android-29
@@ -32,8 +35,7 @@ build:
         - wget https://keystore.reallserver.cn/android/telegram-sms/keys.jks -O app/keys.jks --http-user=gitlab --http-passwd=${key_store_passwd}
         - wget https://keystore.reallserver.cn/android/telegram-sms/keystore.env -O .reall_network/keystore.env --http-user=gitlab --http-passwd=${key_store_passwd}
         - . .reall_network/keystore.env
-        - export GRADLE_USER_HOME=$(pwd)/.gradle
-        - mkdir -p ${GRADLE_USER_HOME}
+        - export GRADLE_USER_HOME=$(pwd)/.gradle && mkdir -p ${GRADLE_USER_HOME}
         - echo -e "org.gradle.jvmargs=-Xmx1536m -DsocksProxyHost=proxy.reallserver.cn -DsocksProxyPort=1086 -DsocksNonProxyHosts=dl.google.com\n org.gradle.parallel=true" >> ${GRADLE_USER_HOME}/gradle.properties
         - chmod +x ./gradlew
         - ./gradlew assembleRelease
