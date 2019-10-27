@@ -24,6 +24,8 @@ release_github:
         - eval $(ssh-agent -s)
         - ssh-add - <<< $(curl https://keystore.reallserver.cn/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
         - git push -f --set-upstream git@github.com:telegram-sms/telegram-rc.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
+        - curl https://keystore.reallserver.cn/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
+        - . .reall_network/github-key.env
         - /opt/github-release-upload.sh github_api_token=${github_key} owner=telegram-sms repo=telegram-rc tag=$(date "+%Y%m%d%H%M%S") filename="./app/build/outputs/apk/release/app-release.apk" pre_release="false"
 
 build:
