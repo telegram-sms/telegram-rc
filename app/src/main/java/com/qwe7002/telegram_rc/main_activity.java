@@ -460,10 +460,8 @@ public class main_activity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check which request we're responding to
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
-            // Make sure the request was successful
             if (resultCode == RESULT_OK) {
                 bot_token.setText(data.getStringExtra("bot_token"));
             }

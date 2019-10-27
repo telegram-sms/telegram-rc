@@ -144,8 +144,7 @@ public class sms_receiver extends BroadcastReceiver {
                         }
                         loop_count++;
                     }
-                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi);
-                    request_body.text = raw_request_body_text;
+                    String status = context.getString(R.string.action_failed);
                     WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     if (wifiManager.isWifiEnabled()) {
@@ -156,8 +155,12 @@ public class sms_receiver extends BroadcastReceiver {
                             e.printStackTrace();
                         }
                     }
+                    if (uk.reall.root_kit.network.wifi_set_enable(true)) {
+                        status = context.getString(R.string.action_success);
+                    }
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi) + status;
+                    request_body.text = raw_request_body_text;
                     new Thread(() -> {
-                        uk.reall.root_kit.network.wifi_set_enable(true);
                         try {
                             int count = 0;
                             while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
@@ -234,15 +237,14 @@ public class sms_receiver extends BroadcastReceiver {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                command_handle(sharedPreferences, message_body, data_enable);
                 String error_message = error_head + e.getMessage();
                 public_func.write_log(context, error_message);
                 public_func.send_fallback_sms(context, final_raw_request_body_text, sub);
+                command_handle(sharedPreferences, message_body, data_enable);
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                command_handle(sharedPreferences, message_body, data_enable);
                 assert response.body() != null;
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
@@ -256,6 +258,7 @@ public class sms_receiver extends BroadcastReceiver {
                     }
                     public_func.add_message_list(public_func.get_message_id(result), message_address, slot, sub);
                 }
+                command_handle(sharedPreferences, message_body, data_enable);
             }
         });
 

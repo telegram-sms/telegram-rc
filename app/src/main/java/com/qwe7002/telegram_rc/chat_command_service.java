@@ -243,9 +243,9 @@ public class chat_command_service extends Service {
                 if (sharedPreferences.getBoolean("root", false)) {
                     String[] command_list = request_msg.split(" ");
                     if (command_list.length > 1 && uk.reall.root_kit.nadb.set_nadb(command_list[1])) {
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_success);
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_success) + context.getString(R.string.action_success);
                     } else {
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_failed);
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.adb_set_failed) + context.getString(R.string.action_failed);
                     }
                 } else {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
@@ -262,12 +262,19 @@ public class chat_command_service extends Service {
                     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     if (wifiManager.isWifiEnabled()) {
-                        uk.reall.root_kit.network.wifi_set_enable(false);
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi);
+                        String status = context.getString(R.string.action_failed);
+                        if (uk.reall.root_kit.network.wifi_set_enable(false)) {
+                            status = context.getString(R.string.action_success);
+                        }
+
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + status;
                     } else {
-                        uk.reall.root_kit.network.wifi_set_enable(true);
+                        String status = context.getString(R.string.action_failed);
+                        if (uk.reall.root_kit.network.wifi_set_enable(true)) {
+                            status = context.getString(R.string.action_success);
+                        }
                         wifi_open = true;
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi);
+                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + status;
                     }
                     request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
                     if (wifi_open) {

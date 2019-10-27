@@ -1,12 +1,14 @@
 <resources>
-    <string name="close_wifi">Close WI-FI hotspot successfully.</string>
-    <string name="open_wifi">Open WI-FI hotspot successfully.</string>
-    <string name="switch_data">Modify the mobile network successfully.</string>
+    <string name="action_success">successfully.</string>
+    <string name="action_failed">failed.</string>
+    <string name="close_wifi">Close WI-FI hotspot </string>
+    <string name="open_wifi">Open WI-FI hotspot </string>
+    <string name="switch_data">Modify the mobile network.</string>
     <string name="switch_ap_message">/switch_ap - Turn wifi hotspot on or off</string>
     <string name="config_adb_message">/config_adb - Config network adb port</string>
     <string name="current_data_card">Current data card</string>
     <string name="not_getting_root">Not getting root privileges.</string>
-    <string name="adb_set_success">Network adb setup is complete.</string>
-    <string name="adb_set_failed">Network adb setup failed.</string>
-    <string name="root_switch">[Root] Allow advanced features</string>\
+    <string name="adb_set_success">Network adb setup </string>
+    <string name="adb_set_failed">Network adb setup </string>
+    <string name="root_switch">[Root] Allow advanced features</string>
 </resources>

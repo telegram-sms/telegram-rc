@@ -1,7 +1,9 @@
 <resources>
-    <string name="close_wifi">WI-FIホットスポットを閉じます。</string>
-    <string name="open_wifi">WI-FIホットスポットを正常に開きます。</string>
-    <string name="switch_data">Modify the mobile network successfully.</string>
+    <string name="action_success">成功。</string>
+    <string name="action_failed">失敗。</string>
+    <string name="close_wifi">WI-FIホットスポットを閉じる</string>
+    <string name="open_wifi">WI-FIホットスポットを開く</string>
+    <string name="switch_data">モバイルネットワークを変更する。</string>
     <string name="switch_ap_message">/switch_ap - WiFiホットスポットをオンまたはオフにする</string>
     <string name="config_adb_message">/config_adb - 構成ネットワーク adb ポート</string>
     <string name="current_data_card">現在のデータカード</string>
