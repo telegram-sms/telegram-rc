@@ -457,6 +457,11 @@ public class chat_command_service extends Service {
                             if (!public_func.get_data_enable(context)) {
                                 uk.reall.root_kit.network.data_set_enable(true);
                             } else {
+                                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                                assert wifiManager != null;
+                                if (wifiManager.isWifiEnabled()) {
+                                    uk.reall.root_kit.network.wifi_set_enable(false);
+                                }
                                 uk.reall.root_kit.network.data_set_enable(false);
                             }
                             break;
