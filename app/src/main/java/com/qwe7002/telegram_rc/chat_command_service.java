@@ -310,11 +310,18 @@ public class chat_command_service extends Service {
             case "/switch_data":
             case "/switchdata":
             case "/restart_network":
+            case "/close_ap":
                 if (sharedPreferences.getBoolean("root", false)) {
-                    if (command.equals("/restart_network")) {
-                        request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network);
-                    } else {
-                        request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                    switch (command) {
+                        case "/restart_network":
+                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network);
+                            break;
+                        case "/close_ap":
+                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
+                            break;
+                        default:
+                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                            break;
                     }
                 } else {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
@@ -454,13 +461,16 @@ public class chat_command_service extends Service {
                     switch (final_command) {
                         case "/switch_data":
                         case "/switchdata":
+                        case "/close_ap":
                             if (!public_func.get_data_enable(context)) {
                                 uk.reall.root_kit.network.data_set_enable(true);
                             } else {
-                                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                                assert wifiManager != null;
-                                if (wifiManager.isWifiEnabled()) {
-                                    uk.reall.root_kit.network.wifi_set_enable(false);
+                                if (final_command.equals("/close_ap")) {
+                                    WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                                    assert wifiManager != null;
+                                    if (wifiManager.isWifiEnabled()) {
+                                        uk.reall.root_kit.network.wifi_set_enable(false);
+                                    }
                                 }
                                 uk.reall.root_kit.network.data_set_enable(false);
                             }

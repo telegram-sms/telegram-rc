@@ -57,7 +57,6 @@ import uk.reall.root_kit.shell;
 
 public class main_activity extends AppCompatActivity {
     private Context context = null;
-    private Switch display_dual_sim_display_name;
     private final String TAG = "main_activity";
 
     @SuppressLint("BatteryLife")
@@ -83,7 +82,7 @@ public class main_activity extends AppCompatActivity {
         final Switch privacy_mode_switch = findViewById(R.id.privacy_switch);
         final Button save_button = findViewById(R.id.save);
         final Button get_id = findViewById(R.id.get_id);
-        display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
+        final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
 
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
@@ -460,6 +459,7 @@ public class main_activity extends AppCompatActivity {
                 startActivityForResult(intent, 1);
                 break;
             case 1:
+                Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                         TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
