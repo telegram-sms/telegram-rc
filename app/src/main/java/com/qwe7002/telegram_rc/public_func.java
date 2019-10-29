@@ -319,8 +319,13 @@ class public_func {
             return;
         }
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
+        String trust_number = sharedPreferences.getString("trusted_phone_number", null);
+        if (trust_number == null) {
+            Log.i(TAG, "The trusted number is empty.");
+            return;
+        }
         if (!sharedPreferences.getBoolean("fallback_sms", false)) {
-            Log.d(TAG, "send_fallback_sms: Fallback SMS is not enabled.");
+            Log.i(TAG, "Did not open the SMS to fall back.");
             return;
         }
         android.telephony.SmsManager sms_manager;
@@ -330,8 +335,6 @@ class public_func {
             sms_manager = SmsManager.getSmsManagerForSubscriptionId(sub_id);
         }
         ArrayList<String> divideContents = sms_manager.divideMessage(content);
-        String trust_number = sharedPreferences.getString("trusted_phone_number", null);
-        assert trust_number != null;
         sms_manager.sendMultipartTextMessage(trust_number, null, divideContents, null, null);
     }
 

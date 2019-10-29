@@ -413,6 +413,7 @@ public class main_activity extends AppCompatActivity {
                         return;
                     }
                     if (!new_bot_token.equals(bot_token_save)) {
+                        Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
                         Paper.book().destroy();
                     }
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
@@ -420,8 +421,8 @@ public class main_activity extends AppCompatActivity {
                     editor.putString("chat_id", chat_id.getText().toString().trim());
                     if (trusted_phone_number.getText().toString().trim().length() != 0) {
                         editor.putString("trusted_phone_number", trusted_phone_number.getText().toString().trim());
+                        editor.putBoolean("fallback_sms", fallback_sms.isChecked());
                     }
-                    editor.putBoolean("fallback_sms", fallback_sms.isChecked());
                     editor.putBoolean("chat_command", chat_command.isChecked());
                     editor.putBoolean("battery_monitoring_switch", battery_monitoring_switch.isChecked());
                     editor.putBoolean("charger_status", charger_status.isChecked());
