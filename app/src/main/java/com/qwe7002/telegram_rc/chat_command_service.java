@@ -289,7 +289,7 @@ public class chat_command_service extends Service {
                                         break;
                                     }
                                     Thread.sleep(100);
-                                    count++;
+                                    ++count;
                                 }
                                 Thread.sleep(1000);
                             } catch (InterruptedException e) {
@@ -337,7 +337,7 @@ public class chat_command_service extends Service {
                     String msg_send_to = public_func.get_send_phone_number(msg_send_list[1]);
                     if (public_func.is_phone_number(msg_send_to)) {
                         StringBuilder msg_send_content = new StringBuilder();
-                        for (int i = 2; i < msg_send_list.length; i++) {
+                        for (int i = 2; i < msg_send_list.length; ++i) {
                             if (msg_send_list.length != 3 && i != 2) {
                                 msg_send_content.append("\n");
                             }
@@ -618,7 +618,7 @@ public class chat_command_service extends Service {
                     public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
                     magnification = 1;
                     if (error_magnification <= 59) {
-                        error_magnification++;
+                        ++error_magnification;
                     }
                     try {
                         Thread.sleep(sleep_time * 1000);
@@ -645,7 +645,7 @@ public class chat_command_service extends Service {
                         }
                     }
                     if (magnification <= 11) {
-                        magnification++;
+                        ++magnification;
                     }
                 } else {
                     public_func.write_log(context, "response code:" + response.code());

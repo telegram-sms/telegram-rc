@@ -60,7 +60,7 @@ public class sms_receiver extends BroadcastReceiver {
         Object[] pdus = (Object[]) extras.get("pdus");
         assert pdus != null;
         final SmsMessage[] messages = new SmsMessage[pdus.length];
-        for (int i = 0; i < pdus.length; i++) {
+        for (int i = 0; i < pdus.length; ++i) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 String format = extras.getString("format");
                 messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
@@ -143,7 +143,7 @@ public class sms_receiver extends BroadcastReceiver {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        loop_count++;
+                        ++loop_count;
                     }
                     String status = context.getString(R.string.action_failed);
                     WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -169,7 +169,7 @@ public class sms_receiver extends BroadcastReceiver {
                                     break;
                                 }
                                 Thread.sleep(100);
-                                count++;
+                                ++count;
                             }
                             Thread.sleep(1000);//Wait 3   second to avoid startup failure
                         } catch (InterruptedException e) {
@@ -196,7 +196,7 @@ public class sms_receiver extends BroadcastReceiver {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            loop_count++;
+                            ++loop_count;
                         }
                     }
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
@@ -215,7 +215,7 @@ public class sms_receiver extends BroadcastReceiver {
                     String msg_send_to = public_func.get_send_phone_number(msg_send_list[0]);
                     if (public_func.is_phone_number(msg_send_to) && msg_send_list.length != 1) {
                         StringBuilder msg_send_content = new StringBuilder();
-                        for (int i = 1; i < msg_send_list.length; i++) {
+                        for (int i = 1; i < msg_send_list.length; ++i) {
                             if (msg_send_list.length != 2 && i != 1) {
                                 msg_send_content.append("\n");
                             }
