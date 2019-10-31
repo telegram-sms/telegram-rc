@@ -180,18 +180,16 @@ class public_func {
                 net_type = "WIFI";
                 break;
             case ConnectivityManager.TYPE_MOBILE:
-                String result = "";
                 boolean is_att = false;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                         Log.d("get_network_type", "No permission.");
-                        return result;
+                    } else {
+                        SubscriptionInfo info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
+                        if (info != null) {
+                            is_att = info.getCarrierName().toString().contains("AT&T");
+                        }
                     }
-                    SubscriptionInfo info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
-                    if (info != null) {
-                        result = info.getCarrierName().toString();
-                    }
-                    is_att = result.contains("AT&T");
                 }
                 switch (network_info.getSubtype()) {
                     case TelephonyManager.NETWORK_TYPE_NR:
@@ -243,8 +241,7 @@ class public_func {
             Log.d("get_data_sim_id", "No permission.");
             return result;
         }
-        SubscriptionInfo info;
-        info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
+        SubscriptionInfo info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
         if (info == null) {
             return result;
         }
