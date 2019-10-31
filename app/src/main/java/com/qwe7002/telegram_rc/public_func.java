@@ -180,7 +180,19 @@ class public_func {
                 net_type = "WIFI";
                 break;
             case ConnectivityManager.TYPE_MOBILE:
-                boolean is_att = get_data_sim_name(context).contains("AT&T");
+                String result = "";
+                boolean is_att = false;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                        Log.d("get_network_type", "No permission.");
+                        return result;
+                    }
+                    SubscriptionInfo info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
+                    if (info != null) {
+                        result = info.getCarrierName().toString();
+                    }
+                    is_att = result.contains("AT&T");
+                }
                 switch (network_info.getSubtype()) {
                     case TelephonyManager.NETWORK_TYPE_NR:
                         net_type = "5G";
@@ -223,32 +235,16 @@ class public_func {
         return net_type;
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
-    private static String get_data_sim_name(Context context) {
-        String result = "Unknown";
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            Log.d("get_data_sim_name", "No permission.");
-            return result;
-        }
-        SubscriptionInfo info;
-        info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
-        if (info == null) {
-            return result;
-        }
-        result = info.getCarrierName().toString();
-        return result;
-    }
 
+    @TargetApi(Build.VERSION_CODES.N)
     static String get_data_sim_id(Context context) {
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             Log.d("get_data_sim_id", "No permission.");
             return result;
         }
-        SubscriptionInfo info = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
-        }
+        SubscriptionInfo info;
+        info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
         if (info == null) {
             return result;
         }
