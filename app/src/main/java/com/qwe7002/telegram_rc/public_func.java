@@ -1,6 +1,7 @@
 package com.qwe7002.telegram_rc;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -222,16 +223,15 @@ class public_func {
         return net_type;
     }
 
+    @TargetApi(Build.VERSION_CODES.N)
     private static String get_data_sim_name(Context context) {
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             Log.d("get_data_sim_name", "No permission.");
             return result;
         }
-        SubscriptionInfo info = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
-        }
+        SubscriptionInfo info;
+        info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
         if (info == null) {
             return result;
         }
