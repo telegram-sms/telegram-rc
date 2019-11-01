@@ -436,8 +436,7 @@ class public_func {
         Log.i("write_log", log);
         int new_file_mode = Context.MODE_APPEND;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.UK);
-        Date ts = new Date(System.currentTimeMillis());
-        String write_string = "\n" + simpleDateFormat.format(ts) + " " + log;
+        String write_string = "\n" + simpleDateFormat.format(new Date(System.currentTimeMillis())) + " " + log;
         write_file(context, "error.log", write_string, new_file_mode);
     }
 
@@ -452,6 +451,7 @@ class public_func {
 
     @SuppressWarnings("WeakerAccess")
     static String read_file_last_line(Context context, @SuppressWarnings("SameParameterValue") String file, int line) {
+        String TAG = "read_file_last_line";
         StringBuilder builder = new StringBuilder();
         FileInputStream file_stream = null;
         FileChannel channel = null;
@@ -474,6 +474,7 @@ class public_func {
             return builder.toString();
         } catch (IOException e) {
             e.printStackTrace();
+            Log.d(TAG, "Unable to read the file.");
             return "";
         } finally {
             try {
