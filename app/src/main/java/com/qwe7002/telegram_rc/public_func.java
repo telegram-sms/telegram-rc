@@ -441,8 +441,8 @@ class public_func {
         write_file(context, "error.log", write_string, new_file_mode);
     }
 
-    static String read_log(Context context, @SuppressWarnings("SameParameterValue") int line) {
-        String result = "\n" + context.getString(R.string.no_logs);
+    static String read_log(Context context, int line) {
+        String result = context.getString(R.string.no_logs);
         String log_content = public_func.read_file_last_line(context, "error.log", line);
         if (!log_content.isEmpty()) {
             result = log_content;
