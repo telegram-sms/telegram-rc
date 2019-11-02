@@ -545,6 +545,7 @@ public class chat_command_service extends Service {
         assert batteryManager != null;
         int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
         if (battery_level > 100) {
+            Log.d(TAG, "The previous battery is over 100%, and the correction is 100%.");
             battery_level = 100;
         }
         String battery_level_string = battery_level + "%";
