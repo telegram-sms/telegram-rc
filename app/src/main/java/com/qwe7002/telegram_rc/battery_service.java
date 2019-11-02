@@ -76,8 +76,9 @@ public class battery_service extends Service {
     class battery_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(final Context context, final Intent intent) {
+            assert intent.getAction() != null;
             Log.d("battery_receiver", "Receive action: " + intent.getAction());
-            if (Objects.equals(intent.getAction(), public_func.broadcast_stop_service)) {
+            if (intent.getAction().equals(public_func.broadcast_stop_service)) {
                 Log.i("battery_service", "Received stop signal, quitting now...");
                 stopSelf();
                 android.os.Process.killProcess(android.os.Process.myPid());

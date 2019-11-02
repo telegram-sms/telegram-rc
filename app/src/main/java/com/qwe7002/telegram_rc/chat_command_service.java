@@ -654,7 +654,8 @@ public class chat_command_service extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "onReceive: " + intent.getAction());
-            switch (Objects.requireNonNull(intent.getAction())) {
+            assert intent.getAction() != null;
+            switch (intent.getAction()) {
                 case public_func.broadcast_stop_service:
                     Log.i(TAG, "Received stop signal, quitting now...");
                     stopSelf();
