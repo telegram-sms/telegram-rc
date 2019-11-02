@@ -25,15 +25,12 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static android.content.Context.BATTERY_SERVICE;
-
 public class battery_service extends Service {
     static String bot_token;
     static String chat_id;
     static boolean doh_switch;
     private Context context;
     private battery_receiver battery_receiver = null;
-    private stop_broadcast_receiver stop_broadcast_receiver = null;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -51,25 +48,21 @@ public class battery_service extends Service {
         bot_token = sharedPreferences.getString("bot_token", "");
         doh_switch = sharedPreferences.getBoolean("doh_switch", true);
         boolean charger_status = sharedPreferences.getBoolean("charger_status", false);
-        IntentFilter intentFilter = new IntentFilter(public_func.broadcast_stop_service);
-        stop_broadcast_receiver = new stop_broadcast_receiver();
-
         battery_receiver = new battery_receiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_OKAY);
         filter.addAction(Intent.ACTION_BATTERY_LOW);
+        filter.addAction(public_func.broadcast_stop_service);
         if (charger_status) {
             filter.addAction(Intent.ACTION_POWER_CONNECTED);
             filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
         }
         registerReceiver(battery_receiver, filter);
-        registerReceiver(stop_broadcast_receiver, intentFilter);
 
     }
 
     @Override
     public void onDestroy() {
-        unregisterReceiver(stop_broadcast_receiver);
         unregisterReceiver(battery_receiver);
         stopForeground(true);
         super.onDestroy();
@@ -80,76 +73,74 @@ public class battery_service extends Service {
         return null;
     }
 
-    class stop_broadcast_receiver extends BroadcastReceiver {
+    class battery_receiver extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.i("battery_service", "Received stop signal, quitting now...");
-            stopSelf();
-            android.os.Process.killProcess(android.os.Process.myPid());
-        }
-    }
-
-}
-
-class battery_receiver extends BroadcastReceiver {
-    @Override
-    public void onReceive(final Context context, final Intent intent) {
-        Log.d("battery_receiver", "Receive action: " + intent.getAction());
-        String request_uri = public_func.get_url(battery_service.bot_token, "sendMessage");
-        final message_json request_body = new message_json();
-        request_body.chat_id = battery_service.chat_id;
-        StringBuilder prebody = new StringBuilder(context.getString(R.string.system_message_head) + "\n");
-        final String action = intent.getAction();
-        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-        switch (Objects.requireNonNull(action)) {
-            case Intent.ACTION_BATTERY_OKAY:
-                prebody.append(context.getString(R.string.low_battery_status_end));
-                break;
-            case Intent.ACTION_BATTERY_LOW:
-                prebody.append(context.getString(R.string.battery_low));
-                break;
-            case Intent.ACTION_POWER_CONNECTED:
-                prebody.append(context.getString(R.string.charger_connect));
-                break;
-            case Intent.ACTION_POWER_DISCONNECTED:
-                prebody.append(context.getString(R.string.charger_disconnect));
-                break;
-        }
-        assert batteryManager != null;
-        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-        if (battery_level > 100) {
-            battery_level = 100;
-        }
-
-        request_body.text = prebody.append("\n").append(context.getString(R.string.current_battery_level)).append(battery_level).append("%").toString();
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(battery_service.doh_switch);
-        String request_body_raw = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
-        Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-        Call call = okhttp_client.newCall(request);
-        final String error_head = "Send battery info failed:";
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                e.printStackTrace();
-                String error_message = error_head + e.getMessage();
-                public_func.write_log(context, error_message);
-                if (action.equals(Intent.ACTION_BATTERY_LOW)) {
-                    public_func.send_fallback_sms(context, request_body.text, -1);
-                }
+        public void onReceive(final Context context, final Intent intent) {
+            Log.d("battery_receiver", "Receive action: " + intent.getAction());
+            if (Objects.equals(intent.getAction(), public_func.broadcast_stop_service)) {
+                Log.i("battery_service", "Received stop signal, quitting now...");
+                stopSelf();
+                android.os.Process.killProcess(android.os.Process.myPid());
+                return;
+            }
+            String request_uri = public_func.get_url(battery_service.bot_token, "sendMessage");
+            final message_json request_body = new message_json();
+            request_body.chat_id = battery_service.chat_id;
+            StringBuilder prebody = new StringBuilder(context.getString(R.string.system_message_head) + "\n");
+            final String action = intent.getAction();
+            BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+            switch (Objects.requireNonNull(action)) {
+                case Intent.ACTION_BATTERY_OKAY:
+                    prebody.append(context.getString(R.string.low_battery_status_end));
+                    break;
+                case Intent.ACTION_BATTERY_LOW:
+                    prebody.append(context.getString(R.string.battery_low));
+                    break;
+                case Intent.ACTION_POWER_CONNECTED:
+                    prebody.append(context.getString(R.string.charger_connect));
+                    break;
+                case Intent.ACTION_POWER_DISCONNECTED:
+                    prebody.append(context.getString(R.string.charger_disconnect));
+                    break;
+            }
+            assert batteryManager != null;
+            int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            if (battery_level > 100) {
+                battery_level = 100;
             }
 
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.code() != 200) {
-                    assert response.body() != null;
-                    String error_message = error_head + response.code() + " " + Objects.requireNonNull(response.body()).string();
+            request_body.text = prebody.append("\n").append(context.getString(R.string.current_battery_level)).append(battery_level).append("%").toString();
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj(battery_service.doh_switch);
+            String request_body_raw = new Gson().toJson(request_body);
+            RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
+            Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+            Call call = okhttp_client.newCall(request);
+            final String error_head = "Send battery info failed:";
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    e.printStackTrace();
+                    String error_message = error_head + e.getMessage();
                     public_func.write_log(context, error_message);
                     if (action.equals(Intent.ACTION_BATTERY_LOW)) {
                         public_func.send_fallback_sms(context, request_body.text, -1);
                     }
                 }
-            }
-        });
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    if (response.code() != 200) {
+                        assert response.body() != null;
+                        String error_message = error_head + response.code() + " " + Objects.requireNonNull(response.body()).string();
+                        public_func.write_log(context, error_message);
+                        if (action.equals(Intent.ACTION_BATTERY_LOW)) {
+                            public_func.send_fallback_sms(context, request_body.text, -1);
+                        }
+                    }
+                }
+            });
+        }
     }
+
 }
+

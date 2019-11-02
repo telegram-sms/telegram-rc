@@ -94,10 +94,10 @@ public class chat_command_service extends Service {
         }
         thread_main = new Thread(new thread_main_runnable());
         thread_main.start();
-        IntentFilter intentFilter = new IntentFilter(public_func.broadcast_stop_service);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(public_func.broadcast_stop_service);
+        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         broadcast_receiver = new broadcast_receiver();
-        registerReceiver(broadcast_receiver, intentFilter);
-        intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(broadcast_receiver, intentFilter);
 
     }
