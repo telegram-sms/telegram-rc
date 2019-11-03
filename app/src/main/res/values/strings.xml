@@ -68,4 +68,6 @@
     <string name="using_privacy_mode">Respond only to commands containing the Bot username</string>
     <string name="scan_title">Scan QR code</string>
     <string name="no_camera_permission">Please allow camera access for QR code scanning.</string>
+    <string name="conflict_error">terminated by other request; make sure that only one bot instance is running.</string>
+
 </resources>
