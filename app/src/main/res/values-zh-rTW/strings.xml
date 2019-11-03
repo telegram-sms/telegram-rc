@@ -7,8 +7,8 @@
     <string name="send_sms_head">發送簡訊</string>
     <string name="system_message_head">[系統訊息]</string>
     <string name="success_connect">您已成功連接到 Telegram bot 伺服器。</string>
-    <string name="connect_wait_title">連接到伺服器......</string>
-    <string name="connect_wait_message">請耐心等待......</string>
+    <string name="connect_wait_title">連接到伺服器…</string>
+    <string name="connect_wait_message">請耐心等待…</string>
     <string name="select_chat">選擇對話</string>
     <string name="missed_call_head">未接來電</string>
     <string name="Incoming_number">"來電號碼: "</string>
@@ -32,7 +32,7 @@
     <string name="current_network_connection_status">"網路狀態: "</string>
     <string name="battery_monitoring">監控電池狀態變動</string>
     <string name="trusted_phone_number_empty">可信電話號碼不能為空。</string>
-    <string name="service_is_running">服務正在運行......</string>
+    <string name="service_is_running">服務正在運行…</string>
     <string name="battery_monitoring_notify">電池監控</string>
     <string name="chat_command_service_name">聊天命令</string>
     <string name="success">成功</string>
@@ -48,7 +48,7 @@
     <string name="sendsms">/sendsms - 發送簡訊</string>
     <string name="sending">正在發送</string>
     <string name="get_recent_chat_message">請發送一些消息到Bot。</string>
-    <string name="get_recent_chat_title">獲取最近的對話.....</string>
+    <string name="get_recent_chat_title">獲取最近的對話…</string>
     <string name="using_doh">使用DNS over HTTPS</string>
     <string name="sim_card_insert">SIM卡被插入。</string>
     <string name="sim_card_remove">SIM卡被移除。</string>
