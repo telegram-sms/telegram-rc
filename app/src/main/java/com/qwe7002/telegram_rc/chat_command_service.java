@@ -548,29 +548,28 @@ public class chat_command_service extends Service {
             Log.d(TAG, "The previous battery is over 100%, and the correction is 100%.");
             battery_level = 100;
         }
-        String battery_level_string = battery_level + "%";
         IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = context.registerReceiver(null, intentfilter);
         assert batteryStatus != null;
         int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        StringBuilder battery_string_builder = new StringBuilder().append(battery_level).append("%");
         switch (charge_status) {
             case BatteryManager.BATTERY_STATUS_CHARGING:
             case BatteryManager.BATTERY_STATUS_FULL:
-                battery_level_string += " (" + context.getString(R.string.charging) + ")";
+                battery_string_builder.append(" (").append(context.getString(R.string.charging)).append(")");
                 break;
             case BatteryManager.BATTERY_STATUS_DISCHARGING:
             case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                int plug_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-                switch (plug_status) {
+                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
                     case BatteryManager.BATTERY_PLUGGED_AC:
                     case BatteryManager.BATTERY_PLUGGED_USB:
                     case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        battery_level_string += " (" + getString(R.string.not_charging) + ")";
+                        battery_string_builder.append(" (").append(context.getString(R.string.not_charging)).append(")");
                         break;
                 }
                 break;
         }
-        return battery_level_string;
+        return battery_string_builder.toString();
     }
 
     class thread_main_runnable implements Runnable {
