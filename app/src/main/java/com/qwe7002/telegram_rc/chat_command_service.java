@@ -40,7 +40,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-@SuppressWarnings("SpellCheckingInspection")
 public class chat_command_service extends Service {
     private static long offset = 0;
     private static int magnification = 1;

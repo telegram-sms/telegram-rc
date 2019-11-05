@@ -57,12 +57,15 @@ public class sms_receiver extends BroadcastReceiver {
         String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
 
         final int sub = extras.getInt("subscription", -1);
+        //noinspection SpellCheckingInspection
         Object[] pdus = (Object[]) extras.get("pdus");
         assert pdus != null;
         final SmsMessage[] messages = new SmsMessage[pdus.length];
         for (int i = 0; i < pdus.length; ++i) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 String format = extras.getString("format");
+                Log.d(TAG, "format: " + format);
+                assert format != null;
                 messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
             } else {
                 messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
