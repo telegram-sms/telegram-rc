@@ -10,6 +10,10 @@ You can follow the Telegram channel [Telegram SMS 更新日志 (tg_sms_changelog
 
 [Download](https://github.com/telegram-sms/telegram_remote_control/releases)
 
+The program's wireless hotspot feature relies on [VPNHotspot] (https://github.com/Mygod/VPNHotspot/) and requires dependent software to be installed for use.
+
+The user manual is not available in this program, please refer to the user manual of Telegram SMS.
+
 ## Risk warning | 风险警告 | 風險警告 | リスク警告
 
 **This is a sub-version of Telegram SMS that has more experimental features. No warranty expressed or implied. Use at your own risk. You have been warned.**

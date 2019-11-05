@@ -91,8 +91,7 @@ public class call_receiver extends BroadcastReceiver {
                     @Override
                     public void onFailure(@NonNull Call call, @NonNull IOException e) {
                         e.printStackTrace();
-                        String error_message = error_head + e.getMessage();
-                        public_func.write_log(context, error_message);
+                        public_func.write_log(context, error_head + e.getMessage());
                         public_func.send_fallback_sms(context, request_body.text, public_func.get_sub_id(context, slot));
 
                     }
@@ -101,8 +100,7 @@ public class call_receiver extends BroadcastReceiver {
                     public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                         assert response.body() != null;
                         if (response.code() != 200) {
-                            String error_message = error_head + response.code() + " " + Objects.requireNonNull(response.body()).string();
-                            public_func.write_log(context, error_message);
+                            public_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
                         } else {
                             String result = Objects.requireNonNull(response.body()).string();
                             JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject().get("result").getAsJsonObject();
