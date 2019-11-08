@@ -101,6 +101,7 @@ public class chat_command_service extends Service {
 
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     private void receive_handle(JsonObject result_obj) {
         String message_type = "";
         long update_id = result_obj.get("update_id").getAsLong();
@@ -192,7 +193,7 @@ public class chat_command_service extends Service {
 
 
         boolean has_command = false;
-        switch (command) {
+        switch (command.replace("_", "")) {
             case "/help":
             case "/start":
                 String dual_card = "\n" + getString(R.string.sendsms);
@@ -234,7 +235,6 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
                 has_command = true;
                 break;
-            case "/config_adb":
             case "/configadb":
                 if (sharedPreferences.getBoolean("root", false)) {
                     String[] command_list = request_msg.split(" ");
@@ -251,7 +251,6 @@ public class chat_command_service extends Service {
                 }
                 has_command = true;
                 break;
-            case "/switch_ap":
             case "/switchap":
                 if (sharedPreferences.getBoolean("root", false)) {
                     if (!is_vpn_hotsport_exist()) {
@@ -262,7 +261,7 @@ public class chat_command_service extends Service {
                     assert wifiManager != null;
                     if (wifiManager.isWifiEnabled()) {
                         String status = context.getString(R.string.action_failed);
-                        if (uk.reall.root_kit.network.wifi_set_enable(false)) {
+                        if (uk.reall.root_kit.shell.check_root()) {
                             status = context.getString(R.string.action_success);
                         }
 
@@ -303,10 +302,9 @@ public class chat_command_service extends Service {
                 }
                 has_command = true;
                 break;
-            case "/switch_data":
             case "/switchdata":
-            case "/restart_network":
-            case "/close_ap":
+            case "/restartnetwork":
+            case "/closeap":
                 if (sharedPreferences.getBoolean("root", false)) {
                     switch (command) {
                         case "/restart_network":
@@ -445,6 +443,7 @@ public class chat_command_service extends Service {
                 public_func.write_log(context, error_head + e.getMessage());
             }
 
+            @SuppressWarnings("SpellCheckingInspection")
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
@@ -452,24 +451,26 @@ public class chat_command_service extends Service {
                     public_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
                 }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
-                    switch (final_command) {
-                        case "/switch_data":
-                        case "/switchdata":
-                        case "/close_ap":
-                            if (!public_func.get_data_enable(context)) {
-                                uk.reall.root_kit.network.data_set_enable(true);
-                            } else {
-                                if (final_command.equals("/close_ap")) {
-                                    WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                                    assert wifiManager != null;
-                                    if (wifiManager.isWifiEnabled()) {
-                                        uk.reall.root_kit.network.wifi_set_enable(false);
-                                    }
-                                }
-                                uk.reall.root_kit.network.data_set_enable(false);
+                    switch (final_command.replace("_", "")) {
+                        case "/switchap":
+                            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                            assert wifiManager != null;
+                            if (wifiManager.isWifiEnabled()) {
+                                uk.reall.root_kit.network.wifi_set_enable(false);
                             }
                             break;
-                        case "/restart_network":
+                        case "/switchdata":
+                            if (public_func.get_data_enable(context)) {
+                                uk.reall.root_kit.network.data_set_enable(false);
+                            } else {
+                                uk.reall.root_kit.network.data_set_enable(true);
+                            }
+                            break;
+                        case "/closeap":
+                            uk.reall.root_kit.network.wifi_set_enable(false);
+                            uk.reall.root_kit.network.data_set_enable(false);
+                            break;
+                        case "/restartnetwork":
                             public_func.restart_network();
                             break;
                     }
