@@ -174,7 +174,7 @@ public class sms_receiver extends BroadcastReceiver {
                                 Thread.sleep(100);
                                 ++count;
                             }
-                            Thread.sleep(1000);//Wait 3   second to avoid startup failure
+                            Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -184,6 +184,10 @@ public class sms_receiver extends BroadcastReceiver {
                             uk.reall.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
                         }
                     }).start();
+                    break;
+                case "close-ap":
+                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
+                    request_body.text = raw_request_body_text;
                     break;
                 case "switch-data":
                     if (!data_enable) {
@@ -264,7 +268,6 @@ public class sms_receiver extends BroadcastReceiver {
                 command_handle(sharedPreferences, message_body, data_enable);
             }
         });
-
     }
 
     void command_handle(SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
@@ -274,6 +277,10 @@ public class sms_receiver extends BroadcastReceiver {
                     if (data_enable) {
                         uk.reall.root_kit.network.data_set_enable(false);
                     }
+                    break;
+                case "close-ap":
+                    uk.reall.root_kit.network.wifi_set_enable(false);
+                    uk.reall.root_kit.network.data_set_enable(false);
                     break;
                 case "restart-network":
                     public_func.restart_network();

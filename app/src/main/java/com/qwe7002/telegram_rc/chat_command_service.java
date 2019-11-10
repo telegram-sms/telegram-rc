@@ -252,6 +252,7 @@ public class chat_command_service extends Service {
                 has_command = true;
                 break;
             case "/switchap":
+                String result_ap = getString(R.string.not_getting_root);
                 if (sharedPreferences.getBoolean("root", false)) {
                     if (!is_vpn_hotsport_exist()) {
                         break;
@@ -260,21 +261,16 @@ public class chat_command_service extends Service {
                     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     if (wifiManager.isWifiEnabled()) {
-                        String status = context.getString(R.string.action_failed);
-                        if (uk.reall.root_kit.shell.check_root()) {
-                            status = context.getString(R.string.action_success);
-                        }
-
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + status;
+                        result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
                     } else {
                         String status = context.getString(R.string.action_failed);
                         if (uk.reall.root_kit.network.wifi_set_enable(true)) {
                             status = context.getString(R.string.action_success);
                         }
                         wifi_open = true;
-                        request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + status;
+                        result_ap = getString(R.string.open_wifi) + status;
                     }
-                    request_body.text += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
                     if (wifi_open) {
                         new Thread(() -> {
                             try {
@@ -297,29 +293,28 @@ public class chat_command_service extends Service {
                             }
                         }).start();
                     }
-                } else {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                 }
+                request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                 has_command = true;
                 break;
             case "/switchdata":
             case "/restartnetwork":
             case "/closeap":
+                String result_data = getString(R.string.not_getting_root);
                 if (sharedPreferences.getBoolean("root", false)) {
                     switch (command) {
-                        case "/restart_network":
-                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network);
+                        case "/restartnetwork":
+                            result_data = context.getString(R.string.restart_network);
                             break;
-                        case "/close_ap":
-                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
+                        case "/closeap":
+                            result_data = context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
                             break;
                         default:
-                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                            result_data = context.getString(R.string.switch_data);
                             break;
                     }
-                } else {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                 }
+                request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
                 has_command = true;
                 break;
             case "/sendsms":
@@ -357,23 +352,21 @@ public class chat_command_service extends Service {
                             return;
                         }
                     }
-                } else {
-                    if (message_type_is_private) {
-                        send_sms_status = 0;
-                        send_slot_temp = -1;
-                        if (public_func.get_active_card(context) > 1) {
-                            switch (command) {
-                                case "/sendsms":
-                                case "/sendsms1":
-                                    send_slot_temp = 0;
-                                    break;
-                                case "/sendsms2":
-                                    send_slot_temp = 1;
-                                    break;
-                            }
+                } else if (message_type_is_private) {
+                    send_sms_status = 0;
+                    send_slot_temp = -1;
+                    if (public_func.get_active_card(context) > 1) {
+                        switch (command) {
+                            case "/sendsms":
+                            case "/sendsms1":
+                                send_slot_temp = 0;
+                                break;
+                            case "/sendsms2":
+                                send_slot_temp = 1;
+                                break;
                         }
-                        has_command = false;
                     }
+                    has_command = false;
                 }
                 request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                 break;
@@ -385,26 +378,37 @@ public class chat_command_service extends Service {
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
                 break;
         }
+        if (has_command) {
+            send_sms_status = -1;
+            send_slot_temp = -1;
+            send_to_temp = null;
+        }
         if (!has_command) {
+            Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.");
+            String dual_sim = "";
+            if (send_slot_temp != -1) {
+                dual_sim = "SIM" + (send_slot_temp + 1) + " ";
+            }
+            String head = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]";
+            String result_send = getString(R.string.failed_to_get_information);
+            Log.d(TAG, "Sending mode status: " + send_sms_status);
             switch (send_sms_status) {
                 case 0:
                     send_sms_status = 1;
-                    request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_number);
-                    Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.");
+                    result_send = getString(R.string.enter_number);
                     break;
                 case 1:
                     String temp_to = public_func.get_send_phone_number(request_msg);
                     Log.d(TAG, "receive_handle: " + temp_to);
                     if (public_func.is_phone_number(temp_to)) {
                         send_to_temp = temp_to;
-                        request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.enter_content);
+                        result_send = getString(R.string.enter_content);
                         send_sms_status = 2;
                     } else {
                         send_sms_status = -1;
                         send_slot_temp = -1;
                         send_to_temp = null;
-                        request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.unable_get_phone_number);
-
+                        result_send = getString(R.string.unable_get_phone_number);
                     }
                     break;
                 case 2:
@@ -420,13 +424,9 @@ public class chat_command_service extends Service {
                         send_to_temp = null;
                         return;
                     }
-                    request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                     break;
             }
-        } else {
-            send_sms_status = -1;
-            send_slot_temp = -1;
-            send_to_temp = null;
+            request_body.text = head + "\n" + result_send;
         }
 
         String request_uri = public_func.get_url(bot_token, "sendMessage");
@@ -525,6 +525,7 @@ public class chat_command_service extends Service {
         return null;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     boolean is_vpn_hotsport_exist() {
         ApplicationInfo info;
         try {
