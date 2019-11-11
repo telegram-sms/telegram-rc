@@ -24,7 +24,7 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
 
-import com.github.sumimakito.codeauxlib.CodeauxLibPortable;
+import com.github.sumimakito.codeauxlib.CodeauxLibStatic;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -56,7 +56,7 @@ import okhttp3.dnsoverhttps.DnsOverHttps;
 class public_func {
     static final String broadcast_stop_service = "com.qwe7002.telegram_rc.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    private static final CodeauxLibPortable parser = new CodeauxLibPortable();
+
     static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
 
     static boolean get_data_enable(Context context) {
@@ -519,6 +519,6 @@ class public_func {
     }
 
     static String get_verification_code(String body) {
-        return parser.find(body);
+        return CodeauxLibStatic.parsecode(body);
     }
 }
