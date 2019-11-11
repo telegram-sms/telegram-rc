@@ -24,7 +24,6 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.PermissionChecker;
 
-import com.github.sumimakito.codeauxlib.CodeauxLibStatic;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -518,7 +517,4 @@ class public_func {
         Log.d("add_message_list", "add_message_list: " + message_id);
     }
 
-    static String get_verification_code(String body) {
-        return CodeauxLibStatic.parsecode(body);
-    }
 }
