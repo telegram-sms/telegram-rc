@@ -216,7 +216,7 @@ public class sms_receiver extends BroadcastReceiver {
                     break;
                 default:
                     if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-                        Log.d(TAG, "No SMS permission.");
+                        Log.i(TAG, "No SMS permission.");
                         break;
                     }
                     String[] msg_send_list = message_body.split("\n");
@@ -232,8 +232,6 @@ public class sms_receiver extends BroadcastReceiver {
                         new Thread(() -> public_func.send_sms(context, msg_send_to, msg_send_content.toString(), slot, sub)).start();
                         return;
                     }
-
-
             }
 
         }

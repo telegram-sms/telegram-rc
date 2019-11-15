@@ -366,8 +366,10 @@ class public_func {
     }
 
     static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch) {
-        Intent battery_service = new Intent(context, com.qwe7002.telegram_rc.battery_service.class);
+        Intent battery_service = new Intent(context, battery_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
+        Intent notification_listener_monitor_service = new Intent(context, notification_listener_monitor_service.class);
+        context.startService(notification_listener_monitor_service);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (battery_switch) {
                 context.startForegroundService(battery_service);
@@ -516,5 +518,4 @@ class public_func {
         Paper.book().write(message_id, item);
         Log.d("add_message_list", "add_message_list: " + message_id);
     }
-
 }

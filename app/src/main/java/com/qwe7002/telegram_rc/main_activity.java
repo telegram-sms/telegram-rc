@@ -29,6 +29,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.paperdb.Paper;
@@ -58,7 +60,7 @@ import uk.reall.root_kit.shell;
 public class main_activity extends AppCompatActivity {
     private Context context = null;
     private final String TAG = "main_activity";
-
+    private static boolean set_permission_back = false;
     @SuppressLint("BatteryLife")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +85,7 @@ public class main_activity extends AppCompatActivity {
         final Button save_button = findViewById(R.id.save);
         final Button get_id = findViewById(R.id.get_id);
         final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
+        final Button notify_app_set = findViewById(R.id.notify_app_set);
 
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
@@ -170,6 +173,9 @@ public class main_activity extends AppCompatActivity {
                 if (tm.getPhoneCount() == 1) {
                     display_dual_sim_display_name.setVisibility(View.GONE);
                 }
+            } else {
+                display_dual_sim_display_name.setVisibility(View.GONE);
+                //Unable to support dual card API version
             }
         }
         display_dual_sim_display_name.setOnClickListener(v -> {
@@ -444,8 +450,28 @@ public class main_activity extends AppCompatActivity {
                 }
             });
         });
+        notify_app_set.setOnClickListener(v -> {
+            if (!is_notify_listener()) {
+                Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                set_permission_back = true;
+                return;
+            }
+            startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
+        });
     }
 
+    @Override
+    protected void onResume() {
+        if (set_permission_back) {
+            set_permission_back = false;
+            if (is_notify_listener()) {
+                startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
+            }
+        }
+        super.onResume();
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
@@ -453,7 +479,7 @@ public class main_activity extends AppCompatActivity {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "onRequestPermissionsResult: No camera permissions.");
                     Snackbar.make(findViewById(R.id.bot_token), R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
-                        return;
+                    return;
                 }
                 Intent intent = new Intent(context, scanner_activity.class);
                 startActivityForResult(intent, 1);
@@ -510,8 +536,7 @@ public class main_activity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 0);
                 return true;
             case R.id.logcat:
-                Intent logcat_intent = new Intent(main_activity.this, logcat_activity.class);
-                startActivity(logcat_intent);
+                startActivity(new Intent(main_activity.this, logcat_activity.class));
                 return true;
 
         }
@@ -527,6 +552,11 @@ public class main_activity extends AppCompatActivity {
             Snackbar.make(findViewById(R.id.bot_token), "Browser not found.", Snackbar.LENGTH_LONG).show();
         }
         return true;
+    }
+
+    boolean is_notify_listener() {
+        Set<String> packageNames = NotificationManagerCompat.getEnabledListenerPackages(context);
+        return packageNames.contains(context.getPackageName());
     }
 }
 
