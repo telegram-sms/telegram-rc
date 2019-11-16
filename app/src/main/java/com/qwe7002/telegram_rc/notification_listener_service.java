@@ -49,7 +49,7 @@ public class notification_listener_service extends NotificationListenerService {
     }
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
-        String package_name = sbn.getPackageName();
+        final String package_name = sbn.getPackageName();
         Log.d(TAG, "onNotificationPosted: " + package_name);
         Context context = getApplicationContext();
         final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
@@ -59,16 +59,12 @@ public class notification_listener_service extends NotificationListenerService {
         }
         Paper.init(context);
         List<String> listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
-        if (!listen_list.contains(sbn.getPackageName())) {
+        if (!listen_list.contains(package_name)) {
             Log.i(TAG, "[" + package_name + "] Not in the list of listening packages.");
             return;
         }
-        String bot_token = sharedPreferences.getString("bot_token", "");
-        String chat_id = sharedPreferences.getString("chat_id", "");
-        String request_uri = public_func.get_url(bot_token, "sendMessage");
         Bundle extras = sbn.getNotification().extras;
         assert extras != null;
-        String title = extras.getString(Notification.EXTRA_TITLE, "None");
         String app_name = "unknown";
         final PackageManager pm = getApplicationContext().getPackageManager();
         try {
@@ -77,8 +73,12 @@ public class notification_listener_service extends NotificationListenerService {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-
+        String title = extras.getString(Notification.EXTRA_TITLE, "None");
         String content = extras.getString(Notification.EXTRA_TEXT, "None");
+
+        String bot_token = sharedPreferences.getString("bot_token", "");
+        String chat_id = sharedPreferences.getString("chat_id", "");
+        String request_uri = public_func.get_url(bot_token, "sendMessage");
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         request_body.text = getString(R.string.receive_notification_title) + "\n" + getString(R.string.app_name_title) + app_name + "\n" + getString(R.string.title) + title + "\n" + getString(R.string.content) + content;
