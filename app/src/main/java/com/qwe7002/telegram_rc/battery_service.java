@@ -52,11 +52,11 @@ public class battery_service extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_OKAY);
         filter.addAction(Intent.ACTION_BATTERY_LOW);
-        filter.addAction(public_func.broadcast_stop_service);
         if (charger_status) {
             filter.addAction(Intent.ACTION_POWER_CONNECTED);
             filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
         }
+        filter.addAction(public_func.broadcast_stop_service);
         registerReceiver(battery_receiver, filter);
 
     }
