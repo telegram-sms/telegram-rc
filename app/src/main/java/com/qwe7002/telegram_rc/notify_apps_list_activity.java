@@ -82,7 +82,6 @@ public class notify_apps_list_activity extends AppCompatActivity {
         new Thread() {
             @Override
             public void run() {
-                super.run();
                 final List<app_info> app_info_list = scan_app_list(notify_apps_list_activity.this.getPackageManager());
                 runOnUiThread(() -> {
                     ProgressBar scan_label = findViewById(R.id.progress_view);
