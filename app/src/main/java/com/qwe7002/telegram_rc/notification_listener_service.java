@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,7 +35,7 @@ public class notification_listener_service extends NotificationListenerService {
         Context context = getApplicationContext();
         final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         Paper.init(context);
-        List<String> listen_list = Paper.book().read("notify_listen_list");
+        List<String> listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
         if (!listen_list.contains(sbn.getPackageName())) {
             Log.i(TAG, "[" + package_name + "]Not in the list of listening packages.");
         }
