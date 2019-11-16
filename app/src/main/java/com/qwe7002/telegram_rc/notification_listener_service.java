@@ -38,6 +38,7 @@ public class notification_listener_service extends NotificationListenerService {
         List<String> listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
         if (!listen_list.contains(sbn.getPackageName())) {
             Log.i(TAG, "[" + package_name + "]Not in the list of listening packages.");
+            return;
         }
         if (!sharedPreferences.getBoolean("initialized", false)) {
             Log.i(TAG, "Uninitialized, SMS receiver is deactivated.");
