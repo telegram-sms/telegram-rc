@@ -71,4 +71,7 @@
     <string name="error_message_head">"错误信息: "</string>
     <string name="set_up_apps_that_need_to_listen_for_notifications">设置需要监听通知的应用</string>
     <string name="app_list">应用列表</string>
+    <string name="receive_notification_title">[收到通知]</string>
+    <string name="app_name_title">\"应用名称: \"</string>
+    <string name="title">\"标题: \"</string>
 </resources>

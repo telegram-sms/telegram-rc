@@ -81,7 +81,7 @@ public class notification_listener_service extends NotificationListenerService {
         String content = extras.getString(Notification.EXTRA_TEXT, "None");
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
-        request_body.text = "[Receive Notification]" + "\n" + "App: " + app_name + "\n" + "Title: " + title + "\n" + getString(R.string.content) + content;
+        request_body.text = getString(R.string.receive_notification_title) + "\n" + getString(R.string.app_name_title) + app_name + "\n" + getString(R.string.title) + title + "\n" + getString(R.string.content) + content;
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
@@ -111,7 +111,6 @@ public class notification_listener_service extends NotificationListenerService {
     }
 
     class stop_receiver extends BroadcastReceiver {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.i("notification_listener", "Received stop signal, quitting now...");
