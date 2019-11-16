@@ -61,6 +61,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
         setContentView(R.layout.notify_apps_list_activity);
         final ListView app_list = findViewById(R.id.app_list_view);
         final SearchView filter_edit = findViewById(R.id.filter_editor);
+        filter_edit.setIconifiedByDefault(false);
         app_list.setTextFilterEnabled(true);
         app_adapter = new app_adapter(context);
         filter_edit.setOnQueryTextListener(new SearchView.OnQueryTextListener() {

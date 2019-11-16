@@ -39,7 +39,7 @@
             android:paddingBottom="8dp"
             android:singleLine="true"
             app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="TextFields" />
+            android:focusable="false" />
 
 
         <ListView
