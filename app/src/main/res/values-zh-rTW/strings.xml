@@ -70,4 +70,5 @@
     <string name="conflict_error">當前請求因其他請求而終止；請確保只有一個機器人實例正在運行。</string>
     <string name="error_message_head">"錯誤信息: "</string>
     <string name="set_up_apps_that_need_to_listen_for_notifications">設置需要監聽通知的應用</string>
+    <string name="app_list">應用列表</string>
 </resources>

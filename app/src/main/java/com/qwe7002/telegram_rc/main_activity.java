@@ -42,6 +42,7 @@ import com.google.gson.JsonParser;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -419,7 +420,10 @@ public class main_activity extends AppCompatActivity {
                     }
                     if (!new_bot_token.equals(bot_token_save)) {
                         Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
+                        List<String> notify_listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
                         Paper.book().destroy();
+                        Log.d(TAG, "notify_listen_list: " + notify_listen_list);
+                        Paper.book().write("notify_listen_list", notify_listen_list);
                     }
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);

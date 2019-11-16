@@ -6,7 +6,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -58,11 +57,12 @@ public class notify_apps_list_activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Paper.init(getApplicationContext());
         context = getBaseContext();
-        this.setTitle("App List");
+        this.setTitle(getString(R.string.app_list));
         setContentView(R.layout.notify_apps_list_activity);
         final ListView app_list = findViewById(R.id.app_list_view);
         final SearchView filter_edit = findViewById(R.id.filter_editor);
         app_list.setTextFilterEnabled(true);
+        app_adapter = new app_adapter(context);
         filter_edit.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -71,16 +71,12 @@ public class notify_apps_list_activity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (!TextUtils.isEmpty(newText)) {
-                    app_list.setFilterText(newText);
-                } else {
-                    app_list.clearTextFilter();
-                }
+                app_adapter.getFilter().filter(newText);
                 return false;
             }
         });
 
-        app_adapter = new app_adapter(context);
+
         app_list.setAdapter(app_adapter);
         new Thread() {
             @Override
@@ -110,7 +106,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
                 FilterResults results = new FilterResults();
                 List<app_info> list = new ArrayList<>();
                 for (app_info p : app_info_list) {
-                    if (p.app_name.contains(str)) {
+                    if (p.app_name.toLowerCase().contains(str.toLowerCase())) {
                         list.add(p);
                     }
                 }
