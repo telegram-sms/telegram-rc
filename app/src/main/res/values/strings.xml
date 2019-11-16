@@ -73,7 +73,7 @@
     <string name="set_up_apps_that_need_to_listen_for_notifications">Set up apps that need to listen for notifications</string>
     <string name="app_list">App List</string>
     <string name="receive_notification_title">[Receive Notification]</string>
-    <string name="app_name_title">\"App Name: \"</string>
-    <string name="title">\"Title: \"</string>
+    <string name="app_name_title">"App Name: "</string>
+    <string name="title">"Title: "</string>
 
 </resources>

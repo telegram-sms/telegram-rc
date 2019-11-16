@@ -72,6 +72,6 @@
     <string name="set_up_apps_that_need_to_listen_for_notifications">通知をリッスンする必要があるアプリをセットアップする</string>
     <string name="app_list">アプリケーションリスト</string>
     <string name="receive_notification_title">[受信した通知]</string>
-    <string name="app_name_title">\"アプリケーション名: \"</string>
-    <string name="title">\"標題: \"</string>
+    <string name="app_name_title">"アプリケーション名: "</string>
+    <string name="title">"標題: "</string>
 </resources>
