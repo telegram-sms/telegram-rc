@@ -169,6 +169,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
                 view_holder_object = new view_holder();
                 convert_view = LayoutInflater.from(context).inflate(R.layout.item_app_info, parent, false);
                 view_holder_object.app_icon = convert_view.findViewById(R.id.app_icon);
+                view_holder_object.package_name = convert_view.findViewById(R.id.package_name);
                 view_holder_object.app_name = convert_view.findViewById(R.id.app_name);
                 view_holder_object.app_checkbox = convert_view.findViewById(R.id.select_checkbox);
                 convert_view.setTag(view_holder_object);
@@ -177,6 +178,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
             }
             view_holder_object.app_icon.setImageDrawable(app_info.app_icon);
             view_holder_object.app_name.setText(app_info.app_name);
+            view_holder_object.package_name.setText(app_info.package_name);
             view_holder_object.app_checkbox.setChecked(listen_list.contains(app_info.package_name));
             view_holder_object.app_checkbox.setOnClickListener(v -> {
                 app_info item_info = (app_info) getItem(position);
@@ -204,6 +206,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
         static class view_holder {
             ImageView app_icon;
             TextView app_name;
+            TextView package_name;
             CheckBox app_checkbox;
         }
 
