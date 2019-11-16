@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
+import android.util.Log;
 
 import java.util.List;
 
@@ -14,15 +15,11 @@ public class notification_listener_monitor_service extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        ensureCollectorRunning();
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        return START_STICKY;
-    }
-
-    private void ensureCollectorRunning() {
+        Context context = getApplicationContext();
+        if (public_func.is_notify_listener(context)) {
+            Log.i("notify_monitor_service", "Permission denied.");
+            return;
+        }
         ComponentName collectorComponent = new ComponentName(this, notification_listener_monitor_service.class);
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         boolean collectorRunning = false;
@@ -41,6 +38,11 @@ public class notification_listener_monitor_service extends Service {
         if (!collectorRunning) {
             toggleNotificationListenerService();
         }
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
     }
 
     private void toggleNotificationListenerService() {

@@ -29,7 +29,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -45,7 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.paperdb.Paper;
@@ -455,7 +453,7 @@ public class main_activity extends AppCompatActivity {
             });
         });
         notify_app_set.setOnClickListener(v -> {
-            if (!is_notify_listener()) {
+            if (!public_func.is_notify_listener(context)) {
                 Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
@@ -470,7 +468,7 @@ public class main_activity extends AppCompatActivity {
     protected void onResume() {
         if (set_permission_back) {
             set_permission_back = false;
-            if (is_notify_listener()) {
+            if (public_func.is_notify_listener(context)) {
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
             }
         }
@@ -558,9 +556,5 @@ public class main_activity extends AppCompatActivity {
         return true;
     }
 
-    boolean is_notify_listener() {
-        Set<String> packageNames = NotificationManagerCompat.getEnabledListenerPackages(context);
-        return packageNames.contains(context.getPackageName());
-    }
 }
 

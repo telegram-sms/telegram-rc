@@ -75,5 +75,6 @@
     <string name="receive_notification_title">[Receive Notification]</string>
     <string name="app_name_title">"App Name: "</string>
     <string name="title">"Title: "</string>
+    <string name="Notification_Listener_title">"Notification Listener "</string>
 
 </resources>

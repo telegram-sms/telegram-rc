@@ -32,32 +32,38 @@ import okhttp3.Response;
 
 public class notification_listener_service extends NotificationListenerService {
     final String TAG = "notification_receiver";
+    Context context;
     stop_receiver receiver;
-
+    SharedPreferences sharedPreferences;
     @Override
     public void onCreate() {
         super.onCreate();
+        context = getApplicationContext();
+        Paper.init(context);
+        sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
+        if (!sharedPreferences.getBoolean("initialized", false)) {
+            Log.i(TAG, "Uninitialized, Notification receiver is deactivated.");
+            stopSelf();
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
+
         receiver = new stop_receiver();
         registerReceiver(receiver, new IntentFilter(public_func.broadcast_stop_service));
-
+        Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.Notification_Listener_title));
+        startForeground(3, notification);
     }
 
     @Override
     public void onDestroy() {
         unregisterReceiver(receiver);
+        stopForeground(true);
         super.onDestroy();
     }
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         final String package_name = sbn.getPackageName();
         Log.d(TAG, "onNotificationPosted: " + package_name);
-        Context context = getApplicationContext();
-        final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
-        if (!sharedPreferences.getBoolean("initialized", false)) {
-            Log.i(TAG, "Uninitialized, SMS receiver is deactivated.");
-            return;
-        }
-        Paper.init(context);
+
         List<String> listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
         if (!listen_list.contains(package_name)) {
             Log.i(TAG, "[" + package_name + "] Not in the list of listening packages.");
