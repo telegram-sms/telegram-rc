@@ -74,6 +74,7 @@ public class notification_listener_service extends NotificationListenerService {
         Bundle extras = sbn.getNotification().extras;
         assert extras != null;
         String app_name = "unknown";
+        Log.d(TAG, "onNotificationPosted: " + app_name_list);
         if (app_name_list.containsKey(package_name)) {
             app_name = app_name_list.get(package_name);
         } else {
