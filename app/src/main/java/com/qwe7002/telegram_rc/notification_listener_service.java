@@ -19,7 +19,9 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import io.paperdb.Paper;
@@ -32,6 +34,7 @@ import okhttp3.Response;
 
 public class notification_listener_service extends NotificationListenerService {
     final String TAG = "notification_receiver";
+    static Map<String, String> app_name_list = new HashMap<>();
     Context context;
     stop_receiver receiver;
     SharedPreferences sharedPreferences;
@@ -71,12 +74,17 @@ public class notification_listener_service extends NotificationListenerService {
         Bundle extras = sbn.getNotification().extras;
         assert extras != null;
         String app_name = "unknown";
-        final PackageManager pm = getApplicationContext().getPackageManager();
-        try {
-            ApplicationInfo application_info = pm.getApplicationInfo(sbn.getPackageName(), 0);
-            app_name = (String) pm.getApplicationLabel(application_info);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+        if (app_name_list.containsKey(package_name)) {
+            app_name = app_name_list.get(package_name);
+        } else {
+            final PackageManager pm = getApplicationContext().getPackageManager();
+            try {
+                ApplicationInfo application_info = pm.getApplicationInfo(sbn.getPackageName(), 0);
+                app_name = (String) pm.getApplicationLabel(application_info);
+                app_name_list.put(package_name, app_name);
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
         }
         String title = extras.getString(Notification.EXTRA_TITLE, "None");
         String content = extras.getString(Notification.EXTRA_TEXT, "None");
