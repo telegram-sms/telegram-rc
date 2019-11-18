@@ -353,6 +353,7 @@ public class chat_command_service extends Service {
                         }
                     }
                 } else if (message_type_is_private) {
+                    has_command = false;
                     send_sms_status = 0;
                     send_slot_temp = -1;
                     if (public_func.get_active_card(context) > 1) {
@@ -366,7 +367,6 @@ public class chat_command_service extends Service {
                                 break;
                         }
                     }
-                    has_command = false;
                 }
                 request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                 break;
@@ -383,7 +383,7 @@ public class chat_command_service extends Service {
             send_slot_temp = -1;
             send_to_temp = null;
         }
-        if (!has_command) {
+        if (!has_command && send_sms_status != -1) {
             Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.");
             String dual_sim = "";
             if (send_slot_temp != -1) {
