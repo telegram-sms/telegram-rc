@@ -38,6 +38,8 @@
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:singleLine="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:focusable="false" />
 
