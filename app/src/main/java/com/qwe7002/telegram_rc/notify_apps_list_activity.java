@@ -1,6 +1,6 @@
+
 package com.qwe7002.telegram_rc;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -77,7 +77,6 @@ public class notify_apps_list_activity extends AppCompatActivity {
             }
         });
 
-
         app_list.setAdapter(app_adapter);
         new Thread() {
             @Override
@@ -99,15 +98,13 @@ public class notify_apps_list_activity extends AppCompatActivity {
         List<app_info> view_app_info_list = new ArrayList<>();
         private Context context;
         private Filter filter = new Filter() {
-            @SuppressLint("DefaultLocale")
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-                String str = constraint.toString();
                 FilterResults results = new FilterResults();
                 List<app_info> list = new ArrayList<>();
-                for (app_info p : app_info_list) {
-                    if (p.app_name.toLowerCase().contains(str.toLowerCase())) {
-                        list.add(p);
+                for (app_info app_info_item : app_info_list) {
+                    if (app_info_item.app_name.toLowerCase().contains(constraint.toString().toLowerCase())) {
+                        list.add(app_info_item);
                     }
                 }
                 results.values = list;
