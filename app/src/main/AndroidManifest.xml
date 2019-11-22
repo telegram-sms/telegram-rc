@@ -28,15 +28,15 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
-        <activity
-            android:name=".notify_apps_list_activity"
-            android:windowSoftInputMode="adjustPan" />
 
         <receiver android:name=".sim_status_receiver">
             <intent-filter>
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+        <activity
+            android:name=".notify_apps_list_activity"
+            android:windowSoftInputMode="adjustPan" />
 
         <service
             android:name=".notification_listener_service"
@@ -47,6 +47,7 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
         <service android:name=".notification_listener_monitor_service" />
 
         <service

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Telegram remote control</string>
     <string name="content">"Content: "</string>
     <string name="from">"From: "</string>
     <string name="to">"To: "</string>
@@ -76,5 +75,4 @@
     <string name="app_name_title">"App: "</string>
     <string name="title">"Title: "</string>
     <string name="Notification_Listener_title">"Notification Listener "</string>
-
 </resources>

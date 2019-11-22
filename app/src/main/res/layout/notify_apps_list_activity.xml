@@ -50,8 +50,6 @@
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@+id/filter_editor"
-            app:layout_constraintTop_toBottomOf="@+id/filter_editor">
-
-        </ListView>
+            app:layout_constraintTop_toBottomOf="@+id/filter_editor" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

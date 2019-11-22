@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -169,18 +170,15 @@ public class main_activity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                 assert tm != null;
-                if (tm.getPhoneCount() <= 1) {
+                if (tm.getPhoneCount() >= 1) {
                     display_dual_sim_display_name.setVisibility(View.GONE);
                 }
-            } else {
-                display_dual_sim_display_name.setVisibility(View.GONE);
-                //Unable to support dual card API version
             }
         }
         display_dual_sim_display_name.setOnClickListener(v -> {
             if (checkPermission != PackageManager.PERMISSION_GRANTED) {
                 display_dual_sim_display_name.setChecked(false);
-                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 2);
+                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
             } else {
                 if (public_func.get_active_card(context) < 2) {
                     display_dual_sim_display_name.setEnabled(false);
@@ -196,7 +194,6 @@ public class main_activity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
             }
 
             @Override
@@ -454,7 +451,7 @@ public class main_activity extends AppCompatActivity {
         });
         notify_app_set.setOnClickListener(v -> {
             if (!public_func.is_notify_listener(context)) {
-                Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 set_permission_back = true;
@@ -466,14 +463,16 @@ public class main_activity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        if (set_permission_back) {
-            set_permission_back = false;
+        super.onResume();
+        boolean back_status = set_permission_back;
+        set_permission_back = false;
+        if (back_status) {
             if (public_func.is_notify_listener(context)) {
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
             }
         }
-        super.onResume();
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {

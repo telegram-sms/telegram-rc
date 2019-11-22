@@ -1,4 +1,5 @@
 <resources>
+    <string name="app_name" translatable="false">Telegram remote control</string>
     <string name="action_success">successfully.</string>
     <string name="action_failed">failed.</string>
     <string name="close_wifi">"Close WI-FI hotspot "</string>
