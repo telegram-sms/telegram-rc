@@ -218,7 +218,7 @@ public class chat_command_service extends Service {
             case "/getinfo":
                 String card_info = "";
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    card_info = "\nSIM:" + public_func.get_sim_display_name(context, 0);
+                    card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0);
                     if (public_func.get_active_card(context) == 2) {
                         String data_card = "";
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
