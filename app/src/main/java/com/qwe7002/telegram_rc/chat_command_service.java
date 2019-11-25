@@ -222,9 +222,9 @@ public class chat_command_service extends Service {
                     if (public_func.get_active_card(context) == 2) {
                         String data_card = "";
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            data_card = "\n" + getString(R.string.current_data_card) + ":SIM" + public_func.get_data_sim_id(context);
+                            data_card = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context);
                         }
-                        card_info = data_card + "\nSIM1:" + public_func.get_sim_display_name(context, 0) + "\nSIM2:" + public_func.get_sim_display_name(context, 1);
+                        card_info = data_card + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + "\nSIM2: " + public_func.get_sim_display_name(context, 1);
 
                     }
                 }
