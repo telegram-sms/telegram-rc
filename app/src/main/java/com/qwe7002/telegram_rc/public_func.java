@@ -7,6 +7,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -371,8 +372,10 @@ class public_func {
         Intent battery_service = new Intent(context, battery_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
         if (is_notify_listener(context)) {
-            Intent notification_listener_monitor_service = new Intent(context, notification_listener_monitor_service.class);
-            context.startService(notification_listener_monitor_service);
+            ComponentName thisComponent = new ComponentName(context, notification_listener_service.class);
+            PackageManager pm = context.getPackageManager();
+            pm.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+            pm.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (battery_switch) {
@@ -407,7 +410,6 @@ class public_func {
             return -1;
         }
         return SubscriptionManager.from(context).getActiveSubscriptionInfoCount();
-
     }
 
     static String get_sim_display_name(Context context, int slot) {
