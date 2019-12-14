@@ -5,19 +5,26 @@ cache:
     key: ${CI_PROJECT_ID}
     paths:
         - .gradle/
+
+
+variables:
+    OWNER: telegram-sms
+    REPO: telegram-rc
+    KEYSTORE_SERVER: keystore.reallserver.cn
+
 release_github:
     dependencies:
         - build
-    only:
-        - master
     stage: deploy
     script:
         - eval $(ssh-agent -s)
-        - ssh-add - <<< $(curl https://keystore.reallserver.cn/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
-        - git push -f --set-upstream git@github.com:telegram-sms/telegram-rc.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
-        - curl https://keystore.reallserver.cn/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
+        - ssh-add - <<< $(curl https://${KEYSTORE_SERVER}/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
+        - git push --set-upstream git@github.com:${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
+        # Release APK.
+        - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
         - . .reall_network/github-key.env
-        - /opt/github-release-upload.sh github_api_token=${GITHUB_ACCESS_KEY} owner=telegram-sms repo=telegram-rc tag=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M") filename="./app/build/outputs/apk/release/app-release.apk" pre_release="false"
+        - export TAG=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")
+        - /opt/github-release-upload.sh github_api_token=${GITHUB_ACCESS_KEY} owner=${OWNER} repo=${REPO} tag=$TAG filename="./app/build/outputs/apk/release/app-release.apk" pre_release="true"
 
 build:
     image: alvrme/alpine-android:android-29
@@ -25,8 +32,8 @@ build:
     script:
         - export VERSION_CODE=${CI_PIPELINE_ID}
         - export VERSION_NAME=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}
-        - wget https://keystore.reallserver.cn/android/telegram-sms/keys.jks -O app/keys.jks --http-user=gitlab --http-passwd=${key_store_passwd}
-        - wget https://keystore.reallserver.cn/android/telegram-sms/keystore.env -O .reall_network/keystore.env --http-user=gitlab --http-passwd=${key_store_passwd}
+        - wget https://${KEYSTORE_SERVER}/android/telegram-sms/keys.jks -O app/keys.jks --http-user=gitlab --http-passwd=${key_store_passwd}
+        - wget https://${KEYSTORE_SERVER}/android/telegram-sms/keystore.env -O .reall_network/keystore.env --http-user=gitlab --http-passwd=${key_store_passwd}
         - . .reall_network/keystore.env
         - export GRADLE_USER_HOME=$(pwd)/.gradle && mkdir -p ${GRADLE_USER_HOME}
         - echo -e "org.gradle.jvmargs=-Xmx1536m -DsocksProxyHost=proxy.reallserver.cn -DsocksProxyPort=1086 -DsocksNonProxyHosts=dl.google.com\n org.gradle.parallel=true" >> ${GRADLE_USER_HOME}/gradle.properties
