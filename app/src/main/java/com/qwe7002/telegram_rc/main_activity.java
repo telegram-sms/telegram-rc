@@ -95,7 +95,7 @@ public class main_activity extends AppCompatActivity {
         } else {
             privacy_mode_switch.setVisibility(View.GONE);
         }
-
+        privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
             if (!sharedPreferences.getBoolean("conversion_data_structure", false)) {
@@ -541,7 +541,7 @@ public class main_activity extends AppCompatActivity {
 
         }
         assert file_name != null;
-        Uri uri = Uri.parse("https://get-telegram-sms.reall.uk" + file_name);
+        Uri uri = Uri.parse("https://get.telegram-sms.com" + file_name);
         CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         builder.setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         CustomTabsIntent customTabsIntent = builder.build();
