@@ -40,6 +40,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+@SuppressWarnings("ALL")
 public class chat_command_service extends Service {
     private static long offset = 0;
     private static int magnification = 1;
@@ -240,7 +241,7 @@ public class chat_command_service extends Service {
                     String[] command_list = request_msg.split(" ");
                     StringBuilder result = new StringBuilder();
                     result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
-                    if (command_list.length > 1 && uk.reall.root_kit.nadb.set_nadb(command_list[1])) {
+                    if (command_list.length > 1 && com.qwe7002.root_kit.nadb.set_nadb(command_list[1])) {
                         result.append(getString(R.string.action_success));
                     } else {
                         result.append(getString(R.string.action_failed));
@@ -257,21 +258,27 @@ public class chat_command_service extends Service {
                     if (!is_vpn_hotsport_exist()) {
                         break;
                     }
-                    boolean wifi_open = false;
                     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
+                    boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
                     if (wifiManager.isWifiEnabled()) {
-                        result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
-                    } else {
+                        if (!com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
+                            wifi_open = false;
+                            com.qwe7002.root_kit.network.wifi_set_enable(false);
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                    if (!wifi_open) {
+                        Paper.book().write("wifi_open", true);
                         String status = context.getString(R.string.action_failed);
-                        if (uk.reall.root_kit.network.wifi_set_enable(true)) {
+                        if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
                             status = context.getString(R.string.action_success);
                         }
-                        wifi_open = true;
                         result_ap = getString(R.string.open_wifi) + status;
-                    }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
-                    if (wifi_open) {
                         new Thread(() -> {
                             try {
                                 int count = 0;
@@ -287,12 +294,16 @@ public class chat_command_service extends Service {
                                 e.printStackTrace();
                             }
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                uk.reall.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                                com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
                             } else {
-                                uk.reall.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                                com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
                             }
                         }).start();
+                    } else {
+                        Paper.book().write("wifi_open", false);
+                        result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
                     }
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context);
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                 has_command = true;
@@ -453,22 +464,24 @@ public class chat_command_service extends Service {
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
                     switch (final_command.replace("_", "")) {
                         case "/switchap":
-                            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                            assert wifiManager != null;
-                            if (wifiManager.isWifiEnabled()) {
-                                uk.reall.root_kit.network.wifi_set_enable(false);
+                            if (!Paper.book().read("wifi_open", false)) {
+                                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                                assert wifiManager != null;
+                                if (wifiManager.isWifiEnabled()) {
+                                    com.qwe7002.root_kit.network.wifi_set_enable(false);
+                                }
                             }
                             break;
                         case "/switchdata":
                             if (public_func.get_data_enable(context)) {
-                                uk.reall.root_kit.network.data_set_enable(false);
+                                com.qwe7002.root_kit.network.data_set_enable(false);
                             } else {
-                                uk.reall.root_kit.network.data_set_enable(true);
+                                com.qwe7002.root_kit.network.data_set_enable(true);
                             }
                             break;
                         case "/closeap":
-                            uk.reall.root_kit.network.wifi_set_enable(false);
-                            uk.reall.root_kit.network.data_set_enable(false);
+                            com.qwe7002.root_kit.network.wifi_set_enable(false);
+                            com.qwe7002.root_kit.network.data_set_enable(false);
                             break;
                         case "/restartnetwork":
                             public_func.restart_network();

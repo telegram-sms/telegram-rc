@@ -38,6 +38,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.qwe7002.root_kit.shell;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -54,7 +55,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import uk.reall.root_kit.shell;
 
 
 public class main_activity extends AppCompatActivity {

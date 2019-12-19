@@ -55,6 +55,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.dnsoverhttps.DnsOverHttps;
 
+@SuppressWarnings("ALL")
 class public_func {
     static final String broadcast_stop_service = "com.qwe7002.telegram_rc.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -71,13 +72,13 @@ class public_func {
     }
 
     static void restart_network() {
-        uk.reall.root_kit.network.set_airplane_mode(true);
+        com.qwe7002.root_kit.network.set_airplane_mode(true);
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        uk.reall.root_kit.network.set_airplane_mode(false);
+        com.qwe7002.root_kit.network.set_airplane_mode(false);
     }
 
     static int parse_int(String int_str) {

@@ -1,4 +1,4 @@
-package uk.reall.root_kit;
+package com.qwe7002.root_kit;
 
 import android.util.Log;
 

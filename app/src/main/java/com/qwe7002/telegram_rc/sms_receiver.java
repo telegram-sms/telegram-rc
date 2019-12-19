@@ -124,7 +124,7 @@ public class sms_receiver extends BroadcastReceiver {
         final boolean data_enable = public_func.get_data_enable(context);
         int loop_count;
         if (is_trusted_phone) {
-            switch (message_body.toLowerCase()) {
+            switch (message_body.toLowerCase().replace("-", "")) {
                 case "restart-service":
                     new Thread(() -> {
                         public_func.stop_all_service(context);
@@ -135,7 +135,7 @@ public class sms_receiver extends BroadcastReceiver {
                     break;
 
                 case "open-ap":
-                    uk.reall.root_kit.network.data_set_enable(true);
+                    com.qwe7002.root_kit.network.data_set_enable(true);
                     loop_count = 0;
                     while (!public_func.check_network_status(context)) {
                         if (loop_count >= 100) {
@@ -153,14 +153,14 @@ public class sms_receiver extends BroadcastReceiver {
                     WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     if (wifiManager.isWifiEnabled()) {
-                        uk.reall.root_kit.network.wifi_set_enable(false);
+                        com.qwe7002.root_kit.network.wifi_set_enable(false);
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
-                    if (uk.reall.root_kit.network.wifi_set_enable(true)) {
+                    if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
                         status = context.getString(R.string.action_success);
                     }
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi) + status;
@@ -180,9 +180,9 @@ public class sms_receiver extends BroadcastReceiver {
                             e.printStackTrace();
                         }
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            uk.reall.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                            com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
                         } else {
-                            uk.reall.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                            com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
                         }
                     }).start();
                     break;
@@ -192,7 +192,7 @@ public class sms_receiver extends BroadcastReceiver {
                     break;
                 case "switch-data":
                     if (!data_enable) {
-                        uk.reall.root_kit.network.data_set_enable(true);
+                        com.qwe7002.root_kit.network.data_set_enable(true);
                         loop_count = 0;
                         while (!public_func.check_network_status(context)) {
                             if (loop_count >= 100) {
@@ -274,12 +274,12 @@ public class sms_receiver extends BroadcastReceiver {
             switch (message_body.toLowerCase()) {
                 case "switch-data":
                     if (data_enable) {
-                        uk.reall.root_kit.network.data_set_enable(false);
+                        com.qwe7002.root_kit.network.data_set_enable(false);
                     }
                     break;
                 case "close-ap":
-                    uk.reall.root_kit.network.wifi_set_enable(false);
-                    uk.reall.root_kit.network.data_set_enable(false);
+                    com.qwe7002.root_kit.network.wifi_set_enable(false);
+                    com.qwe7002.root_kit.network.data_set_enable(false);
                     break;
                 case "restart-network":
                     public_func.restart_network();
