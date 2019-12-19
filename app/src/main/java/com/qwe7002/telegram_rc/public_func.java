@@ -71,16 +71,6 @@ class public_func {
         return networkInfo.isConnectedOrConnecting();
     }
 
-    static void restart_network() {
-        com.qwe7002.root_kit.network.set_airplane_mode(true);
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        com.qwe7002.root_kit.network.set_airplane_mode(false);
-    }
-
     static int parse_int(String int_str) {
         int result = 0;
         try {

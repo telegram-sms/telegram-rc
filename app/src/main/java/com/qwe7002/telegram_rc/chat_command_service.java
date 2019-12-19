@@ -484,7 +484,7 @@ public class chat_command_service extends Service {
                             com.qwe7002.root_kit.network.data_set_enable(false);
                             break;
                         case "/restartnetwork":
-                            public_func.restart_network();
+                            com.qwe7002.root_kit.network.restart_network();
                             break;
                     }
                 }

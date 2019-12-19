@@ -282,7 +282,7 @@ public class sms_receiver extends BroadcastReceiver {
                     com.qwe7002.root_kit.network.data_set_enable(false);
                     break;
                 case "restart-network":
-                    public_func.restart_network();
+                    com.qwe7002.root_kit.network.restart_network();
                     break;
             }
         }

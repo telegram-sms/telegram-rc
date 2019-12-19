@@ -2,7 +2,7 @@ package com.qwe7002.root_kit;
 
 
 public class network {
-    public static void set_airplane_mode(boolean enable) {
+    private static void set_airplane_mode(boolean enable) {
         int set = 0;
         String state = "true";
         if (enable) {
@@ -26,5 +26,15 @@ public class network {
             state = "enable";
         }
         shell.run_shell_command("svc data " + state);
+    }
+
+    public static void restart_network() {
+        com.qwe7002.root_kit.network.set_airplane_mode(true);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        com.qwe7002.root_kit.network.set_airplane_mode(false);
     }
 }
