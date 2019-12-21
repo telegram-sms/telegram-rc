@@ -14,6 +14,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.SmsManager;
@@ -55,7 +57,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.dnsoverhttps.DnsOverHttps;
 
-@SuppressWarnings("ALL")
 class public_func {
     static final String broadcast_stop_service = "com.qwe7002.telegram_rc.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -66,9 +67,19 @@ class public_func {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         assert connectivityManager != null;
-        NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        assert networkInfo != null;
-        return networkInfo.isConnectedOrConnecting();
+        boolean network_status = false;
+        Network[] networks = connectivityManager.getAllNetworks();
+        if (networks.length != 0) {
+            for (Network network : networks) {
+                NetworkCapabilities network_capabilities = connectivityManager.getNetworkCapabilities(network);
+                Log.d("check_network_status", "check_network_status: " + network_capabilities);
+                assert network_capabilities != null;
+                if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    network_status = true;
+                }
+            }
+        }
+        return network_status;
     }
 
     static int parse_int(String int_str) {
@@ -108,13 +119,24 @@ class public_func {
         return dual_sim;
     }
 
+
     static boolean check_network_status(Context context) {
-        ConnectivityManager manager = (ConnectivityManager) context
-                .getApplicationContext().getSystemService(
-                        Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        boolean network_status = false;
         assert manager != null;
-        NetworkInfo networkinfo = manager.getActiveNetworkInfo();
-        return networkinfo != null && networkinfo.isConnected();
+        Network[] networks = manager.getAllNetworks();
+        if (networks.length != 0) {
+            for (Network network : networks) {
+                NetworkCapabilities network_capabilities = manager.getNetworkCapabilities(network);
+                Log.d("check_network_status", "check_network_status: " + network_capabilities);
+                assert network_capabilities != null;
+                if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+                    network_status = true;
+                }
+            }
+        }
+        return network_status;
     }
 
     static String get_url(String token, String func) {
@@ -164,68 +186,86 @@ class public_func {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connect_manager != null;
-        NetworkInfo network_info = connect_manager.getActiveNetworkInfo();
-        if (network_info == null) {
-            return net_type;
-        }
-        switch (network_info.getType()) {
-            case ConnectivityManager.TYPE_WIFI:
-                net_type = "WIFI";
-                break;
-            case ConnectivityManager.TYPE_MOBILE:
-                boolean is_att = false;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                        Log.d("get_network_type", "No permission.");
-                    } else {
-                        SubscriptionInfo info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
-                        if (info != null) {
-                            is_att = info.getCarrierName().toString().contains("AT&T");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Network[] networks = connect_manager.getAllNetworks();
+            if (networks.length != 0) {
+                for (Network network : networks) {
+                    NetworkCapabilities network_capabilities = connect_manager.getNetworkCapabilities(network);
+                    assert network_capabilities != null;
+                    if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                            net_type = "WIFI";
+                        }
+                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                            TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                                assert telephonyManager != null;
+                                net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
+                            }
+                        }
+                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
+                            net_type = "Bluetooth";
+                        }
+                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                            net_type = "Ethernet";
                         }
                     }
                 }
-                switch (network_info.getSubtype()) {
-                    case TelephonyManager.NETWORK_TYPE_NR:
-                        net_type = "5G";
-                        if (is_att) {
-                            net_type = "5G+";
-                        }
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_LTE:
-                        net_type = "LTE";
-                        if (is_att) {
-                            net_type = "5G E";
-                        }
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_HSPAP:
-                        if (is_att) {
-                            net_type = "4G";
-                            break;
-                        }
-                    case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                    case TelephonyManager.NETWORK_TYPE_EHRPD:
-                    case TelephonyManager.NETWORK_TYPE_HSDPA:
-                    case TelephonyManager.NETWORK_TYPE_HSUPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPA:
-                    case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
-                    case TelephonyManager.NETWORK_TYPE_UMTS:
-                        net_type = "3G";
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_GPRS:
-                    case TelephonyManager.NETWORK_TYPE_EDGE:
-                    case TelephonyManager.NETWORK_TYPE_CDMA:
-                    case TelephonyManager.NETWORK_TYPE_1xRTT:
-                    case TelephonyManager.NETWORK_TYPE_IDEN:
-                        net_type = "2G";
-                        break;
-                }
+            }
+        } else {
+            //noinspection deprecation
+            NetworkInfo network_info = connect_manager.getActiveNetworkInfo();
+            if (network_info == null) {
+                return net_type;
+            }
+            //noinspection deprecation
+            switch (network_info.getType()) {
+                //noinspection deprecation
+                case ConnectivityManager.TYPE_WIFI:
+                    net_type = "WIFI";
+                    break;
+                //noinspection deprecation
+                case ConnectivityManager.TYPE_MOBILE:
+                    //noinspection deprecation
+                    net_type = check_cellular_network_type(network_info.getSubtype());
+                    break;
+            }
+        }
+
+        return net_type;
+    }
+
+    private static String check_cellular_network_type(int type) {
+        String net_type = "Unknown";
+        switch (type) {
+            case TelephonyManager.NETWORK_TYPE_NR:
+                net_type = "5G";
+                break;
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                net_type = "LTE";
+                break;
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+            case TelephonyManager.NETWORK_TYPE_EVDO_0:
+            case TelephonyManager.NETWORK_TYPE_EVDO_A:
+            case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_EHRPD:
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+                net_type = "3G";
+                break;
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+            case TelephonyManager.NETWORK_TYPE_CDMA:
+            case TelephonyManager.NETWORK_TYPE_1xRTT:
+            case TelephonyManager.NETWORK_TYPE_IDEN:
+                net_type = "2G";
                 break;
         }
         return net_type;
     }
-
 
     @TargetApi(Build.VERSION_CODES.N)
     static String get_data_sim_id(Context context) {
@@ -234,7 +274,9 @@ class public_func {
             Log.d("get_data_sim_id", "No permission.");
             return result;
         }
-        SubscriptionInfo info = SubscriptionManager.from(context).getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
+        SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+        assert subscriptionManager != null;
+        SubscriptionInfo info = subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
         if (info == null) {
             return result;
         }
@@ -337,7 +379,8 @@ class public_func {
             assert manager != null;
             manager.createNotificationChannel(channel);
             notification = new Notification.Builder(context, notification_name);
-        } else {//Notification generation method after O
+        } else {
+            //Notification generation method after O
             notification = new Notification.Builder(context).setPriority(Notification.PRIORITY_MIN);
         }
         notification.setAutoCancel(false)
@@ -391,7 +434,9 @@ class public_func {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 return -1;
             }
-            return SubscriptionManager.from(context).getActiveSubscriptionInfoForSimSlotIndex(slot).getSubscriptionId();
+            SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+            assert subscriptionManager != null;
+            return subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slot).getSubscriptionId();
         }
         return -1;
     }
@@ -400,7 +445,9 @@ class public_func {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             return -1;
         }
-        return SubscriptionManager.from(context).getActiveSubscriptionInfoCount();
+        SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+        assert subscriptionManager != null;
+        return subscriptionManager.getActiveSubscriptionInfoCount();
     }
 
     static String get_sim_display_name(Context context, int slot) {
@@ -410,12 +457,13 @@ class public_func {
             Log.d(TAG, "No permission.");
             return result;
         }
-
-        SubscriptionInfo info = SubscriptionManager.from(context).getActiveSubscriptionInfoForSimSlotIndex(slot);
+        SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+        assert subscriptionManager != null;
+        SubscriptionInfo info = subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slot);
         if (info == null) {
             Log.d(TAG, "The active card is in the second card slot.");
             if (get_active_card(context) == 1 && slot == 0) {
-                info = SubscriptionManager.from(context).getActiveSubscriptionInfoForSimSlotIndex(1);
+                info = subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(1);
             }
             if (info == null) {
                 return result;

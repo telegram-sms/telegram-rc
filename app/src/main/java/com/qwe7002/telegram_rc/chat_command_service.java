@@ -12,6 +12,9 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -20,6 +23,7 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
@@ -27,6 +31,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -40,7 +46,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-@SuppressWarnings("ALL")
 public class chat_command_service extends Service {
     private static long offset = 0;
     private static int magnification = 1;
@@ -57,7 +62,9 @@ public class chat_command_service extends Service {
     private String send_to_temp;
     private SharedPreferences sharedPreferences;
     private String bot_username = "";
+    private ConnectivityManager cm;
     private boolean privacy_mode;
+    private network_callback callback;
     final String TAG = "chat_command";
     static Thread thread_main;
 
@@ -73,7 +80,7 @@ public class chat_command_service extends Service {
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
-
+        cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         Paper.init(context);
 
         sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
@@ -82,7 +89,7 @@ public class chat_command_service extends Service {
         bot_token = sharedPreferences.getString("bot_token", "");
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
-        wifiLock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL, "bot_command_polling_wifi");
+        wifiLock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
         wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
         wifiLock.setReferenceCounted(false);
         wakelock.setReferenceCounted(false);
@@ -96,7 +103,17 @@ public class chat_command_service extends Service {
         thread_main.start();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(public_func.broadcast_stop_service);
-        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            //noinspection deprecation
+            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        } else {
+            NetworkRequest network_request = new NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    .build();
+            callback = new network_callback();
+            cm.registerNetworkCallback(network_request, callback);
+        }
         broadcast_receiver = new broadcast_receiver();
         registerReceiver(broadcast_receiver, intentFilter);
 
@@ -497,6 +514,9 @@ public class chat_command_service extends Service {
         wifiLock.release();
         wakelock.release();
         unregisterReceiver(broadcast_receiver);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cm.unregisterNetworkCallback(callback);
+        }
         stopForeground(true);
         super.onDestroy();
     }
@@ -677,6 +697,15 @@ public class chat_command_service extends Service {
         }
     }
 
+    private void when_network_change() {
+        if (public_func.check_network_status(context)) {
+            if (!thread_main.isAlive()) {
+                public_func.write_log(context, "Network connections has been restored.");
+                thread_main = new Thread(new thread_main_runnable());
+                thread_main.start();
+            }
+        }
+    }
     private class broadcast_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -688,17 +717,20 @@ public class chat_command_service extends Service {
                     stopSelf();
                     android.os.Process.killProcess(android.os.Process.myPid());
                     break;
+                //noinspection deprecation
                 case ConnectivityManager.CONNECTIVITY_ACTION:
-                    if (public_func.check_network_status(context)) {
-                        if (!thread_main.isAlive()) {
-                            public_func.write_log(context, "Network connections has been restored.");
-                            thread_main = new Thread(new thread_main_runnable());
-                            thread_main.start();
-                        }
-                    }
+                    when_network_change();
                     break;
-
             }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private class network_callback extends ConnectivityManager.NetworkCallback {
+        @Override
+        public void onAvailable(@NotNull Network network) {
+            Log.d(TAG, "onAvailable");
+            when_network_change();
         }
     }
 }
