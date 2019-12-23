@@ -1,6 +1,7 @@
 package com.qwe7002.telegram_rc;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -131,7 +132,7 @@ class public_func {
                 NetworkCapabilities network_capabilities = manager.getNetworkCapabilities(network);
                 Log.d("check_network_status", "check_network_status: " + network_capabilities);
                 assert network_capabilities != null;
-                if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+                if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
                     network_status = true;
                 }
             }
@@ -182,6 +183,7 @@ class public_func {
         return true;
     }
 
+    @SuppressLint("HardwareIds")
     static String get_network_type(Context context) {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -195,12 +197,22 @@ class public_func {
                     if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                             net_type = "WIFI";
+
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                             TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                                boolean is_att = false;
                                 assert telephonyManager != null;
-                                net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
+                                SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+                                assert subscriptionManager != null;
+                                SubscriptionInfo info = subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
+                                if (info != null) {
+                                    is_att = info.getCarrierName().toString().contains("AT&T");
+                                }
+                                net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att);
+                            } else {
+                                Log.d("get_network_type", "No permission.");
                             }
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
@@ -226,8 +238,16 @@ class public_func {
                     break;
                 //noinspection deprecation
                 case ConnectivityManager.TYPE_MOBILE:
+                    boolean is_att = false;
+                    TelephonyManager telephonyManager = (TelephonyManager) context
+                            .getSystemService(Context.TELEPHONY_SERVICE);
+                    assert telephonyManager != null;
+                    Log.d("get_network_type", telephonyManager.getSubscriberId());
+                    if (telephonyManager.getSubscriberId().startsWith("3104101")) {
+                        is_att = true;
+                    }
                     //noinspection deprecation
-                    net_type = check_cellular_network_type(network_info.getSubtype());
+                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att);
                     break;
             }
         }
@@ -235,16 +255,26 @@ class public_func {
         return net_type;
     }
 
-    private static String check_cellular_network_type(int type) {
+    private static String check_cellular_network_type(int type, boolean is_att) {
         String net_type = "Unknown";
         switch (type) {
             case TelephonyManager.NETWORK_TYPE_NR:
                 net_type = "5G";
+                if (is_att) {
+                    net_type = "5G+";
+                }
                 break;
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
+                if (is_att) {
+                    net_type = "5G E";
+                }
                 break;
             case TelephonyManager.NETWORK_TYPE_HSPAP:
+                if (is_att) {
+                    net_type = "4G";
+                    break;
+                }
             case TelephonyManager.NETWORK_TYPE_EVDO_0:
             case TelephonyManager.NETWORK_TYPE_EVDO_A:
             case TelephonyManager.NETWORK_TYPE_EVDO_B:
