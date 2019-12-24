@@ -90,7 +90,7 @@ public class main_activity extends AppCompatActivity {
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
 
-        if (public_func.parse_int(chat_id_save) < 0) {
+        if (public_func.parse_long(chat_id_save) < 0) {
             privacy_mode_switch.setVisibility(View.VISIBLE);
         } else {
             privacy_mode_switch.setVisibility(View.GONE);
@@ -198,7 +198,7 @@ public class main_activity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (public_func.parse_int(chat_id.getText().toString()) < 0) {
+                if (public_func.parse_long(chat_id.getText().toString()) < 0) {
                     privacy_mode_switch.setVisibility(View.VISIBLE);
                 } else {
                     privacy_mode_switch.setVisibility(View.GONE);

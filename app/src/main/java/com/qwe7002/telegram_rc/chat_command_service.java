@@ -214,21 +214,25 @@ public class chat_command_service extends Service {
         switch (command.replace("_", "")) {
             case "/help":
             case "/start":
+            case "/commandlist":
                 String dual_card = "\n" + getString(R.string.sendsms);
                 if (public_func.get_active_card(context) == 2) {
                     dual_card = "\n" + getString(R.string.sendsms_dual);
                 }
                 String config_adb = "";
+                String switch_ap = "";
                 if (sharedPreferences.getBoolean("root", false)) {
+                    if (is_vpn_hotsport_exist()) {
+                        switch_ap = "\n" + getString(R.string.switch_ap_message);
+                    }
                     config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
-                String switch_ap = "";
-                if (is_vpn_hotsport_exist()) {
-                    switch_ap = "\n" + getString(R.string.switch_ap_message);
-                }
-                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + dual_card + switch_ap + config_adb;
-                if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
+                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + "\n" + getString(R.string.base_command) + dual_card + switch_ap + config_adb;
+                if (!message_type_is_private && privacy_mode && !bot_username.equals("") && !command.equals("/commandlist")) {
                     request_body.text = request_body.text.replace(" -", "@" + bot_username + " -");
+                }
+                if (command.equals("/commandlist")) {
+                    request_body.text = (getString(R.string.base_command) + dual_card + switch_ap + config_adb).replace("/", "");
                 }
                 has_command = true;
                 break;
@@ -608,7 +612,7 @@ public class chat_command_service extends Service {
         @Override
         public void run() {
             Log.d(TAG, "run: thread main start");
-            if (public_func.parse_int(chat_id) < 0) {
+            if (public_func.parse_long(chat_id) < 0) {
                 bot_username = sharedPreferences.getString("bot_username", null);
                 Log.d(TAG, "Load bot username from storage: " + bot_username);
                 if (bot_username == null) {

@@ -83,13 +83,12 @@ class public_func {
         return network_status;
     }
 
-    static int parse_int(String int_str) {
-        int result = 0;
+    static long parse_long(String int_str) {
+        long result = 0;
         try {
-            result = Integer.parseInt(int_str);
+            result = Long.parseLong(int_str);
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            //Avoid errors caused by unconvertible inputs.
         }
         return result;
     }
@@ -165,7 +164,6 @@ class public_func {
             return InetAddress.getByName(host);
         } catch (UnknownHostException e) {
             e.printStackTrace();
-            // unlikely
             throw new RuntimeException(e);
         }
     }
@@ -243,6 +241,7 @@ class public_func {
                             .getSystemService(Context.TELEPHONY_SERVICE);
                     assert telephonyManager != null;
                     Log.d("get_network_type", telephonyManager.getSubscriberId());
+                    //todo
                     if (telephonyManager.getSubscriberId().startsWith("3104101")) {
                         is_att = true;
                     }
