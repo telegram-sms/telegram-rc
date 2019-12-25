@@ -288,14 +288,21 @@ public class chat_command_service extends Service {
                     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
-                    if (wifiManager.isWifiEnabled()) {
+                    if (wifiManager.isWifiEnabled() && wifi_open) {
                         if (!com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
                             wifi_open = false;
                             com.qwe7002.root_kit.network.wifi_set_enable(false);
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                            int count = 0;
+                            while (wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED) {
+                                if (count == 600) {
+                                    break;
+                                }
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                ++count;
                             }
                         }
                     }
