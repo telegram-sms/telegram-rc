@@ -241,7 +241,6 @@ class public_func {
                             .getSystemService(Context.TELEPHONY_SERVICE);
                     assert telephonyManager != null;
                     Log.d("get_network_type", telephonyManager.getSubscriberId());
-                    //todo
                     if (telephonyManager.getSubscriberId().startsWith("3104101")) {
                         is_att = true;
                     }
@@ -250,7 +249,6 @@ class public_func {
                     break;
             }
         }
-
         return net_type;
     }
 

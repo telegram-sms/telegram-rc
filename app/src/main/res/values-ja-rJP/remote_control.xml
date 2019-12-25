@@ -11,4 +11,7 @@
     <string name="not_getting_root">ルート権限を取得していません。</string>
     <string name="adb_config">ネットワーク adb のセットアップが完了しました。</string>
     <string name="root_switch">[Root] 高度な機能を許可する</string>
+    <string name="hotspot_status">ホットスポットのステータス:</string>
+    <string name="enable">有効にする</string>
+    <string name="disable">無効にする</string>
 </resources>

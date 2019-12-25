@@ -247,10 +247,16 @@ public class chat_command_service extends Service {
                             data_card = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context);
                         }
                         card_info = data_card + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + "\nSIM2: " + public_func.get_sim_display_name(context, 1);
-
                     }
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + card_info;
+                String is_hotspot_running = "";
+                if (sharedPreferences.getBoolean("root", false)) {
+                    is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
+                    if (com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
+                        is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
+                    }
+                }
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + public_func.get_network_type(context) + is_hotspot_running + card_info;
                 has_command = true;
                 break;
             case "/log":
