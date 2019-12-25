@@ -293,7 +293,7 @@ public class chat_command_service extends Service {
                             wifi_open = false;
                             com.qwe7002.root_kit.network.wifi_set_enable(false);
                             int count = 0;
-                            while (wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED) {
+                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
                                 if (count == 600) {
                                     break;
                                 }
