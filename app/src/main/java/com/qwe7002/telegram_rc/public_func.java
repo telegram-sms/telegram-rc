@@ -223,28 +223,22 @@ class public_func {
                 }
             }
         } else {
-            //noinspection deprecation
             NetworkInfo network_info = connect_manager.getActiveNetworkInfo();
             if (network_info == null) {
                 return net_type;
             }
-            //noinspection deprecation
             switch (network_info.getType()) {
-                //noinspection deprecation
                 case ConnectivityManager.TYPE_WIFI:
                     net_type = "WIFI";
                     break;
-                //noinspection deprecation
                 case ConnectivityManager.TYPE_MOBILE:
                     boolean is_att = false;
                     TelephonyManager telephonyManager = (TelephonyManager) context
                             .getSystemService(Context.TELEPHONY_SERVICE);
                     assert telephonyManager != null;
-                    Log.d("get_network_type", telephonyManager.getSubscriberId());
                     if (telephonyManager.getSubscriberId().startsWith("3104101")) {
                         is_att = true;
                     }
-                    //noinspection deprecation
                     net_type = check_cellular_network_type(network_info.getSubtype(), is_att);
                     break;
             }
