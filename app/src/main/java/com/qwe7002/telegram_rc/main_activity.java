@@ -67,9 +67,6 @@ public class main_activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = getApplicationContext();
-
-        Paper.init(context);
-
         final EditText bot_token = findViewById(R.id.bot_token);
         final EditText chat_id = findViewById(R.id.chat_id);
         final EditText trusted_phone_number = findViewById(R.id.trusted_phone_number);
@@ -77,6 +74,8 @@ public class main_activity extends AppCompatActivity {
         final Switch fallback_sms = findViewById(R.id.fallback_sms);
         final Switch battery_monitoring_switch = findViewById(R.id.battery_monitoring);
         final Switch doh_switch = findViewById(R.id.doh_switch);
+        //load config
+        Paper.init(context);
         final SharedPreferences sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
         final Switch charger_status = findViewById(R.id.charger_status);
         final Switch verification_code = findViewById(R.id.verification_code_switch);
@@ -98,44 +97,9 @@ public class main_activity extends AppCompatActivity {
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+
             if (!sharedPreferences.getBoolean("conversion_data_structure", false)) {
-                new Thread(() -> {
-                    String message_list_raw = null;
-                    FileInputStream file_stream = null;
-                    try {
-                        file_stream = context.openFileInput("message.json");
-                        int length = file_stream.available();
-                        byte[] buffer = new byte[length];
-                        //noinspection ResultOfMethodCallIgnored
-                        file_stream.read(buffer);
-                        message_list_raw = new String(buffer);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (file_stream != null) {
-                            try {
-                                file_stream.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    if (message_list_raw != null) {
-                        JsonObject message_list = JsonParser.parseString(message_list_raw).getAsJsonObject();
-                        for (Map.Entry<String, JsonElement> entry_set : message_list.entrySet()) {
-                            JsonObject json_item = entry_set.getValue().getAsJsonObject();
-                            message_item item = new message_item();
-                            item.phone = json_item.get("phone").getAsString();
-                            item.card = json_item.get("card").getAsInt();
-                            item.sub_id = json_item.get("sub_id").getAsInt();
-                            Paper.book().write(entry_set.getKey(), item);
-                            Log.d(TAG, "add_message_list: " + entry_set.getKey());
-                        }
-                        Log.d(TAG, "The conversion is complete.");
-                        public_func.write_file(context, "message.json", "", Context.MODE_PRIVATE);
-                    }
-                    sharedPreferences.edit().putBoolean("conversion_data_structure", true).apply();
-                }).start();
+                new Thread(() -> convert_data(sharedPreferences)).start();
             }
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
@@ -554,5 +518,42 @@ public class main_activity extends AppCompatActivity {
         return true;
     }
 
+    private void convert_data(SharedPreferences sharedPreferences) {
+        String message_list_raw = null;
+        FileInputStream file_stream = null;
+        try {
+            file_stream = context.openFileInput("message.json");
+            int length = file_stream.available();
+            byte[] buffer = new byte[length];
+            //noinspection ResultOfMethodCallIgnored
+            file_stream.read(buffer);
+            message_list_raw = new String(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (file_stream != null) {
+                try {
+                    file_stream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (message_list_raw != null) {
+            JsonObject message_list = JsonParser.parseString(message_list_raw).getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry_set : message_list.entrySet()) {
+                JsonObject json_item = entry_set.getValue().getAsJsonObject();
+                message_item item = new message_item();
+                item.phone = json_item.get("phone").getAsString();
+                item.card = json_item.get("card").getAsInt();
+                item.sub_id = json_item.get("sub_id").getAsInt();
+                Paper.book().write(entry_set.getKey(), item);
+                Log.d(TAG, "add_message_list: " + entry_set.getKey());
+            }
+            Log.d(TAG, "The conversion is complete.");
+            public_func.write_file(context, "message.json", "", Context.MODE_PRIVATE);
+        }
+        sharedPreferences.edit().putBoolean("conversion_data_structure", true).apply();
+    }
 }
 
