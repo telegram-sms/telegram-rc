@@ -61,7 +61,6 @@ import okhttp3.dnsoverhttps.DnsOverHttps;
 class public_func {
     static final String broadcast_stop_service = "com.qwe7002.telegram_rc.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-
     static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
 
     static boolean get_data_enable(Context context) {
@@ -198,20 +197,27 @@ class public_func {
 
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                                Log.d("get_network_type", "No permission.");
+                                return net_type;
+                            }
                             TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                                boolean is_att = false;
-                                assert telephonyManager != null;
+                            boolean is_att = false;
+                            assert telephonyManager != null;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                //Behavior change: Android Q does not allow IMSI access
                                 SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
                                 assert subscriptionManager != null;
                                 SubscriptionInfo info = subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
                                 if (info != null) {
                                     is_att = info.getCarrierName().toString().contains("AT&T");
                                 }
-                                net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att);
                             } else {
-                                Log.d("get_network_type", "No permission.");
+                                if (telephonyManager.getSubscriberId().startsWith("3104101")) {
+                                    is_att = true;
+                                }
                             }
+                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att);
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
                             net_type = "Bluetooth";
