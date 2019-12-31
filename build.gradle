@@ -8,6 +8,7 @@ buildscript {
         maven {
             url "http://dl.bintray.com/kotlin/kotlin-eap"
         }
+
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.6.0-rc01'
@@ -22,6 +23,9 @@ allprojects {
         jcenter()
         maven {
             url "http://dl.bintray.com/kotlin/kotlin-eap"
+        }
+        maven{
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
         }
     }
 }

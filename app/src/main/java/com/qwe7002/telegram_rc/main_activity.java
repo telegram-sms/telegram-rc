@@ -74,9 +74,6 @@ public class main_activity extends AppCompatActivity {
         final Switch fallback_sms = findViewById(R.id.fallback_sms);
         final Switch battery_monitoring_switch = findViewById(R.id.battery_monitoring);
         final Switch doh_switch = findViewById(R.id.doh_switch);
-        //load config
-        Paper.init(context);
-        final SharedPreferences sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
         final Switch charger_status = findViewById(R.id.charger_status);
         final Switch verification_code = findViewById(R.id.verification_code_switch);
         final Switch root_switch = findViewById(R.id.root_switch);
@@ -85,6 +82,10 @@ public class main_activity extends AppCompatActivity {
         final Button get_id = findViewById(R.id.get_id);
         final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
         final Button notify_app_set = findViewById(R.id.notify_app_set);
+
+        //load config
+        Paper.init(context);
+        final SharedPreferences sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
 
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
@@ -195,7 +196,6 @@ public class main_activity extends AppCompatActivity {
         root_switch.setOnClickListener(view -> new Thread(() -> {
             if (!shell.check_root()) {
                 runOnUiThread(() -> root_switch.setChecked(false));
-
             }
         }).start());
         get_id.setOnClickListener(v -> {
