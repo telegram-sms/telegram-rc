@@ -133,7 +133,6 @@ public class sms_receiver extends BroadcastReceiver {
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
                     request_body.text = raw_request_body_text;
                     break;
-
                 case "open-ap":
                     com.qwe7002.root_kit.network.data_set_enable(true);
                     loop_count = 0;
@@ -161,6 +160,7 @@ public class sms_receiver extends BroadcastReceiver {
                         }
                     }
                     if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
+                        Paper.book().write("wifi_open", true);
                         status = context.getString(R.string.action_success);
                     }
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi) + status;
@@ -187,6 +187,7 @@ public class sms_receiver extends BroadcastReceiver {
                     }).start();
                     break;
                 case "close-ap":
+                    Paper.book().write("wifi_open", false);
                     raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
                     request_body.text = raw_request_body_text;
                     break;

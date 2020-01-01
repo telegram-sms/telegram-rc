@@ -104,7 +104,6 @@ public class chat_command_service extends Service {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(public_func.broadcast_stop_service);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            //noinspection deprecation
             intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         } else {
             NetworkRequest network_request = new NetworkRequest.Builder()
@@ -292,18 +291,12 @@ public class chat_command_service extends Service {
                         if (!com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
                             wifi_open = false;
                             com.qwe7002.root_kit.network.wifi_set_enable(false);
-                            int count = 0;
-                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
-                                if (count == 600) {
-                                    break;
-                                }
-                                try {
-                                    Thread.sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                ++count;
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
+
                         }
                     }
                     if (!wifi_open) {
@@ -352,6 +345,7 @@ public class chat_command_service extends Service {
                             result_data = context.getString(R.string.restart_network);
                             break;
                         case "/closeap":
+                            Paper.book().write("wifi_open", false);
                             result_data = context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
                             break;
                         default:
@@ -734,7 +728,6 @@ public class chat_command_service extends Service {
                     stopSelf();
                     android.os.Process.killProcess(android.os.Process.myPid());
                     break;
-                //noinspection deprecation
                 case ConnectivityManager.CONNECTIVITY_ACTION:
                     when_network_change();
                     break;
@@ -742,7 +735,7 @@ public class chat_command_service extends Service {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private class network_callback extends ConnectivityManager.NetworkCallback {
         @Override
         public void onAvailable(@NotNull Network network) {
