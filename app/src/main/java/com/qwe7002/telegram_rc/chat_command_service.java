@@ -743,7 +743,6 @@ public class chat_command_service extends Service {
                                 Log.d("get_network_type", "No permission.");
                                 return net_type;
                             }
-
                             net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att_sim(telephonyManager.getSimOperator()));
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
@@ -846,19 +845,27 @@ public class chat_command_service extends Service {
     }
 
     private boolean is_att_sim(String mcc_mnc) {
-        switch (mcc_mnc) {
-            case "310150":
-            case "310680":
-            case "310070":
-            case "310560":
-            case "310410":
-            case "310380":
-            case "310170":
-            case "310980":
+        Log.d(TAG, "is_att_sim: " + mcc_mnc);
+        int int_mcc_mnc = -1;
+        try {
+            int_mcc_mnc = Integer.parseInt(mcc_mnc);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        switch (int_mcc_mnc) {
+            case 310150:
+            case 310680:
+            case 310070:
+            case 310560:
+            case 310410:
+            case 310380:
+            case 310170:
+            case 310980:
                 return true;
         }
         return false;
     }
+
     private String check_cellular_network_type(int type, boolean is_att) {
         String net_type = "Unknown";
         switch (type) {
