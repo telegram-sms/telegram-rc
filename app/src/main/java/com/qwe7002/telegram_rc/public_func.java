@@ -1,7 +1,6 @@
 package com.qwe7002.telegram_rc;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -17,12 +16,10 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.SmsManager;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -178,120 +175,6 @@ class public_func {
             }
         }
         return true;
-    }
-
-    @SuppressLint("HardwareIds")
-    static String get_network_type(Context context) {
-        String net_type = "Unknown";
-        ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        assert connect_manager != null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Network[] networks = connect_manager.getAllNetworks();
-            if (networks.length != 0) {
-                for (Network network : networks) {
-                    NetworkCapabilities network_capabilities = connect_manager.getNetworkCapabilities(network);
-                    assert network_capabilities != null;
-                    if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                            net_type = "WIFI";
-
-                        }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                                Log.d("get_network_type", "No permission.");
-                                return net_type;
-                            }
-                            TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                            boolean is_att = false;
-                            assert telephonyManager != null;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                //Behavior change: Android Q does not allow IMSI access
-                                SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-                                assert subscriptionManager != null;
-                                SubscriptionInfo info = subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
-                                if (info != null) {
-                                    is_att = info.getCarrierName().toString().contains("AT&T");
-                                }
-                            } else {
-                                if (telephonyManager.getSubscriberId().startsWith("3104101")) {
-                                    is_att = true;
-                                }
-                            }
-                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att);
-                        }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
-                            net_type = "Bluetooth";
-                        }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                            net_type = "Ethernet";
-                        }
-                    }
-                }
-            }
-        } else {
-            NetworkInfo network_info = connect_manager.getActiveNetworkInfo();
-            if (network_info == null) {
-                return net_type;
-            }
-            switch (network_info.getType()) {
-                case ConnectivityManager.TYPE_WIFI:
-                    net_type = "WIFI";
-                    break;
-                case ConnectivityManager.TYPE_MOBILE:
-                    boolean is_att = false;
-                    TelephonyManager telephonyManager = (TelephonyManager) context
-                            .getSystemService(Context.TELEPHONY_SERVICE);
-                    assert telephonyManager != null;
-                    if (telephonyManager.getSubscriberId().startsWith("3104101")) {
-                        is_att = true;
-                    }
-                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att);
-                    break;
-            }
-        }
-        return net_type;
-    }
-
-    private static String check_cellular_network_type(int type, boolean is_att) {
-        String net_type = "Unknown";
-        switch (type) {
-            case TelephonyManager.NETWORK_TYPE_NR:
-                net_type = "5G";
-                if (is_att) {
-                    net_type = "5G+";
-                }
-                break;
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                net_type = "LTE";
-                if (is_att) {
-                    net_type = "5G E";
-                }
-                break;
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-                if (is_att) {
-                    net_type = "4G";
-                    break;
-                }
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_EHRPD:
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-                net_type = "3G";
-                break;
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-            case TelephonyManager.NETWORK_TYPE_CDMA:
-            case TelephonyManager.NETWORK_TYPE_1xRTT:
-            case TelephonyManager.NETWORK_TYPE_IDEN:
-                net_type = "2G";
-                break;
-        }
-        return net_type;
     }
 
     @TargetApi(Build.VERSION_CODES.N)
