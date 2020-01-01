@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.icu.text.DecimalFormat;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -27,8 +28,6 @@ import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoTdscdma;
 import android.telephony.CellInfoWcdma;
-import android.telephony.SubscriptionInfo;
-import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -299,7 +298,7 @@ public class chat_command_service extends Service {
                     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
-                    if (wifiManager.isWifiEnabled() && wifi_open) {
+                    if (wifi_open) {
                         if (!com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
                             wifi_open = false;
                             com.qwe7002.root_kit.network.wifi_set_enable(false);
@@ -342,7 +341,7 @@ public class chat_command_service extends Service {
                         Paper.book().write("wifi_open", false);
                         result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
                     }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info();
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info() + "\n" + getString(R.string.current_network_connection_status) + get_network_type();
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                 has_command = true;
@@ -600,7 +599,7 @@ public class chat_command_service extends Service {
         assert batteryManager != null;
         int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
         if (battery_level > 100) {
-            Log.d(TAG, "The previous battery is over 100%, and the correction is 100%.");
+            Log.i(TAG, "The previous battery is over 100%, and the correction is 100%.");
             battery_level = 100;
         }
         IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -744,21 +743,8 @@ public class chat_command_service extends Service {
                                 Log.d("get_network_type", "No permission.");
                                 return net_type;
                             }
-                            boolean is_att = false;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                //Behavior change: Android Q does not allow IMSI access
-                                SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-                                assert subscriptionManager != null;
-                                SubscriptionInfo info = subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
-                                if (info != null) {
-                                    is_att = info.getCarrierName().toString().contains("AT&T");
-                                }
-                            } else {
-                                if (telephonyManager.getSubscriberId().startsWith("3104101")) {
-                                    is_att = true;
-                                }
-                            }
-                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att);
+
+                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att_sim(telephonyManager.getSimOperator()));
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
                             net_type = "Bluetooth";
@@ -779,36 +765,42 @@ public class chat_command_service extends Service {
                     net_type = "WIFI";
                     break;
                 case ConnectivityManager.TYPE_MOBILE:
-                    boolean is_att = false;
-                    if (telephonyManager.getSubscriberId().startsWith("3104101")) {
-                        is_att = true;
-                    }
-                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att);
+                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att_sim(telephonyManager.getSimOperator()));
                     break;
             }
         }
 
-        StringBuilder cellinfo_string = new StringBuilder();
+        return net_type + get_cell_info(telephonyManager);
+    }
 
+    private String get_cell_info(TelephonyManager telephonyManager) {
+        StringBuilder result_string = new StringBuilder();
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PermissionChecker.PERMISSION_GRANTED) {
             List<CellInfo> infoLists = telephonyManager.getAllCellInfo();
             int strength = 0;
-            int Bandwidth = -1;
+            String band_width = null;
             for (CellInfo info : infoLists) {
+                if (!info.isRegistered()) {
+                    continue;
+                }
                 switch (telephonyManager.getNetworkType()) {
                     case TelephonyManager.NETWORK_TYPE_NR:
-                        CellInfoLte cellinfoNr = (CellInfoLte) info;
+                        CellInfoLte cell_info_nr = (CellInfoLte) info;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            strength = cellinfoNr.getCellSignalStrength().getDbm();
-                            Bandwidth = cellinfoNr.getCellIdentity().getBandwidth() / 1000000;
+                            strength = cell_info_nr.getCellSignalStrength().getDbm();
+                            double band_double = (double) cell_info_nr.getCellIdentity().getBandwidth() / 1000000;
+                            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+                            band_width = decimalFormat.format(band_double);
 
                         }
                         break;
                     case TelephonyManager.NETWORK_TYPE_LTE:
-                        CellInfoLte cellinfoLte = (CellInfoLte) info;
-                        strength = cellinfoLte.getCellSignalStrength().getDbm();
+                        CellInfoLte cell_info_lte = (CellInfoLte) info;
+                        strength = cell_info_lte.getCellSignalStrength().getDbm();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            Bandwidth = cellinfoLte.getCellIdentity().getBandwidth() / 1000000;
+                            double band_double = (double) cell_info_lte.getCellIdentity().getBandwidth() / 1000000;
+                            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+                            band_width = decimalFormat.format(band_double);
                         }
                         break;
                     case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
@@ -835,26 +827,38 @@ public class chat_command_service extends Service {
                     case TelephonyManager.NETWORK_TYPE_1xRTT:
                         strength = ((CellInfoCdma) info).getCellSignalStrength().getCdmaDbm();
                 }
-                if (info.isRegistered()) {
-                    break;
-                }
+                break;
             }
-            cellinfo_string.append(" (");
+            result_string.append(" (");
             if (strength != 0) {
 
-                cellinfo_string.append(strength);
-                cellinfo_string.append(" dBm");
+                result_string.append(strength);
+                result_string.append(" dBm");
             }
-            if (Bandwidth != -1) {
-                cellinfo_string.append(", ");
-                cellinfo_string.append(Bandwidth);
-                cellinfo_string.append(" MHz");
+            if (band_width != null) {
+                result_string.append(", ");
+                result_string.append(band_width);
+                result_string.append(" MHz");
             }
-            cellinfo_string.append(")");
+            result_string.append(")");
         }
-        return net_type + cellinfo_string.toString();
+        return result_string.toString();
     }
 
+    private boolean is_att_sim(String mcc_mnc) {
+        switch (mcc_mnc) {
+            case "310150":
+            case "310680":
+            case "310070":
+            case "310560":
+            case "310410":
+            case "310380":
+            case "310170":
+            case "310980":
+                return true;
+        }
+        return false;
+    }
     private String check_cellular_network_type(int type, boolean is_att) {
         String net_type = "Unknown";
         switch (type) {
