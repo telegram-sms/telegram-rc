@@ -11,22 +11,20 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.icu.text.DecimalFormat;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.telephony.CellInfo;
-import android.telephony.CellInfoCdma;
-import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
-import android.telephony.CellInfoTdscdma;
+import android.telephony.CellInfoNr;
 import android.telephony.CellInfoWcdma;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -34,7 +32,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.PermissionChecker;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -86,12 +83,207 @@ public class chat_command_service extends Service {
         return START_STICKY;
     }
 
+    //cell info
+    private static int arfcn = -1;
+    private static int strength = 0;
+
+    @Override
+    public void onDestroy() {
+        wifiLock.release();
+        wakelock.release();
+        unregisterReceiver(broadcast_receiver);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cm.unregisterNetworkCallback(callback);
+        }
+        stopForeground(true);
+        super.onDestroy();
+    }
+
+    private void get_me() {
+        OkHttpClient okhttp_client_new = okhttp_client;
+        String request_uri = public_func.get_url(bot_token, "getMe");
+        Request request = new Request.Builder().url(request_uri).build();
+        Call call = okhttp_client_new.newCall(request);
+        Response response;
+        try {
+            response = call.execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+            public_func.write_log(context, "Get username failed:" + e.getMessage());
+            return;
+        }
+        if (response.code() == 200) {
+            String result = null;
+            try {
+                result = Objects.requireNonNull(response.body()).string();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            assert result != null;
+            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+            if (result_obj.get("ok").getAsBoolean()) {
+                bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
+                sharedPreferences.edit().putString("bot_username", bot_username).apply();
+                Log.d(TAG, "bot_username: " + bot_username);
+            }
+        }
+
+    }
+
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    boolean is_vpn_hotsport_exist() {
+        ApplicationInfo info;
+        try {
+            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            info = null;
+        }
+
+        return info != null;
+    }
+
+
+    private String get_battery_info() {
+        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+        assert batteryManager != null;
+        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        if (battery_level > 100) {
+            Log.i(TAG, "The previous battery is over 100%, and the correction is 100%.");
+            battery_level = 100;
+        }
+        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, intentfilter);
+        assert batteryStatus != null;
+        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        StringBuilder battery_string_builder = new StringBuilder().append(battery_level).append("%");
+        switch (charge_status) {
+            case BatteryManager.BATTERY_STATUS_CHARGING:
+            case BatteryManager.BATTERY_STATUS_FULL:
+                battery_string_builder.append(" (").append(context.getString(R.string.charging)).append(")");
+                break;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
+                    case BatteryManager.BATTERY_PLUGGED_AC:
+                    case BatteryManager.BATTERY_PLUGGED_USB:
+                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                        battery_string_builder.append(" (").append(context.getString(R.string.not_charging)).append(")");
+                        break;
+                }
+                break;
+        }
+        return battery_string_builder.toString();
+    }
+
+    class thread_main_runnable implements Runnable {
+        @Override
+        public void run() {
+            Log.d(TAG, "run: thread main start");
+            if (public_func.parse_long(chat_id) < 0) {
+                bot_username = sharedPreferences.getString("bot_username", null);
+                Log.d(TAG, "Load bot username from storage: " + bot_username);
+                if (bot_username == null) {
+                    new Thread(chat_command_service.this::get_me).start();
+                }
+            }
+            while (true) {
+                int timeout = 5 * magnification;
+                int http_timeout = timeout + 5;
+                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
+                        .readTimeout(http_timeout, TimeUnit.SECONDS)
+                        .writeTimeout(http_timeout, TimeUnit.SECONDS)
+                        .build();
+                Log.d(TAG, "run: Current timeout:" + timeout);
+                String request_uri = public_func.get_url(bot_token, "getUpdates");
+                polling_json request_body = new polling_json();
+                request_body.offset = offset;
+                request_body.timeout = timeout;
+                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+                Call call = okhttp_client_new.newCall(request);
+                Response response;
+                try {
+                    response = call.execute();
+                    error_magnification = 1;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if (!public_func.check_network_status(context)) {
+                        public_func.write_log(context, "No network connections available. ");
+                        error_magnification = 1;
+                        magnification = 1;
+                        break;
+                    }
+                    int sleep_time = 5 * error_magnification;
+                    public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
+                    magnification = 1;
+                    if (error_magnification <= 59) {
+                        ++error_magnification;
+                    }
+                    try {
+                        Thread.sleep(sleep_time * 1000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    continue;
+
+                }
+                if (response.code() == 200) {
+                    assert response.body() != null;
+                    String result;
+                    try {
+                        result = Objects.requireNonNull(response.body()).string();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                    if (result_obj.get("ok").getAsBoolean()) {
+                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
+                        for (JsonElement item : result_array) {
+                            receive_handle(item.getAsJsonObject());
+                        }
+                    }
+                    if (magnification <= 11) {
+                        ++magnification;
+                    }
+                } else {
+                    public_func.write_log(context, "response code:" + response.code());
+                    if (response.code() == 401) {
+                        assert response.body() != null;
+                        String result;
+                        try {
+                            result = Objects.requireNonNull(response.body()).string();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            continue;
+                        }
+                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                        String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
+                        public_func.send_fallback_sms(context, result_message, -1);
+                        public_func.stop_all_service(context);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean run_lock = false;
+
     @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
     @Override
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
         cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        Log.i(TAG, "Network_info: " + get_network_type());
         Paper.init(context);
 
         sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
@@ -298,12 +490,20 @@ public class chat_command_service extends Service {
                     WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
-                    if (wifi_open) {
+                    if (wifiManager.isWifiEnabled()) {
                         if (!com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
                             wifi_open = false;
+                            Paper.book().write("wifi_open", false);
                             com.qwe7002.root_kit.network.wifi_set_enable(false);
                             try {
-                                Thread.sleep(1000);
+                                int count = 0;
+                                while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
+                                    if (count == 600) {
+                                        break;
+                                    }
+                                    Thread.sleep(100);
+                                    ++count;
+                                }
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -531,194 +731,6 @@ public class chat_command_service extends Service {
         });
     }
 
-    @Override
-    public void onDestroy() {
-        wifiLock.release();
-        wakelock.release();
-        unregisterReceiver(broadcast_receiver);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            cm.unregisterNetworkCallback(callback);
-        }
-        stopForeground(true);
-        super.onDestroy();
-    }
-
-    private void get_me() {
-        OkHttpClient okhttp_client_new = okhttp_client;
-        String request_uri = public_func.get_url(bot_token, "getMe");
-        Request request = new Request.Builder().url(request_uri).build();
-        Call call = okhttp_client_new.newCall(request);
-        Response response;
-        try {
-            response = call.execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-            public_func.write_log(context, "Get username failed:" + e.getMessage());
-            return;
-        }
-        if (response.code() == 200) {
-            String result = null;
-            try {
-                result = Objects.requireNonNull(response.body()).string();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            assert result != null;
-            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-            if (result_obj.get("ok").getAsBoolean()) {
-                bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                sharedPreferences.edit().putString("bot_username", bot_username).apply();
-                Log.d(TAG, "bot_username: " + bot_username);
-            }
-        }
-
-    }
-
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    @SuppressWarnings("SpellCheckingInspection")
-    boolean is_vpn_hotsport_exist() {
-        ApplicationInfo info;
-        try {
-            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            info = null;
-        }
-
-        return info != null;
-    }
-
-
-    private String get_battery_info() {
-        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-        assert batteryManager != null;
-        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-        if (battery_level > 100) {
-            Log.i(TAG, "The previous battery is over 100%, and the correction is 100%.");
-            battery_level = 100;
-        }
-        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = context.registerReceiver(null, intentfilter);
-        assert batteryStatus != null;
-        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        StringBuilder battery_string_builder = new StringBuilder().append(battery_level).append("%");
-        switch (charge_status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING:
-            case BatteryManager.BATTERY_STATUS_FULL:
-                battery_string_builder.append(" (").append(context.getString(R.string.charging)).append(")");
-                break;
-            case BatteryManager.BATTERY_STATUS_DISCHARGING:
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
-                    case BatteryManager.BATTERY_PLUGGED_AC:
-                    case BatteryManager.BATTERY_PLUGGED_USB:
-                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        battery_string_builder.append(" (").append(context.getString(R.string.not_charging)).append(")");
-                        break;
-                }
-                break;
-        }
-        return battery_string_builder.toString();
-    }
-
-    class thread_main_runnable implements Runnable {
-        @Override
-        public void run() {
-            Log.d(TAG, "run: thread main start");
-            if (public_func.parse_long(chat_id) < 0) {
-                bot_username = sharedPreferences.getString("bot_username", null);
-                Log.d(TAG, "Load bot username from storage: " + bot_username);
-                if (bot_username == null) {
-                    new Thread(chat_command_service.this::get_me).start();
-                }
-            }
-            while (true) {
-                int timeout = 5 * magnification;
-                int http_timeout = timeout + 5;
-                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
-                        .readTimeout(http_timeout, TimeUnit.SECONDS)
-                        .writeTimeout(http_timeout, TimeUnit.SECONDS)
-                        .build();
-                Log.d(TAG, "run: Current timeout:" + timeout);
-                String request_uri = public_func.get_url(bot_token, "getUpdates");
-                polling_json request_body = new polling_json();
-                request_body.offset = offset;
-                request_body.timeout = timeout;
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
-                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-                Call call = okhttp_client_new.newCall(request);
-                Response response;
-                try {
-                    response = call.execute();
-                    error_magnification = 1;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (!public_func.check_network_status(context)) {
-                        public_func.write_log(context, "No network connections available. ");
-                        error_magnification = 1;
-                        magnification = 1;
-                        break;
-                    }
-                    int sleep_time = 5 * error_magnification;
-                    public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
-                    magnification = 1;
-                    if (error_magnification <= 59) {
-                        ++error_magnification;
-                    }
-                    try {
-                        Thread.sleep(sleep_time * 1000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                    continue;
-
-                }
-                if (response.code() == 200) {
-                    assert response.body() != null;
-                    String result;
-                    try {
-                        result = Objects.requireNonNull(response.body()).string();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        continue;
-                    }
-                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                    if (result_obj.get("ok").getAsBoolean()) {
-                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
-                        for (JsonElement item : result_array) {
-                            receive_handle(item.getAsJsonObject());
-                        }
-                    }
-                    if (magnification <= 11) {
-                        ++magnification;
-                    }
-                } else {
-                    public_func.write_log(context, "response code:" + response.code());
-                    if (response.code() == 401) {
-                        assert response.body() != null;
-                        String result;
-                        try {
-                            result = Objects.requireNonNull(response.body()).string();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            continue;
-                        }
-                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                        String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
-                        public_func.send_fallback_sms(context, result_message, -1);
-                        public_func.stop_all_service(context);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     @SuppressLint("HardwareIds")
     private String get_network_type() {
         String net_type = "Unknown";
@@ -743,7 +755,7 @@ public class chat_command_service extends Service {
                                 Log.d("get_network_type", "No permission.");
                                 return net_type;
                             }
-                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att_sim(telephonyManager.getSimOperator()));
+                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att_sim(telephonyManager.getSimOperator())) + get_cell_info(telephonyManager);
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
                             net_type = "Bluetooth";
@@ -764,83 +776,80 @@ public class chat_command_service extends Service {
                     net_type = "WIFI";
                     break;
                 case ConnectivityManager.TYPE_MOBILE:
-                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att_sim(telephonyManager.getSimOperator()));
+                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att_sim(telephonyManager.getSimOperator())) + get_cell_info(telephonyManager);
                     break;
             }
         }
 
-        return net_type + get_cell_info(telephonyManager);
+        return net_type;
     }
 
     private String get_cell_info(TelephonyManager telephonyManager) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return "";
+        }
         StringBuilder result_string = new StringBuilder();
-        if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PermissionChecker.PERMISSION_GRANTED) {
-            List<CellInfo> infoLists = telephonyManager.getAllCellInfo();
-            int strength = 0;
-            String band_width = null;
-            for (CellInfo info : infoLists) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            run_lock = false;
+            telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
+                @Override
+                public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
+                    Log.d(TAG, "onCellInfo: " + cellInfo.size());
+                    for (CellInfo info : cellInfo) {
+                        Log.d(TAG, "onCellInfo: " + info.getTimeStamp());
+                        if (info instanceof CellInfoNr) {
+                            strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
+                            arfcn = -1;
+                            break;
+                        }
+                        if (info instanceof CellInfoLte) {
+                            strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
+                            arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
+
+                        }
+                    }
+                    run_lock = true;
+                }
+            });
+            while (!run_lock) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            for (CellInfo info : telephonyManager.getAllCellInfo()) {
                 if (!info.isRegistered()) {
+                    Log.d(TAG, "get_cell_info_handle: ");
                     continue;
                 }
-                switch (telephonyManager.getNetworkType()) {
-                    case TelephonyManager.NETWORK_TYPE_NR:
-                        CellInfoLte cell_info_nr = (CellInfoLte) info;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            strength = cell_info_nr.getCellSignalStrength().getDbm();
-                            double band_double = (double) cell_info_nr.getCellIdentity().getBandwidth() / 1000000;
-                            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-                            band_width = decimalFormat.format(band_double);
-
-                        }
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_LTE:
-                        CellInfoLte cell_info_lte = (CellInfoLte) info;
-                        strength = cell_info_lte.getCellSignalStrength().getDbm();
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            double band_double = (double) cell_info_lte.getCellIdentity().getBandwidth() / 1000000;
-                            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-                            band_width = decimalFormat.format(band_double);
-                        }
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            strength = ((CellInfoTdscdma) info).getCellSignalStrength().getDbm();
-                        }
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_HSPAP:
-                    case TelephonyManager.NETWORK_TYPE_EHRPD:
-                    case TelephonyManager.NETWORK_TYPE_HSDPA:
-                    case TelephonyManager.NETWORK_TYPE_HSUPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPA:
-                    case TelephonyManager.NETWORK_TYPE_UMTS:
-                        strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_GPRS:
-                    case TelephonyManager.NETWORK_TYPE_EDGE:
-                        strength = ((CellInfoGsm) info).getCellSignalStrength().getDbm();
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                    case TelephonyManager.NETWORK_TYPE_CDMA:
-                    case TelephonyManager.NETWORK_TYPE_1xRTT:
-                        strength = ((CellInfoCdma) info).getCellSignalStrength().getCdmaDbm();
+                if (info instanceof CellInfoLte) {
+                    strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
+                    }
+                    break;
                 }
-                break;
+                if (info instanceof CellInfoWcdma) {
+                    strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        arfcn = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
+                    }
+                }
             }
-            result_string.append(" (");
-            if (strength != 0) {
-
-                result_string.append(strength);
-                result_string.append(" dBm");
-            }
-            if (band_width != null) {
-                result_string.append(", ");
-                result_string.append(band_width);
-                result_string.append(" MHz");
-            }
-            result_string.append(")");
         }
+        result_string.append(" (");
+        if (strength != 0) {
+            result_string.append(strength);
+            result_string.append(" dBm");
+        }
+        if (arfcn != -1) {
+            result_string.append(", ");
+            result_string.append("ARFCN: ");
+            result_string.append(arfcn);
+        }
+        result_string.append(")");
         return result_string.toString();
     }
 
