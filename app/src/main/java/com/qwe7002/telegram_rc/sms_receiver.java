@@ -10,11 +10,14 @@ import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 
 import com.github.sumimakito.codeauxlib.CodeauxLibStatic;
 import com.google.gson.Gson;
@@ -32,6 +35,7 @@ import okhttp3.Response;
 
 
 public class sms_receiver extends BroadcastReceiver {
+    @SuppressWarnings("SpellCheckingInspection")
     public void onReceive(final Context context, Intent intent) {
         Paper.init(context);
         final String TAG = "sms_receiver";
@@ -124,75 +128,19 @@ public class sms_receiver extends BroadcastReceiver {
         final boolean data_enable = public_func.get_data_enable(context);
         int loop_count;
         if (is_trusted_phone) {
-            switch (message_body.toLowerCase().replace("-", "")) {
-                case "restart-service":
-                    new Thread(() -> {
-                        public_func.stop_all_service(context);
-                        public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
-                    }).start();
-                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
-                    request_body.text = raw_request_body_text;
-                    break;
-                case "open-ap":
-                    com.qwe7002.root_kit.network.data_set_enable(true);
-                    loop_count = 0;
-                    while (!public_func.check_network_status(context)) {
-                        if (loop_count >= 100) {
-                            Log.d(TAG, "loop wait timeout");
-                            break;
-                        }
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        ++loop_count;
-                    }
-                    String status = context.getString(R.string.action_failed);
-                    WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                    assert wifiManager != null;
-                    if (wifiManager.isWifiEnabled()) {
-                        com.qwe7002.root_kit.network.wifi_set_enable(false);
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
-                        Paper.book().write("wifi_open", true);
-                        status = context.getString(R.string.action_success);
-                    }
-                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi) + status;
-                    request_body.text = raw_request_body_text;
-                    new Thread(() -> {
-                        try {
-                            int count = 0;
-                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                                if (count == 100) {
-                                    break;
-                                }
-                                Thread.sleep(100);
-                                ++count;
-                            }
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                        } else {
-                            com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                        }
-                    }).start();
-                    break;
-                case "close-ap":
-                    Paper.book().write("wifi_open", false);
-                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
-                    request_body.text = raw_request_body_text;
-                    break;
-                case "switch-data":
-                    if (!data_enable) {
+            String message_command = message_body.toLowerCase().replace("_", "");
+            String[] message_command_list = message_command.split("\n");
+            if (message_command_list.length > 0) {
+                switch (message_command_list[0]) {
+                    case "/restartservice":
+                        new Thread(() -> {
+                            public_func.stop_all_service(context);
+                            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+                        }).start();
+                        raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
+                        request_body.text = raw_request_body_text;
+                        break;
+                    case "/openap":
                         com.qwe7002.root_kit.network.data_set_enable(true);
                         loop_count = 0;
                         while (!public_func.check_network_status(context)) {
@@ -207,32 +155,107 @@ public class sms_receiver extends BroadcastReceiver {
                             }
                             ++loop_count;
                         }
-                    }
-                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
-                    request_body.text = raw_request_body_text;
-                    break;
-                case "restart-network":
-                    raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network);
-                    request_body.text = raw_request_body_text;
-                    break;
-                default:
-                    if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-                        Log.i(TAG, "No SMS permission.");
-                        break;
-                    }
-                    String[] msg_send_list = message_body.split("\n");
-                    String msg_send_to = public_func.get_send_phone_number(msg_send_list[0]);
-                    if (public_func.is_phone_number(msg_send_to) && msg_send_list.length != 1) {
-                        StringBuilder msg_send_content = new StringBuilder();
-                        for (int i = 1; i < msg_send_list.length; ++i) {
-                            if (msg_send_list.length != 2 && i != 1) {
-                                msg_send_content.append("\n");
+                        String status = context.getString(R.string.action_failed);
+                        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                        assert wifiManager != null;
+                        if (wifiManager.isWifiEnabled()) {
+                            com.qwe7002.root_kit.network.wifi_set_enable(false);
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
-                            msg_send_content.append(msg_send_list[i]);
                         }
-                        new Thread(() -> public_func.send_sms(context, msg_send_to, msg_send_content.toString(), slot, sub)).start();
-                        return;
-                    }
+                        if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
+                            Paper.book().write("wifi_open", true);
+                            status = context.getString(R.string.action_success);
+                        }
+                        raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi) + status;
+                        request_body.text = raw_request_body_text;
+                        new Thread(() -> {
+                            try {
+                                int count = 0;
+                                while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
+                                    if (count == 100) {
+                                        break;
+                                    }
+                                    Thread.sleep(100);
+                                    ++count;
+                                }
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                            } else {
+                                com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                            }
+                        }).start();
+                        break;
+                    case "/closeap":
+                        Paper.book().write("wifi_open", false);
+                        raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
+                        request_body.text = raw_request_body_text;
+                        break;
+                    case "/switchdata":
+                        if (!data_enable) {
+                            com.qwe7002.root_kit.network.data_set_enable(true);
+                            loop_count = 0;
+                            while (!public_func.check_network_status(context)) {
+                                if (loop_count >= 100) {
+                                    Log.d(TAG, "loop wait timeout");
+                                    break;
+                                }
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                ++loop_count;
+                            }
+                        }
+                        raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
+                        request_body.text = raw_request_body_text;
+                        break;
+                    case "/restartnetwork":
+                        raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network);
+                        request_body.text = raw_request_body_text;
+                        break;
+                    case "/sendussd":
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                                String[] command_list = message_body.split("\n");
+                                if (command_list.length > 1 && public_func.is_USSD(command_list[1])) {
+                                    TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                                    Handler handler = new Handler();
+                                    assert telephonyManager != null;
+                                    telephonyManager.sendUssdRequest(command_list[1], new ussd_request_callback(context, bot_token, chat_id, sharedPreferences.getBoolean("doh_switch", true)), handler);
+                                    return;
+                                }
+                                request_body.text = "Error";
+                            }
+                        } else {
+                            Log.i(TAG, "send_ussd: No permission.");
+                        }
+                    case "/sendsms":
+                        if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+                            Log.i(TAG, "No SMS permission.");
+                            break;
+                        }
+                        String msg_send_to = public_func.get_send_phone_number(message_command_list[1]);
+                        if (public_func.is_phone_number(msg_send_to) && message_command_list.length > 2) {
+                            StringBuilder msg_send_content = new StringBuilder();
+                            for (int i = 2; i < message_command_list.length; ++i) {
+                                if (i != 2) {
+                                    msg_send_content.append("\n");
+                                }
+                                msg_send_content.append(message_command_list[i]);
+                            }
+                            new Thread(() -> public_func.send_sms(context, msg_send_to, msg_send_content.toString(), slot, sub)).start();
+                            return;
+                        }
+                }
             }
 
         }
@@ -270,19 +293,20 @@ public class sms_receiver extends BroadcastReceiver {
         });
     }
 
-    void command_handle(SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
+    @SuppressWarnings("SpellCheckingInspection")
+    private void command_handle(SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
         if (sharedPreferences.getBoolean("root", false)) {
-            switch (message_body.toLowerCase()) {
-                case "switch-data":
+            switch (message_body.toLowerCase().replace("_", "")) {
+                case "/switchdata":
                     if (data_enable) {
                         com.qwe7002.root_kit.network.data_set_enable(false);
                     }
                     break;
-                case "close-ap":
+                case "/closeap":
                     com.qwe7002.root_kit.network.wifi_set_enable(false);
                     com.qwe7002.root_kit.network.data_set_enable(false);
                     break;
-                case "restart-network":
+                case "/restartnetwork":
                     com.qwe7002.root_kit.network.restart_network();
                     break;
             }

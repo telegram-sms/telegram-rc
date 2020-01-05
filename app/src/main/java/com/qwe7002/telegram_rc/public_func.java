@@ -44,6 +44,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import io.paperdb.Paper;
 import okhttp3.Call;
@@ -164,6 +165,10 @@ class public_func {
         }
     }
 
+    static boolean is_USSD(String str) {
+        String pattern = "(?:\\*\\d+)+#";
+        return Pattern.compile(pattern).matcher(str).matches();
+    }
     static boolean is_phone_number(String str) {
         for (int i = str.length(); --i >= 0; ) {
             char c = str.charAt(i);

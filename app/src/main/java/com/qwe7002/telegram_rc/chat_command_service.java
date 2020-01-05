@@ -20,6 +20,7 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.telephony.CellInfo;
@@ -58,23 +59,28 @@ public class chat_command_service extends Service {
     private static long offset = 0;
     private static int magnification = 1;
     private static int error_magnification = 1;
-    private String chat_id;
-    private String bot_token;
-    private Context context;
+
+    //cell info
+    private static int arfcn = -1;
     private OkHttpClient okhttp_client;
     private broadcast_receiver broadcast_receiver;
     private PowerManager.WakeLock wakelock;
     private WifiManager.WifiLock wifiLock;
+    private static int strength = 0;
+    // global object
+    private Context context;
+    private SharedPreferences sharedPreferences;
+    private ConnectivityManager cm;
+    private network_callback callback;
     private int send_sms_status = -1;
     private int send_slot_temp = -1;
     private String send_to_temp;
-    private SharedPreferences sharedPreferences;
     private String bot_username = "";
-    private ConnectivityManager cm;
     private boolean privacy_mode;
-    private network_callback callback;
     final String TAG = "chat_command";
     static Thread thread_main;
+    private String chat_id;
+    private String bot_token;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -83,9 +89,7 @@ public class chat_command_service extends Service {
         return START_STICKY;
     }
 
-    //cell info
-    private static int arfcn = -1;
-    private static int strength = 0;
+
 
     @Override
     public void onDestroy() {
@@ -521,11 +525,7 @@ public class chat_command_service extends Service {
                             try {
                                 int count = 0;
                                 while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                                    if (count == 600) {
-                                        break;
-                                    }
                                     Thread.sleep(100);
-                                    ++count;
                                 }
                                 Thread.sleep(1000);
                             } catch (InterruptedException e) {
@@ -567,6 +567,22 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
                 has_command = true;
                 break;
+            case "/sendussd":
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                        String[] command_list = request_msg.split(" ");
+                        if (command_list.length > 1 && public_func.is_USSD(command_list[1])) {
+                            TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+                            Handler handler = new Handler();
+                            assert telephonyManager != null;
+                            telephonyManager.sendUssdRequest(command_list[1], new ussd_request_callback(context, bot_token, chat_id, sharedPreferences.getBoolean("doh_switch", true)), handler);
+                            return;
+                        }
+                        request_body.text = "Error";
+                    }
+                } else {
+                    Log.i(TAG, "send_ussd: No permission.");
+                }
             case "/sendsms":
             case "/sendsms1":
             case "/sendsms2":
@@ -693,7 +709,6 @@ public class chat_command_service extends Service {
                 public_func.write_log(context, error_head + e.getMessage());
             }
 
-            @SuppressWarnings("SpellCheckingInspection")
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
@@ -731,6 +746,7 @@ public class chat_command_service extends Service {
         });
     }
 
+
     @SuppressLint("HardwareIds")
     private String get_network_type() {
         String net_type = "Unknown";
@@ -752,7 +768,7 @@ public class chat_command_service extends Service {
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                                Log.d("get_network_type", "No permission.");
+                                Log.i("get_network_type", "No permission.");
                                 return net_type;
                             }
                             net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att_sim(telephonyManager.getSimOperator())) + get_cell_info(telephonyManager);
