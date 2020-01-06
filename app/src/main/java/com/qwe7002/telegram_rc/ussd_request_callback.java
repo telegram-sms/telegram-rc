@@ -27,12 +27,13 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
     private Context context;
     private boolean doh_switch;
     private String request_uri;
-
+    private String message_header;
     ussd_request_callback(Context context, String token, String chat_id, Boolean doh_switch) {
         this.context = context;
         this.chat_id = chat_id;
         this.doh_switch = doh_switch;
-        request_uri = public_func.get_url(token, "SendMessage");
+        this.request_uri = public_func.get_url(token, "SendMessage");
+        this.message_header = "[Received USSD response]";
     }
 
     @Override
@@ -40,8 +41,20 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
         super.onReceiveUssdResponse(telephonyManager, request, response);
         Log.d(TAG, "onReceiveUssdResponse: " + request);
         Log.d(TAG, "onReceiveUssdResponse: " + response.toString());
+        String message = message_header + "\n" + context.getString(R.string.content) + response.toString();
+        network_progress_handle(message);
+    }
 
-        String message = context.getString(R.string.system_message_head) + "\n" + response.toString();
+    @Override
+    public void onReceiveUssdResponseFailed(TelephonyManager telephonyManager, String request, int failureCode) {
+        super.onReceiveUssdResponseFailed(telephonyManager, request, failureCode);
+        Log.d(TAG, "onReceiveUssdResponseFailed: " + request);
+        Log.d(TAG, "onReceiveUssdResponseFailed: " + get_error_code_string(failureCode));
+        String message = message_header + "\n" + "Error message: " + get_error_code_string(failureCode);
+        network_progress_handle(message);
+    }
+
+    private void network_progress_handle(String message) {
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         request_body.text = message;
@@ -56,6 +69,7 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
                 public_func.write_log(context, error_head + e.getMessage());
+                public_func.send_fallback_sms(context, request_body.text, -1);
             }
 
             @Override
@@ -63,15 +77,24 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
                 if (response.code() != 200) {
                     assert response.body() != null;
                     public_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                    public_func.send_fallback_sms(context, request_body.text, -1);
                 }
             }
         });
     }
 
-    @Override
-    public void onReceiveUssdResponseFailed(TelephonyManager telephonyManager, String request, int failureCode) {
-        super.onReceiveUssdResponseFailed(telephonyManager, request, failureCode);
-        Log.d(TAG, "onReceiveUssdResponseFailed: " + request);
-        Log.d(TAG, "onReceiveUssdResponseFailed: " + failureCode);
+    private String get_error_code_string(int error_code) {
+        String result;
+        switch (error_code) {
+            case -1:
+                result = "Connection Problem Or Invalid MMI Code.";
+                break;
+            case -2:
+                result = "No service.";
+                break;
+            default:
+                result = "failed with code " + error_code;
+        }
+        return result;
     }
 }

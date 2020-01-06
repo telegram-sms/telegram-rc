@@ -22,6 +22,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
@@ -43,6 +44,7 @@ import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -500,13 +502,8 @@ public class chat_command_service extends Service {
                             Paper.book().write("wifi_open", false);
                             com.qwe7002.root_kit.network.wifi_set_enable(false);
                             try {
-                                int count = 0;
                                 while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
-                                    if (count == 600) {
-                                        break;
-                                    }
                                     Thread.sleep(100);
-                                    ++count;
                                 }
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
@@ -523,7 +520,6 @@ public class chat_command_service extends Service {
                         result_ap = getString(R.string.open_wifi) + status;
                         new Thread(() -> {
                             try {
-                                int count = 0;
                                 while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
                                     Thread.sleep(100);
                                 }
@@ -571,18 +567,21 @@ public class chat_command_service extends Service {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                         String[] command_list = request_msg.split(" ");
+                        Log.d(TAG, "receive_handle: " + Arrays.toString(command_list));
                         if (command_list.length > 1 && public_func.is_USSD(command_list[1])) {
                             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+                            Looper.prepare();
                             Handler handler = new Handler();
                             assert telephonyManager != null;
                             telephonyManager.sendUssdRequest(command_list[1], new ussd_request_callback(context, bot_token, chat_id, sharedPreferences.getBoolean("doh_switch", true)), handler);
-                            return;
+                            Looper.loop();
                         }
-                        request_body.text = "Error";
                     }
                 } else {
                     Log.i(TAG, "send_ussd: No permission.");
                 }
+                request_body.text = "Error";
+                break;
             case "/sendsms":
             case "/sendsms1":
             case "/sendsms2":
