@@ -74,6 +74,6 @@
     <string name="receive_notification_title">[收到通知]</string>
     <string name="app_name_title">"應用名稱: "</string>
     <string name="title">"標題: "</string>
-    <string name="Notification_Listener_title">"通知偵聽器 "</string>
+    <string name="Notification_Listener_title">通知偵聽器</string>
     <string name="error_stop_message">發生致命錯誤，程序已停止。</string>
 </resources>

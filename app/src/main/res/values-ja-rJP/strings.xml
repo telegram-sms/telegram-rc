@@ -74,7 +74,7 @@
     <string name="receive_notification_title">[受信した通知]</string>
     <string name="app_name_title">"アプリケーション名: "</string>
     <string name="title">"標題: "</string>
-    <string name="Notification_Listener_title">"通知リスナー "</string>
+    <string name="Notification_Listener_title">通知リスナー</string>
     <string name="error_stop_message">致命的なエラーが発生し、プログラムが停止しました。</string>
 
 </resources>

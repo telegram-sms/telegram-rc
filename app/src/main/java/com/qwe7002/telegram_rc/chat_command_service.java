@@ -576,11 +576,11 @@ public class chat_command_service extends Service {
                             telephonyManager.sendUssdRequest(command_list[1], new ussd_request_callback(context, bot_token, chat_id, sharedPreferences.getBoolean("doh_switch", true)), handler);
                             Looper.loop();
                         }
+                    } else {
+                        Log.i(TAG, "send_ussd: No permission.");
                     }
-                } else {
-                    Log.i(TAG, "send_ussd: No permission.");
                 }
-                request_body.text = "Error";
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
                 break;
             case "/sendsms":
             case "/sendsms1":
