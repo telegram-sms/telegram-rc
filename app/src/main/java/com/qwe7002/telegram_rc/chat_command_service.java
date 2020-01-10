@@ -44,7 +44,6 @@ import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -289,7 +288,6 @@ public class chat_command_service extends Service {
         super.onCreate();
         context = getApplicationContext();
         cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        Log.i(TAG, "Network_info: " + get_network_type());
         Paper.init(context);
 
         sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
@@ -405,7 +403,7 @@ public class chat_command_service extends Service {
                 command = temp_command;
                 if (temp_command.contains("@")) {
                     int command_at_location = temp_command.indexOf("@");
-                    command = temp_command.substring(0, command_at_location);
+                    command = temp_command.substring(0, command_at_location).replace("_", "");
                     command_bot_username = temp_command.substring(command_at_location + 1);
                 }
 
@@ -419,13 +417,17 @@ public class chat_command_service extends Service {
 
 
         boolean has_command = false;
-        switch (command.replace("_", "")) {
+        switch (command) {
             case "/help":
             case "/start":
             case "/commandlist":
-                String dual_card = "\n" + getString(R.string.sendsms);
+                String sim_command = "\n" + getString(R.string.sendsms);
                 if (public_func.get_active_card(context) == 2) {
-                    dual_card = "\n" + getString(R.string.sendsms_dual);
+                    sim_command = "\n" + getString(R.string.sendsms_dual);
+                }
+                String ussd_command = "";
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    ussd_command = "\n";
                 }
                 String config_adb = "";
                 String switch_ap = "";
@@ -435,13 +437,16 @@ public class chat_command_service extends Service {
                     }
                     config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + "\n" + getString(R.string.base_command) + dual_card + switch_ap + config_adb;
-                if (!message_type_is_private && privacy_mode && !bot_username.equals("") && !command.equals("/commandlist")) {
-                    request_body.text = request_body.text.replace(" -", "@" + bot_username + " -");
-                }
                 if (command.equals("/commandlist")) {
-                    request_body.text = (getString(R.string.base_command) + dual_card + switch_ap + config_adb).replace("/", "");
+                    request_body.text = (getString(R.string.available_command) + "\n" + sim_command + ussd_command + switch_ap + config_adb).replace("/", "");
+                    break;
                 }
+
+                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + "\n" + getString(R.string.base_command) + sim_command + ussd_command + switch_ap + config_adb;
+                if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
+                    result_string = result_string.replace(" -", "@" + bot_username + " -");
+                }
+                request_body.text = result_string;
                 has_command = true;
                 break;
             case "/ping":
@@ -508,7 +513,6 @@ public class chat_command_service extends Service {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-
                         }
                     }
                     if (!wifi_open) {
@@ -567,8 +571,7 @@ public class chat_command_service extends Service {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                         String[] command_list = request_msg.split(" ");
-                        Log.d(TAG, "receive_handle: " + Arrays.toString(command_list));
-                        if (command_list.length > 1 && public_func.is_USSD(command_list[1])) {
+                        if (command_list.length == 2) {
                             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
                             Looper.prepare();
                             Handler handler = new Handler();
@@ -763,9 +766,12 @@ public class chat_command_service extends Service {
                     if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                             net_type = "WIFI";
-
+                            break;
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                            if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_IMS)) {
+                                continue;
+                            }
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                                 Log.i("get_network_type", "No permission.");
                                 return net_type;

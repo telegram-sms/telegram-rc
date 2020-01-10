@@ -79,6 +79,24 @@ class public_func {
         return network_status;
     }
 
+    static boolean check_network_status(Context context) {
+        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        boolean network_status = false;
+        assert manager != null;
+        Network[] networks = manager.getAllNetworks();
+        if (networks.length != 0) {
+            for (Network network : networks) {
+                NetworkCapabilities network_capabilities = manager.getNetworkCapabilities(network);
+                Log.d("check_network_status", "check_network_status: " + network_capabilities);
+                assert network_capabilities != null;
+                if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+                    network_status = true;
+                }
+            }
+        }
+        return network_status;
+    }
     static long parse_long(String int_str) {
         long result = 0;
         try {
@@ -115,26 +133,6 @@ class public_func {
         return dual_sim;
     }
 
-
-    static boolean check_network_status(Context context) {
-        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        boolean network_status = false;
-        assert manager != null;
-        Network[] networks = manager.getAllNetworks();
-        if (networks.length != 0) {
-            for (Network network : networks) {
-                NetworkCapabilities network_capabilities = manager.getNetworkCapabilities(network);
-                Log.d("check_network_status", "check_network_status: " + network_capabilities);
-                assert network_capabilities != null;
-                if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
-                    network_status = true;
-                }
-            }
-        }
-        return network_status;
-    }
-
     static String get_url(String token, String func) {
         return "https://api.telegram.org/bot" + token + "/" + func;
     }
@@ -148,14 +146,14 @@ class public_func {
         if (doh_switch) {
             okhttp.dns(new DnsOverHttps.Builder().client(new OkHttpClient.Builder().retryOnConnectionFailure(true).build())
                     .url(HttpUrl.get("https://cloudflare-dns.com/dns-query"))
-                    .bootstrapDnsHosts(getByIp("1.0.0.1"), getByIp("9.9.9.9"), getByIp("185.222.222.222"), getByIp("2606:4700:4700::1001"), getByIp("2620:fe::fe"), getByIp("2a09::"))
+                    .bootstrapDnsHosts(get_by_ip("1.0.0.1"), get_by_ip("9.9.9.9"), get_by_ip("185.222.222.222"), get_by_ip("2606:4700:4700::1001"), get_by_ip("2620:fe::fe"), get_by_ip("2a09::"))
                     .includeIPv6(true)
                     .build());
         }
         return okhttp.build();
     }
 
-    private static InetAddress getByIp(String host) {
+    private static InetAddress get_by_ip(String host) {
         try {
             return InetAddress.getByName(host);
         } catch (UnknownHostException e) {
@@ -164,9 +162,6 @@ class public_func {
         }
     }
 
-    static boolean is_USSD(String str) {
-        return str.contains("#");
-    }
     static boolean is_phone_number(String str) {
         for (int i = str.length(); --i >= 0; ) {
             char c = str.charAt(i);

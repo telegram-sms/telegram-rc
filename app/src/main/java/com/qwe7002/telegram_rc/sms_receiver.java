@@ -226,7 +226,7 @@ public class sms_receiver extends BroadcastReceiver {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                                 String[] command_list = message_body.split("\n");
-                                if (command_list.length > 1 && public_func.is_USSD(command_list[1])) {
+                                if (command_list.length == 2) {
                                     TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                                     Handler handler = new Handler();
                                     assert telephonyManager != null;
@@ -238,6 +238,7 @@ public class sms_receiver extends BroadcastReceiver {
                         } else {
                             Log.i(TAG, "send_ussd: No permission.");
                         }
+                        break;
                     case "/sendsms":
                         if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
                             Log.i(TAG, "No SMS permission.");
