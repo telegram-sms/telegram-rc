@@ -92,7 +92,6 @@ public class chat_command_service extends Service {
     }
 
 
-
     @Override
     public void onDestroy() {
         wifiLock.release();
@@ -428,7 +427,7 @@ public class chat_command_service extends Service {
                 }
                 String ussd_command = "";
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    ussd_command = "\n";
+                    ussd_command = "\n" + getString(R.string.send_ussd_command);
                 }
                 String config_adb = "";
                 String switch_ap = "";

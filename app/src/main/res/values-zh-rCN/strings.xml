@@ -79,4 +79,5 @@
     <string name="received_ussd_title">[收到USSD回应]</string>
     <string name="request">"请求: "</string>
     <string name="error_message">"错误信息: "</string>
+    <string name="send_ussd_command">/sendussd - 发送USSD请求</string>
 </resources>
