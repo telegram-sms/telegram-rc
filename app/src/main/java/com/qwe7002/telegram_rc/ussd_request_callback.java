@@ -22,18 +22,21 @@ import okhttp3.Response;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
+
+    @SuppressWarnings("SpellCheckingInspection")
     private String TAG = "ussd_request_callback";
     private String chat_id;
     private Context context;
     private boolean doh_switch;
     private String request_uri;
     private String message_header;
+
     ussd_request_callback(Context context, String token, String chat_id, Boolean doh_switch) {
         this.context = context;
         this.chat_id = chat_id;
         this.doh_switch = doh_switch;
         this.request_uri = public_func.get_url(token, "SendMessage");
-        this.message_header = "[Received USSD response]";
+        this.message_header = context.getString(R.string.received_ussd_title);
     }
 
     @Override
@@ -41,16 +44,15 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
         super.onReceiveUssdResponse(telephonyManager, request, response);
         Log.d(TAG, "onReceiveUssdResponse: " + request);
         Log.d(TAG, "onReceiveUssdResponse: " + response.toString());
-        String message = message_header + "\n" + context.getString(R.string.content) + response.toString();
+        String message = message_header + "\n" + context.getString(R.string.request) + request + "\n" + context.getString(R.string.content) + response.toString();
         network_progress_handle(message);
     }
 
     @Override
     public void onReceiveUssdResponseFailed(TelephonyManager telephonyManager, String request, int failureCode) {
         super.onReceiveUssdResponseFailed(telephonyManager, request, failureCode);
-        Log.d(TAG, "onReceiveUssdResponseFailed: " + request);
         Log.d(TAG, "onReceiveUssdResponseFailed: " + get_error_code_string(failureCode));
-        String message = message_header + "\n" + "Error message: " + get_error_code_string(failureCode);
+        String message = message_header + "\n" + context.getString(R.string.request) + request + "\n" + context.getString(R.string.error_message) + get_error_code_string(failureCode);
         network_progress_handle(message);
     }
 

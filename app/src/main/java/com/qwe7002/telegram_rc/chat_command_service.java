@@ -62,6 +62,7 @@ public class chat_command_service extends Service {
     private static int error_magnification = 1;
 
     //cell info
+    @SuppressWarnings("SpellCheckingInspection")
     private static int arfcn = -1;
     private OkHttpClient okhttp_client;
     private broadcast_receiver broadcast_receiver;

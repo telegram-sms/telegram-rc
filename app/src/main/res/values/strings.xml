@@ -5,8 +5,8 @@
     <string name="to">"To: "</string>
     <string name="send_sms_head">Send SMS</string>
     <string name="system_message_head">[System information]</string>
-    <string name="success_connect">Connected to the Telegram API Server.</string>
-    <string name="connect_wait_title">Connecting to the Telegram API server…</string>
+    <string name="success_connect">Connected to the Telegram Server.</string>
+    <string name="connect_wait_title">Connecting to the Telegram server…</string>
     <string name="connect_wait_message">Please wait…</string>
     <string name="select_chat">Select Chat</string>
     <string name="missed_call_head">Missed Call</string>
@@ -76,4 +76,7 @@
     <string name="title">"Title: "</string>
     <string name="Notification_Listener_title">"Notification Listener "</string>
     <string name="error_stop_message">A fatal error has occurred, the program has stopped.</string>
+    <string name="received_ussd_title">[Received USSD response]</string>
+    <string name="request">"Request: "</string>
+    <string name="error_message">"Error message: "</string>
 </resources>
