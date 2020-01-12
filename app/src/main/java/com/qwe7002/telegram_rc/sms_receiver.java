@@ -10,10 +10,8 @@ import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -227,10 +225,7 @@ public class sms_receiver extends BroadcastReceiver {
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                                 String[] command_list = message_body.split("\n");
                                 if (command_list.length == 2) {
-                                    TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                                    Handler handler = new Handler();
-                                    assert telephonyManager != null;
-                                    telephonyManager.sendUssdRequest(command_list[1], new ussd_request_callback(context, bot_token, chat_id, sharedPreferences.getBoolean("doh_switch", true)), handler);
+                                    public_func.send_ussd(context, command_list[1]);
                                     return;
                                 }
                                 request_body.text = "Error";

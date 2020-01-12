@@ -80,4 +80,5 @@
     <string name="request">"請求: "</string>
     <string name="error_message">"錯誤信息: "</string>
     <string name="send_ussd_command">/sendussd - 發送USSD請求</string>
+    <string name="ussd_code_running">正在運行USSD代碼…</string>
 </resources>

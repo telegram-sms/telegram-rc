@@ -20,9 +20,7 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.PowerManager;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
@@ -427,7 +425,9 @@ public class chat_command_service extends Service {
                 }
                 String ussd_command = "";
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    ussd_command = "\n" + getString(R.string.send_ussd_command);
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                        ussd_command = "\n" + getString(R.string.send_ussd_command);
+                    }
                 }
                 String config_adb = "";
                 String switch_ap = "";
@@ -476,12 +476,15 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
                 has_command = true;
                 break;
-            case "/configadb":
+            case "/switchadb":
                 if (sharedPreferences.getBoolean("root", false)) {
-                    String[] command_list = request_msg.split(" ");
+                    String port = "-1";
+                    if (!Paper.book().read("net_adb_open", false)) {
+                        port = "5555";
+                    }
                     StringBuilder result = new StringBuilder();
                     result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
-                    if (command_list.length > 1 && com.qwe7002.root_kit.nadb.set_nadb(command_list[1])) {
+                    if (com.qwe7002.root_kit.nadb.set_nadb(port)) {
                         result.append(getString(R.string.action_success));
                     } else {
                         result.append(getString(R.string.action_failed));
@@ -572,12 +575,8 @@ public class chat_command_service extends Service {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                         String[] command_list = request_msg.split(" ");
                         if (command_list.length == 2) {
-                            TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-                            Looper.prepare();
-                            Handler handler = new Handler();
-                            assert telephonyManager != null;
-                            telephonyManager.sendUssdRequest(command_list[1], new ussd_request_callback(context, bot_token, chat_id, sharedPreferences.getBoolean("doh_switch", true)), handler);
-                            Looper.loop();
+                            public_func.send_ussd(context, command_list[1]);
+                            return;
                         }
                     } else {
                         Log.i(TAG, "send_ussd: No permission.");
