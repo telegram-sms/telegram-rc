@@ -227,7 +227,6 @@ public class sms_receiver extends BroadcastReceiver {
                                     public_func.send_ussd(context, message_command_list[1]);
                                     return;
                                 }
-                                request_body.text = "Error";
                             }
                         } else {
                             Log.i(TAG, "send_ussd: No permission.");
