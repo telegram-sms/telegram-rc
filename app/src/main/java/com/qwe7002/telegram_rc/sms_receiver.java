@@ -223,9 +223,8 @@ public class sms_receiver extends BroadcastReceiver {
                     case "/sendussd":
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                                String[] command_list = message_body.split("\n");
-                                if (command_list.length == 2) {
-                                    public_func.send_ussd(context, command_list[1]);
+                                if (message_command_list.length == 2) {
+                                    public_func.send_ussd(context, message_command_list[1]);
                                     return;
                                 }
                                 request_body.text = "Error";
