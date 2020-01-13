@@ -89,6 +89,10 @@ public class main_activity extends AppCompatActivity {
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
 
+        if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
+            show_privacy_dialog();
+        }
+
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
 
@@ -102,7 +106,7 @@ public class main_activity extends AppCompatActivity {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
 
             if (!sharedPreferences.getBoolean("conversion_data_structure", false)) {
-                new Thread(() -> convert_data(sharedPreferences)).start();
+                new Thread(this::convert_data).start();
             }
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
@@ -307,10 +311,6 @@ public class main_activity extends AppCompatActivity {
         });
 
         save_button.setOnClickListener(v -> {
-            if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
-                show_privacy_dialog();
-                return;
-            }
             if (bot_token.getText().toString().isEmpty() || chat_id.getText().toString().isEmpty()) {
                 Snackbar.make(v, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG).show();
                 return;
@@ -319,7 +319,10 @@ public class main_activity extends AppCompatActivity {
                 Snackbar.make(v, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show();
                 return;
             }
-
+            if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
+                show_privacy_dialog();
+                return;
+            }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG}, 1);
 
@@ -433,9 +436,6 @@ public class main_activity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
-            show_privacy_dialog();
-        }
         boolean back_status = set_permission_back;
         set_permission_back = false;
         if (back_status) {
@@ -554,7 +554,7 @@ public class main_activity extends AppCompatActivity {
         return true;
     }
 
-    private void convert_data(SharedPreferences sharedPreferences) {
+    private void convert_data() {
         String message_list_raw = null;
         FileInputStream file_stream = null;
         try {
