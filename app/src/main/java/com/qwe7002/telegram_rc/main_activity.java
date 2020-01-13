@@ -62,6 +62,7 @@ public class main_activity extends AppCompatActivity {
     private final String TAG = "main_activity";
     private static boolean set_permission_back = false;
     private SharedPreferences sharedPreferences;
+
     @SuppressLint("BatteryLife")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -453,9 +454,9 @@ public class main_activity extends AppCompatActivity {
         builder.setNegativeButton(R.string.decline, null);
         builder.setNeutralButton(R.string.visit_page, (dialog, which) -> {
             Uri uri = Uri.parse("https://get.telegram-sms.com/wiki/" + context.getString(R.string.privacy_policy_url));
-            CustomTabsIntent.Builder builder1 = new CustomTabsIntent.Builder();
-            builder1.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
-            CustomTabsIntent customTabsIntent = builder1.build();
+            CustomTabsIntent.Builder privacy_builder = new CustomTabsIntent.Builder();
+            privacy_builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
+            CustomTabsIntent customTabsIntent = privacy_builder.build();
             try {
                 customTabsIntent.launchUrl(context, uri);
             } catch (ActivityNotFoundException e) {
@@ -472,7 +473,7 @@ public class main_activity extends AppCompatActivity {
         switch (requestCode) {
             case 0:
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "onRequestPermissionsResult: No camera permissions.");
+                    Log.d(TAG, "No camera permissions.");
                     Snackbar.make(findViewById(R.id.bot_token), R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
                     return;
                 }
@@ -483,9 +484,9 @@ public class main_activity extends AppCompatActivity {
                 Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                        TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-                        assert tm != null;
-                        if (tm.getPhoneCount() <= 1) {
+                        TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                        assert telephony_manager != null;
+                        if (telephony_manager.getPhoneCount() <= 1) {
                             display_dual_sim_display_name.setVisibility(View.GONE);
                         }
                         if (public_func.get_active_card(context) < 2) {
