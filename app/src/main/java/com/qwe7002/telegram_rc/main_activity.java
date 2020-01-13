@@ -457,6 +457,7 @@ public class main_activity extends AppCompatActivity {
             CustomTabsIntent.Builder privacy_builder = new CustomTabsIntent.Builder();
             privacy_builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
             CustomTabsIntent customTabsIntent = privacy_builder.build();
+            customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             try {
                 customTabsIntent.launchUrl(context, uri);
             } catch (ActivityNotFoundException e) {
@@ -466,6 +467,9 @@ public class main_activity extends AppCompatActivity {
         });
         AlertDialog dialog = builder.create();
         dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setAllCaps(false);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setAllCaps(false);
+        dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setAllCaps(false);
     }
 
     @Override
