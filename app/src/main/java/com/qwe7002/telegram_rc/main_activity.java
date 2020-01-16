@@ -141,7 +141,7 @@ public class main_activity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                 assert tm != null;
-                if (tm.getPhoneCount() >= 1) {
+                if (tm.getPhoneCount() <= 1) {
                     display_dual_sim_display_name.setVisibility(View.GONE);
                 }
             }

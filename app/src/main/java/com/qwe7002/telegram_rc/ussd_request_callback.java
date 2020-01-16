@@ -95,13 +95,14 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
         String result;
         switch (error_code) {
             case -1:
-                result = "Connection Problem Or Invalid MMI Code.";
+                result = "Connection problem or invalid MMI code.";
                 break;
             case -2:
                 result = "No service.";
                 break;
             default:
-                result = "failed with code " + error_code;
+                result = "An unknown error occurred (" + error_code + ")";
+                break;
         }
         return result;
     }
