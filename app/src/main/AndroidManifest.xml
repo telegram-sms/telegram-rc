@@ -44,6 +44,8 @@
             android:name=".notify_apps_list_activity"
             android:windowSoftInputMode="adjustPan" />
 
+        <service android:name=".resend_loop_service" />
+        <service android:name=".send_ussd_service" />
         <service
             android:name=".notification_listener_service"
             android:label="@string/app_name"

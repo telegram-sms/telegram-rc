@@ -128,7 +128,7 @@ public class main_activity extends AppCompatActivity {
 
         fallback_sms.setChecked(sharedPreferences.getBoolean("fallback_sms", false));
         if (trusted_phone_number.length() == 0) {
-            fallback_sms.setEnabled(false);
+            fallback_sms.setVisibility(View.GONE);
             fallback_sms.setChecked(false);
         }
 
@@ -184,17 +184,19 @@ public class main_activity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (trusted_phone_number.length() != 0) {
-                    fallback_sms.setEnabled(true);
-                }
-                if (trusted_phone_number.length() == 0) {
-                    fallback_sms.setEnabled(false);
-                    fallback_sms.setChecked(false);
-                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+                if (trusted_phone_number.length() != 0) {
+                    //fallback_sms.setEnabled(true);
+                    fallback_sms.setVisibility(View.VISIBLE);
+                }
+                if (trusted_phone_number.length() == 0) {
+                    //fallback_sms.setEnabled(false);
+                    fallback_sms.setVisibility(View.GONE);
+                    fallback_sms.setChecked(false);
+                }
             }
         });
         battery_monitoring_switch.setOnClickListener(v -> charger_status.setEnabled(battery_monitoring_switch.isChecked()));

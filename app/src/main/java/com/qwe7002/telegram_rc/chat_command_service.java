@@ -307,7 +307,7 @@ public class chat_command_service extends Service {
         thread_main = new Thread(new thread_main_runnable());
         thread_main.start();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(public_func.broadcast_stop_service);
+        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         } else {
@@ -954,7 +954,7 @@ public class chat_command_service extends Service {
             Log.d(TAG, "onReceive: " + intent.getAction());
             assert intent.getAction() != null;
             switch (intent.getAction()) {
-                case public_func.broadcast_stop_service:
+                case public_func.BROADCAST_STOP_SERVICE:
                     Log.i(TAG, "Received stop signal, quitting now...");
                     stopSelf();
                     android.os.Process.killProcess(android.os.Process.myPid());

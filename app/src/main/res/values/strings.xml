@@ -76,7 +76,7 @@
     <string name="title">"Title: "</string>
     <string name="Notification_Listener_title">"Notification Listener "</string>
     <string name="error_stop_message">A fatal error has occurred, the program has stopped.</string>
-    <string name="received_ussd_title">[Received USSD response]</string>
+    <string name="send_ussd_head">[Send USSD]</string>
     <string name="request">"Request: "</string>
     <string name="error_message">"Error message: "</string>
     <string name="send_ussd_command">/sendussd - Send USSD request</string>
