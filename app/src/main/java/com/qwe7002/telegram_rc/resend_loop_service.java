@@ -29,7 +29,6 @@ import okhttp3.Response;
 
 public class resend_loop_service extends Service {
     Context context;
-    ArrayList<String> resend_list;
     boolean doh_switch;
     String chat_id;
     String request_uri;
@@ -37,7 +36,7 @@ public class resend_loop_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(context, "Waiting for internet connection.");
+        Notification notification = public_func.get_notification_obj(context, "Waiting for internet connection");
         startForeground(5, notification);
         return START_NOT_STICKY;
     }
@@ -84,20 +83,24 @@ public class resend_loop_service extends Service {
         doh_switch = sharedPreferences.getBoolean("doh_switch", true);
         String bot_token = sharedPreferences.getString("bot_token", "");
         request_uri = public_func.get_url(bot_token, "SendMessage");
-        while (resend_list.size() != 0) {
-            if (public_func.check_network_status(context)) {
-                resend_list = Paper.book().read("resend_list", new ArrayList<>());
-                for (String item : resend_list) {
-                    network_progress_handle(item);
+        new Thread(() -> {
+            ArrayList<String> resend_list = Paper.book().read("resend_list", new ArrayList<>());
+            while (resend_list.size() != 0) {
+                if (public_func.check_network_status(context)) {
+                    resend_list = Paper.book().read("resend_list", new ArrayList<>());
+                    for (String item : resend_list) {
+                        network_progress_handle(item);
+                    }
+                }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             stopSelf();
-        }
+        }).start();
+
     }
 
     @Override
