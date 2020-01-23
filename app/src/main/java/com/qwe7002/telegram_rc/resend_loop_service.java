@@ -27,8 +27,6 @@ import okhttp3.Response;
 
 public class resend_loop_service extends Service {
     Context context;
-    boolean doh_switch;
-    String chat_id;
     String request_uri;
     stop_notify_receiver receiver;
 
@@ -39,13 +37,10 @@ public class resend_loop_service extends Service {
         return START_NOT_STICKY;
     }
 
-    private void network_progress_handle(String message) {
-        message_json request_body = new message_json();
-        request_body.chat_id = chat_id;
+    private void network_progress_handle(String message, OkHttpClient okhttp_client, message_json request_body) {
         request_body.text = message;
         String request_body_json = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_json, public_func.JSON);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch);
         Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request_obj);
         try {
@@ -71,17 +66,16 @@ public class resend_loop_service extends Service {
         receiver = new stop_notify_receiver();
         registerReceiver(receiver, filter);
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-        chat_id = sharedPreferences.getString("chat_id", "");
-        doh_switch = sharedPreferences.getBoolean("doh_switch", true);
-        String bot_token = sharedPreferences.getString("bot_token", "");
-        request_uri = public_func.get_url(bot_token, "SendMessage");
+        request_uri = public_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
+        message_json request_body = new message_json();
+        request_body.chat_id = sharedPreferences.getString("chat_id", "");
         new Thread(() -> {
             ArrayList<String> resend_list = Paper.book().read("resend_list", new ArrayList<>());
             while (resend_list.size() != 0) {
                 if (public_func.check_network_status(context)) {
                     resend_list = Paper.book().read("resend_list", new ArrayList<>());
                     for (String item : resend_list) {
-                        network_progress_handle(item);
+                        network_progress_handle(item, public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true)), request_body);
                     }
                 }
                 try {
@@ -92,7 +86,6 @@ public class resend_loop_service extends Service {
             }
             stopSelf();
         }).start();
-
     }
 
     @Override

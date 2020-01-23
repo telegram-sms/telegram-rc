@@ -211,6 +211,10 @@ class public_func {
         resend_list = Paper.book().read("resend_list", new ArrayList<>());
         resend_list.add(message);
         Paper.book().write("resend_list", resend_list);
+        start_resend(context);
+    }
+
+    static void start_resend(Context context) {
         Intent intent = new Intent(context, com.qwe7002.telegram_rc.resend_loop_service.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
@@ -218,7 +222,6 @@ class public_func {
             context.startService(intent);
         }
     }
-
     static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             Log.d("send_sms", "No permission.");
