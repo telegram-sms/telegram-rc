@@ -25,7 +25,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class resend_loop_service extends Service {
+public class resend_service extends Service {
     Context context;
     String request_uri;
     stop_notify_receiver receiver;

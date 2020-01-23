@@ -215,7 +215,7 @@ class public_func {
     }
 
     static void start_resend(Context context) {
-        Intent intent = new Intent(context, com.qwe7002.telegram_rc.resend_loop_service.class);
+        Intent intent = new Intent(context, resend_service.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
         } else {
