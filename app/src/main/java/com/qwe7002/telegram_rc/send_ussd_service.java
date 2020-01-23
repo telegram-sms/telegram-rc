@@ -2,6 +2,8 @@ package com.qwe7002.telegram_rc;
 
 import android.Manifest;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -28,12 +30,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-
+@RequiresApi(api = Build.VERSION_CODES.O)
 public class send_ussd_service extends Service {
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.ussd_code_running));
+        Notification notification = get_notification_obj();
         startForeground(4, notification);
         Handler handler = new Handler();
         Context context = getApplicationContext();
@@ -74,6 +75,25 @@ public class send_ussd_service extends Service {
 
         return START_NOT_STICKY;
     }
+
+    private Notification get_notification_obj() {
+        Context context = getApplicationContext();
+        String notification_name = context.getString(R.string.send_ussd_command);
+        Notification.Builder notification;
+        NotificationChannel channel = new NotificationChannel(notification_name, notification_name,
+                NotificationManager.IMPORTANCE_MIN);
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        assert manager != null;
+        manager.createNotificationChannel(channel);
+        notification = new Notification.Builder(context, notification_name).setAutoCancel(false)
+                .setSmallIcon(R.drawable.ic_stat)
+                .setOngoing(true)
+                .setTicker(context.getString(R.string.app_name))
+                .setContentTitle(context.getString(R.string.app_name))
+                .setContentText(notification_name);
+        return notification.build();
+    }
+
 
     @Nullable
     @Override
