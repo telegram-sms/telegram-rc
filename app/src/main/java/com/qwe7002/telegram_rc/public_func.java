@@ -314,7 +314,6 @@ class public_func {
             manager.createNotificationChannel(channel);
             notification = new Notification.Builder(context, notification_name);
         } else {
-            //Notification generation method after O
             notification = new Notification.Builder(context).setPriority(Notification.PRIORITY_MIN);
         }
         notification.setAutoCancel(false)
