@@ -53,7 +53,6 @@ public class resend_service extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     @Override
@@ -74,8 +73,9 @@ public class resend_service extends Service {
             while (resend_list.size() != 0) {
                 if (public_func.check_network_status(context)) {
                     resend_list = Paper.book().read("resend_list", new ArrayList<>());
+                    OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
                     for (String item : resend_list) {
-                        network_progress_handle(item, public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true)), request_body);
+                        network_progress_handle(item, okhttp_client, request_body);
                     }
                 }
                 try {
