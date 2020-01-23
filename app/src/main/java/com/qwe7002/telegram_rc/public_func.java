@@ -198,11 +198,7 @@ class public_func {
     static void send_ussd(Context context, String ussd) {
         Intent send_ussd_service = new Intent(context, com.qwe7002.telegram_rc.send_ussd_service.class);
         send_ussd_service.putExtra("ussd", ussd);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(send_ussd_service);
-        } else {
-            context.startService(send_ussd_service);
-        }
+        context.startForegroundService(send_ussd_service);
     }
 
     static void add_resend_loop(Context context, String message) {
