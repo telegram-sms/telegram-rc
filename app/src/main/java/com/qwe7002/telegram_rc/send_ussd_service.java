@@ -40,9 +40,11 @@ public class send_ussd_service extends Service {
         String ussd = intent.getStringExtra("ussd");
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         String TAG = "Send ussd";
+
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             Log.i(TAG, "send_ussd: No permission.");
         }
+
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = public_func.get_url(bot_token, "sendMessage");

@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
@@ -21,7 +20,6 @@ import java.util.Objects;
 
 import io.paperdb.Paper;
 import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -36,7 +34,7 @@ public class resend_loop_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(context, "Waiting for internet connection");
+        Notification notification = public_func.get_notification_obj(context, getString(R.string.failed_resend));
         startForeground(5, notification);
         return START_NOT_STICKY;
     }
@@ -50,23 +48,17 @@ public class resend_loop_service extends Service {
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch);
         Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request_obj);
-        final String error_head = "Resend failed: ";
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                e.printStackTrace();
-                public_func.write_log(context, error_head + e.getMessage());
+        try {
+            Response response = call.execute();
+            if (response.code() == 200) {
+                ArrayList<String> resend_list_local = Paper.book().read("resend_list", new ArrayList<>());
+                resend_list_local.remove(message);
+                Paper.book().write("resend_list", resend_list_local);
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) {
-                if (response.code() == 200) {
-                    ArrayList<String> resend_list_local = Paper.book().read("resend_list", new ArrayList<>());
-                    resend_list_local.remove(message);
-                    Paper.book().write("resend_list", resend_list_local);
-                }
-            }
-        });
     }
 
     @Override
