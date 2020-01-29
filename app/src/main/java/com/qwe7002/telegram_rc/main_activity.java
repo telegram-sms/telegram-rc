@@ -118,26 +118,59 @@ public class main_activity extends AppCompatActivity {
             display_dual_sim_display_name.setChecked(display_dual_sim_display_name_config);
         }
         root_switch.setChecked(sharedPreferences.getBoolean("root", false));
+
         bot_token.setText(bot_token_save);
         chat_id.setText(chat_id_save);
 
         trusted_phone_number.setText(sharedPreferences.getString("trusted_phone_number", ""));
+
         battery_monitoring_switch.setChecked(sharedPreferences.getBoolean("battery_monitoring_switch", false));
-        charger_status.setEnabled(battery_monitoring_switch.isChecked());
         charger_status.setChecked(sharedPreferences.getBoolean("charger_status", false));
+
+        if (!battery_monitoring_switch.isChecked()) {
+            charger_status.setChecked(false);
+            charger_status.setVisibility(View.GONE);
+        }
+
+        battery_monitoring_switch.setOnClickListener(v -> {
+            if (battery_monitoring_switch.isChecked()) {
+                charger_status.setVisibility(View.VISIBLE);
+            } else {
+                charger_status.setVisibility(View.GONE);
+            }
+        });
 
         fallback_sms.setChecked(sharedPreferences.getBoolean("fallback_sms", false));
         if (trusted_phone_number.length() == 0) {
             fallback_sms.setVisibility(View.GONE);
             fallback_sms.setChecked(false);
         }
+        trusted_phone_number.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (trusted_phone_number.length() != 0) {
+                    fallback_sms.setVisibility(View.VISIBLE);
+                } else {
+                    fallback_sms.setVisibility(View.GONE);
+                    fallback_sms.setChecked(false);
+                }
+            }
+        });
 
         chat_command.setChecked(sharedPreferences.getBoolean("chat_command", false));
         verification_code.setChecked(sharedPreferences.getBoolean("verification_code", false));
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
-        int checkPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
-        if (checkPermission == PackageManager.PERMISSION_GRANTED) {
+        int check_phone_state_permission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
+        if (check_phone_state_permission == PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                 assert tm != null;
@@ -147,7 +180,7 @@ public class main_activity extends AppCompatActivity {
             }
         }
         display_dual_sim_display_name.setOnClickListener(v -> {
-            if (checkPermission != PackageManager.PERMISSION_GRANTED) {
+            if (check_phone_state_permission != PackageManager.PERMISSION_GRANTED) {
                 display_dual_sim_display_name.setChecked(false);
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
             } else {
@@ -176,30 +209,6 @@ public class main_activity extends AppCompatActivity {
                 }
             }
         });
-
-        trusted_phone_number.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (trusted_phone_number.length() != 0) {
-                    //fallback_sms.setEnabled(true);
-                    fallback_sms.setVisibility(View.VISIBLE);
-                }
-                if (trusted_phone_number.length() == 0) {
-                    //fallback_sms.setEnabled(false);
-                    fallback_sms.setVisibility(View.GONE);
-                    fallback_sms.setChecked(false);
-                }
-            }
-        });
-        battery_monitoring_switch.setOnClickListener(v -> charger_status.setEnabled(battery_monitoring_switch.isChecked()));
 
         root_switch.setOnClickListener(view -> new Thread(() -> {
             if (!shell.check_root()) {

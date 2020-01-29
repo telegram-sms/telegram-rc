@@ -218,6 +218,7 @@ class public_func {
             context.startService(intent);
         }
     }
+
     static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             Log.d("send_sms", "No permission.");
