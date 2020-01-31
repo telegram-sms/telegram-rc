@@ -31,7 +31,7 @@ public class network {
     public static void restart_network() {
         com.qwe7002.root_kit.network.set_airplane_mode(true);
         try {
-            Thread.sleep(3000);
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
