@@ -20,7 +20,7 @@
     <string name="get_recent_chat_id">Get recent chat ID</string>
     <string name="test_and_save">Test and save</string>
     <string name="network_error_falls_back_to_sms">Resend using SMS when network error occurs</string>
-    <string name="current_battery_level">Battery level:</string>
+    <string name="current_battery_level">"Battery level: "</string>
     <string name="low_battery_status_end">Battery has been charged to a safe level.</string>
     <string name="logcat">View log</string>
     <string name="token_not_configure">Please configure the bot token first.</string>
