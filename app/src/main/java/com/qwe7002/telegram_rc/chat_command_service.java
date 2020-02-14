@@ -406,7 +406,6 @@ public class chat_command_service extends Service {
                     command = temp_command_lowercase.substring(0, command_at_location).replace("_", "");
                     command_bot_username = temp_command.substring(command_at_location + 1);
                 }
-
             }
         }
 
