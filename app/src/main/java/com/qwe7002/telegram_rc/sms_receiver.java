@@ -21,6 +21,10 @@ import com.github.sumimakito.codeauxlib.CodeauxLibStatic;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 
 import io.paperdb.Paper;
@@ -251,8 +255,20 @@ public class sms_receiver extends BroadcastReceiver {
                         }
                 }
             }
-
         }
+
+        ArrayList<String> black_list_array = Paper.book().read("black_keyword_list");
+        for (String black_list_item : black_list_array) {
+            if (message_body.contains(black_list_item)) {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.UK);
+                String write_message = request_body.text + "\n" + "Time: " + simpleDateFormat.format(new Date(System.currentTimeMillis()));
+                public_func.add_spam_list(context, write_message);
+                Log.i(TAG, "Detected message contains blacklist keywords, add spam list");
+                return;
+            }
+        }
+
+
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();

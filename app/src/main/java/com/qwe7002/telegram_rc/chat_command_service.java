@@ -42,6 +42,7 @@ import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -584,6 +585,14 @@ public class chat_command_service extends Service {
                     }
                 }
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
+                break;
+            case "/getspamsms":
+                ArrayList<String> spam_sms_list = Paper.book().read("spam_sms_list");
+                if (spam_sms_list.size() != 0) {
+                    public_func.start_send_background_service(context, true);
+                    return;
+                }
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + "No spam history";
                 break;
             case "/sendsms":
             case "/sendsms1":

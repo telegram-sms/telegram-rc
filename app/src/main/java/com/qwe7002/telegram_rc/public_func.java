@@ -34,7 +34,11 @@ import com.google.gson.JsonParser;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.Authenticator;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -55,6 +59,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.dnsoverhttps.DnsOverHttps;
+
 
 class public_func {
     static final String BROADCAST_STOP_SERVICE = "com.qwe7002.telegram_rc.stop_all";
@@ -140,11 +145,32 @@ class public_func {
     }
 
     static OkHttpClient get_okhttp_obj(boolean doh_switch) {
+
+
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true);
+
+        proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
+        if (proxy_item.enable) {
+            InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.proxy_host, proxy_item.proxy_port);
+            Proxy proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
+            Authenticator.setDefault(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    if (getRequestingHost().equalsIgnoreCase(proxy_item.proxy_host)) {
+                        if (proxy_item.proxy_port == getRequestingPort()) {
+                            return new PasswordAuthentication(proxy_item.username, proxy_item.password.toCharArray());
+                        }
+                    }
+                    return null;
+                }
+            });
+            okhttp.proxy(proxy);
+            doh_switch = true;
+        }
         if (doh_switch) {
             okhttp.dns(new DnsOverHttps.Builder().client(new OkHttpClient.Builder().retryOnConnectionFailure(true).build())
                     .url(HttpUrl.get("https://cloudflare-dns.com/dns-query"))
@@ -207,11 +233,25 @@ class public_func {
         resend_list = Paper.book().read("resend_list", new ArrayList<>());
         resend_list.add(message);
         Paper.book().write("resend_list", resend_list);
-        start_resend(context);
+        start_send_background_service(context, false);
     }
 
-    static void start_resend(Context context) {
-        Intent intent = new Intent(context, resend_service.class);
+    static void add_spam_list(Context context, String message) {
+        ArrayList<String> spam_sms_list;
+        Paper.init(context);
+        spam_sms_list = Paper.book().read("spam_sms_list", new ArrayList<>());
+        if (spam_sms_list.size() >= 5) {
+            spam_sms_list.remove(0);
+        }
+        spam_sms_list.add(message);
+        Paper.book().write("spam_sms_list", spam_sms_list);
+    }
+
+    static void start_send_background_service(Context context, boolean spam_sms_mode) {
+        Intent intent = new Intent(context, send_background_service.class);
+        if (spam_sms_mode) {
+            intent.putExtra("send_spam_mode", true);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
         } else {

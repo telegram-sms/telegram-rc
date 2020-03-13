@@ -23,7 +23,7 @@ public class boot_receiver extends BroadcastReceiver {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
             if (Paper.book().read("resend_list", new ArrayList<>()).size() != 0) {
                 Log.d(TAG, "An unsent message was detected, and the automatic resend process was initiated.");
-                public_func.start_resend(context);
+                public_func.start_send_background_service(context, false);
             }
         }
     }

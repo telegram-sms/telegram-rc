@@ -18,6 +18,7 @@ import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,6 +45,7 @@ import com.qwe7002.root_kit.shell;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -84,7 +86,6 @@ public class main_activity extends AppCompatActivity {
         final Button save_button = findViewById(R.id.save);
         final Button get_id = findViewById(R.id.get_id);
         final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
-        final Button notify_app_set = findViewById(R.id.notify_app_set);
 
         //load config
         Paper.init(context);
@@ -172,6 +173,9 @@ public class main_activity extends AppCompatActivity {
         verification_code.setChecked(sharedPreferences.getBoolean("verification_code", false));
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
+        proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
+
+        doh_switch.setEnabled(!proxy_item.enable);
         int check_phone_state_permission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
         if (check_phone_state_permission == PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -398,8 +402,10 @@ public class main_activity extends AppCompatActivity {
                     if (!new_bot_token.equals(bot_token_save)) {
                         Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
                         List<String> notify_listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
+                        ArrayList<String> black_keyword_list = Paper.book().read("black_keyword_list", new ArrayList<>());
+                        proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
                         Paper.book().destroy();
-                        Paper.book().write("notify_listen_list", notify_listen_list);
+                        Paper.book().write("notify_listen_list", notify_listen_list).write("black_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
                     }
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);
@@ -431,16 +437,7 @@ public class main_activity extends AppCompatActivity {
                 }
             });
         });
-        notify_app_set.setOnClickListener(v -> {
-            if (!public_func.is_notify_listener(context)) {
-                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                set_permission_back = true;
-                return;
-            }
-            startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
-        });
+
     }
 
     private void set_privacy_mode_checkbox(TextView chat_id, Switch chat_command, Switch privacy_mode_switch) {
@@ -544,8 +541,10 @@ public class main_activity extends AppCompatActivity {
         return true;
     }
 
+    @SuppressLint("InflateParams")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        LayoutInflater inflater = this.getLayoutInflater();
         String file_name = null;
         switch (item.getItemId()) {
             case R.id.user_manual:
@@ -563,6 +562,75 @@ public class main_activity extends AppCompatActivity {
             case R.id.logcat:
                 startActivity(new Intent(main_activity.this, logcat_activity.class));
                 return true;
+            case R.id.set_notify:
+                if (!public_func.is_notify_listener(context)) {
+                    Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    set_permission_back = true;
+                    return false;
+                }
+                startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
+                return true;
+            case R.id.spam_sms_keyword:
+                View spam_dialog_view = inflater.inflate(R.layout.set_keyword_layout, null);
+                final EditText editText = spam_dialog_view.findViewById(R.id.spam_sms_keyword);
+                ArrayList<String> black_keyword_list_old = Paper.book().read("black_keyword_list", new ArrayList<>());
+                StringBuilder black_keyword_list_old_string = new StringBuilder();
+                int count = 0;
+                for (String list_item : black_keyword_list_old) {
+                    if (count != 0) {
+                        black_keyword_list_old_string.append(";");
+                    }
+                    ++count;
+                    black_keyword_list_old_string.append(list_item);
+                }
+                editText.setText(black_keyword_list_old_string);
+                new AlertDialog.Builder(this).setTitle(R.string.spam_keyword_dialog_title)
+                        .setView(spam_dialog_view)
+                        .setPositiveButton("OK", (dialog, which) -> {
+                            String input = editText.getText().toString();
+                            String[] black_keyword_list = input.split(";");
+                            Paper.book().write("black_keyword_list", new ArrayList<>(Arrays.asList(black_keyword_list)));
+                        })
+                        .show();
+                return true;
+            case R.id.set_proxy:
+                View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
+                final Switch doh_switch = findViewById(R.id.doh_switch);
+                final Switch proxy_enable = proxy_dialog_view.findViewById(R.id.proxy_enable);
+                final EditText proxy_host = proxy_dialog_view.findViewById(R.id.proxy_host);
+                final EditText proxy_port = proxy_dialog_view.findViewById(R.id.proxy_port);
+                final EditText proxy_username = proxy_dialog_view.findViewById(R.id.proxy_username);
+                final EditText proxy_password = proxy_dialog_view.findViewById(R.id.proxy_password);
+                proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
+                proxy_enable.setChecked(proxy_item.enable);
+                proxy_host.setText(proxy_item.proxy_host);
+                proxy_port.setText(String.valueOf(proxy_item.proxy_port));
+                proxy_username.setText(proxy_item.username);
+                proxy_password.setText(proxy_item.password);
+                new AlertDialog.Builder(this).setTitle(R.string.proxy_dialog_title)
+                        .setView(proxy_dialog_view)
+                        .setPositiveButton("OK", (dialog, which) -> {
+                            if (!doh_switch.isChecked()) {
+                                doh_switch.setChecked(true);
+                            }
+                            doh_switch.setEnabled(!proxy_enable.isChecked());
+                            proxy_item.enable = proxy_enable.isChecked();
+                            proxy_item.proxy_host = proxy_host.getText().toString();
+                            proxy_item.proxy_port = Integer.parseInt(proxy_port.getText().toString());
+                            proxy_item.username = proxy_username.getText().toString();
+                            proxy_item.password = proxy_password.getText().toString();
+                            Paper.book().write("proxy_config", proxy_item);
+                            new Thread(() -> {
+                                public_func.stop_all_service(context);
+                                if (sharedPreferences.getBoolean("initialized", false)) {
+                                    public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+                                }
+                            }).start();
+                        })
+                        .show();
+                return true;
 
         }
         assert file_name != null;
@@ -578,7 +646,6 @@ public class main_activity extends AppCompatActivity {
         }
         return true;
     }
-
     private void convert_data() {
         String message_list_raw = null;
         FileInputStream file_stream = null;
