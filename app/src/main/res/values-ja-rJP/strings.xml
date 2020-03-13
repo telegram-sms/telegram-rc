@@ -94,7 +94,7 @@
     <string name="keywords">キーワード</string>
     <string name="spam_sms_keyword_title">SMSブラックリスト</string>
     <string name="proxy_title">プロキシ</string>
-    <string name="spam_keyword_dialog_title">キーワードを分割するには「;」を使用してください。</string>
+    <string name="spam_keyword_dialog_title">キーワードを分割するには「;」(半角字符)を使用してください。</string>
     <string name="proxy_dialog_title">Socks5プロキシのセットアップ</string>
     <string name="set_notification_listener">通知リスナー</string>
 </resources>
