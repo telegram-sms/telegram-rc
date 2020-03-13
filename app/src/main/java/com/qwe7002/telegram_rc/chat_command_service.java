@@ -589,7 +589,7 @@ public class chat_command_service extends Service {
             case "/getspamsms":
                 ArrayList<String> spam_sms_list = Paper.book().read("spam_sms_list");
                 if (spam_sms_list.size() != 0) {
-                    public_func.start_send_background_service(context, true);
+                    public_func.start_send_spam_service(context);
                     return;
                 }
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "No spam history";

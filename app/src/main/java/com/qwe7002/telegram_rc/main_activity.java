@@ -86,7 +86,6 @@ public class main_activity extends AppCompatActivity {
         final Button save_button = findViewById(R.id.save);
         final Button get_id = findViewById(R.id.get_id);
         final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
-
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);

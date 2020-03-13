@@ -233,7 +233,7 @@ class public_func {
         resend_list = Paper.book().read("resend_list", new ArrayList<>());
         resend_list.add(message);
         Paper.book().write("resend_list", resend_list);
-        start_send_background_service(context, false);
+        start_resend_service(context);
     }
 
     static void add_spam_list(Context context, String message) {
@@ -247,11 +247,17 @@ class public_func {
         Paper.book().write("spam_sms_list", spam_sms_list);
     }
 
-    static void start_send_background_service(Context context, boolean spam_sms_mode) {
-        Intent intent = new Intent(context, send_background_service.class);
-        if (spam_sms_mode) {
-            intent.putExtra("send_spam_mode", true);
+    static void start_resend_service(Context context) {
+        Intent intent = new Intent(context, resend_service.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
         }
+    }
+
+    static void start_send_spam_service(Context context) {
+        Intent intent = new Intent(context, send_spam_service.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
         } else {

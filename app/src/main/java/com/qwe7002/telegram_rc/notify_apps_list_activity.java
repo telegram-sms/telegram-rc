@@ -30,14 +30,18 @@ import io.paperdb.Paper;
 public class notify_apps_list_activity extends AppCompatActivity {
 
     private app_adapter app_adapter;
+    private Context context;
 
-    static List<app_info> scan_app_list(PackageManager packageManager) {
+    private List<app_info> scan_app_list(PackageManager packageManager) {
         List<app_info> app_info_list = new ArrayList<>();
         try {
             List<PackageInfo> package_info_list = packageManager.getInstalledPackages(0);
             for (int i = 0; i < package_info_list.size(); i++) {
                 PackageInfo package_info = package_info_list.get(i);
                 app_info app_info = new app_info();
+                if (package_info.packageName.equals(context.getPackageName())) {
+                    continue;
+                }
                 app_info.package_name = package_info.packageName;
                 app_info.app_name = package_info.applicationInfo.loadLabel(packageManager).toString();
                 if (package_info.applicationInfo.loadIcon(packageManager) == null) {
@@ -55,7 +59,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Context context = getApplicationContext();
+        context = getApplicationContext();
         Paper.init(context);
         this.setTitle(getString(R.string.app_list));
         setContentView(R.layout.notify_apps_list_activity);
