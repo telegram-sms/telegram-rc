@@ -97,4 +97,5 @@
     <string name="spam_keyword_dialog_title">請使用\"; \"分割關鍵字。</string>
     <string name="proxy_dialog_title">Socks5代理設置</string>
     <string name="set_notification_listener">通知偵聽器</string>
+    <string name="time">"時間: "</string>
 </resources>

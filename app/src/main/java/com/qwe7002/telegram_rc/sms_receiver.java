@@ -261,8 +261,15 @@ public class sms_receiver extends BroadcastReceiver {
         for (String black_list_item : black_list_array) {
             if (message_body.contains(black_list_item)) {
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.UK);
-                String write_message = request_body.text + "\n" + "Time: " + simpleDateFormat.format(new Date(System.currentTimeMillis()));
-                public_func.add_spam_list(context, write_message);
+                String write_message = request_body.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(new Date(System.currentTimeMillis()));
+                ArrayList<String> spam_sms_list;
+                Paper.init(context);
+                spam_sms_list = Paper.book().read("spam_sms_list", new ArrayList<>());
+                if (spam_sms_list.size() >= 5) {
+                    spam_sms_list.remove(0);
+                }
+                spam_sms_list.add(write_message);
+                Paper.book().write("spam_sms_list", spam_sms_list);
                 Log.i(TAG, "Detected message contains blacklist keywords, add spam list");
                 return;
             }

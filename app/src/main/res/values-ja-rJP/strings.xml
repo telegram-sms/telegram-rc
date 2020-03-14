@@ -97,4 +97,5 @@
     <string name="spam_keyword_dialog_title">キーワードを分割するには「;」(半角字符)を使用してください。</string>
     <string name="proxy_dialog_title">Socks5プロキシのセットアップ</string>
     <string name="set_notification_listener">通知リスナー</string>
+    <string name="time">"時間: "</string>
 </resources>

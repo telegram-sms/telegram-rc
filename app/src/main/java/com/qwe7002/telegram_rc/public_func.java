@@ -236,17 +236,6 @@ class public_func {
         start_resend_service(context);
     }
 
-    static void add_spam_list(Context context, String message) {
-        ArrayList<String> spam_sms_list;
-        Paper.init(context);
-        spam_sms_list = Paper.book().read("spam_sms_list", new ArrayList<>());
-        if (spam_sms_list.size() >= 5) {
-            spam_sms_list.remove(0);
-        }
-        spam_sms_list.add(message);
-        Paper.book().write("spam_sms_list", spam_sms_list);
-    }
-
     static void start_resend_service(Context context) {
         Intent intent = new Intent(context, resend_service.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

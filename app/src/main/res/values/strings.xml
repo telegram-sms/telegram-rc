@@ -97,4 +97,5 @@
     <string name="spam_keyword_dialog_title">Please use \";\" to split keywords.</string>
     <string name="proxy_dialog_title">Socks5 proxy setup</string>
     <string name="set_notification_listener">Notification listener</string>
+    <string name="time">"Time: "</string>
 </resources>
