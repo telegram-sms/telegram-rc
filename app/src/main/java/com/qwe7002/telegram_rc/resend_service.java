@@ -55,7 +55,6 @@ public class resend_service extends Service {
                 resend_list_local.remove(message);
                 Paper.book().write("resend_list", resend_list_local);
             }
-            response.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

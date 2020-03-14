@@ -256,14 +256,6 @@ class public_func {
         }
     }
 
-    static void start_send_spam_service(Context context) {
-        Intent intent = new Intent(context, send_spam_service.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
-        }
-    }
 
     static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
