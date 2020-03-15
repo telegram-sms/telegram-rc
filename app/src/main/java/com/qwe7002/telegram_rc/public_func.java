@@ -145,8 +145,6 @@ class public_func {
     }
 
     static OkHttpClient get_okhttp_obj(boolean doh_switch) {
-
-
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)

@@ -173,8 +173,8 @@ public class main_activity extends AppCompatActivity {
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
         proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
-
         doh_switch.setEnabled(!proxy_item.enable);
+
         int check_phone_state_permission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
         if (check_phone_state_permission == PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
