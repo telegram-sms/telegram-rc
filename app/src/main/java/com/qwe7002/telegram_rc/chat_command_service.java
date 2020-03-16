@@ -487,95 +487,97 @@ public class chat_command_service extends Service {
                 has_command = true;
                 break;
             case "/switchadb":
-                if (sharedPreferences.getBoolean("root", false)) {
-                    String port = "-1";
-                    if (!Paper.book().read("net_adb_open", false)) {
-                        port = "5555";
-                    }
-                    StringBuilder result = new StringBuilder();
-                    result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
-                    if (com.qwe7002.root_kit.nadb.set_nadb(port)) {
-                        result.append(getString(R.string.action_success));
-                    } else {
-                        result.append(getString(R.string.action_failed));
-                    }
-                    request_body.text = result.toString();
-                } else {
+                if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
                 }
+                String port = "-1";
+                if (!Paper.book().read("net_adb_open", false)) {
+                    port = "5555";
+                }
+                StringBuilder result = new StringBuilder();
+                result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
+                if (com.qwe7002.root_kit.nadb.set_nadb(port)) {
+                    result.append(getString(R.string.action_success));
+                } else {
+                    result.append(getString(R.string.action_failed));
+                }
+                request_body.text = result.toString();
                 has_command = true;
                 break;
             case "/switchap":
-                String result_ap = getString(R.string.not_getting_root);
-                if (sharedPreferences.getBoolean("root", false)) {
-                    if (!is_vpn_hotsport_exist()) {
-                        break;
-                    }
-                    WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                    assert wifiManager != null;
-                    boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
-                    if (wifiManager.isWifiEnabled()) {
-                        if (!com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
-                            wifi_open = false;
-                            Paper.book().write("wifi_open", false);
-                            com.qwe7002.root_kit.network.wifi_set_enable(false);
-                            try {
-                                while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
-                                    Thread.sleep(100);
-                                }
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    if (!wifi_open) {
-                        Paper.book().write("wifi_open", true);
-                        String status = context.getString(R.string.action_failed);
-                        if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
-                            status = context.getString(R.string.action_success);
-                        }
-                        result_ap = getString(R.string.open_wifi) + status;
-                        new Thread(() -> {
-                            try {
-                                while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                                    Thread.sleep(100);
-                                }
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                            } else {
-                                com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                            }
-                        }).start();
-                    } else {
-                        Paper.book().write("wifi_open", false);
-                        result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
-                    }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info() + "\n" + getString(R.string.current_network_connection_status) + get_network_type();
+                if (!sharedPreferences.getBoolean("root", false) || !is_vpn_hotsport_exist()) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
                 }
+                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                assert wifiManager != null;
+                boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
+                if (wifiManager.isWifiEnabled()) {
+                    if (!com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
+                        wifi_open = false;
+                        Paper.book().write("wifi_open", false);
+                        com.qwe7002.root_kit.network.wifi_set_enable(false);
+                        try {
+                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
+                                Thread.sleep(100);
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                String result_ap;
+                if (!wifi_open) {
+                    Paper.book().write("wifi_open", true);
+                    String status = context.getString(R.string.action_failed);
+                    if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
+                        status = context.getString(R.string.action_success);
+                    }
+                    result_ap = getString(R.string.open_wifi) + status;
+                    new Thread(() -> {
+                        try {
+                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
+                                Thread.sleep(100);
+                            }
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                        } else {
+                            com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+                        }
+                    }).start();
+                } else {
+                    Paper.book().write("wifi_open", false);
+                    result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
+                }
+                result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info() + "\n" + getString(R.string.current_network_connection_status) + get_network_type();
+
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                 has_command = true;
                 break;
             case "/switchdata":
             case "/restartnetwork":
             case "/closeap":
-                String result_data = getString(R.string.not_getting_root);
-                if (sharedPreferences.getBoolean("root", false)) {
-                    switch (command) {
-                        case "/restartnetwork":
-                            result_data = context.getString(R.string.restart_network);
-                            break;
-                        case "/closeap":
-                            Paper.book().write("wifi_open", false);
-                            result_data = context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
-                            break;
-                        default:
-                            result_data = context.getString(R.string.switch_data);
-                            break;
-                    }
+                if (!sharedPreferences.getBoolean("root", false)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
+                }
+                String result_data;
+                switch (command) {
+                    case "/restartnetwork":
+                        result_data = context.getString(R.string.restart_network);
+                        break;
+                    case "/closeap":
+                        Paper.book().write("wifi_open", false);
+                        result_data = context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
+                        break;
+                    default:
+                        result_data = context.getString(R.string.switch_data);
+                        break;
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
                 has_command = true;
