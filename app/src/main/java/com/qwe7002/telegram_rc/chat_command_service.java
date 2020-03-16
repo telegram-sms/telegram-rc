@@ -421,9 +421,12 @@ public class chat_command_service extends Service {
             case "/help":
             case "/start":
             case "/commandlist":
-                String sim_command = "\n" + getString(R.string.sendsms);
+                String sms_command = "\n" + getString(R.string.sendsms);
                 if (public_func.get_active_card(context) == 2) {
-                    sim_command = "\n" + getString(R.string.sendsms_dual);
+                    sms_command = "\n" + getString(R.string.sendsms_dual);
+                }
+                if (!Paper.book().read("black_keyword_list", "").isEmpty()) {
+                    sms_command += "\n" + getString(R.string.get_spam_sms);
                 }
                 String ussd_command = "";
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -440,11 +443,11 @@ public class chat_command_service extends Service {
                     config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
                 if (command.equals("/commandlist")) {
-                    request_body.text = (getString(R.string.available_command) + "\n" + sim_command + ussd_command + switch_ap + config_adb).replace("/", "");
+                    request_body.text = (getString(R.string.available_command) + "\n" + sms_command + ussd_command + switch_ap + config_adb).replace("/", "");
                     break;
                 }
 
-                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + "\n" + getString(R.string.base_command) + sim_command + ussd_command + switch_ap + config_adb;
+                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + "\n" + getString(R.string.base_command) + sms_command + ussd_command + switch_ap + config_adb;
                 if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
                     result_string = result_string.replace(" -", "@" + bot_username + " -");
                 }
@@ -464,6 +467,11 @@ public class chat_command_service extends Service {
                         card_info = data_card + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + "\nSIM2: " + public_func.get_sim_display_name(context, 1);
                     }
                 }
+                String spam_count = "";
+                ArrayList<String> spam_list = Paper.book().read("spam_sms_list", new ArrayList<>());
+                if (spam_list.size() != 0) {
+                    spam_count = "\n" + getString(R.string.spam_count_title) + spam_list.size();
+                }
                 String is_hotspot_running = "";
                 if (sharedPreferences.getBoolean("root", false)) {
                     is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
@@ -471,7 +479,7 @@ public class chat_command_service extends Service {
                         is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
                     }
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info() + "\n" + getString(R.string.current_network_connection_status) + get_network_type() + is_hotspot_running + card_info;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info() + "\n" + getString(R.string.current_network_connection_status) + get_network_type() + is_hotspot_running + spam_count + card_info;
                 has_command = true;
                 break;
             case "/log":
@@ -587,7 +595,7 @@ public class chat_command_service extends Service {
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
                 break;
             case "/getspamsms":
-                ArrayList<String> spam_sms_list = Paper.book().read("spam_sms_list");
+                ArrayList<String> spam_sms_list = Paper.book().read("spam_sms_list", new ArrayList<>());
                 if (spam_sms_list.size() != 0) {
                     new Thread(() -> {
                         if (public_func.check_network_status(context)) {
@@ -626,7 +634,7 @@ public class chat_command_service extends Service {
                     }).start();
                     return;
                 }
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + "No spam history";
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.no_spam_history);
                 break;
             case "/sendsms":
             case "/sendsms1":
