@@ -108,6 +108,7 @@ public class sms_receiver extends BroadcastReceiver {
         if (trusted_phone_number != null && trusted_phone_number.length() != 0) {
             is_trusted_phone = message_address.contains(trusted_phone_number);
         }
+        Log.d(TAG, "onReceive: " + is_trusted_phone);
         final message_json request_body = new message_json();
         request_body.chat_id = chat_id;
 
@@ -124,8 +125,9 @@ public class sms_receiver extends BroadcastReceiver {
                         .replace(">", "&gt;")
                         .replace("&", "&amp;")
                         .replace(verification, "<code>" + verification + "</code>");
+                is_verification_code = true;
             }
-            is_verification_code = true;
+
         }
         request_body.text = message_head + message_body_html;
         final boolean data_enable = public_func.get_data_enable(context);
@@ -257,9 +259,10 @@ public class sms_receiver extends BroadcastReceiver {
                 }
             }
         }
-
+        Log.d(TAG, "onReceive: " + is_verification_code);
         if (!is_verification_code && !is_trusted_phone) {
-            ArrayList<String> black_list_array = Paper.book().read("black_keyword_list");
+            Log.d(TAG, "onReceive: ");
+            ArrayList<String> black_list_array = Paper.book().read("black_keyword_list", new ArrayList<>());
             for (String black_list_item : black_list_array) {
                 if (message_body.contains(black_list_item)) {
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(context.getString(R.string.time_format), Locale.UK);
