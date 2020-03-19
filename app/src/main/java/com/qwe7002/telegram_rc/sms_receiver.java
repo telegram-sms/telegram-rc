@@ -82,6 +82,7 @@ public class sms_receiver extends BroadcastReceiver {
             public_func.write_log(context, "Message length is equal to 0.");
             return;
         }
+
         StringBuilder message_body_builder = new StringBuilder();
         for (SmsMessage item : messages) {
             message_body_builder.append(item.getMessageBody());
@@ -113,7 +114,11 @@ public class sms_receiver extends BroadcastReceiver {
         request_body.chat_id = chat_id;
 
         String message_body_html = message_body;
-        final String message_head = "[" + dual_sim + context.getString(R.string.receive_sms_head) + "]" + "\n" + context.getString(R.string.from) + message_address + "\n" + context.getString(R.string.content);
+        String flash_sms_string = "";
+        if (messages[0].getMessageClass() == SmsMessage.MessageClass.CLASS_0) {
+            flash_sms_string = "\nType: Class 0";
+        }
+        final String message_head = "[" + dual_sim + context.getString(R.string.receive_sms_head) + "]" + "\n" + context.getString(R.string.from) + message_address + "\n" + context.getString(R.string.content) + flash_sms_string;
         String raw_request_body_text = message_head + message_body;
         boolean is_verification_code = false;
         if (sharedPreferences.getBoolean("verification_code", false) && !is_trusted_phone) {
@@ -288,6 +293,7 @@ public class sms_receiver extends BroadcastReceiver {
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS forward failed:";
         final String final_raw_request_body_text = raw_request_body_text;
+        boolean final_is_flash = (messages[0].getMessageClass() == SmsMessage.MessageClass.CLASS_0);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -304,7 +310,9 @@ public class sms_receiver extends BroadcastReceiver {
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
                     public_func.write_log(context, error_head + response.code() + " " + result);
-                    public_func.send_fallback_sms(context, final_raw_request_body_text, sub);
+                    if (!final_is_flash) {
+                        public_func.send_fallback_sms(context, final_raw_request_body_text, sub);
+                    }
                     public_func.add_resend_loop(context, request_body.text);
                 } else {
                     if (!public_func.is_phone_number(message_address)) {

@@ -40,11 +40,13 @@
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+
         <activity
             android:name=".notify_apps_list_activity"
             android:windowSoftInputMode="adjustPan" />
 
         <service android:name=".resend_service" />
+
         <service
             android:name=".notification_listener_service"
             android:label="@string/app_name"
