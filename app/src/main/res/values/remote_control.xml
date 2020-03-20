@@ -7,7 +7,7 @@
     <string name="switch_data">Switching mobile network status.</string>
     <string name="restart_network">Restarting the mobile network.</string>
     <string name="switch_ap_message">/switch_ap - Turn tethering on or off</string>
-    <string name="config_adb_message">/config_adb - Config network adb port</string>
+    <string name="config_adb_message">/switch_adb - Config network adb port</string>
     <string name="current_data_card">Data card</string>
     <string name="not_getting_root">Not getting root privileges.</string>
     <string name="adb_config">"Network adb setup "</string>
