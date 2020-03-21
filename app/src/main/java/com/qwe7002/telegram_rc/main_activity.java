@@ -103,7 +103,6 @@ public class main_activity extends AppCompatActivity {
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
-
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -417,7 +416,6 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("doh_switch", doh_switch.isChecked());
                     editor.putBoolean("privacy_mode", privacy_mode_switch.isChecked());
                     editor.putBoolean("initialized", true);
-                    editor.putBoolean("conversion_data_structure", true);
                     editor.putBoolean("privacy_dialog_agree", true);
                     editor.apply();
                     new Thread(() -> {
