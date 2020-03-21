@@ -492,6 +492,9 @@ public class chat_command_service extends Service {
                 String port = "-1";
                 if (!Paper.book().read("net_adb_open", false)) {
                     port = "5555";
+                    Paper.book().write("net_adb_open", true);
+                } else {
+                    Paper.book().write("net_adb_open", false);
                 }
                 StringBuilder result = new StringBuilder();
                 result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
