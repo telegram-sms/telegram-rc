@@ -448,26 +448,17 @@ class public_func {
         int new_file_mode = Context.MODE_APPEND;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(context.getString(R.string.time_format), Locale.UK);
         String write_string = "\n" + simpleDateFormat.format(new Date(System.currentTimeMillis())) + " " + log;
-        write_file(context, "error.log", write_string, new_file_mode);
+        write_log_file(context, write_string, new_file_mode);
     }
 
     static String read_log(Context context, int line) {
         String result = context.getString(R.string.no_logs);
-        String log_content = public_func.read_file_last_line(context, "error.log", line);
-        if (!log_content.isEmpty()) {
-            result = log_content;
-        }
-        return result;
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    static String read_file_last_line(Context context, @SuppressWarnings("SameParameterValue") String file, int line) {
         String TAG = "read_file_last_line";
         StringBuilder builder = new StringBuilder();
         FileInputStream file_stream = null;
         FileChannel channel = null;
         try {
-            file_stream = context.openFileInput(file);
+            file_stream = context.openFileInput("error.log");
             channel = file_stream.getChannel();
             ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
             buffer.position((int) channel.size());
@@ -482,11 +473,15 @@ class public_func {
                     ++count;
                 }
             }
-            return builder.toString();
+            if (!builder.toString().isEmpty()) {
+                return builder.toString();
+            } else {
+                return result;
+            }
         } catch (IOException e) {
             e.printStackTrace();
             Log.d(TAG, "Unable to read the file.");
-            return "";
+            return result;
         } finally {
             try {
                 if (file_stream != null) {
@@ -501,10 +496,14 @@ class public_func {
         }
     }
 
-    static void write_file(Context context, String file_name, String write_string, int mode) {
+    static void reset_log_file(Context context) {
+        write_log_file(context, "", Context.MODE_PRIVATE);
+    }
+
+    private static void write_log_file(Context context, String write_string, int mode) {
         FileOutputStream file_stream = null;
         try {
-            file_stream = context.openFileOutput(file_name, mode);
+            file_stream = context.openFileOutput("error.log", mode);
             byte[] bytes = write_string.getBytes();
             file_stream.write(bytes);
         } catch (IOException e) {

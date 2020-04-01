@@ -103,36 +103,7 @@ public class chat_command_service extends Service {
         super.onDestroy();
     }
 
-    private void get_me() {
-        OkHttpClient okhttp_client_new = okhttp_client;
-        String request_uri = public_func.get_url(bot_token, "getMe");
-        Request request = new Request.Builder().url(request_uri).build();
-        Call call = okhttp_client_new.newCall(request);
-        Response response;
-        try {
-            response = call.execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-            public_func.write_log(context, "Get username failed:" + e.getMessage());
-            return;
-        }
-        if (response.code() == 200) {
-            String result = null;
-            try {
-                result = Objects.requireNonNull(response.body()).string();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            assert result != null;
-            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-            if (result_obj.get("ok").getAsBoolean()) {
-                bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                sharedPreferences.edit().putString("bot_username", bot_username).apply();
-                Log.d(TAG, "bot_username: " + bot_username);
-            }
-        }
-
-    }
+    private static boolean run_lock = false;
 
 
     @Override
@@ -186,142 +157,37 @@ public class chat_command_service extends Service {
         return battery_string_builder.toString();
     }
 
-    class thread_main_runnable implements Runnable {
-        @Override
-        public void run() {
-            Log.d(TAG, "run: thread main start");
-            if (public_func.parse_long(chat_id) < 0) {
-                bot_username = sharedPreferences.getString("bot_username", null);
-                Log.d(TAG, "Load bot username from storage: " + bot_username);
-                if (bot_username == null) {
-                    new Thread(chat_command_service.this::get_me).start();
-                }
+    private boolean get_me() {
+        OkHttpClient okhttp_client_new = okhttp_client;
+        String request_uri = public_func.get_url(bot_token, "getMe");
+        Request request = new Request.Builder().url(request_uri).build();
+        Call call = okhttp_client_new.newCall(request);
+        Response response;
+        try {
+            response = call.execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+            public_func.write_log(context, "Get username failed:" + e.getMessage());
+            return false;
+        }
+        if (response.code() == 200) {
+            String result = null;
+            try {
+                result = Objects.requireNonNull(response.body()).string();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            while (true) {
-                int timeout = 5 * magnification;
-                int http_timeout = timeout + 5;
-                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
-                        .readTimeout(http_timeout, TimeUnit.SECONDS)
-                        .writeTimeout(http_timeout, TimeUnit.SECONDS)
-                        .build();
-                Log.d(TAG, "run: Current timeout:" + timeout);
-                String request_uri = public_func.get_url(bot_token, "getUpdates");
-                polling_json request_body = new polling_json();
-                request_body.offset = offset;
-                request_body.timeout = timeout;
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
-                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-                Call call = okhttp_client_new.newCall(request);
-                Response response;
-                try {
-                    response = call.execute();
-                    error_magnification = 1;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (!public_func.check_network_status(context)) {
-                        public_func.write_log(context, "No network connections available. ");
-                        error_magnification = 1;
-                        magnification = 1;
-                        break;
-                    }
-                    int sleep_time = 5 * error_magnification;
-                    public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
-                    magnification = 1;
-                    if (error_magnification <= 59) {
-                        ++error_magnification;
-                    }
-                    try {
-                        Thread.sleep(sleep_time * 1000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                    continue;
-
-                }
-                if (response.code() == 200) {
-                    assert response.body() != null;
-                    String result;
-                    try {
-                        result = Objects.requireNonNull(response.body()).string();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        continue;
-                    }
-                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                    if (result_obj.get("ok").getAsBoolean()) {
-                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
-                        for (JsonElement item : result_array) {
-                            receive_handle(item.getAsJsonObject());
-                        }
-                    }
-                    if (magnification <= 11) {
-                        ++magnification;
-                    }
-                } else {
-                    public_func.write_log(context, "response code:" + response.code());
-                    if (response.code() == 401) {
-                        assert response.body() != null;
-                        String result;
-                        try {
-                            result = Objects.requireNonNull(response.body()).string();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            continue;
-                        }
-                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                        String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
-                        public_func.send_fallback_sms(context, result_message, -1);
-                        public_func.stop_all_service(context);
-                        break;
-                    }
-                }
+            assert result != null;
+            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+            if (result_obj.get("ok").getAsBoolean()) {
+                bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
+                Paper.book().write("bot_username", bot_username);
+                Log.d(TAG, "bot_username: " + bot_username);
+                public_func.write_log(context, "Get the bot username: " + bot_username);
             }
+            return true;
         }
-    }
-
-    private static boolean run_lock = false;
-
-    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        context = getApplicationContext();
-        cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        Paper.init(context);
-
-        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-
-        chat_id = sharedPreferences.getString("chat_id", "");
-        bot_token = sharedPreferences.getString("bot_token", "");
-        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
-        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
-        wifiLock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
-        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
-        wifiLock.setReferenceCounted(false);
-        wakelock.setReferenceCounted(false);
-        if (!wifiLock.isHeld()) {
-            wifiLock.acquire();
-        }
-        if (!wakelock.isHeld()) {
-            wakelock.acquire();
-        }
-        thread_main = new Thread(new thread_main_runnable());
-        thread_main.start();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        } else {
-            NetworkRequest network_request = new NetworkRequest.Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    .build();
-            callback = new network_callback();
-            cm.registerNetworkCallback(network_request, callback);
-        }
-        broadcast_receiver = new broadcast_receiver();
-        registerReceiver(broadcast_receiver, intentFilter);
-
+        return false;
     }
 
     @SuppressWarnings("SpellCheckingInspection")
@@ -634,6 +500,11 @@ public class chat_command_service extends Service {
                     public_func.write_log(context, "Send spam message is complete.");
                 }).start();
                 return;
+            case "/setspamkeyword":
+                //todo
+                //String[] black_keyword_list = input.split(";");
+                //Paper.book().write("black_keyword_list", new ArrayList<>(Arrays.asList(black_keyword_list)));
+                break;
             case "/sendsms":
             case "/sendsms1":
             case "/sendsms2":
@@ -795,6 +666,148 @@ public class chat_command_service extends Service {
                 }
             }
         });
+    }
+
+    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        context = getApplicationContext();
+        cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        Paper.init(context);
+
+        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+
+        chat_id = sharedPreferences.getString("chat_id", "");
+        bot_token = sharedPreferences.getString("bot_token", "");
+        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
+        wifiLock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
+        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
+        wifiLock.setReferenceCounted(false);
+        wakelock.setReferenceCounted(false);
+        if (!wifiLock.isHeld()) {
+            wifiLock.acquire();
+        }
+        if (!wakelock.isHeld()) {
+            wakelock.acquire();
+        }
+        thread_main = new Thread(new thread_main_runnable());
+        thread_main.start();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        } else {
+            NetworkRequest network_request = new NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    .build();
+            callback = new network_callback();
+            cm.registerNetworkCallback(network_request, callback);
+        }
+        broadcast_receiver = new broadcast_receiver();
+        registerReceiver(broadcast_receiver, intentFilter);
+
+    }
+
+    class thread_main_runnable implements Runnable {
+        @Override
+        public void run() {
+            Log.d(TAG, "run: thread main start");
+            if (public_func.parse_long(chat_id) < 0) {
+                bot_username = Paper.book().read("bot_username", null);
+                if (bot_username == null) {
+                    while (!get_me()) {
+                        Log.i(TAG, "Wait 5 seconds and try again.");
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+            while (true) {
+                int timeout = 5 * magnification;
+                int http_timeout = timeout + 5;
+                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
+                        .readTimeout(http_timeout, TimeUnit.SECONDS)
+                        .writeTimeout(http_timeout, TimeUnit.SECONDS)
+                        .build();
+                Log.d(TAG, "run: Current timeout:" + timeout);
+                String request_uri = public_func.get_url(bot_token, "getUpdates");
+                polling_json request_body = new polling_json();
+                request_body.offset = offset;
+                request_body.timeout = timeout;
+                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+                Call call = okhttp_client_new.newCall(request);
+                Response response;
+                try {
+                    response = call.execute();
+                    error_magnification = 1;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if (!public_func.check_network_status(context)) {
+                        public_func.write_log(context, "No network connections available. ");
+                        error_magnification = 1;
+                        magnification = 1;
+                        break;
+                    }
+                    int sleep_time = 5 * error_magnification;
+                    public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
+                    magnification = 1;
+                    if (error_magnification <= 59) {
+                        ++error_magnification;
+                    }
+                    try {
+                        Thread.sleep(sleep_time * 1000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    continue;
+
+                }
+                if (response.code() == 200) {
+                    assert response.body() != null;
+                    String result;
+                    try {
+                        result = Objects.requireNonNull(response.body()).string();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                    if (result_obj.get("ok").getAsBoolean()) {
+                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
+                        for (JsonElement item : result_array) {
+                            receive_handle(item.getAsJsonObject());
+                        }
+                    }
+                    if (magnification <= 11) {
+                        ++magnification;
+                    }
+                } else {
+                    public_func.write_log(context, "response code:" + response.code());
+                    if (response.code() == 401) {
+                        assert response.body() != null;
+                        String result;
+                        try {
+                            result = Objects.requireNonNull(response.body()).string();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            continue;
+                        }
+                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                        String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
+                        public_func.send_fallback_sms(context, result_message, -1);
+                        public_func.stop_all_service(context);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
 
