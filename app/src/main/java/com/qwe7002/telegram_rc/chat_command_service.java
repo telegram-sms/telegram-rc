@@ -471,7 +471,7 @@ public class chat_command_service extends Service {
                 }
                 new Thread(() -> {
                     if (public_func.check_network_status(context)) {
-                        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+                        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
                         for (String item : spam_sms_list) {
                             message_json send_sms_request_body = new message_json();
                             send_sms_request_body.chat_id = chat_id;
@@ -680,7 +680,7 @@ public class chat_command_service extends Service {
 
         chat_id = sharedPreferences.getString("chat_id", "");
         bot_token = sharedPreferences.getString("bot_token", "");
-        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
         privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
         wifiLock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
         wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
@@ -719,7 +719,7 @@ public class chat_command_service extends Service {
                 bot_username = Paper.book().read("bot_username", null);
                 if (bot_username == null) {
                     while (!get_me()) {
-                        Log.i(TAG, "Wait 5 seconds and try again.");
+                        public_func.write_log(context, "Failed to get bot Username, Wait 5 seconds and try again.");
                         try {
                             Thread.sleep(5000);
                         } catch (InterruptedException e) {
@@ -727,6 +727,7 @@ public class chat_command_service extends Service {
                         }
                     }
                 }
+                Log.i(TAG, "run: The Bot Username is loaded. The Bot Username is: " + bot_username);
             }
             while (true) {
                 int timeout = 5 * magnification;

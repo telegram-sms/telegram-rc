@@ -144,14 +144,12 @@ class public_func {
         return "https://api.telegram.org/bot" + token + "/" + func;
     }
 
-    static OkHttpClient get_okhttp_obj(boolean doh_switch) {
+    static OkHttpClient get_okhttp_obj(boolean doh_switch, proxy_config proxy_item) {
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true);
-
-        proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
         Proxy proxy = null;
         if (proxy_item.enable) {
             InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.proxy_host, proxy_item.proxy_port);
@@ -178,7 +176,7 @@ class public_func {
             }
             okhttp.dns(new DnsOverHttps.Builder().client(doh_http_client.build())
                     .url(HttpUrl.get("https://cloudflare-dns.com/dns-query"))
-                    .bootstrapDnsHosts(get_by_ip("1.0.0.1"), get_by_ip("9.9.9.9"), get_by_ip("185.222.222.222"), get_by_ip("2606:4700:4700::1001"), get_by_ip("2620:fe::fe"), get_by_ip("2a09::"))
+                    .bootstrapDnsHosts(get_by_ip("2606:4700:4700::1001"), get_by_ip("2606:4700:4700::1111"), get_by_ip("1.0.0.1"), get_by_ip("1.1.1.1"))
                     .includeIPv6(true)
                     .build());
         }
@@ -259,6 +257,7 @@ class public_func {
             write_log(context, "[" + send_to + "] is an illegal phone number");
             return;
         }
+        Paper.init(context);
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
@@ -278,7 +277,7 @@ class public_func {
         Gson gson = new Gson();
         String request_body_raw = gson.toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         try {
