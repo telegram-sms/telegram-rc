@@ -231,7 +231,6 @@ class public_func {
 
     static void add_resend_loop(Context context, String message) {
         ArrayList<String> resend_list;
-        Paper.init(context);
         resend_list = Paper.book().read("resend_list", new ArrayList<>());
         resend_list.add(message);
         Paper.book().write("resend_list", resend_list);
@@ -257,7 +256,6 @@ class public_func {
             write_log(context, "[" + send_to + "] is an illegal phone number");
             return;
         }
-        Paper.init(context);
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
