@@ -86,6 +86,7 @@ public class main_activity extends AppCompatActivity {
         final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
         //load config
         Paper.init(context);
+
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
 
         if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
@@ -166,9 +167,9 @@ public class main_activity extends AppCompatActivity {
         verification_code.setChecked(sharedPreferences.getBoolean("verification_code", false));
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
-        proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
-        doh_switch.setEnabled(!proxy_item.enable);
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            doh_switch.setEnabled(!Paper.book().read("proxy_config", new proxy_config()).enable);
+        }
         int check_phone_state_permission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
         if (check_phone_state_permission == PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -530,6 +531,10 @@ public class main_activity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+            MenuItem set_proxy_item = menu.findItem(R.id.set_proxy);
+            set_proxy_item.setVisible(false);
+        }
         return true;
     }
 

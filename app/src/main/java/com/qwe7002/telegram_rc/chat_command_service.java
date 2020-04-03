@@ -812,7 +812,6 @@ public class chat_command_service extends Service {
     }
 
 
-    @SuppressLint("HardwareIds")
     private String get_network_type() {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);

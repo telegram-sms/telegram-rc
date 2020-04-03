@@ -151,28 +151,31 @@ class public_func {
                 .writeTimeout(15, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true);
         Proxy proxy = null;
-        if (proxy_item.enable) {
-            InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.proxy_host, proxy_item.proxy_port);
-            proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
-            Authenticator.setDefault(new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    if (getRequestingHost().equalsIgnoreCase(proxy_item.proxy_host)) {
-                        if (proxy_item.proxy_port == getRequestingPort()) {
-                            return new PasswordAuthentication(proxy_item.username, proxy_item.password.toCharArray());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (proxy_item.enable) {
+                InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.proxy_host, proxy_item.proxy_port);
+                proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
+                Authenticator.setDefault(new Authenticator() {
+                    @Override
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        if (getRequestingHost().equalsIgnoreCase(proxy_item.proxy_host)) {
+                            if (proxy_item.proxy_port == getRequestingPort()) {
+                                return new PasswordAuthentication(proxy_item.username, proxy_item.password.toCharArray());
+                            }
                         }
+                        return null;
                     }
-                    return null;
-                }
-            });
-            okhttp.proxy(proxy);
-            doh_switch = true;
+                });
+                okhttp.proxy(proxy);
+                doh_switch = true;
+            }
         }
         if (doh_switch) {
             OkHttpClient.Builder doh_http_client = new OkHttpClient.Builder().retryOnConnectionFailure(true);
-            if (proxy_item.enable && proxy_item.dns_over_socks5) {
-                assert proxy != null;
-                doh_http_client.proxy(proxy);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if (proxy_item.enable && proxy_item.dns_over_socks5) {
+                    doh_http_client.proxy(proxy);
+                }
             }
             okhttp.dns(new DnsOverHttps.Builder().client(doh_http_client.build())
                     .url(HttpUrl.get("https://cloudflare-dns.com/dns-query"))

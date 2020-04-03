@@ -32,6 +32,7 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
 
     ussd_request_callback(Context context, SharedPreferences sharedPreferences, long message_id) {
         this.context = context;
+        Paper.init(context);
         String chat_id = sharedPreferences.getString("chat_id", "");
         this.doh_switch = sharedPreferences.getBoolean("doh_switch", true);
         this.request_body = new message_json();

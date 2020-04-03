@@ -36,6 +36,7 @@ public class send_ussd_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Context context = getApplicationContext();
+        Paper.init(context);
         String notification_name = context.getString(R.string.ussd_code_running);
         Notification.Builder notification;
         NotificationChannel channel = new NotificationChannel(notification_name, notification_name,

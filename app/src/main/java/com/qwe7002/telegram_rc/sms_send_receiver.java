@@ -29,6 +29,7 @@ import static android.content.Context.MODE_PRIVATE;
 public class sms_send_receiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, Intent intent) {
+        Paper.init(context);
         final String TAG = "sms_send_receiver";
         Log.d(TAG, "Receive action: " + intent.getAction());
         Bundle extras = intent.getExtras();
