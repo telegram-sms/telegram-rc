@@ -98,17 +98,13 @@ I would also like to thank the following people for their hard work to localise 
 This APP uses the following public DNS service:
 
 - [1.1.1.1](https://1.1.1.1/)
-- [Quad9](https://www.quad9.net/)
-- [dns.sb](https://dns.sb/)
 
 And finally, [sm.ms](https://sm.ms) for hosting images used in this page.
 
 ## Buy me a cup of coffee to help maintain this project further?
 
-- [via Patreon](https://get.telegram-sms.com/donate/patreon)
 - [via Paypal](https://get.telegram-sms.com/donate/paypal)
 - [via Bitcoin](bitcoin:17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae) (**17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae**)
 - [via UnionPay(中国银联云闪付)](https://get.telegram-sms.com/donate/unionpay)
-- [via Alipay(支付宝)](https://get.telegram-sms.com/donate/alipay)
 
 Your donation will make me work better for this project.
