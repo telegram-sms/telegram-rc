@@ -56,22 +56,23 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class chat_command_service extends Service {
+    //Global counter
     private static long offset = 0;
     private static int magnification = 1;
     private static int error_magnification = 1;
 
     //cell info
-    @SuppressWarnings("SpellCheckingInspection")
     private static int arfcn = -1;
+    private static int strength = 0;
+
+    // global object
     private OkHttpClient okhttp_client;
     private broadcast_receiver broadcast_receiver;
     private PowerManager.WakeLock wakelock;
-    private WifiManager.WifiLock wifiLock;
-    private static int strength = 0;
-    // global object
+    private WifiManager.WifiLock wifilock;
     private Context context;
     private SharedPreferences sharedPreferences;
-    private ConnectivityManager cm;
+    private ConnectivityManager connectivity_manager;
     private network_callback callback;
     private int send_sms_status = -1;
     private int send_slot_temp = -1;
@@ -85,7 +86,7 @@ public class chat_command_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.chat_command_service_name));
+        Notification notification = public_func.get_notification_obj(context, getString(R.string.chat_command_service_name));
         startForeground(2, notification);
         return START_STICKY;
     }
@@ -93,11 +94,11 @@ public class chat_command_service extends Service {
 
     @Override
     public void onDestroy() {
-        wifiLock.release();
+        wifilock.release();
         wakelock.release();
         unregisterReceiver(broadcast_receiver);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            cm.unregisterNetworkCallback(callback);
+            connectivity_manager.unregisterNetworkCallback(callback);
         }
         stopForeground(true);
         super.onDestroy();
@@ -673,7 +674,7 @@ public class chat_command_service extends Service {
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
-        cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         Paper.init(context);
 
         sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
@@ -682,12 +683,12 @@ public class chat_command_service extends Service {
         bot_token = sharedPreferences.getString("bot_token", "");
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
         privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
-        wifiLock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
+        wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
         wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
-        wifiLock.setReferenceCounted(false);
+        wifilock.setReferenceCounted(false);
         wakelock.setReferenceCounted(false);
-        if (!wifiLock.isHeld()) {
-            wifiLock.acquire();
+        if (!wifilock.isHeld()) {
+            wifilock.acquire();
         }
         if (!wakelock.isHeld()) {
             wakelock.acquire();
@@ -704,7 +705,7 @@ public class chat_command_service extends Service {
                     .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     .build();
             callback = new network_callback();
-            cm.registerNetworkCallback(network_request, callback);
+            connectivity_manager.registerNetworkCallback(network_request, callback);
         }
         broadcast_receiver = new broadcast_receiver();
         registerReceiver(broadcast_receiver, intentFilter);
