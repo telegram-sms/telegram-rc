@@ -62,8 +62,8 @@ public class chat_command_service extends Service {
     private static int error_magnification = 1;
 
     //cell info
-    private static int arfcn = -1;
-    private static int strength = 0;
+    private static int signal_arfcn = -1;
+    private static int signal_strength = 0;
 
     // global object
     private OkHttpClient okhttp_client;
@@ -112,7 +112,6 @@ public class chat_command_service extends Service {
         return null;
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     boolean is_vpn_hotsport_exist() {
         ApplicationInfo info;
         try {
@@ -182,8 +181,6 @@ public class chat_command_service extends Service {
             JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
             if (result_obj.get("ok").getAsBoolean()) {
                 bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                Paper.book().write("bot_username", bot_username);
-                Log.d(TAG, "bot_username: " + bot_username);
                 public_func.write_log(context, "Get the bot username: " + bot_username);
             }
             return true;
@@ -191,7 +188,6 @@ public class chat_command_service extends Service {
         return false;
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     private void receive_handle(JsonObject result_obj) {
         String message_type = "";
         long update_id = result_obj.get("update_id").getAsLong();
@@ -501,11 +497,6 @@ public class chat_command_service extends Service {
                     public_func.write_log(context, "Send spam message is complete.");
                 }).start();
                 return;
-            case "/setspamkeyword":
-                //todo
-                //String[] black_keyword_list = input.split(";");
-                //Paper.book().write("black_keyword_list", new ArrayList<>(Arrays.asList(black_keyword_list)));
-                break;
             case "/sendsms":
             case "/sendsms1":
             case "/sendsms2":
@@ -882,13 +873,13 @@ public class chat_command_service extends Service {
                     for (CellInfo info : cellInfo) {
                         Log.d(TAG, "onCellInfo: " + info.getTimeStamp());
                         if (info instanceof CellInfoNr) {
-                            strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
-                            arfcn = -1;
+                            signal_strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
+                            signal_arfcn = -1;
                             break;
                         }
                         if (info instanceof CellInfoLte) {
-                            strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
-                            arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
+                            signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
+                            signal_arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
 
                         }
                     }
@@ -909,36 +900,35 @@ public class chat_command_service extends Service {
                     continue;
                 }
                 if (info instanceof CellInfoLte) {
-                    strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
+                    signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
+                        signal_arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
                     }
                     break;
                 }
                 if (info instanceof CellInfoWcdma) {
-                    strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
+                    signal_strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        arfcn = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
+                        signal_arfcn = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
                     }
                 }
             }
         }
         result_string.append(" (");
-        if (strength != 0) {
-            result_string.append(strength);
+        if (signal_strength != 0) {
+            result_string.append(signal_strength);
             result_string.append(" dBm");
         }
-        if (arfcn != -1) {
+        if (signal_arfcn != -1) {
             result_string.append(", ");
             result_string.append("ARFCN: ");
-            result_string.append(arfcn);
+            result_string.append(signal_arfcn);
         }
         result_string.append(")");
         return result_string.toString();
     }
 
     private boolean is_att_sim(String mcc_mnc) {
-        Log.d(TAG, "is_att_sim: " + mcc_mnc);
         int int_mcc_mnc = -1;
         try {
             int_mcc_mnc = Integer.parseInt(mcc_mnc);
