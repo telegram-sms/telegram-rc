@@ -48,9 +48,6 @@ public class sim_status_receiver extends BroadcastReceiver {
         last_status = state;
         String status;
         switch (state) {
-            case TelephonyManager.SIM_STATE_READY:
-                status = context.getString(R.string.sim_card_insert);
-                break;
             case TelephonyManager.SIM_STATE_UNKNOWN:
             case TelephonyManager.SIM_STATE_ABSENT:
                 status = context.getString(R.string.sim_card_remove);

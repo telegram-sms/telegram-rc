@@ -10,7 +10,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.0-beta03'
+        classpath 'com.android.tools.build:gradle:4.0.0-beta04'
         //Use the EAP version of the kotlin plugin
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.71"
     }
