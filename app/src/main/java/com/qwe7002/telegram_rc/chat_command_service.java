@@ -749,7 +749,11 @@ public class chat_command_service extends Service {
                         break;
                     }
                     int sleep_time = 5 * error_magnification;
-                    public_func.write_log(context, "Connection to the Telegram API service failed,try again after " + sleep_time + " seconds.");
+                    if (sleep_time > 5) {
+                        public_func.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
+                    } else {
+                        Log.i(TAG, "run: Connection to the Telegram API service failed");
+                    }
                     magnification = 1;
                     if (error_magnification <= 59) {
                         ++error_magnification;
