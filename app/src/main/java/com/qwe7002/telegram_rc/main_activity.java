@@ -170,8 +170,7 @@ public class main_activity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             doh_switch.setEnabled(!Paper.book().read("proxy_config", new proxy_config()).enable);
         }
-        int check_phone_state_permission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE);
-        if (check_phone_state_permission == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                 assert tm != null;
@@ -181,7 +180,7 @@ public class main_activity extends AppCompatActivity {
             }
         }
         display_dual_sim_display_name.setOnClickListener(v -> {
-            if (check_phone_state_permission != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 display_dual_sim_display_name.setChecked(false);
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
             } else {
