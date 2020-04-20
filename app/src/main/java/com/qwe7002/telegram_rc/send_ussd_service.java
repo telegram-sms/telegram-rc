@@ -50,7 +50,7 @@ public class send_ussd_service extends Service {
                 .setTicker(context.getString(R.string.app_name))
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText(notification_name);
-        startForeground(4, notification.build());
+        startForeground(public_func.send_ussd_servce_notify_id, notification.build());
         Handler handler = new Handler();
         String ussd = intent.getStringExtra("ussd");
         assert ussd != null;

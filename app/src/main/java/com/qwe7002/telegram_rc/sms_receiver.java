@@ -118,7 +118,7 @@ public class sms_receiver extends BroadcastReceiver {
         if (messages[0].getMessageClass() == SmsMessage.MessageClass.CLASS_0) {
             flash_sms_string = "\nType: Class 0";
         }
-        final String message_head = "[" + dual_sim + context.getString(R.string.receive_sms_head) + "]" + "\n" + context.getString(R.string.from) + message_address + "\n" + context.getString(R.string.content) + flash_sms_string;
+        final String message_head = "[" + dual_sim + context.getString(R.string.receive_sms_head) + "]" + flash_sms_string + "\n" + context.getString(R.string.from) + message_address + "\n" + context.getString(R.string.content);
         String raw_request_body_text = message_head + message_body;
         boolean is_verification_code = false;
         if (sharedPreferences.getBoolean("verification_code", false) && !is_trusted_phone) {

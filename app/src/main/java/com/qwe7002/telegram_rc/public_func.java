@@ -65,6 +65,11 @@ class public_func {
     static final String BROADCAST_STOP_SERVICE = "com.qwe7002.telegram_rc.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
+    static final int battery_notify_id = 1;
+    static final int chat_command_notify_id = 2;
+    static final int notification_listener_service_notify_id = 3;
+    static final int send_ussd_servce_notify_id = 4;
+    static final int resend_service_notify_id = 5;
 
     static boolean get_data_enable(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(
