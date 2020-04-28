@@ -36,7 +36,7 @@ build:
         - wget https://${KEYSTORE_SERVER}/android/telegram-sms/keystore.env -O .reall_network/keystore.env --http-user=gitlab --http-passwd=${key_store_passwd}
         - . .reall_network/keystore.env
         - export GRADLE_USER_HOME=$(pwd)/.gradle && mkdir -p ${GRADLE_USER_HOME}
-        - echo -e "org.gradle.jvmargs=-Xmx1536m -DsocksProxyHost=proxy.reallserver.cn -DsocksProxyPort=1086 -DsocksNonProxyHosts=dl.google.com\n org.gradle.parallel=true" >> ${GRADLE_USER_HOME}/gradle.properties
+        - echo -e "org.gradle.jvmargs=-Xmx1536m\n org.gradle.parallel=true" >> ${GRADLE_USER_HOME}/gradle.properties
         - chmod +x ./gradlew
         - ./gradlew assembleRelease
     artifacts:
