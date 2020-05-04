@@ -890,7 +890,8 @@ public class chat_command_service extends Service {
                         }
                     }*/
                     CellInfo info = cellInfo.get(0);
-                    Log.d(TAG, "onCellInfo: " + info.getTimeStamp());
+                    Log.d(TAG, "cell_registered: " + info.isRegistered());
+                    Log.d(TAG, "cell_updatetime: " + info.getTimeStamp());
                     if (info instanceof CellInfoNr) {
                         signal_strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
                         signal_arfcn = -1;
@@ -898,35 +899,29 @@ public class chat_command_service extends Service {
                     if (info instanceof CellInfoLte) {
                         signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
                         signal_arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
-                        Log.d(TAG, "onCellInfo: " + signal_strength);
-                        Log.d(TAG, "onCellInfo: " + signal_arfcn);
                     }
                     if (info instanceof CellInfoWcdma) {
                         signal_strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
                         signal_arfcn = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
-                        Log.d(TAG, "onCellInfo: " + signal_strength);
-                        Log.d(TAG, "onCellInfo: " + signal_arfcn);
                     }
                     if (info instanceof CellInfoCdma) {
                         signal_strength = ((CellInfoCdma) info).getCellSignalStrength().getDbm();
                         signal_arfcn = -1;
-                        Log.d(TAG, "onCellInfo: " + signal_strength);
-                        Log.d(TAG, "onCellInfo: " + signal_arfcn);
                     }
                     run_lock = true;
                 }
             });
             while (!run_lock) {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+
         } else {
             for (CellInfo info : telephonyManager.getAllCellInfo()) {
                 if (!info.isRegistered()) {
-                    Log.d(TAG, "get_cell_info_handle: ");
                     continue;
                 }
                 if (info instanceof CellInfoLte) {
@@ -944,6 +939,8 @@ public class chat_command_service extends Service {
                 }
             }
         }
+        Log.d(TAG, "signal_strength: " + signal_strength);
+        Log.d(TAG, "signal_arfcn: " + signal_arfcn);
         result_string.append(" (");
         if (signal_strength != 0) {
             result_string.append(signal_strength);
