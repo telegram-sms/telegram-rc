@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.telephony.CellInfo;
+import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoNr;
 import android.telephony.CellInfoWcdma;
@@ -874,7 +875,7 @@ public class chat_command_service extends Service {
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
                     Log.d(TAG, "onCellInfo: " + cellInfo.size());
-                    for (CellInfo info : cellInfo) {
+                    /*for (CellInfo info : cellInfo) {
                         Log.d(TAG, "onCellInfo: " + info.getTimeStamp());
                         if (info instanceof CellInfoNr) {
                             signal_strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
@@ -884,8 +885,33 @@ public class chat_command_service extends Service {
                         if (info instanceof CellInfoLte) {
                             signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
                             signal_arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
-
+                            Log.d(TAG, "onCellInfo: "+signal_strength);
+                            Log.d(TAG, "onCellInfo: "+signal_arfcn);
                         }
+                    }*/
+                    CellInfo info = cellInfo.get(0);
+                    Log.d(TAG, "onCellInfo: " + info.getTimeStamp());
+                    if (info instanceof CellInfoNr) {
+                        signal_strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
+                        signal_arfcn = -1;
+                    }
+                    if (info instanceof CellInfoLte) {
+                        signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
+                        signal_arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
+                        Log.d(TAG, "onCellInfo: " + signal_strength);
+                        Log.d(TAG, "onCellInfo: " + signal_arfcn);
+                    }
+                    if (info instanceof CellInfoWcdma) {
+                        signal_strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
+                        signal_arfcn = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
+                        Log.d(TAG, "onCellInfo: " + signal_strength);
+                        Log.d(TAG, "onCellInfo: " + signal_arfcn);
+                    }
+                    if (info instanceof CellInfoCdma) {
+                        signal_strength = ((CellInfoCdma) info).getCellSignalStrength().getDbm();
+                        signal_arfcn = -1;
+                        Log.d(TAG, "onCellInfo: " + signal_strength);
+                        Log.d(TAG, "onCellInfo: " + signal_arfcn);
                     }
                     run_lock = true;
                 }
