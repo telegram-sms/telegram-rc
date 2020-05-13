@@ -874,7 +874,8 @@ public class chat_command_service extends Service {
             telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
-                    Log.d(TAG, "onCellInfo: " + cellInfo.size());
+                    Log.d(TAG, "cellinfo_size: " + cellInfo.size());
+                    //Wrong implementation
                     /*for (CellInfo info : cellInfo) {
                         Log.d(TAG, "onCellInfo: " + info.getTimeStamp());
                         if (info instanceof CellInfoNr) {
