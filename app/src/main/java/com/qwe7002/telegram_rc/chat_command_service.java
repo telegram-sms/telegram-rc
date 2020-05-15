@@ -172,13 +172,13 @@ public class chat_command_service extends Service {
             return false;
         }
         if (response.code() == 200) {
-            String result = null;
+            String result;
             try {
                 result = Objects.requireNonNull(response.body()).string();
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
-            assert result != null;
             JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
             if (result_obj.get("ok").getAsBoolean()) {
                 bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
@@ -210,10 +210,6 @@ public class chat_command_service extends Service {
         }
         JsonObject from_obj = null;
         final boolean message_type_is_private = message_type.equals("private");
-        if (!message_type_is_private && bot_username == null) {
-            Log.i(TAG, "receive_handle: Did not successfully get bot_username.");
-            get_me();
-        }
         if (message_obj.has("from")) {
             from_obj = message_obj.get("from").getAsJsonObject();
             if (!message_type_is_private && from_obj.get("is_bot").getAsBoolean()) {
