@@ -2,8 +2,8 @@
     <string name="app_name" translatable="false">Telegram remote control</string>
     <string name="action_success">successfully.</string>
     <string name="action_failed">failed.</string>
-    <string name="close_wifi">"Close tethering "</string>
-    <string name="open_wifi">"Open tethering "</string>
+    <string name="close_wifi">"Disable tethering "</string>
+    <string name="open_wifi">"Enable tethering "</string>
     <string name="switch_data">Switching mobile network status.</string>
     <string name="restart_network">Restarting the mobile network.</string>
     <string name="switch_ap_message">/switch_ap - Turn tethering on or off</string>

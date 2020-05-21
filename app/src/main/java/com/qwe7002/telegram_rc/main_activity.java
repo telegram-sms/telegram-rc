@@ -18,6 +18,7 @@ import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -86,7 +87,10 @@ public class main_activity extends AppCompatActivity {
         final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
         //load config
         Paper.init(context);
-
+        Intent battery_service = new Intent(context, beacon_receiver_service.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(battery_service);
+        }
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
 
         if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
@@ -235,7 +239,7 @@ public class main_activity extends AppCompatActivity {
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             progress_dialog.setOnKeyListener((dialogInterface, i, keyEvent) -> {
-                if (keyEvent.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK) {
+                if (keyEvent.getKeyCode() == KeyEvent.KEYCODE_BACK) {
                     call.cancel();
                 }
                 return false;
@@ -330,14 +334,14 @@ public class main_activity extends AppCompatActivity {
                 show_privacy_dialog();
                 return;
             }
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG}, 1);
 
                 PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
                 assert powerManager != null;
                 boolean has_ignored = powerManager.isIgnoringBatteryOptimizations(getPackageName());
                 if (!has_ignored) {
-                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
                     intent.setData(Uri.parse("package:" + getPackageName()));
                     if (intent.resolveActivityInfo(getPackageManager(), PackageManager.MATCH_DEFAULT_ONLY) != null) {
                         startActivity(intent);
@@ -555,6 +559,9 @@ public class main_activity extends AppCompatActivity {
                 return true;
             case R.id.logcat:
                 startActivity(new Intent(main_activity.this, logcat_activity.class));
+                return true;
+            case R.id.set_beacon:
+                startActivity(new Intent(main_activity.this, beacon_config_activity.class));
                 return true;
             case R.id.set_notify:
                 if (!public_func.is_notify_listener(context)) {
