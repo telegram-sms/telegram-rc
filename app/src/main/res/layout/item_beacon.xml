@@ -19,9 +19,9 @@
             android:layout_marginRight="12dp"
             android:maxEms="20"
             android:singleLine="true"
-            android:text="@string/app_name"
-            tools:ignore="RelativeOverlap" />
-        <!--android:textColor="@color/text_color"-->
+            android:text="Device name"
+            android:textColor="@color/text_color"
+            tools:ignore="HardcodedText,RelativeOverlap" />
 
         <TextView
             android:id="@+id/beacon_address"
@@ -32,7 +32,8 @@
             android:layout_marginRight="12dp"
             android:maxEms="20"
             android:singleLine="true"
-            android:text="com.example.apps"
+            android:text="Address:"
+            android:textColor="@color/text_color"
             tools:ignore="HardcodedText" />
 
         <TextView
@@ -44,7 +45,8 @@
             android:layout_marginRight="12dp"
             android:maxEms="20"
             android:singleLine="true"
-            android:text="com.example.apps"
+            android:text="Rssi: Power:"
+            android:textColor="@color/text_color"
             tools:ignore="HardcodedText" />
 
         <CheckBox
