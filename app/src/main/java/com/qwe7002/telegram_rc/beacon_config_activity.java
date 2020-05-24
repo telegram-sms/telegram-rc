@@ -28,10 +28,10 @@ import java.util.ArrayList;
 import io.paperdb.Paper;
 
 public class beacon_config_activity extends AppCompatActivity {
-    protected static final String TAG = "MonitoringActivity";
-    beacon_consumer beacon_consumer_obj;
-    ListView beaconList;
-    private BeaconManager beaconManager;
+    protected static final String TAG = "monitoring_activity";
+    private beacon_consumer beacon_consumer_obj;
+    private ListView beaconList;
+    private BeaconManager beacon_manager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,26 +41,46 @@ public class beacon_config_activity extends AppCompatActivity {
         beacon_consumer_obj = new beacon_consumer();
         beaconList = (ListView) findViewById(R.id.beacon_list);
 
-        beaconManager = BeaconManager.getInstanceForApplication(this);
+        beacon_manager = BeaconManager.getInstanceForApplication(this);
 
         // Detect the main identifier (UID) frame:
-        beaconManager.getBeaconParsers().add(new BeaconParser().
+        beacon_manager.getBeaconParsers().add(new BeaconParser().
+                setBeaconLayout(BeaconParser.URI_BEACON_LAYOUT));
+
+        // Detect the main identifier (UID) frame:
+        beacon_manager.getBeaconParsers().add(new BeaconParser().
+                setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
+
+        // Detect the main identifier (UID) frame:
+        beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
 
         // Detect the telemetry (TLM) frame:
-        beaconManager.getBeaconParsers().add(new BeaconParser().
+        beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_TLM_LAYOUT));
 
         // Detect the URL frame:
-        beaconManager.getBeaconParsers().add(new BeaconParser().
+        beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
-        beaconManager.bind(beacon_consumer_obj);
+        beacon_manager.bind(beacon_consumer_obj);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        beacon_manager.unbind(beacon_consumer_obj);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        beacon_manager.bind(beacon_consumer_obj);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        beaconManager.unbind(beacon_consumer_obj);
+        beacon_manager.unbind(beacon_consumer_obj);
     }
 
     static class BeaconModel {
@@ -134,7 +154,7 @@ public class beacon_config_activity extends AppCompatActivity {
     class beacon_consumer implements BeaconConsumer {
         @Override
         public void onBeaconServiceConnect() {
-            beaconManager.addRangeNotifier((beacons, region) -> {
+            beacon_manager.addRangeNotifier((beacons, region) -> {
                 if (beacons.size() > 0) {
                     final ArrayList<BeaconModel> list = new ArrayList<>();
 
@@ -158,7 +178,7 @@ public class beacon_config_activity extends AppCompatActivity {
             });
 
             try {
-                beaconManager.startRangingBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
+                beacon_manager.startRangingBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
             } catch (RemoteException e) {
                 e.printStackTrace();
             }

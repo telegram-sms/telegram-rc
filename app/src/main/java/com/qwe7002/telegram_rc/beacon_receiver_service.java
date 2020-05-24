@@ -75,6 +75,14 @@ public class beacon_receiver_service extends Service {
 
         // Detect the main identifier (UID) frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
+                setBeaconLayout(BeaconParser.URI_BEACON_LAYOUT));
+
+        // Detect the main identifier (UID) frame:
+        beacon_manager.getBeaconParsers().add(new BeaconParser().
+                setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
+
+        // Detect the main identifier (UID) frame:
+        beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
 
         // Detect the telemetry (TLM) frame:
