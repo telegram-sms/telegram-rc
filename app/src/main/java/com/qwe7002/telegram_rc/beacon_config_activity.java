@@ -43,11 +43,11 @@ public class beacon_config_activity extends AppCompatActivity {
 
         beacon_manager = BeaconManager.getInstanceForApplication(this);
 
-        // Detect the main identifier (UID) frame:
+        // Detect the URI BEACON frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.URI_BEACON_LAYOUT));
 
-        // Detect the main identifier (UID) frame:
+        // Detect the ALTBEACON frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
 

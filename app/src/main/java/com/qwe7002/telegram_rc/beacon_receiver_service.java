@@ -73,11 +73,11 @@ public class beacon_receiver_service extends Service {
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
 
-        // Detect the main identifier (UID) frame:
+        // Detect the URI BEACON frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.URI_BEACON_LAYOUT));
 
-        // Detect the main identifier (UID) frame:
+        // Detect the ALTBEACON frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
 
