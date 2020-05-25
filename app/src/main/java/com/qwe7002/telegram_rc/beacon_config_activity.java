@@ -178,7 +178,7 @@ public class beacon_config_activity extends AppCompatActivity {
             });
 
             try {
-                beacon_manager.startRangingBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
+                beacon_manager.startRangingBeaconsInRegion(new Region(getPackageName(), null, null, null));
             } catch (RemoteException e) {
                 e.printStackTrace();
             }

@@ -115,16 +115,16 @@ public class beacon_receiver_service extends Service {
                 String message = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + getString(R.string.action_success);
                 boolean found_beacon = false;
                 ArrayList<String> listen_beacon_list = Paper.book().read("beacon_address", new ArrayList<>());
+                if (listen_beacon_list.size() == 0) {
+                    Log.d(TAG, "onBeaconServiceConnect: Watchlist is empty");
+                    return;
+                }
                 for (Beacon beacon : beacons) {
                     //if (beacon.getServiceUuid() != 0xfeaa) {
                     //Only detect eddystone
                     //    continue;
                     //}
-                    Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Dist: " + beacon.getDistance());
-                    if (listen_beacon_list.size() == 0) {
-                        Log.d(TAG, "onBeaconServiceConnect: Watchlist is empty");
-                        return;
-                    }
+                    Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
                     for (String beacon_address : listen_beacon_list) {
                         if (beacon.getBluetoothAddress().equals(beacon_address)) {
                             not_found_count = 0;
@@ -144,7 +144,7 @@ public class beacon_receiver_service extends Service {
                     }
                 }
                 if (beacons.size() == 0 || !found_beacon) {
-                    Log.d(TAG, "Beacon not found");
+                    Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
                     if (not_found_count >= 10 && !wifi_manager.isWifiEnabled()) {
                         not_found_count = 0;
                         open_ap();
@@ -155,7 +155,7 @@ public class beacon_receiver_service extends Service {
             });
 
             try {
-                beacon_manager.startRangingBeaconsInRegion(new Region("myMonitoringUniqueId", null, null, null));
+                beacon_manager.startRangingBeaconsInRegion(new Region(getPackageName(), null, null, null));
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -191,7 +191,6 @@ public class beacon_receiver_service extends Service {
             } else {
                 com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
             }
-
         }
 
         @Override
