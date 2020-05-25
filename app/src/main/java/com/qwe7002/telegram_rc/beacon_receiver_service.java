@@ -40,7 +40,7 @@ public class beacon_receiver_service extends Service {
     private Context context;
     private WifiManager wifi_manager;
     private int not_found_count = 0;
-    private int low_singal_count = 0;
+    private int detect_singal_count = 0;
     private OkHttpClient okhttp_client;
     private String chat_id;
     private String request_url;
@@ -130,14 +130,14 @@ public class beacon_receiver_service extends Service {
                             not_found_count = 0;
                             found_beacon = true;
                             if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {
-                                Log.d(TAG, "close ap action count: " + low_singal_count);
-                                if (low_singal_count >= 1) {
-                                    low_singal_count = 0;
+                                Log.d(TAG, "close ap action count: " + detect_singal_count);
+                                if (detect_singal_count >= 5) {
+                                    detect_singal_count = 0;
                                     close_ap();
                                     message = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + getString(R.string.action_success);
                                     network_progress_handle(message + "\nBeacon Rssi: " + beacon.getRssi() + "dBm", chat_id, okhttp_client);
                                 }
-                                ++low_singal_count;
+                                ++detect_singal_count;
                                 break;
                             }
                         }
