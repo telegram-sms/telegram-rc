@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import io.paperdb.Paper;
 import okhttp3.Call;
@@ -197,7 +198,6 @@ public class beacon_receiver_service extends Service {
 
         @Override
         public void unbindService(ServiceConnection serviceConnection) {
-
         }
 
         @Override
@@ -225,8 +225,8 @@ public class beacon_receiver_service extends Service {
             }
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) {
-                Log.d(TAG, "onResponse: ");
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                Log.d(TAG, "onResponse: " + Objects.requireNonNull(response.body()).string());
             }
         });
     }
