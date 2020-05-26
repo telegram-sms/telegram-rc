@@ -211,9 +211,6 @@ public class beacon_receiver_service extends Service {
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context);
-        if (message.contains("<code>") && message.contains("</code>")) {
-            request_body.parse_mode = "html";
-        }
         String request_body_json = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_json, public_func.JSON);
         Request request_obj = new Request.Builder().url(request_url).method("POST", body).build();
