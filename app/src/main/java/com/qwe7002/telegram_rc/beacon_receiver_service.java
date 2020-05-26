@@ -120,16 +120,13 @@ public class beacon_receiver_service extends Service {
                     return;
                 }
                 for (Beacon beacon : beacons) {
-                    //if (beacon.getServiceUuid() != 0xfeaa) {
-                    //Only detect eddystone
-                    //    continue;
-                    //}
                     Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
                     for (String beacon_address : listen_beacon_list) {
                         if (beacon.getBluetoothAddress().equals(beacon_address)) {
                             not_found_count = 0;
                             found_beacon = true;
-                            if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {
+                            //if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {
+                            if (Paper.book().read("wifi_open", false)) {
                                 Log.d(TAG, "close ap action count: " + detect_singal_count);
                                 if (detect_singal_count >= 5) {
                                     detect_singal_count = 0;
@@ -145,7 +142,7 @@ public class beacon_receiver_service extends Service {
                 }
                 if (beacons.size() == 0 || !found_beacon) {
                     Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
-                    if (not_found_count >= 10 && !wifi_manager.isWifiEnabled()) {
+                    if (not_found_count >= 10 && !Paper.book().read("wifi_open", false)) {
                         not_found_count = 0;
                         open_ap();
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);

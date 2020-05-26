@@ -160,10 +160,10 @@ public class beacon_config_activity extends AppCompatActivity {
 
                     for (Beacon beacon : beacons) {
                         BeaconModel model = new BeaconModel();
-                        //if (beacon.getServiceUuid() != 0xfeaa) {
-                        //Only detect eddystone
-                        //    continue;
-                        //}
+                        /*if (beacon.getServiceUuid() != 0xfeaa) {
+                            Only detect eddystone
+                            continue;
+                        }*/
                         model.title = beacon.getBluetoothName();
                         model.address = beacon.getBluetoothAddress();
                         model.info = "Rssi: " + beacon.getRssi() + " dBm Power: " + beacon.getTxPower() + " dBm";
