@@ -93,13 +93,10 @@ public class beacon_receiver_service extends Service {
         // Detect the URL frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
-
-        beacon_manager.setBackgroundScanPeriod(3000L);
-        beacon_manager.setBackgroundBetweenScanPeriod(3000L);
-
-        beacon_manager.setForegroundScanPeriod(3000L);
-        beacon_manager.setForegroundBetweenScanPeriod(3000L);
-
+        beacon_manager.setBackgroundScanPeriod(2000L);
+        beacon_manager.setForegroundScanPeriod(2000L);
+        beacon_manager.setForegroundBetweenScanPeriod(2000L);
+        beacon_manager.setForegroundBetweenScanPeriod(2000L);
         beacon_manager.bind(beacon_consumer);
     }
 
@@ -121,15 +118,15 @@ public class beacon_receiver_service extends Service {
                     return;
                 }
                 for (Beacon beacon : beacons) {
+                    not_found_count = 0;
                     Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
                     for (String beacon_address : listen_beacon_list) {
                         if (beacon.getBluetoothAddress().equals(beacon_address)) {
-                            not_found_count = 0;
                             found_beacon = true;
                             //if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {
                             if (Paper.book().read("wifi_open", false)) {
                                 Log.d(TAG, "close ap action count: " + detect_singal_count);
-                                if (detect_singal_count >= 5) {
+                                if (detect_singal_count >= 10) {
                                     detect_singal_count = 0;
                                     close_ap();
                                     message = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + getString(R.string.action_success);
@@ -148,6 +145,7 @@ public class beacon_receiver_service extends Service {
                         open_ap();
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
                     }
+                    Log.d(TAG, "onBeaconServiceConnect: " + not_found_count);
                     ++not_found_count;
                 }
             });
