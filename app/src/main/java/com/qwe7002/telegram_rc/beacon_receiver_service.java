@@ -123,7 +123,7 @@ public class beacon_receiver_service extends Service {
                     for (String beacon_address : listen_beacon_list) {
                         if (beacon.getBluetoothAddress().equals(beacon_address)) {
                             found_beacon = true;
-                            //if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {
+                            //if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {}
                             if (Paper.book().read("wifi_open", false)) {
                                 Log.d(TAG, "close ap action count: " + detect_singal_count);
                                 if (detect_singal_count >= 10) {
@@ -140,7 +140,7 @@ public class beacon_receiver_service extends Service {
                 }
                 if (beacons.size() == 0 || !found_beacon) {
                     Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
-                    if (not_found_count >= 10 && !Paper.book().read("wifi_open", false)) {
+                    if (not_found_count >= 20 && !Paper.book().read("wifi_open", false)) {
                         not_found_count = 0;
                         open_ap();
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
