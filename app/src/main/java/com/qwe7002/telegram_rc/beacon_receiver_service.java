@@ -140,7 +140,7 @@ public class beacon_receiver_service extends Service {
                 }
                 if (beacons.size() == 0 || !found_beacon) {
                     Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
-                    if (not_found_count >= 20 && !Paper.book().read("wifi_open", false)) {
+                    if (not_found_count >= 30 && !Paper.book().read("wifi_open", false)) {
                         not_found_count = 0;
                         open_ap();
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
