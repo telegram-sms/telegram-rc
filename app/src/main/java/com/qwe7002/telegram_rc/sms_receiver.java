@@ -2,7 +2,6 @@ package com.qwe7002.telegram_rc;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
@@ -49,13 +47,9 @@ public class sms_receiver extends BroadcastReceiver {
             Log.i(TAG, "Uninitialized, SMS receiver is deactivated.");
             return;
         }
-        final boolean is_default = Telephony.Sms.getDefaultSmsPackage(context).equals(context.getPackageName());
+
         assert intent.getAction() != null;
-        if (intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED") && is_default) {
-            //When it is the default application, it will receive two broadcasts.
-            Log.i(TAG, "Detected that this app is the default SMS app, reject: android.provider.Telephony.SMS_RECEIVED");
-            return;
-        }
+
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = public_func.get_url(bot_token, "sendMessage");
@@ -87,18 +81,6 @@ public class sms_receiver extends BroadcastReceiver {
         final String message_body = message_body_builder.toString();
         final String message_address = messages[0].getOriginatingAddress();
         assert message_address != null;
-
-        if (is_default) {
-            new Thread(() -> {
-                Log.i(TAG, "onReceive: Write to the system database.");
-                ContentValues values = new ContentValues();
-                values.put(Telephony.Sms.ADDRESS, message_body);
-                values.put(Telephony.Sms.BODY, message_address);
-                values.put(Telephony.Sms.SUBSCRIPTION_ID, String.valueOf(sub));
-                values.put(Telephony.Sms.READ, "1");
-                context.getContentResolver().insert(Telephony.Sms.CONTENT_URI, values);
-            }).start();
-        }
 
         String trusted_phone_number = sharedPreferences.getString("trusted_phone_number", null);
         boolean is_trusted_phone = false;
