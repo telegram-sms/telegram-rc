@@ -110,6 +110,9 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
+                if (Paper.book().read("disable_beacon", false)) {
+                    return;
+                }
                 String message = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + getString(R.string.action_success);
                 boolean found_beacon = false;
                 ArrayList<String> listen_beacon_list = Paper.book().read("beacon_address", new ArrayList<>());
@@ -199,7 +202,6 @@ public class beacon_receiver_service extends Service {
         public boolean bindService(Intent intent, ServiceConnection serviceConnection, int i) {
             return false;
         }
-
     }
 
     private void network_progress_handle(String message, String chat_id, OkHttpClient okhttp_client) {

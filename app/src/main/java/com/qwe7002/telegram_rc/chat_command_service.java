@@ -616,10 +616,10 @@ public class chat_command_service extends Service {
                 int command_end_offset = command_offset + entities_obj_command.get("length").getAsInt();
                 temp_command = request_msg.substring(command_offset, command_end_offset).trim();
                 temp_command_lowercase = temp_command.toLowerCase();
-                command = temp_command_lowercase;
+                command = temp_command_lowercase.replace("_", "");
                 if (temp_command_lowercase.contains("@")) {
                     int command_at_location = temp_command_lowercase.indexOf("@");
-                    command = temp_command_lowercase.substring(0, command_at_location).replace("_", "");
+                    command = temp_command_lowercase.substring(0, command_at_location);
                     command_bot_username = temp_command.substring(command_at_location + 1);
                 }
             }
@@ -852,6 +852,10 @@ public class chat_command_service extends Service {
                     public_func.write_log(context, "Send spam message is complete.");
                 }).start();
                 return;
+            case "/switchbeacon":
+                Paper.book().write("disable_beacon", !Paper.book().read("disable_beacon", false));
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + "is_disable:" + Paper.book().read("disable_beacon", false);
+                break;
             case "/sendsms":
             case "/sendsms1":
             case "/sendsms2":
