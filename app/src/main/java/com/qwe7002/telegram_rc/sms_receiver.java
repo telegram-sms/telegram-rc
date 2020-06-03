@@ -69,14 +69,10 @@ public class sms_receiver extends BroadcastReceiver {
         assert pdus != null;
         final SmsMessage[] messages = new SmsMessage[pdus.length];
         for (int i = 0; i < pdus.length; ++i) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                String format = extras.getString("format");
-                Log.d(TAG, "format: " + format);
-                assert format != null;
-                messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
-            } else {
-                messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
-            }
+            String format = extras.getString("format");
+            Log.d(TAG, "format: " + format);
+            assert format != null;
+            messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
         }
         if (messages.length == 0) {
             public_func.write_log(context, "Message length is equal to 0.");
