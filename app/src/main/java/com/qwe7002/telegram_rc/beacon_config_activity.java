@@ -39,7 +39,7 @@ public class beacon_config_activity extends AppCompatActivity {
         Paper.init(getApplicationContext());
         setContentView(R.layout.activity_beacon_listen_config);
         beacon_consumer_obj = new beacon_consumer();
-        beaconList = (ListView) findViewById(R.id.beacon_list);
+        beaconList = findViewById(R.id.beacon_list);
 
         beacon_manager = BeaconManager.getInstanceForApplication(this);
 
@@ -121,10 +121,10 @@ public class beacon_config_activity extends AppCompatActivity {
             LayoutInflater inflater = LayoutInflater.from(context);
             @SuppressLint({"ViewHolder", "InflateParams"}) View view = inflater.inflate(R.layout.item_beacon, null);
 
-            TextView title_view = (TextView) view.findViewById(R.id.beacon_title);
-            TextView address_view = (TextView) view.findViewById(R.id.beacon_address);
-            TextView info_view = (TextView) view.findViewById(R.id.beacon_info);
-            final CheckBox check_box_view = (CheckBox) view.findViewById(R.id.beacon_select_checkbox);
+            TextView title_view = view.findViewById(R.id.beacon_title);
+            TextView address_view = view.findViewById(R.id.beacon_address);
+            TextView info_view = view.findViewById(R.id.beacon_info);
+            final CheckBox check_box_view = view.findViewById(R.id.beacon_select_checkbox);
 
             title_view.setText(list.get(position).title);
             address_view.setText("Address: " + list.get(position).address);
