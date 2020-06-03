@@ -22,6 +22,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.Process;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoLte;
@@ -272,16 +273,12 @@ public class chat_command_service extends Service {
         thread_main.start();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        } else {
-            NetworkRequest network_request = new NetworkRequest.Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    .build();
-            callback = new network_callback();
-            connectivity_manager.registerNetworkCallback(network_request, callback);
-        }
+        NetworkRequest network_request = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                .build();
+        callback = new network_callback();
+        connectivity_manager.registerNetworkCallback(network_request, callback);
         broadcast_receiver = new broadcast_receiver();
         registerReceiver(broadcast_receiver, intentFilter);
 
@@ -1034,15 +1031,10 @@ public class chat_command_service extends Service {
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "onReceive: " + intent.getAction());
             assert intent.getAction() != null;
-            switch (intent.getAction()) {
-                case public_func.BROADCAST_STOP_SERVICE:
-                    Log.i(TAG, "Received stop signal, quitting now...");
-                    stopSelf();
-                    android.os.Process.killProcess(android.os.Process.myPid());
-                    break;
-                case ConnectivityManager.CONNECTIVITY_ACTION:
-                    when_network_change();
-                    break;
+            if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
+                Log.i(TAG, "Received stop signal, quitting now...");
+                stopSelf();
+                Process.killProcess(Process.myPid());
             }
         }
     }

@@ -167,10 +167,7 @@ public class beacon_receiver_service extends Service {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
-
         }
-
         private void open_ap() {
             Paper.book().write("wifi_open", true);
             com.qwe7002.root_kit.network.wifi_set_enable(true);
