@@ -87,10 +87,6 @@ public class main_activity extends AppCompatActivity {
         final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
         //load config
         Paper.init(context);
-        Intent battery_service = new Intent(context, beacon_receiver_service.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(battery_service);
-        }
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
 
         if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {

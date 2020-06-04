@@ -375,6 +375,7 @@ class public_func {
     static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch) {
         Intent battery_service = new Intent(context, battery_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
+        Intent beacon_service = new Intent(context, beacon_receiver_service.class);
         if (is_notify_listener(context)) {
             ComponentName thisComponent = new ComponentName(context, notification_listener_service.class);
             PackageManager pm = context.getPackageManager();
@@ -388,6 +389,7 @@ class public_func {
             if (chat_command_switch) {
                 context.startForegroundService(chat_long_polling_service);
             }
+            context.startForegroundService(beacon_service);
         } else {
             if (battery_switch) {
                 context.startService(battery_service);
@@ -395,6 +397,7 @@ class public_func {
             if (chat_command_switch) {
                 context.startService(chat_long_polling_service);
             }
+            context.startService(beacon_service);
         }
     }
 
