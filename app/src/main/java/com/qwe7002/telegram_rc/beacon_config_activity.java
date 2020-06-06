@@ -42,7 +42,8 @@ public class beacon_config_activity extends AppCompatActivity {
         beaconList = findViewById(R.id.beacon_list);
 
         beacon_manager = BeaconManager.getInstanceForApplication(this);
-
+        beacon_manager.getBeaconParsers().add(new BeaconParser().
+                setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
         // Detect the URI BEACON frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.URI_BEACON_LAYOUT));
