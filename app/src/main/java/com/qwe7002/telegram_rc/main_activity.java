@@ -34,6 +34,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
@@ -557,6 +558,8 @@ public class main_activity extends AppCompatActivity {
                 startActivity(new Intent(main_activity.this, logcat_activity.class));
                 return true;
             case R.id.set_beacon:
+                Intent stop_intent = new Intent("stop_beacon_service");
+                LocalBroadcastManager.getInstance(this).sendBroadcast(stop_intent);
                 startActivity(new Intent(main_activity.this, beacon_config_activity.class));
                 return true;
             case R.id.set_notify:

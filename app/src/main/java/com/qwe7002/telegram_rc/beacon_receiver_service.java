@@ -2,8 +2,10 @@ package com.qwe7002.telegram_rc;
 
 import android.app.Notification;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
@@ -13,6 +15,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.gson.Gson;
 
@@ -47,7 +50,7 @@ public class beacon_receiver_service extends Service {
     private String request_url;
     private BeaconManager beacon_manager;
     private beacon_service_consumer beacon_consumer;
-
+    private long startup_time = 0;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, "beacon receiver");
@@ -61,6 +64,14 @@ public class beacon_receiver_service extends Service {
         return null;
     }
 
+    private BroadcastReceiver stop_beacon_service = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            beacon_manager.unbind(beacon_consumer);
+            stopSelf();
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -73,16 +84,9 @@ public class beacon_receiver_service extends Service {
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
+
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-        // Detect the URI BEACON frame:
-        beacon_manager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout(BeaconParser.URI_BEACON_LAYOUT));
-
-        // Detect the ALTBEACON frame:
-        beacon_manager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
-
         // Detect the main identifier (UID) frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
@@ -99,19 +103,23 @@ public class beacon_receiver_service extends Service {
         beacon_manager.setForegroundBetweenScanPeriod(2000L);
         beacon_manager.setForegroundBetweenScanPeriod(2000L);
         beacon_manager.bind(beacon_consumer);
+        LocalBroadcastManager.getInstance(this).registerReceiver(stop_beacon_service,
+                new IntentFilter("stop_beacon_service"));
+        startup_time = System.currentTimeMillis();
     }
 
     @Override
     public void onDestroy() {
+        stopForeground(true);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(stop_beacon_service);
         super.onDestroy();
-        beacon_manager.unbind(beacon_consumer);
     }
 
     class beacon_service_consumer implements BeaconConsumer {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
-                if (Paper.book().read("disable_beacon", false)) {
+                if (Paper.book().read("disable_beacon", false) || (System.currentTimeMillis() - startup_time) < 10000L) {
                     return;
                 }
                 String message = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + getString(R.string.action_success);
@@ -144,7 +152,7 @@ public class beacon_receiver_service extends Service {
                 }
                 if (beacons.size() == 0 || !found_beacon) {
                     Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
-                    if (not_found_count >= 30 && !Paper.book().read("wifi_open", false)) {
+                    if (not_found_count >= 10 && !Paper.book().read("wifi_open", false)) {
                         not_found_count = 0;
                         open_ap();
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);

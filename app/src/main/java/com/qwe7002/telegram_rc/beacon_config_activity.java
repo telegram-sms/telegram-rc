@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
@@ -32,25 +33,20 @@ public class beacon_config_activity extends AppCompatActivity {
     private beacon_consumer beacon_consumer_obj;
     private ListView beaconList;
     private BeaconManager beacon_manager;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Paper.init(getApplicationContext());
         setContentView(R.layout.activity_beacon_listen_config);
+        context = getApplicationContext();
         beacon_consumer_obj = new beacon_consumer();
         beaconList = findViewById(R.id.beacon_list);
 
         beacon_manager = BeaconManager.getInstanceForApplication(this);
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-        // Detect the URI BEACON frame:
-        beacon_manager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout(BeaconParser.URI_BEACON_LAYOUT));
-
-        // Detect the ALTBEACON frame:
-        beacon_manager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
 
         // Detect the main identifier (UID) frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
@@ -66,22 +62,18 @@ public class beacon_config_activity extends AppCompatActivity {
         beacon_manager.bind(beacon_consumer_obj);
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        beacon_manager.unbind(beacon_consumer_obj);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        beacon_manager.bind(beacon_consumer_obj);
-    }
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        Intent beacon_service = new Intent(context, beacon_receiver_service.class);
         beacon_manager.unbind(beacon_consumer_obj);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(beacon_service);
+        } else {
+            context.startService(beacon_service);
+        }
+
+        super.onDestroy();
     }
 
     static class BeaconModel {
