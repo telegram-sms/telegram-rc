@@ -63,6 +63,7 @@ import okhttp3.dnsoverhttps.DnsOverHttps;
 
 class public_func {
     static final String BROADCAST_STOP_SERVICE = "com.qwe7002.telegram_rc.stop_all";
+    static final String BROADCAST_STOP_BEACON_SERVICE = "com.qwe7002.telegram_rc.stop_beacon_service";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
     static final int battery_notify_id = 1;
@@ -363,6 +364,7 @@ class public_func {
     }
 
     static void stop_all_service(Context context) {
+        stop_beacon_service(context);
         Intent intent = new Intent(BROADCAST_STOP_SERVICE);
         context.sendBroadcast(intent);
         try {
@@ -372,10 +374,12 @@ class public_func {
         }
     }
 
-    static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch) {
+    static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch, Boolean Beacon_service) {
         Intent battery_service = new Intent(context, battery_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
-        Intent beacon_service = new Intent(context, beacon_receiver_service.class);
+        if (Beacon_service) {
+            start_beacon_service(context);
+        }
         if (is_notify_listener(context)) {
             ComponentName thisComponent = new ComponentName(context, notification_listener_service.class);
             PackageManager pm = context.getPackageManager();
@@ -389,7 +393,6 @@ class public_func {
             if (chat_command_switch) {
                 context.startForegroundService(chat_long_polling_service);
             }
-            context.startForegroundService(beacon_service);
         } else {
             if (battery_switch) {
                 context.startService(battery_service);
@@ -397,8 +400,21 @@ class public_func {
             if (chat_command_switch) {
                 context.startService(chat_long_polling_service);
             }
+        }
+    }
+
+    static void start_beacon_service(Context context) {
+        Intent beacon_service = new Intent(context, beacon_receiver_service.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(beacon_service);
+        } else {
             context.startService(beacon_service);
         }
+
+    }
+
+    static void stop_beacon_service(Context context) {
+        context.sendBroadcast(new Intent(BROADCAST_STOP_BEACON_SERVICE));
     }
 
     static int get_sub_id(Context context, int slot) {

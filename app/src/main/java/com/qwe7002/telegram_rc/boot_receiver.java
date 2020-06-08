@@ -24,7 +24,7 @@ public class boot_receiver extends BroadcastReceiver {
             assert wifi_manager != null;
             Paper.book().write("wifi_open", wifi_manager.isWifiEnabled());
             public_func.write_log(context, "Received [" + intent.getAction() + "] broadcast, starting background service.");
-            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), (Paper.book().read("beacon_address", new ArrayList<>()).size() != 0 && !Paper.book().read("disable_beacon", false)));
             if (Paper.book().read("resend_list", new ArrayList<>()).size() != 0) {
                 Log.d(TAG, "An unsent message was detected, and the automatic resend process was initiated.");
                 public_func.start_resend_service(context);

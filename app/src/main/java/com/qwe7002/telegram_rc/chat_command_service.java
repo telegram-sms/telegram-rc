@@ -615,8 +615,8 @@ public class chat_command_service extends Service {
                 int command_offset = entities_obj_command.get("offset").getAsInt();
                 int command_end_offset = command_offset + entities_obj_command.get("length").getAsInt();
                 temp_command = request_msg.substring(command_offset, command_end_offset).trim();
-                temp_command_lowercase = temp_command.toLowerCase();
-                command = temp_command_lowercase.replace("_", "");
+                temp_command_lowercase = temp_command.toLowerCase().replace("_", "");
+                command = temp_command_lowercase;
                 if (temp_command_lowercase.contains("@")) {
                     int command_at_location = temp_command_lowercase.indexOf("@");
                     command = temp_command_lowercase.substring(0, command_at_location);
@@ -630,7 +630,7 @@ public class chat_command_service extends Service {
             return;
         }
 
-
+        Log.d(TAG, "Command: " + command);
         boolean has_command = false;
         switch (command) {
             case "/help":
@@ -660,7 +660,7 @@ public class chat_command_service extends Service {
                     break;
                 }
 
-                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + "\n" + getString(R.string.base_command) + sms_command + ussd_command + switch_ap + config_adb;
+                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap + config_adb;
                 if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
                     result_string = result_string.replace(" -", "@" + bot_username + " -");
                 }
@@ -780,23 +780,15 @@ public class chat_command_service extends Service {
                 break;
             case "/switchdata":
             case "/restartnetwork":
-            case "/closeap":
                 if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                     break;
                 }
                 String result_data;
-                switch (command) {
-                    case "/restartnetwork":
-                        result_data = context.getString(R.string.restart_network);
-                        break;
-                    case "/closeap":
-                        Paper.book().write("wifi_open", false);
-                        result_data = context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
-                        break;
-                    default:
-                        result_data = context.getString(R.string.switch_data);
-                        break;
+                if ("/restartnetwork".equals(command)) {
+                    result_data = context.getString(R.string.restart_network);
+                } else {
+                    result_data = context.getString(R.string.switch_data);
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
                 has_command = true;
@@ -853,8 +845,14 @@ public class chat_command_service extends Service {
                 }).start();
                 return;
             case "/switchbeacon":
-                Paper.book().write("disable_beacon", !Paper.book().read("disable_beacon", false));
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + "is_disable:" + Paper.book().read("disable_beacon", false);
+                boolean state = !Paper.book().read("disable_beacon", false);
+                if (state) {
+                    public_func.stop_beacon_service(context);
+                } else {
+                    public_func.start_beacon_service(context);
+                }
+                Paper.book().write("disable_beacon", state);
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + "is_disable:" + state;
                 break;
             case "/sendsms":
             case "/sendsms1":
@@ -1005,10 +1003,6 @@ public class chat_command_service extends Service {
                             } else {
                                 com.qwe7002.root_kit.network.data_set_enable(true);
                             }
-                            break;
-                        case "/closeap":
-                            com.qwe7002.root_kit.network.wifi_set_enable(false);
-                            com.qwe7002.root_kit.network.data_set_enable(false);
                             break;
                         case "/restartnetwork":
                             com.qwe7002.root_kit.network.restart_network();

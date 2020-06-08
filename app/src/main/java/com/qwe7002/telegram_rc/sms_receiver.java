@@ -124,7 +124,7 @@ public class sms_receiver extends BroadcastReceiver {
                     case "/restartservice":
                         new Thread(() -> {
                             public_func.stop_all_service(context);
-                            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+                            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), (Paper.book().read("beacon_address", new ArrayList<>()).size() != 0 && !Paper.book().read("disable_beacon", false)));
                         }).start();
                         raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
                         request_body.text = raw_request_body_text;

@@ -34,7 +34,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
@@ -104,7 +103,7 @@ public class main_activity extends AppCompatActivity {
         }
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
-            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), (Paper.book().read("beacon_address", new ArrayList<>()).size() != 0 && !Paper.book().read("disable_beacon", false)));
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -332,7 +331,8 @@ public class main_activity extends AppCompatActivity {
                 return;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG}, 1);
+
+                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission_group.LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG}, 1);
 
                 PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
                 assert powerManager != null;
@@ -421,7 +421,7 @@ public class main_activity extends AppCompatActivity {
                     editor.apply();
                     new Thread(() -> {
                         public_func.stop_all_service(context);
-                        public_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command.isChecked());
+                        public_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command.isChecked(), (Paper.book().read("beacon_address", new ArrayList<>()).size() != 0 && !Paper.book().read("disable_beacon", false)));
                     }).start();
                     Looper.prepare();
                     Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)
@@ -520,8 +520,22 @@ public class main_activity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
-            if (resultCode == RESULT_OK) {
-                ((EditText) findViewById(R.id.bot_token)).setText(data.getStringExtra("bot_token"));
+            switch (resultCode) {
+                case RESULT_OK:
+                    JsonObject json_config = JsonParser.parseString(Objects.requireNonNull(data.getStringExtra("config_json"))).getAsJsonObject();
+                    ((EditText) findViewById(R.id.bot_token)).setText(json_config.get("bot_token").getAsString());
+                    ((EditText) findViewById(R.id.chat_id)).setText(json_config.get("chat_id").getAsString());
+                    ((EditText) findViewById(R.id.trusted_phone_number)).setText(json_config.get("trusted_phone_number").getAsString());
+                    ((Switch) findViewById(R.id.fallback_sms)).setChecked(json_config.get("fallback_sms").getAsBoolean());
+                    ((Switch) findViewById(R.id.chat_command)).setChecked(json_config.get("chat_command").getAsBoolean());
+                    ((Switch) findViewById(R.id.battery_monitoring)).setChecked(json_config.get("battery_monitoring_switch").getAsBoolean());
+                    ((Switch) findViewById(R.id.charger_status)).setChecked(json_config.get("charger_status").getAsBoolean());
+                    ((Switch) findViewById(R.id.verification_code_switch)).setChecked(json_config.get("verification_code").getAsBoolean());
+                    ((Switch) findViewById(R.id.privacy_switch)).setChecked(json_config.get("privacy_mode").getAsBoolean());
+                    break;
+                case RESULT_FIRST_USER:
+                    ((EditText) findViewById(R.id.bot_token)).setText(data.getStringExtra("bot_token"));
+                    break;
             }
         }
     }
@@ -558,8 +572,7 @@ public class main_activity extends AppCompatActivity {
                 startActivity(new Intent(main_activity.this, logcat_activity.class));
                 return true;
             case R.id.set_beacon:
-                Intent stop_intent = new Intent("stop_beacon_service");
-                LocalBroadcastManager.getInstance(this).sendBroadcast(stop_intent);
+                public_func.stop_beacon_service(context);
                 startActivity(new Intent(main_activity.this, beacon_config_activity.class));
                 return true;
             case R.id.set_notify:
@@ -628,7 +641,7 @@ public class main_activity extends AppCompatActivity {
                             new Thread(() -> {
                                 public_func.stop_all_service(context);
                                 if (sharedPreferences.getBoolean("initialized", false)) {
-                                    public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+                                    public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), (Paper.book().read("beacon_address", new ArrayList<>()).size() != 0 && !Paper.book().read("disable_beacon", false)));
                                 }
                             }).start();
                         })

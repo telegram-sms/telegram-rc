@@ -15,7 +15,6 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.gson.Gson;
 
@@ -103,15 +102,14 @@ public class beacon_receiver_service extends Service {
         beacon_manager.setForegroundBetweenScanPeriod(2000L);
         beacon_manager.setForegroundBetweenScanPeriod(2000L);
         beacon_manager.bind(beacon_consumer);
-        LocalBroadcastManager.getInstance(this).registerReceiver(stop_beacon_service,
-                new IntentFilter("stop_beacon_service"));
+        registerReceiver(stop_beacon_service, new IntentFilter(public_func.BROADCAST_STOP_BEACON_SERVICE));
         startup_time = System.currentTimeMillis();
     }
 
     @Override
     public void onDestroy() {
         stopForeground(true);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(stop_beacon_service);
+        unregisterReceiver(stop_beacon_service);
         super.onDestroy();
     }
 
@@ -119,7 +117,7 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
-                if (Paper.book().read("disable_beacon", false) || (System.currentTimeMillis() - startup_time) < 10000L) {
+                if ((System.currentTimeMillis() - startup_time) < 10000L) {
                     return;
                 }
                 String message = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + getString(R.string.action_success);
@@ -127,7 +125,7 @@ public class beacon_receiver_service extends Service {
                 ArrayList<String> listen_beacon_list = Paper.book().read("beacon_address", new ArrayList<>());
                 if (listen_beacon_list.size() == 0) {
                     Log.d(TAG, "onBeaconServiceConnect: Watchlist is empty");
-                    return;
+                    stopSelf();
                 }
                 for (Beacon beacon : beacons) {
                     not_found_count = 0;
