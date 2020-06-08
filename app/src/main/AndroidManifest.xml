@@ -116,7 +116,7 @@
                 <action android:name="android.intent.action.SUBSCRIPTION_PHONE_STATE" />
             </intent-filter>
         </receiver>
-
+        <activity android:name=".qrcode_show_activity" />
         <activity android:name=".scanner_activity" />
         <activity
             android:name=".main_activity"

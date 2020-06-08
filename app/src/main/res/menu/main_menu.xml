@@ -33,6 +33,10 @@
         app:showAsAction="never"
         tools:ignore="HardcodedText" />
     <item
+        android:id="@+id/config_qrcode"
+        android:title="Configure QR code"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/logcat"
         android:title="@string/logcat"
         app:showAsAction="never" />
