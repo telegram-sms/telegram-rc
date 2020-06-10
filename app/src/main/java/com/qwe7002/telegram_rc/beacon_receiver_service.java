@@ -131,28 +131,35 @@ public class beacon_receiver_service extends Service {
                     Log.d(TAG, "onBeaconServiceConnect: Watchlist is empty");
                     stopSelf();
                 }
+                Beacon detect_beacon = null;
                 for (Beacon beacon : beacons) {
-                    not_found_count = 0;
                     Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
                     for (String beacon_address : listen_beacon_list) {
                         if (beacon.getBluetoothAddress().equals(beacon_address)) {
+                            not_found_count = 0;
                             found_beacon = true;
-                            //if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {}
-                            if (Paper.book().read("wifi_open", false)) {
-                                Log.d(TAG, "close ap action count: " + detect_singal_count);
-                                if (detect_singal_count >= 10) {
-                                    detect_singal_count = 0;
-                                    close_ap();
-                                    message = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + getString(R.string.action_success);
-                                    network_progress_handle(message + "\nBeacon Rssi: " + beacon.getRssi() + "dBm", chat_id, okhttp_client);
-                                }
-                                ++detect_singal_count;
-                                break;
-                            }
+                            break;
                         }
                     }
+                    if (found_beacon) {
+                        detect_beacon = beacon;
+                        break;
+                    }
                 }
-                if (beacons.size() == 0 || !found_beacon) {
+                if (found_beacon) {
+                    //if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {}
+                    if (Paper.book().read("wifi_open", false)) {
+                        Log.d(TAG, "close ap action count: " + detect_singal_count);
+                        if (detect_singal_count >= 10) {
+                            detect_singal_count = 0;
+                            close_ap();
+                            message = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + getString(R.string.action_success);
+                            network_progress_handle(message + "\nBeacon Rssi: " + detect_beacon.getRssi() + "dBm", chat_id, okhttp_client);
+                        }
+                        ++detect_singal_count;
+                    }
+
+                } else {
                     Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
                     if (not_found_count >= 10 && !Paper.book().read("wifi_open", false)) {
                         not_found_count = 0;

@@ -128,7 +128,7 @@ public class chat_command_service extends Service {
 
 
     public static String get_battery_info(Context context) {
-        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
         int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
         if (battery_level > 100) {
@@ -281,7 +281,6 @@ public class chat_command_service extends Service {
         connectivity_manager.registerNetworkCallback(network_request, callback);
         broadcast_receiver = new broadcast_receiver();
         registerReceiver(broadcast_receiver, intentFilter);
-
     }
 
     class thread_main_runnable implements Runnable {
@@ -391,6 +390,7 @@ public class chat_command_service extends Service {
     private static String get_cell_info(Context context, TelephonyManager telephonyManager) {
         String TAG = "get_cell_info";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "get_cell_info: No permission.");
             return "";
         }
         StringBuilder result_string = new StringBuilder();
@@ -400,21 +400,9 @@ public class chat_command_service extends Service {
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
                     Log.d(TAG, "cellinfo_size: " + cellInfo.size());
-                    //Wrong implementation
-                    /*for (CellInfo info : cellInfo) {
-                        Log.d(TAG, "onCellInfo: " + info.getTimeStamp());
-                        if (info instanceof CellInfoNr) {
-                            signal_strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
-                            signal_arfcn = -1;
-                            break;
-                        }
-                        if (info instanceof CellInfoLte) {
-                            signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
-                            signal_arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
-                            Log.d(TAG, "onCellInfo: "+signal_strength);
-                            Log.d(TAG, "onCellInfo: "+signal_arfcn);
-                        }
-                    }*/
+                    if (cellInfo.size() == 0) {
+                        return;
+                    }
                     CellInfo info = cellInfo.get(0);
                     Log.d(TAG, "cell_registered: " + info.isRegistered());
                     Log.d(TAG, "cell_updatetime: " + info.getTimeStamp());
