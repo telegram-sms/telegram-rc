@@ -14,4 +14,6 @@
     <string name="hotspot_status">"热点状态: "</string>
     <string name="enable">启用</string>
     <string name="disable">停用</string>
+    <string name="beacon_receiver">信标接收器</string>
+    <string name="beacon_receiver_configuration">信标接收器配置</string>
 </resources>

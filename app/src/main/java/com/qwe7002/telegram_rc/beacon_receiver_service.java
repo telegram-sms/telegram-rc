@@ -52,7 +52,7 @@ public class beacon_receiver_service extends Service {
     private long startup_time = 0;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(context, "beacon receiver");
+        Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
         startForeground(99, notification);
         if (Paper.book().read("disable_beacon", false)) {
             stopSelf();
@@ -100,6 +100,7 @@ public class beacon_receiver_service extends Service {
         // Detect the URL frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
+
         beacon_manager.setBackgroundScanPeriod(2000L);
         beacon_manager.setForegroundScanPeriod(2000L);
         beacon_manager.setForegroundBetweenScanPeriod(2000L);
@@ -147,7 +148,6 @@ public class beacon_receiver_service extends Service {
                     }
                 }
                 if (found_beacon) {
-                    //if (wifi_manager.isWifiEnabled() && beacon.getRssi() >= -100) {}
                     if (Paper.book().read("wifi_open", false)) {
                         Log.d(TAG, "close ap action count: " + detect_singal_count);
                         if (detect_singal_count >= 10) {

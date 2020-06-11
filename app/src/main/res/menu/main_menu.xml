@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/scan"
@@ -29,12 +28,11 @@
         app:showAsAction="never" />
     <item
         android:id="@+id/set_beacon"
-        android:title="Beacon"
-        app:showAsAction="never"
-        tools:ignore="HardcodedText" />
+        android:title="@string/beacon_receiver_configuration"
+        app:showAsAction="never" />
     <item
         android:id="@+id/config_qrcode"
-        android:title="Configure QR code"
+        android:title="@string/transfer_configuration"
         app:showAsAction="never" />
     <item
         android:id="@+id/logcat"

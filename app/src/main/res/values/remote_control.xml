@@ -15,4 +15,6 @@
     <string name="hotspot_status">"Tethering status: "</string>
     <string name="enable">Enable</string>
     <string name="disable">Disable</string>
+    <string name="beacon_receiver">"Beacon receiver "</string>
+    <string name="beacon_receiver_configuration">Beacon receiver configuration</string>
 </resources>

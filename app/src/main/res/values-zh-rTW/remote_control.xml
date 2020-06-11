@@ -14,4 +14,6 @@
     <string name="hotspot_status">"無線網路基地台狀態: "</string>
     <string name="enable">啟用</string>
     <string name="disable">停用</string>
+    <string name="beacon_receiver">信標接收器</string>
+    <string name="beacon_receiver_configuration">信標接收器配置</string>
 </resources>

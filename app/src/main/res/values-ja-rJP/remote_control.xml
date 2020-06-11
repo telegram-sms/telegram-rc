@@ -14,4 +14,6 @@
     <string name="hotspot_status">"ホットスポットのステータス: "</string>
     <string name="enable">有効にする</string>
     <string name="disable">無効にする</string>
+    <string name="beacon_receiver">ビーコン受信機</string>
+    <string name="beacon_receiver_configuration">ビーコン受信機構成</string>
 </resources>
