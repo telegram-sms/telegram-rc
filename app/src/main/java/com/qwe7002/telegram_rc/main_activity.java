@@ -571,7 +571,7 @@ public class main_activity extends AppCompatActivity {
         return true;
     }
 
-    @SuppressLint("InflateParams")
+    @SuppressLint({"InflateParams", "NonConstantResourceId"})
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         LayoutInflater inflater = this.getLayoutInflater();

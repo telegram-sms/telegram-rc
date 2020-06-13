@@ -283,110 +283,6 @@ public class chat_command_service extends Service {
         registerReceiver(broadcast_receiver, intentFilter);
     }
 
-    class thread_main_runnable implements Runnable {
-        @Override
-        public void run() {
-            Log.d(TAG, "run: thread main start");
-            if (public_func.parse_long(chat_id) < 0) {
-                bot_username = Paper.book().read("bot_username", null);
-                if (bot_username == null) {
-                    while (!get_me()) {
-                        public_func.write_log(context, "Failed to get bot Username, Wait 5 seconds and try again.");
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                Log.i(TAG, "run: The Bot Username is loaded. The Bot Username is: " + bot_username);
-            }
-            while (true) {
-                int timeout = 5 * magnification;
-                int http_timeout = timeout + 5;
-                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
-                        .readTimeout(http_timeout, TimeUnit.SECONDS)
-                        .writeTimeout(http_timeout, TimeUnit.SECONDS)
-                        .build();
-                Log.d(TAG, "run: Current timeout:" + timeout);
-                String request_uri = public_func.get_url(bot_token, "getUpdates");
-                polling_json request_body = new polling_json();
-                request_body.offset = offset;
-                request_body.timeout = timeout;
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
-                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-                Call call = okhttp_client_new.newCall(request);
-                Response response;
-                try {
-                    response = call.execute();
-                    error_magnification = 1;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (!public_func.check_network_status(context)) {
-                        public_func.write_log(context, "No network connections available. ");
-                        error_magnification = 1;
-                        magnification = 1;
-                        break;
-                    }
-                    int sleep_time = 5 * error_magnification;
-                    if (sleep_time > 5) {
-                        public_func.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
-                    } else {
-                        Log.i(TAG, "run: Connection to the Telegram API service failed");
-                    }
-                    magnification = 1;
-                    if (error_magnification <= 59) {
-                        ++error_magnification;
-                    }
-                    try {
-                        Thread.sleep(sleep_time * 1000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                    continue;
-
-                }
-                if (response.code() == 200) {
-                    assert response.body() != null;
-                    String result;
-                    try {
-                        result = Objects.requireNonNull(response.body()).string();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        continue;
-                    }
-                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                    if (result_obj.get("ok").getAsBoolean()) {
-                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
-                        for (JsonElement item : result_array) {
-                            receive_handle(item.getAsJsonObject());
-                        }
-                    }
-                    if (magnification <= 11) {
-                        ++magnification;
-                    }
-                } else {
-                    public_func.write_log(context, "response code:" + response.code());
-                    if (response.code() == 401) {
-                        assert response.body() != null;
-                        String result;
-                        try {
-                            result = Objects.requireNonNull(response.body()).string();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            continue;
-                        }
-                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                        String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
-                        public_func.send_fallback_sms(context, result_message, -1);
-                        public_func.stop_all_service(context);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     private static String get_cell_info(Context context, TelephonyManager telephonyManager) {
         String TAG = "get_cell_info";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -427,6 +323,7 @@ public class chat_command_service extends Service {
             });
             while (!run_lock) {
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -467,69 +364,6 @@ public class chat_command_service extends Service {
         }
         result_string.append(")");
         return result_string.toString();
-    }
-
-    private static boolean is_att_sim(String mcc_mnc) {
-        int int_mcc_mnc = -1;
-        try {
-            int_mcc_mnc = Integer.parseInt(mcc_mnc);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-        switch (int_mcc_mnc) {
-            case 310150:
-            case 310680:
-            case 310070:
-            case 310560:
-            case 310410:
-            case 310380:
-            case 310170:
-            case 310980:
-                return true;
-        }
-        return false;
-    }
-
-    private static String check_cellular_network_type(int type, boolean is_att) {
-        String net_type = "Unknown";
-        switch (type) {
-            case TelephonyManager.NETWORK_TYPE_NR:
-                net_type = "5G";
-                if (is_att) {
-                    net_type = "5G+";
-                }
-                break;
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                net_type = "LTE";
-                if (is_att) {
-                    net_type = "5G E";
-                }
-                break;
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-                if (is_att) {
-                    net_type = "4G";
-                    break;
-                }
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_EHRPD:
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-                net_type = "3G";
-                break;
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-            case TelephonyManager.NETWORK_TYPE_CDMA:
-            case TelephonyManager.NETWORK_TYPE_1xRTT:
-            case TelephonyManager.NETWORK_TYPE_IDEN:
-                net_type = "2G";
-                break;
-        }
-        return net_type;
     }
 
     private void receive_handle(JsonObject result_obj) {
@@ -727,6 +561,7 @@ public class chat_command_service extends Service {
                         com.qwe7002.root_kit.network.wifi_set_enable(false);
                         try {
                             while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
+                                //noinspection BusyWait
                                 Thread.sleep(100);
                             }
                         } catch (InterruptedException e) {
@@ -745,6 +580,7 @@ public class chat_command_service extends Service {
                     new Thread(() -> {
                         try {
                             while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
+                                //noinspection BusyWait
                                 Thread.sleep(100);
                             }
                             Thread.sleep(1000);
@@ -986,11 +822,7 @@ public class chat_command_service extends Service {
                             }
                             break;
                         case "/switchdata":
-                            if (public_func.get_data_enable(context)) {
-                                com.qwe7002.root_kit.network.data_set_enable(false);
-                            } else {
-                                com.qwe7002.root_kit.network.data_set_enable(true);
-                            }
+                            com.qwe7002.root_kit.network.data_set_enable(!public_func.get_data_enable(context));
                             break;
                         case "/restartnetwork":
                             com.qwe7002.root_kit.network.restart_network();
@@ -999,6 +831,175 @@ public class chat_command_service extends Service {
                 }
             }
         });
+    }
+
+    private static boolean is_att_sim(String mcc_mnc) {
+        int int_mcc_mnc = -1;
+        try {
+            int_mcc_mnc = Integer.parseInt(mcc_mnc);
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        switch (int_mcc_mnc) {
+            case 310150:
+            case 310680:
+            case 310070:
+            case 310560:
+            case 310410:
+            case 310380:
+            case 310170:
+            case 310980:
+                return true;
+        }
+        return false;
+    }
+
+    private static String check_cellular_network_type(int type, boolean is_att) {
+        String net_type = "Unknown";
+        switch (type) {
+            case TelephonyManager.NETWORK_TYPE_NR:
+                net_type = "5G";
+                if (is_att) {
+                    net_type = "5G+";
+                }
+                break;
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                net_type = "LTE";
+                if (is_att) {
+                    net_type = "5G E";
+                }
+                break;
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+                if (is_att) {
+                    net_type = "4G";
+                    break;
+                }
+            case TelephonyManager.NETWORK_TYPE_EVDO_0:
+            case TelephonyManager.NETWORK_TYPE_EVDO_A:
+            case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_EHRPD:
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+                net_type = "3G";
+                break;
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+            case TelephonyManager.NETWORK_TYPE_CDMA:
+            case TelephonyManager.NETWORK_TYPE_1xRTT:
+            case TelephonyManager.NETWORK_TYPE_IDEN:
+                net_type = "2G";
+                break;
+        }
+        return net_type;
+    }
+
+    class thread_main_runnable implements Runnable {
+        @Override
+        public void run() {
+            Log.d(TAG, "run: thread main start");
+            if (public_func.parse_long(chat_id) < 0) {
+                bot_username = Paper.book().read("bot_username", null);
+                if (bot_username == null) {
+                    while (!get_me()) {
+                        public_func.write_log(context, "Failed to get bot Username, Wait 5 seconds and try again.");
+                        try {
+                            //noinspection BusyWait
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                Log.i(TAG, "run: The Bot Username is loaded. The Bot Username is: " + bot_username);
+            }
+            while (true) {
+                int timeout = 5 * magnification;
+                int http_timeout = timeout + 5;
+                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
+                        .readTimeout(http_timeout, TimeUnit.SECONDS)
+                        .writeTimeout(http_timeout, TimeUnit.SECONDS)
+                        .build();
+                Log.d(TAG, "run: Current timeout:" + timeout);
+                String request_uri = public_func.get_url(bot_token, "getUpdates");
+                polling_json request_body = new polling_json();
+                request_body.offset = offset;
+                request_body.timeout = timeout;
+                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+                Call call = okhttp_client_new.newCall(request);
+                Response response;
+                try {
+                    response = call.execute();
+                    error_magnification = 1;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if (!public_func.check_network_status(context)) {
+                        public_func.write_log(context, "No network connections available. ");
+                        error_magnification = 1;
+                        magnification = 1;
+                        break;
+                    }
+                    int sleep_time = 5 * error_magnification;
+                    if (sleep_time > 5) {
+                        public_func.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
+                    } else {
+                        Log.i(TAG, "run: Connection to the Telegram API service failed");
+                    }
+                    magnification = 1;
+                    if (error_magnification <= 59) {
+                        ++error_magnification;
+                    }
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep(sleep_time * 1000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    continue;
+
+                }
+                if (response.code() == 200) {
+                    assert response.body() != null;
+                    String result;
+                    try {
+                        result = Objects.requireNonNull(response.body()).string();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                    if (result_obj.get("ok").getAsBoolean()) {
+                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
+                        for (JsonElement item : result_array) {
+                            receive_handle(item.getAsJsonObject());
+                        }
+                    }
+                    if (magnification <= 11) {
+                        ++magnification;
+                    }
+                } else {
+                    public_func.write_log(context, "response code:" + response.code());
+                    if (response.code() == 401) {
+                        assert response.body() != null;
+                        String result;
+                        try {
+                            result = Objects.requireNonNull(response.body()).string();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            continue;
+                        }
+                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+                        String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
+                        public_func.send_fallback_sms(context, result_message, -1);
+                        public_func.stop_all_service(context);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
 
