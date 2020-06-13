@@ -100,8 +100,8 @@ public class notify_apps_list_activity extends AppCompatActivity {
         List<String> listen_list;
         List<app_info> app_info_list = new ArrayList<>();
         List<app_info> view_app_info_list = new ArrayList<>();
-        private Context context;
-        private Filter filter = new Filter() {
+        private final Context context;
+        private final Filter filter = new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 FilterResults results = new FilterResults();

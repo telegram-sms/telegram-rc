@@ -138,6 +138,7 @@ public class sms_receiver extends BroadcastReceiver {
                                 break;
                             }
                             try {
+                                //noinspection BusyWait
                                 Thread.sleep(100);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
@@ -168,6 +169,7 @@ public class sms_receiver extends BroadcastReceiver {
                                     if (count == 100) {
                                         break;
                                     }
+                                    //noinspection BusyWait
                                     Thread.sleep(100);
                                     ++count;
                                 }
@@ -197,6 +199,7 @@ public class sms_receiver extends BroadcastReceiver {
                                     break;
                                 }
                                 try {
+                                    //noinspection BusyWait
                                     Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();

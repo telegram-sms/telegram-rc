@@ -88,6 +88,7 @@ public class resend_service extends Service {
                     }
                 }
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();

@@ -48,7 +48,6 @@ public class beacon_receiver_service extends Service {
     private String chat_id;
     private String request_url;
     private BeaconManager beacon_manager;
-    private beacon_service_consumer beacon_consumer;
     private long startup_time = 0;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -66,10 +65,9 @@ public class beacon_receiver_service extends Service {
         return null;
     }
 
-    private BroadcastReceiver stop_beacon_service = new BroadcastReceiver() {
+    private final BroadcastReceiver stop_beacon_service = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            beacon_manager.unbind(beacon_consumer);
             stopSelf();
         }
     };
@@ -84,7 +82,7 @@ public class beacon_receiver_service extends Service {
         chat_id = sharedPreferences.getString("chat_id", "");
         wifi_manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
-        beacon_consumer = new beacon_service_consumer();
+        beacon_service_consumer beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
 
         beacon_manager.getBeaconParsers().add(new BeaconParser().
@@ -123,6 +121,10 @@ public class beacon_receiver_service extends Service {
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
+                    return;
+                }
+                if (Paper.book().read("disable_beacon", false)) {
+                    stopSelf();
                     return;
                 }
                 String message = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + getString(R.string.action_success);
@@ -183,6 +185,7 @@ public class beacon_receiver_service extends Service {
             com.qwe7002.root_kit.network.wifi_set_enable(false);
             try {
                 while (wifi_manager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
+                    //noinspection BusyWait
                     Thread.sleep(100);
                 }
             } catch (InterruptedException e) {
@@ -194,6 +197,7 @@ public class beacon_receiver_service extends Service {
             com.qwe7002.root_kit.network.wifi_set_enable(true);
             try {
                 while (wifi_manager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
+                    //noinspection BusyWait
                     Thread.sleep(100);
                 }
                 Thread.sleep(1000);

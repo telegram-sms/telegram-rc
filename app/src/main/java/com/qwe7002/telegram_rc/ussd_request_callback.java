@@ -24,11 +24,11 @@ import okhttp3.Response;
 @RequiresApi(api = Build.VERSION_CODES.O)
 class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
 
-    private Context context;
-    private boolean doh_switch;
+    private final Context context;
+    private final boolean doh_switch;
     private String request_uri;
-    private String message_header;
-    private message_json request_body;
+    private final String message_header;
+    private final message_json request_body;
 
     ussd_request_callback(Context context, SharedPreferences sharedPreferences, long message_id) {
         this.context = context;
