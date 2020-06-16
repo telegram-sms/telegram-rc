@@ -23,11 +23,13 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Process;
+import android.telephony.CellIdentityNr;
 import android.telephony.CellInfo;
-import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoNr;
 import android.telephony.CellInfoWcdma;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -292,6 +294,13 @@ public class chat_command_service extends Service {
         StringBuilder result_string = new StringBuilder();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             run_lock = false;
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                Log.d("get_data_sim_id", "No permission.");
+            }
+            SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+            assert subscriptionManager != null;
+            SubscriptionInfo info = subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
+            telephonyManager.switchMultiSimConfig(info.getSimSlotIndex());
             telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
@@ -304,7 +313,8 @@ public class chat_command_service extends Service {
                     Log.d(TAG, "cell_updatetime: " + info.getTimeStamp());
                     if (info instanceof CellInfoNr) {
                         signal_strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
-                        signal_arfcn = -1;
+                        CellIdentityNr cell_identity = (CellIdentityNr) ((CellInfoNr) info).getCellIdentity();
+                        signal_arfcn = cell_identity.getNrarfcn();
                     }
                     if (info instanceof CellInfoLte) {
                         signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
@@ -313,10 +323,6 @@ public class chat_command_service extends Service {
                     if (info instanceof CellInfoWcdma) {
                         signal_strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
                         signal_arfcn = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
-                    }
-                    if (info instanceof CellInfoCdma) {
-                        signal_strength = ((CellInfoCdma) info).getCellSignalStrength().getDbm();
-                        signal_arfcn = -1;
                     }
                     run_lock = true;
                 }
@@ -464,9 +470,13 @@ public class chat_command_service extends Service {
                 }
                 sms_command += "\n" + getString(R.string.get_spam_sms);
                 String ussd_command = "";
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         ussd_command = "\n" + getString(R.string.send_ussd_command);
+                    }
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        ussd_command = "\n" + getString(R.string.send_ussd_dual_command);
                     }
                 }
                 String config_adb = "";
@@ -618,11 +628,19 @@ public class chat_command_service extends Service {
                 has_command = true;
                 break;
             case "/sendussd":
+            case "/sendussd1":
+            case "/sendussd2":
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                        int slot = 0;
+                        if (public_func.get_active_card(context) == 2) {
+                            if (command.equals("/sendussd2")) {
+                                slot = 1;
+                            }
+                        }
                         String[] command_list = request_msg.split(" ");
                         if (command_list.length == 2) {
-                            public_func.send_ussd(context, command_list[1]);
+                            public_func.send_ussd(context, command_list[1], slot);
                             return;
                         }
                     } else {

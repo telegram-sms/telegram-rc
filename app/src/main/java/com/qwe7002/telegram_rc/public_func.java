@@ -232,9 +232,10 @@ class public_func {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    static void send_ussd(Context context, String ussd) {
+    static void send_ussd(Context context, String ussd, int slot) {
         Intent send_ussd_service = new Intent(context, com.qwe7002.telegram_rc.send_ussd_service.class);
         send_ussd_service.putExtra("ussd", ussd);
+        send_ussd_service.putExtra("slot", slot);
         context.startForegroundService(send_ussd_service);
     }
 

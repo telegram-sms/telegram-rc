@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -40,6 +41,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.qwe7002.material_style_kit.builder_material_styled_dialogs;
 import com.qwe7002.root_kit.shell;
 
 import java.io.IOException;
@@ -84,14 +86,16 @@ public class main_activity extends AppCompatActivity {
         final Button save_button = findViewById(R.id.save);
         final Button get_id = findViewById(R.id.get_id);
         final Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim);
+        builder_material_styled_dialogs dialogs = new builder_material_styled_dialogs();
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
 
         if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
-            show_privacy_dialog();
+            dialogs.show_privacy(this).show();
+            //show_privacy_dialog();
         }
-
+        dialogs.show_about(this, getString(R.string.about_content) + getVersionName(context)).show();
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
 
@@ -326,12 +330,16 @@ public class main_activity extends AppCompatActivity {
                 return;
             }
             if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
-                show_privacy_dialog();
+                dialogs.show_privacy(this).show();
+                //show_privacy_dialog();
                 return;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission_group.LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG}, 1);
+                List<String> permission = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    permission.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+                }
+                ActivityCompat.requestPermissions(main_activity.this, (String[]) permission.toArray(), 1);
 
                 PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
                 assert powerManager != null;
@@ -459,33 +467,33 @@ public class main_activity extends AppCompatActivity {
         }
     }
 
-    private void show_privacy_dialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.privacy_reminder_title);
-        builder.setMessage(R.string.privacy_reminder_information);
-        builder.setCancelable(false);
-        builder.setPositiveButton(R.string.agree, (dialog, which) -> sharedPreferences.edit().putBoolean("privacy_dialog_agree", true).apply());
-        builder.setNegativeButton(R.string.decline, null);
-        builder.setNeutralButton(R.string.visit_page, (dialog, which) -> {
-            Uri uri = Uri.parse("https://get.telegram-sms.com/wiki/" + context.getString(R.string.privacy_policy_url));
-            CustomTabsIntent.Builder privacy_builder = new CustomTabsIntent.Builder();
-            privacy_builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
-            CustomTabsIntent customTabsIntent = privacy_builder.build();
-            customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            try {
-                customTabsIntent.launchUrl(context, uri);
-            } catch (ActivityNotFoundException e) {
-                e.printStackTrace();
-                Snackbar.make(findViewById(R.id.bot_token), "Browser not found.", Snackbar.LENGTH_LONG).show();
-            }
-        });
-        AlertDialog dialog = builder.create();
-        dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setAllCaps(false);
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setAllCaps(false);
-        dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setAllCaps(false);
-    }
-
+    /*  private void show_privacy_dialog() {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.privacy_reminder_title);
+            builder.setMessage(R.string.privacy_reminder_information);
+            builder.setCancelable(false);
+            builder.setPositiveButton(R.string.agree, (dialog, which) -> sharedPreferences.edit().putBoolean("privacy_dialog_agree", true).apply());
+            builder.setNegativeButton(R.string.decline, null);
+            builder.setNeutralButton(R.string.visit_page, (dialog, which) -> {
+                Uri uri = Uri.parse("https://get.telegram-sms.com/wiki/" + context.getString(R.string.privacy_policy_url));
+                CustomTabsIntent.Builder privacy_builder = new CustomTabsIntent.Builder();
+                privacy_builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
+                CustomTabsIntent customTabsIntent = privacy_builder.build();
+                customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                try {
+                    customTabsIntent.launchUrl(context, uri);
+                } catch (ActivityNotFoundException e) {
+                    e.printStackTrace();
+                    Snackbar.make(findViewById(R.id.bot_token), "Browser not found.", Snackbar.LENGTH_LONG).show();
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setAllCaps(false);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setAllCaps(false);
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setAllCaps(false);
+        }
+    */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
@@ -559,6 +567,19 @@ public class main_activity extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    public String getVersionName(Context context) {
+        PackageManager packageManager = context.getPackageManager();
+        PackageInfo packageInfo;
+        String versionName = "";
+        try {
+            packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            versionName = packageInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return versionName;
     }
 
     @Override

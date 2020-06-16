@@ -35,6 +35,7 @@ import okhttp3.Response;
 public class send_ussd_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        String TAG = "send_ussd_service";
         Context context = getApplicationContext();
         Paper.init(context);
         String notification_name = context.getString(R.string.ussd_code_running);
@@ -53,6 +54,7 @@ public class send_ussd_service extends Service {
         startForeground(public_func.send_ussd_servce_notify_id, notification.build());
         Handler handler = new Handler();
         String ussd = intent.getStringExtra("ussd");
+        int slot = intent.getIntExtra("slot", -1);
         assert ussd != null;
         ussd = ussd.toUpperCase();
         ussd = ussd.replaceAll("[ABC]", "2");
@@ -63,9 +65,9 @@ public class send_ussd_service extends Service {
         ussd = ussd.replaceAll("[P-S]", "7");
         ussd = ussd.replaceAll("[TUV]", "8");
         ussd = ussd.replaceAll("[W-Z]", "9");
-        Log.d("ussd", "onStartCommand: " + ussd);
+        Log.d(TAG, "ussd: " + ussd);
+        Log.d(TAG, "slot: " + slot);
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-        String TAG = "Send ussd";
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             Log.i(TAG, "send_ussd: No permission.");
@@ -79,6 +81,11 @@ public class send_ussd_service extends Service {
         request_body.text = context.getString(R.string.send_ussd_head) + "\n" + context.getString(R.string.ussd_code_running);
         TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         assert telephonyManager != null;
+        if (slot == 1) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                telephonyManager.switchMultiSimConfig(1);
+            }
+        }
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));

@@ -59,6 +59,7 @@ public class beacon_config_activity extends AppCompatActivity {
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
         beacon_manager.bind(beacon_consumer_obj);
+
     }
 
 
@@ -145,6 +146,7 @@ public class beacon_config_activity extends AppCompatActivity {
                     final ArrayList<BeaconModel> list = new ArrayList<>();
 
                     for (Beacon beacon : beacons) {
+                        Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
                         BeaconModel model = new BeaconModel();
                         model.title = beacon.getBluetoothName();
                         model.address = beacon.getBluetoothAddress();

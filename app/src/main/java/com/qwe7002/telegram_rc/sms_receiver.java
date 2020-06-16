@@ -218,7 +218,7 @@ public class sms_receiver extends BroadcastReceiver {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                                 if (message_command_list.length == 2) {
-                                    public_func.send_ussd(context, message_command_list[1]);
+                                    public_func.send_ussd(context, message_command_list[1], slot);
                                     return;
                                 }
                             }

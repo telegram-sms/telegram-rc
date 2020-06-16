@@ -103,4 +103,8 @@
     <string name="spam_count_title">"フィルタリングされたスパム: "</string>
     <string name="no_spam_history">スパム履歴なし</string>
     <string name="transfer_configuration">転送構成</string>
+    <string name="ok_button">OK</string>
+    <string name="about_title">About</string>
+    <string name="about_content">"開発者: qwe7002\n日本語訳: @Lollycc @AisakaMk2\n現行版: "</string>
+    <string name="send_ussd_dual_command">"/sendussd1 - SIMスロット1を使用してUSSDリクエストを送信します\n/sendussd2 - SIMスロット2を使用してUSSDリクエストを送信する"</string>
 </resources>
