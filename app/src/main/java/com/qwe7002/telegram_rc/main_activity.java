@@ -95,7 +95,6 @@ public class main_activity extends AppCompatActivity {
             dialogs.show_privacy(this).show();
             //show_privacy_dialog();
         }
-        dialogs.show_about(this, getString(R.string.about_content) + getVersionName(context)).show();
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
 
