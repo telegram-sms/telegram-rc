@@ -568,18 +568,6 @@ public class main_activity extends AppCompatActivity {
         }
     }
 
-    public String getVersionName(Context context) {
-        PackageManager packageManager = context.getPackageManager();
-        PackageInfo packageInfo;
-        String versionName = "";
-        try {
-            packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-            versionName = packageInfo.versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return versionName;
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -606,6 +594,19 @@ public class main_activity extends AppCompatActivity {
             case R.id.donate:
                 file_name = "/donate";
                 break;
+            case R.id.about:
+                PackageManager packageManager = context.getPackageManager();
+                PackageInfo packageInfo;
+                String versionName = "";
+                try {
+                    packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+                    versionName = packageInfo.versionName;
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+                builder_material_styled_dialogs dialogs = new builder_material_styled_dialogs();
+                dialogs.show_about(this, getString(R.string.about_content) + versionName).show();
+                return true;
             case R.id.scan:
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 0);
                 return true;
@@ -695,6 +696,7 @@ public class main_activity extends AppCompatActivity {
                         })
                         .show();
                 return true;
+
 
         }
         assert file_name != null;
