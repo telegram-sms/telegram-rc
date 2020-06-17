@@ -58,6 +58,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+@SuppressWarnings("BusyWait")
 public class chat_command_service extends Service {
     //Global counter
     private static long offset = 0;
@@ -129,7 +130,7 @@ public class chat_command_service extends Service {
 
 
     public static String get_battery_info(Context context) {
-         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
         int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
         if (battery_level > 100) {
@@ -327,7 +328,6 @@ public class chat_command_service extends Service {
             });
             while (!run_lock) {
                 try {
-                    //noinspection BusyWait
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -467,16 +467,17 @@ public class chat_command_service extends Service {
                     sms_command = "\n" + getString(R.string.sendsms_dual);
                 }
                 sms_command += "\n" + getString(R.string.get_spam_sms);
-                String ussd_command = "";
 
+                String ussd_command = "";
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         ussd_command = "\n" + getString(R.string.send_ussd_command);
-                    }
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        ussd_command = "\n" + getString(R.string.send_ussd_dual_command);
+                        if (public_func.get_active_card(context) == 2) {
+                            ussd_command = "\n" + getString(R.string.send_ussd_dual_command);
+                        }
                     }
                 }
+
                 String config_adb = "";
                 String switch_ap = "";
                 if (sharedPreferences.getBoolean("root", false)) {
@@ -569,7 +570,6 @@ public class chat_command_service extends Service {
                         com.qwe7002.root_kit.network.wifi_set_enable(false);
                         try {
                             while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
-                                //noinspection BusyWait
                                 Thread.sleep(100);
                             }
                         } catch (InterruptedException e) {
@@ -588,7 +588,6 @@ public class chat_command_service extends Service {
                     new Thread(() -> {
                         try {
                             while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                                //noinspection BusyWait
                                 Thread.sleep(100);
                             }
                             Thread.sleep(1000);
@@ -630,15 +629,15 @@ public class chat_command_service extends Service {
             case "/sendussd2":
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                        int slot = 0;
+                        int sub_id = -1;
                         if (public_func.get_active_card(context) == 2) {
                             if (command.equals("/sendussd2")) {
-                                slot = 1;
+                                sub_id = public_func.get_sub_id(context, 1);
                             }
                         }
                         String[] command_list = request_msg.split(" ");
                         if (command_list.length == 2) {
-                            public_func.send_ussd(context, command_list[1], slot);
+                            public_func.send_ussd(context, command_list[1], sub_id);
                             return;
                         }
                     } else {
@@ -922,7 +921,6 @@ public class chat_command_service extends Service {
                     while (!get_me()) {
                         public_func.write_log(context, "Failed to get bot Username, Wait 5 seconds and try again.");
                         try {
-                            //noinspection BusyWait
                             Thread.sleep(5000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
@@ -969,7 +967,6 @@ public class chat_command_service extends Service {
                         ++error_magnification;
                     }
                     try {
-                        //noinspection BusyWait
                         Thread.sleep(sleep_time * 1000);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();

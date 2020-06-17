@@ -52,9 +52,11 @@ public class send_ussd_service extends Service {
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText(notification_name);
         startForeground(public_func.send_ussd_servce_notify_id, notification.build());
+
         Handler handler = new Handler();
         String ussd = intent.getStringExtra("ussd");
-        int slot = intent.getIntExtra("slot", -1);
+        int sub_id = intent.getIntExtra("sub_id", -1);
+
         assert ussd != null;
         ussd = ussd.toUpperCase();
         ussd = ussd.replaceAll("[ABC]", "2");
@@ -66,7 +68,15 @@ public class send_ussd_service extends Service {
         ussd = ussd.replaceAll("[TUV]", "8");
         ussd = ussd.replaceAll("[W-Z]", "9");
         Log.d(TAG, "ussd: " + ussd);
-        Log.d(TAG, "slot: " + slot);
+        Log.d(TAG, "subid: " + sub_id);
+
+        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        assert telephonyManager != null;
+
+        if (sub_id != -1) {
+            telephonyManager.createForSubscriptionId(sub_id);
+        }
+
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
@@ -79,11 +89,6 @@ public class send_ussd_service extends Service {
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         request_body.text = context.getString(R.string.send_ussd_head) + "\n" + context.getString(R.string.ussd_code_running);
-        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        assert telephonyManager != null;
-        if (slot == 1) {
-            telephonyManager.createForSubscriptionId(public_func.get_sub_id(context, slot));
-        }
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));

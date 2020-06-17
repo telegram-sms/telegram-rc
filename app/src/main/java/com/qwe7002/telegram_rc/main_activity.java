@@ -585,15 +585,6 @@ public class main_activity extends AppCompatActivity {
         LayoutInflater inflater = this.getLayoutInflater();
         String file_name = null;
         switch (item.getItemId()) {
-            case R.id.user_manual:
-                file_name = "/wiki/" + context.getString(R.string.user_manual_url);
-                break;
-            case R.id.privacy_policy:
-                file_name = "/wiki/" + context.getString(R.string.privacy_policy_url);
-                break;
-            case R.id.donate:
-                file_name = "/donate";
-                break;
             case R.id.about:
                 PackageManager packageManager = context.getPackageManager();
                 PackageInfo packageInfo;
@@ -610,7 +601,6 @@ public class main_activity extends AppCompatActivity {
                 builder.setCancelable(false);
                 builder.setPositiveButton(R.string.ok_button, null);
                 builder.show();
-                //dialogs.show_about(this, getString(R.string.about_content) + versionName).show();
                 return true;
             case R.id.scan:
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 0);
@@ -701,7 +691,15 @@ public class main_activity extends AppCompatActivity {
                         })
                         .show();
                 return true;
-
+            case R.id.user_manual:
+                file_name = "/wiki/" + context.getString(R.string.user_manual_url);
+                break;
+            case R.id.privacy_policy:
+                file_name = "/wiki/" + context.getString(R.string.privacy_policy_url);
+                break;
+            case R.id.donate:
+                file_name = "/donate";
+                break;
 
         }
         assert file_name != null;
