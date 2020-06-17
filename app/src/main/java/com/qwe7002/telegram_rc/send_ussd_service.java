@@ -82,9 +82,7 @@ public class send_ussd_service extends Service {
         TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         assert telephonyManager != null;
         if (slot == 1) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                telephonyManager.switchMultiSimConfig(1);
-            }
+            telephonyManager.createForSubscriptionId(public_func.get_sub_id(context, slot));
         }
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);

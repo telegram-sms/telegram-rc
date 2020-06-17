@@ -158,8 +158,8 @@ public class beacon_config_activity extends AppCompatActivity {
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count);
         beacon_config config = Paper.book().read("beacon_config", new beacon_config());
         delay.setText(String.valueOf(config.delay));
-        disable_count.setText(config.disable_count);
-        enable_count.setText(config.enable_count);
+        disable_count.setText(String.valueOf(config.disable_count));
+        enable_count.setText(String.valueOf(config.enable_count));
         new AlertDialog.Builder(this).setTitle("Beacon configuration")
                 .setView(dialog_view)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {

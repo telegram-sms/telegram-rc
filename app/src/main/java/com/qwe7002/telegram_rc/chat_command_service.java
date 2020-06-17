@@ -28,7 +28,6 @@ import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoNr;
 import android.telephony.CellInfoWcdma;
-import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -299,8 +298,7 @@ public class chat_command_service extends Service {
             }
             SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
             assert subscriptionManager != null;
-            SubscriptionInfo info = subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId());
-            telephonyManager.switchMultiSimConfig(info.getSimSlotIndex());
+            telephonyManager.createForSubscriptionId(SubscriptionManager.getDefaultDataSubscriptionId());
             telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
@@ -940,7 +938,7 @@ public class chat_command_service extends Service {
                         .readTimeout(http_timeout, TimeUnit.SECONDS)
                         .writeTimeout(http_timeout, TimeUnit.SECONDS)
                         .build();
-                Log.d(TAG, "run: Current timeout:" + timeout);
+                //Log.d(TAG, "run: Current timeout:" + timeout);
                 String request_uri = public_func.get_url(bot_token, "getUpdates");
                 polling_json request_body = new polling_json();
                 request_body.offset = offset;
