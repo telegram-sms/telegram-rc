@@ -8,13 +8,18 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.altbeacon.beacon.Beacon;
@@ -136,6 +141,34 @@ public class beacon_config_activity extends AppCompatActivity {
 
             return view;
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.beacon_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        LayoutInflater inflater = this.getLayoutInflater();
+        @SuppressLint("InflateParams") View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
+        EditText delay = dialog_view.findViewById(R.id.beacon_delay);
+        EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count);
+        EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count);
+        beacon_config config = Paper.book().read("beacon_config", new beacon_config());
+        delay.setText(String.valueOf(config.delay));
+        disable_count.setText(config.disable_count);
+        enable_count.setText(config.enable_count);
+        new AlertDialog.Builder(this).setTitle("Beacon configuration")
+                .setView(dialog_view)
+                .setPositiveButton(R.string.ok_button, (dialog, which) -> {
+                    config.delay = Long.parseLong(delay.getText().toString());
+                    config.disable_count = Integer.parseInt(disable_count.getText().toString());
+                    config.enable_count = Integer.parseInt(enable_count.getText().toString());
+                    Paper.book().write("beacon_config", config);
+                }).show();
+        return true;
     }
 
     class beacon_consumer implements BeaconConsumer {

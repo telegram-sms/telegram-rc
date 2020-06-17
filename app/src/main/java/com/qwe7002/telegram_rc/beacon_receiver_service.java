@@ -49,6 +49,7 @@ public class beacon_receiver_service extends Service {
     private String request_url;
     private BeaconManager beacon_manager;
     private long startup_time = 0;
+    private beacon_config config;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
@@ -77,6 +78,8 @@ public class beacon_receiver_service extends Service {
         super.onCreate();
         context = getApplicationContext();
         Paper.init(context);
+        config = Paper.book().read("beacon_config", new beacon_config());
+
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         request_url = public_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
         chat_id = sharedPreferences.getString("chat_id", "");
@@ -99,10 +102,10 @@ public class beacon_receiver_service extends Service {
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
 
-        beacon_manager.setBackgroundScanPeriod(2000L);
-        beacon_manager.setForegroundScanPeriod(2000L);
-        beacon_manager.setForegroundBetweenScanPeriod(2000L);
-        beacon_manager.setForegroundBetweenScanPeriod(2000L);
+        beacon_manager.setBackgroundScanPeriod(config.delay);
+        beacon_manager.setForegroundScanPeriod(config.delay);
+        beacon_manager.setForegroundBetweenScanPeriod(config.delay);
+        beacon_manager.setForegroundBetweenScanPeriod(config.delay);
         beacon_manager.bind(beacon_consumer);
         registerReceiver(stop_beacon_service, new IntentFilter(public_func.BROADCAST_STOP_BEACON_SERVICE));
         startup_time = System.currentTimeMillis();
@@ -152,7 +155,7 @@ public class beacon_receiver_service extends Service {
                 if (found_beacon) {
                     if (Paper.book().read("wifi_open", false)) {
                         Log.d(TAG, "close ap action count: " + detect_singal_count);
-                        if (detect_singal_count >= 10) {
+                        if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
                             close_ap();
                             message = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + getString(R.string.action_success);
@@ -163,7 +166,7 @@ public class beacon_receiver_service extends Service {
 
                 } else {
                     Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
-                    if (not_found_count >= 20 && !Paper.book().read("wifi_open", false)) {
+                    if (not_found_count >= config.enable_count && !Paper.book().read("wifi_open", false)) {
                         not_found_count = 0;
                         open_ap();
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);

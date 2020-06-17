@@ -330,11 +330,12 @@ public class main_activity extends AppCompatActivity {
                 return;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                List<String> permission = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
+                List<String> permission_base = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
+                List<String> permission = new ArrayList<>(permission_base);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     permission.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
                 }
-                ActivityCompat.requestPermissions(main_activity.this, (String[]) permission.toArray(), 1);
+                ActivityCompat.requestPermissions(main_activity.this, permission.toArray(new String[0]), 1);
 
                 PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
                 assert powerManager != null;
@@ -651,7 +652,7 @@ public class main_activity extends AppCompatActivity {
                 editText.setText(black_keyword_list_old_string);
                 new AlertDialog.Builder(this).setTitle(R.string.spam_keyword_dialog_title)
                         .setView(spam_dialog_view)
-                        .setPositiveButton("OK", (dialog, which) -> {
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                             String input = editText.getText().toString();
                             String[] black_keyword_list = input.split(";");
                             Paper.book().write("black_keyword_list", new ArrayList<>(Arrays.asList(black_keyword_list)));
@@ -676,7 +677,7 @@ public class main_activity extends AppCompatActivity {
                 proxy_password.setText(proxy_item.password);
                 new AlertDialog.Builder(this).setTitle(R.string.proxy_dialog_title)
                         .setView(proxy_dialog_view)
-                        .setPositiveButton("OK", (dialog, which) -> {
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                             if (!doh_switch.isChecked()) {
                                 doh_switch.setChecked(true);
                             }
