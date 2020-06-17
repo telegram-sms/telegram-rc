@@ -171,7 +171,6 @@ public class beacon_receiver_service extends Service {
                         open_ap();
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
                     }
-                    Log.d(TAG, "onBeaconServiceConnect: " + not_found_count);
                     ++not_found_count;
                 }
             });

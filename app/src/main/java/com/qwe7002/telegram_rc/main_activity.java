@@ -401,8 +401,11 @@ public class main_activity extends AppCompatActivity {
                         List<String> notify_listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
                         ArrayList<String> black_keyword_list = Paper.book().read("black_keyword_list", new ArrayList<>());
                         proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
+                        beacon_config beacon_config_item = Paper.book().read("beacon_config", new beacon_config());
+                        ArrayList<String> beacon_listen_list = Paper.book().read("beacon_address", new ArrayList<>());
                         Paper.book().destroy();
                         Paper.book().write("notify_listen_list", notify_listen_list).write("black_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
+                        Paper.book().write("beacon_address", beacon_config_item).write("beacon_address", beacon_listen_list);
                     }
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);
