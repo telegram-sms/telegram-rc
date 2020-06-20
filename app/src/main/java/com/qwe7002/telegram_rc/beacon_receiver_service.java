@@ -79,7 +79,6 @@ public class beacon_receiver_service extends Service {
         context = getApplicationContext();
         Paper.init(context);
         config = Paper.book().read("beacon_config", new beacon_config());
-
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         request_url = public_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
         chat_id = sharedPreferences.getString("chat_id", "");

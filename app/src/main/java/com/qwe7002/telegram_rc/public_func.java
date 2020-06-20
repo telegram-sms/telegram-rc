@@ -61,6 +61,7 @@ import okhttp3.Response;
 import okhttp3.dnsoverhttps.DnsOverHttps;
 
 
+
 class public_func {
     static final String BROADCAST_STOP_SERVICE = "com.qwe7002.telegram_rc.stop_all";
     static final String BROADCAST_STOP_BEACON_SERVICE = "com.qwe7002.telegram_rc.stop_beacon_service";
@@ -188,6 +189,11 @@ class public_func {
                     .bootstrapDnsHosts(get_by_ip("2606:4700:4700::1001"), get_by_ip("2606:4700:4700::1111"), get_by_ip("1.0.0.1"), get_by_ip("1.1.1.1"))
                     .includeIPv6(true)
                     .build());
+        }
+        if (BuildConfig.DEBUG) {
+            okhttp3.logging.HttpLoggingInterceptor interceptor = new okhttp3.logging.HttpLoggingInterceptor();
+            interceptor.setLevel(okhttp3.logging.HttpLoggingInterceptor.Level.HEADERS);
+            okhttp.addInterceptor(interceptor);
         }
         return okhttp.build();
     }

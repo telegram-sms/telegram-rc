@@ -691,7 +691,7 @@ public class chat_command_service extends Service {
                     public_func.start_beacon_service(context);
                 }
                 Paper.book().write("disable_beacon", state);
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + "is_disable:" + state;
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status:" + state;
                 break;
             case "/sendsms":
             case "/sendsms1":
