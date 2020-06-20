@@ -59,7 +59,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.dnsoverhttps.DnsOverHttps;
-
+import okhttp3.logging.HttpLoggingInterceptor;
 
 
 class public_func {
@@ -191,8 +191,8 @@ class public_func {
                     .build());
         }
         if (BuildConfig.DEBUG) {
-            okhttp3.logging.HttpLoggingInterceptor interceptor = new okhttp3.logging.HttpLoggingInterceptor();
-            interceptor.setLevel(okhttp3.logging.HttpLoggingInterceptor.Level.HEADERS);
+            HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+            interceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
             okhttp.addInterceptor(interceptor);
         }
         return okhttp.build();
