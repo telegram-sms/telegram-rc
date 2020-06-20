@@ -15,6 +15,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.gson.Gson;
 
@@ -50,6 +51,9 @@ public class beacon_receiver_service extends Service {
     private BeaconManager beacon_manager;
     private long startup_time = 0;
     private beacon_config config;
+
+    private beacon_service_consumer beacon_consumer;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
@@ -66,10 +70,17 @@ public class beacon_receiver_service extends Service {
         return null;
     }
 
-    private final BroadcastReceiver stop_beacon_service = new BroadcastReceiver() {
+    private final BroadcastReceiver reload_config_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            stopSelf();
+            beacon_manager.unbind(beacon_consumer);
+            config = Paper.book().read("beacon_config", new beacon_config());
+            beacon_manager.setBackgroundScanPeriod(config.delay);
+            beacon_manager.setForegroundScanPeriod(config.delay);
+            beacon_manager.setForegroundBetweenScanPeriod(config.delay);
+            beacon_manager.setForegroundBetweenScanPeriod(config.delay);
+            beacon_manager.bind(beacon_consumer);
+            startup_time = System.currentTimeMillis();
         }
     };
 
@@ -79,12 +90,14 @@ public class beacon_receiver_service extends Service {
         context = getApplicationContext();
         Paper.init(context);
         config = Paper.book().read("beacon_config", new beacon_config());
+        LocalBroadcastManager.getInstance(this).registerReceiver(reload_config_receiver,
+                new IntentFilter("reload_beacon_config"));
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         request_url = public_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
         chat_id = sharedPreferences.getString("chat_id", "");
         wifi_manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
-        beacon_service_consumer beacon_consumer = new beacon_service_consumer();
+        beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
 
         beacon_manager.getBeaconParsers().add(new BeaconParser().
@@ -106,15 +119,15 @@ public class beacon_receiver_service extends Service {
         beacon_manager.setForegroundBetweenScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(config.delay);
         beacon_manager.bind(beacon_consumer);
-        registerReceiver(stop_beacon_service, new IntentFilter(public_func.BROADCAST_STOP_BEACON_SERVICE));
         startup_time = System.currentTimeMillis();
 
     }
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy: ");
+        beacon_manager.unbind(beacon_consumer);
         stopForeground(true);
-        unregisterReceiver(stop_beacon_service);
         super.onDestroy();
     }
 
@@ -122,11 +135,12 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
+                beacon_static_data.beacons = beacons;
+                LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
                     return;
                 }
                 if (Paper.book().read("disable_beacon", false)) {
-                    stopSelf();
                     return;
                 }
                 String message = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + getString(R.string.action_success);
@@ -134,7 +148,7 @@ public class beacon_receiver_service extends Service {
                 ArrayList<String> listen_beacon_list = Paper.book().read("beacon_address", new ArrayList<>());
                 if (listen_beacon_list.size() == 0) {
                     Log.d(TAG, "onBeaconServiceConnect: Watchlist is empty");
-                    stopSelf();
+                    return;
                 }
                 Beacon detect_beacon = null;
                 for (Beacon beacon : beacons) {

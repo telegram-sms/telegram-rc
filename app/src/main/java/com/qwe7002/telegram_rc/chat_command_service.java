@@ -685,11 +685,6 @@ public class chat_command_service extends Service {
                 return;
             case "/switchbeacon":
                 boolean state = !Paper.book().read("disable_beacon", false);
-                if (state) {
-                    public_func.stop_beacon_service(context);
-                } else {
-                    public_func.start_beacon_service(context);
-                }
                 Paper.book().write("disable_beacon", state);
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status:" + state;
                 break;

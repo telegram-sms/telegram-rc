@@ -1,11 +1,11 @@
 package com.qwe7002.telegram_rc;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -21,12 +21,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.BeaconConsumer;
-import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.Region;
 
 import java.util.ArrayList;
 
@@ -34,44 +31,44 @@ import io.paperdb.Paper;
 
 public class beacon_config_activity extends AppCompatActivity {
     protected static final String TAG = "monitoring_activity";
-    private beacon_consumer beacon_consumer_obj;
-    private ListView beaconList;
-    private BeaconManager beacon_manager;
     private Context context;
+    private final BroadcastReceiver flush_receive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ListView beaconList = findViewById(R.id.beacon_list);
+            if (beacon_static_data.beacons.size() > 0) {
+                final ArrayList<BeaconModel> list = new ArrayList<>();
+                for (Beacon beacon : beacon_static_data.beacons) {
+                    Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
+                    BeaconModel model = new BeaconModel();
+                    model.title = beacon.getBluetoothName();
+                    model.address = beacon.getBluetoothAddress();
+                    model.info = "Rssi: " + beacon.getRssi() + " dBm Power: " + beacon.getTxPower() + " dBm";
+                    list.add(model);
+                }
+                runOnUiThread(() -> {
+                    CustomBeaconAdapter adapter = new CustomBeaconAdapter(list, beacon_config_activity.this);
+                    beaconList.setAdapter(adapter);
+                });
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Paper.init(getApplicationContext());
-        setContentView(R.layout.activity_beacon);
         context = getApplicationContext();
-        beacon_consumer_obj = new beacon_consumer();
-        beaconList = findViewById(R.id.beacon_list);
+        Paper.init(context);
+        setContentView(R.layout.activity_beacon);
 
-        beacon_manager = BeaconManager.getInstanceForApplication(this);
-        beacon_manager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-
-        // Detect the main identifier (UID) frame:
-        beacon_manager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
-
-        // Detect the telemetry (TLM) frame:
-        beacon_manager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout(BeaconParser.EDDYSTONE_TLM_LAYOUT));
-
-        // Detect the URL frame:
-        beacon_manager.getBeaconParsers().add(new BeaconParser().
-                setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
-        beacon_manager.bind(beacon_consumer_obj);
+        LocalBroadcastManager.getInstance(this).registerReceiver(flush_receive,
+                new IntentFilter("flush_view"));
 
     }
 
-
     @Override
     protected void onDestroy() {
-        beacon_manager.unbind(beacon_consumer_obj);
-        public_func.start_beacon_service(context);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(flush_receive);
         super.onDestroy();
     }
 
@@ -167,52 +164,10 @@ public class beacon_config_activity extends AppCompatActivity {
                     config.disable_count = Integer.parseInt(disable_count.getText().toString());
                     config.enable_count = Integer.parseInt(enable_count.getText().toString());
                     Paper.book().write("beacon_config", config);
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("reload_beacon_config"));
                 }).show();
         return true;
     }
-
-    class beacon_consumer implements BeaconConsumer {
-        @Override
-        public void onBeaconServiceConnect() {
-            beacon_manager.addRangeNotifier((beacons, region) -> {
-                if (beacons.size() > 0) {
-                    final ArrayList<BeaconModel> list = new ArrayList<>();
-
-                    for (Beacon beacon : beacons) {
-                        Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
-                        BeaconModel model = new BeaconModel();
-                        model.title = beacon.getBluetoothName();
-                        model.address = beacon.getBluetoothAddress();
-                        model.info = "Rssi: " + beacon.getRssi() + " dBm Power: " + beacon.getTxPower() + " dBm";
-                        list.add(model);
-                    }
-                    runOnUiThread(() -> {
-                        CustomBeaconAdapter adapter = new CustomBeaconAdapter(list, beacon_config_activity.this);
-                        beaconList.setAdapter(adapter);
-                    });
-                }
-            });
-
-            try {
-                beacon_manager.startRangingBeaconsInRegion(new Region(getPackageName(), null, null, null));
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public Context getApplicationContext() {
-            return null;
-        }
-
-        @Override
-        public void unbindService(ServiceConnection serviceConnection) {
-
-        }
-
-        @Override
-        public boolean bindService(Intent intent, ServiceConnection serviceConnection, int i) {
-            return false;
-        }
-    }
 }
+
+

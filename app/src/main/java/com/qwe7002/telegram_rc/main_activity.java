@@ -102,7 +102,7 @@ public class main_activity extends AppCompatActivity {
         }
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
-            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), (Paper.book().read("beacon_address", new ArrayList<>()).size() != 0 && !Paper.book().read("disable_beacon", false)));
+            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -427,7 +427,7 @@ public class main_activity extends AppCompatActivity {
                     editor.apply();
                     new Thread(() -> {
                         public_func.stop_all_service(context);
-                        public_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command.isChecked(), (Paper.book().read("beacon_address", new ArrayList<>()).size() != 0 && !Paper.book().read("disable_beacon", false)));
+                        public_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command.isChecked());
                     }).start();
                     Looper.prepare();
                     Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)
@@ -616,7 +616,6 @@ public class main_activity extends AppCompatActivity {
                 }
                 return true;
             case R.id.set_beacon:
-                public_func.stop_beacon_service(context);
                 startActivity(new Intent(main_activity.this, beacon_config_activity.class));
                 return true;
             case R.id.set_notify:
@@ -685,7 +684,7 @@ public class main_activity extends AppCompatActivity {
                             new Thread(() -> {
                                 public_func.stop_all_service(context);
                                 if (sharedPreferences.getBoolean("initialized", false)) {
-                                    public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), (Paper.book().read("beacon_address", new ArrayList<>()).size() != 0 && !Paper.book().read("disable_beacon", false)));
+                                    public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
                                 }
                             }).start();
                         })
