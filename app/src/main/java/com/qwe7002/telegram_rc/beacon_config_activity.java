@@ -32,27 +32,31 @@ import io.paperdb.Paper;
 public class beacon_config_activity extends AppCompatActivity {
     protected static final String TAG = "monitoring_activity";
     private Context context;
-    private final BroadcastReceiver flush_receive = new BroadcastReceiver() {
+    private final BroadcastReceiver flush_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            ListView beaconList = findViewById(R.id.beacon_list);
-            if (beacon_static_data.beacons.size() > 0) {
-                final ArrayList<BeaconModel> list = new ArrayList<>();
-                for (Beacon beacon : beacon_static_data.beacons) {
-                    Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
-                    BeaconModel model = new BeaconModel();
-                    model.title = beacon.getBluetoothName();
-                    model.address = beacon.getBluetoothAddress();
-                    model.info = "Rssi: " + beacon.getRssi() + " dBm Power: " + beacon.getTxPower() + " dBm";
-                    list.add(model);
-                }
-                runOnUiThread(() -> {
-                    CustomBeaconAdapter adapter = new CustomBeaconAdapter(list, beacon_config_activity.this);
-                    beaconList.setAdapter(adapter);
-                });
-            }
+            flush();
         }
     };
+
+    void flush() {
+        ListView beaconList = findViewById(R.id.beacon_list);
+        if (beacon_static_data.beacons.size() > 0) {
+            final ArrayList<BeaconModel> list = new ArrayList<>();
+            for (Beacon beacon : beacon_static_data.beacons) {
+                Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
+                BeaconModel model = new BeaconModel();
+                model.title = beacon.getBluetoothName();
+                model.address = beacon.getBluetoothAddress();
+                model.info = "Rssi: " + beacon.getRssi() + " dBm Power: " + beacon.getTxPower() + " dBm";
+                list.add(model);
+            }
+            runOnUiThread(() -> {
+                CustomBeaconAdapter adapter = new CustomBeaconAdapter(list, beacon_config_activity.this);
+                beaconList.setAdapter(adapter);
+            });
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,15 +64,15 @@ public class beacon_config_activity extends AppCompatActivity {
         context = getApplicationContext();
         Paper.init(context);
         setContentView(R.layout.activity_beacon);
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(flush_receive,
+        flush();
+        LocalBroadcastManager.getInstance(this).registerReceiver(flush_receiver,
                 new IntentFilter("flush_view"));
 
     }
 
     @Override
     protected void onDestroy() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(flush_receive);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(flush_receiver);
         super.onDestroy();
     }
 
