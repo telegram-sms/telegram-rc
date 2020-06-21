@@ -31,7 +31,6 @@ import io.paperdb.Paper;
 
 public class beacon_config_activity extends AppCompatActivity {
     protected static final String TAG = "monitoring_activity";
-    private Context context;
     private final BroadcastReceiver flush_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -61,7 +60,7 @@ public class beacon_config_activity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context = getApplicationContext();
+        Context context = getApplicationContext();
         Paper.init(context);
         setContentView(R.layout.activity_beacon);
         flush();
