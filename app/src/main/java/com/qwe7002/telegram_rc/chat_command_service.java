@@ -292,14 +292,17 @@ public class chat_command_service extends Service {
             return "";
         }
         StringBuilder result_string = new StringBuilder();
+        SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+        assert subscriptionManager != null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Log.d(TAG, "get_cell_info: Set the default data SIM card:" + SubscriptionManager.getDefaultDataSubscriptionId());
+            telephonyManager.createForSubscriptionId(SubscriptionManager.getDefaultDataSubscriptionId());
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             run_lock = false;
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 Log.d("get_data_sim_id", "No permission.");
             }
-            SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-            assert subscriptionManager != null;
-            telephonyManager.createForSubscriptionId(SubscriptionManager.getDefaultDataSubscriptionId());
             telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
