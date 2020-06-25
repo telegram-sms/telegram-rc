@@ -14,6 +14,8 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -40,7 +42,7 @@ public class resend_service extends Service {
         return START_NOT_STICKY;
     }
 
-    private void network_progress_handle(String message, String chat_id, OkHttpClient okhttp_client) {
+    private void network_progress_handle(@NotNull String message, String chat_id, OkHttpClient okhttp_client) {
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         request_body.text = message;
@@ -114,7 +116,7 @@ public class resend_service extends Service {
 
     class stop_notify_receiver extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, @NotNull Intent intent) {
             if (Objects.equals(intent.getAction(), public_func.BROADCAST_STOP_SERVICE)) {
                 Log.i("resend_loop", "Received stop signal, quitting now...");
                 stopSelf();

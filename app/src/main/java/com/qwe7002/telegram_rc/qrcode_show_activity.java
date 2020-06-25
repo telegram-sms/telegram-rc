@@ -41,6 +41,7 @@ public class qrcode_show_activity extends AppCompatActivity {
 
     }
 
+    @org.jetbrains.annotations.Nullable
     private Bitmap gen_qrcode_bitmap(String content) {
         AwesomeQrRenderer renderer = new AwesomeQrRenderer();
         ByteMatrix byte_matrix;

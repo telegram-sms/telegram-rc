@@ -241,7 +241,7 @@ public class beacon_receiver_service extends Service {
         }
     }
 
-    private void network_progress_handle(String message, String chat_id, OkHttpClient okhttp_client) {
+    private void network_progress_handle(String message, String chat_id, @NotNull OkHttpClient okhttp_client) {
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context);

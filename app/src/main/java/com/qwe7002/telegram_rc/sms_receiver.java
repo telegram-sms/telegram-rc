@@ -18,6 +18,8 @@ import androidx.core.app.ActivityCompat;
 import com.github.sumimakito.codeauxlib.CodeauxLibPortable;
 import com.google.gson.Gson;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,8 +37,7 @@ import okhttp3.Response;
 
 
 public class sms_receiver extends BroadcastReceiver {
-    @SuppressWarnings("SpellCheckingInspection")
-    public void onReceive(final Context context, Intent intent) {
+    public void onReceive(final Context context, @NotNull Intent intent) {
         Paper.init(context);
         final String TAG = "sms_receiver";
         Log.d(TAG, "Receive action: " + intent.getAction());
@@ -310,8 +311,7 @@ public class sms_receiver extends BroadcastReceiver {
         });
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
-    private void command_handle(SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
+    private void command_handle(@NotNull SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
         if (sharedPreferences.getBoolean("root", false)) {
             switch (message_body.toLowerCase().replace("_", "")) {
                 case "/switchdata":

@@ -16,6 +16,8 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,8 +54,9 @@ public class notification_listener_service extends NotificationListenerService {
         stopForeground(true);
         super.onDestroy();
     }
+
     @Override
-    public void onNotificationPosted(StatusBarNotification sbn) {
+    public void onNotificationPosted(@NotNull StatusBarNotification sbn) {
         final String package_name = sbn.getPackageName();
         Log.d(TAG, "onNotificationPosted: " + package_name);
 

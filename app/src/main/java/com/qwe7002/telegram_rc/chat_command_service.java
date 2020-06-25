@@ -129,7 +129,8 @@ public class chat_command_service extends Service {
     }
 
 
-    public static String get_battery_info(Context context) {
+    @NotNull
+    public static String get_battery_info(@NotNull Context context) {
         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
         int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -192,7 +193,7 @@ public class chat_command_service extends Service {
         return false;
     }
 
-    public static String get_network_type(Context context) {
+    public static String get_network_type(@NotNull Context context) {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connect_manager != null;
@@ -373,7 +374,7 @@ public class chat_command_service extends Service {
         return result_string.toString();
     }
 
-    private void receive_handle(JsonObject result_obj) {
+    private void receive_handle(@NotNull JsonObject result_obj) {
         String message_type = "";
         long update_id = result_obj.get("update_id").getAsLong();
         offset = update_id + 1;
@@ -1026,7 +1027,7 @@ public class chat_command_service extends Service {
 
     private class broadcast_receiver extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, @NotNull Intent intent) {
             Log.d(TAG, "onReceive: " + intent.getAction());
             assert intent.getAction() != null;
             if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {

@@ -10,6 +10,8 @@ import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.Objects;
 
@@ -30,7 +32,7 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
     private final String message_header;
     private final message_json request_body;
 
-    ussd_request_callback(Context context, SharedPreferences sharedPreferences, long message_id) {
+    ussd_request_callback(Context context, @NotNull SharedPreferences sharedPreferences, long message_id) {
         this.context = context;
         Paper.init(context);
         String chat_id = sharedPreferences.getString("chat_id", "");

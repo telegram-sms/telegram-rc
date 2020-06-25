@@ -14,6 +14,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.zxing.Result;
 
+import org.jetbrains.annotations.NotNull;
+
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 public class scanner_activity extends Activity implements ZXingScannerView.ResultHandler {
@@ -46,7 +48,7 @@ public class scanner_activity extends Activity implements ZXingScannerView.Resul
     }
 
     @Override
-    public void handleResult(Result rawResult) {
+    public void handleResult(@NotNull Result rawResult) {
         String TAG = "activity_scanner";
         Log.d(TAG, "format: " + rawResult.getBarcodeFormat().toString() + " content: " + rawResult.getText());
         if (!json_validate(rawResult.getText())) {
