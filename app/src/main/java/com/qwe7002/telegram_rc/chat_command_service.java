@@ -628,6 +628,17 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
                 has_command = true;
                 break;
+            case "/setadbpub":
+                String run_result = "Error";
+                String[] msg_list = request_msg.split("\n");
+                if (msg_list.length == 2) {
+                    if (com.qwe7002.root_kit.nadb.get_adb_auth(msg_list[1])) {
+                        run_result = "Done";
+                    }
+
+                }
+                request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
+                break;
             case "/sendussd":
             case "/sendussd1":
             case "/sendussd2":
