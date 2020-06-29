@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.util.Log;
@@ -115,7 +113,6 @@ public class sms_receiver extends BroadcastReceiver {
         }
         request_body.text = message_head + message_body_html;
         final boolean data_enable = public_func.get_data_enable(context);
-        int loop_count;
         if (is_trusted_phone) {
             String message_command = message_body.toLowerCase().replace("_", "");
             String[] message_command_list = message_command.split("\n");
@@ -129,83 +126,9 @@ public class sms_receiver extends BroadcastReceiver {
                         raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_service);
                         request_body.text = raw_request_body_text;
                         break;
-                    case "/openap":
-                        com.qwe7002.root_kit.network.data_set_enable(true);
-                        loop_count = 0;
-                        while (!public_func.check_network_status(context)) {
-                            if (loop_count >= 100) {
-                                Log.d(TAG, "loop wait timeout");
-                                break;
-                            }
-                            try {
-                                //noinspection BusyWait
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            ++loop_count;
-                        }
-                        String status = context.getString(R.string.action_failed);
-                        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                        assert wifiManager != null;
-                        if (wifiManager.isWifiEnabled()) {
-                            com.qwe7002.root_kit.network.wifi_set_enable(false);
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
-                            Paper.book().write("wifi_open", true);
-                            status = context.getString(R.string.action_success);
-                        }
-                        raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.open_wifi) + status;
-                        request_body.text = raw_request_body_text;
-                        new Thread(() -> {
-                            try {
-                                int count = 0;
-                                while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                                    if (count == 100) {
-                                        break;
-                                    }
-                                    //noinspection BusyWait
-                                    Thread.sleep(100);
-                                    ++count;
-                                }
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                            } else {
-                                com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                            }
-                        }).start();
-                        break;
-                    case "/closeap":
-                        Paper.book().write("wifi_open", false);
-                        raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.close_wifi) + context.getString(R.string.action_success);
-                        request_body.text = raw_request_body_text;
-                        break;
                     case "/switchdata":
                         if (!data_enable) {
-                            com.qwe7002.root_kit.network.data_set_enable(true);
-                            loop_count = 0;
-                            while (!public_func.check_network_status(context)) {
-                                if (loop_count >= 100) {
-                                    Log.d(TAG, "loop wait timeout");
-                                    break;
-                                }
-                                try {
-                                    //noinspection BusyWait
-                                    Thread.sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                ++loop_count;
-                            }
+                            open_data(context);
                         }
                         raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                         request_body.text = raw_request_body_text;
@@ -319,14 +242,27 @@ public class sms_receiver extends BroadcastReceiver {
                         com.qwe7002.root_kit.network.data_set_enable(false);
                     }
                     break;
-                case "/closeap":
-                    com.qwe7002.root_kit.network.wifi_set_enable(false);
-                    com.qwe7002.root_kit.network.data_set_enable(false);
-                    break;
                 case "/restartnetwork":
                     com.qwe7002.root_kit.network.restart_network();
                     break;
             }
+        }
+    }
+
+    void open_data(Context context) {
+        com.qwe7002.root_kit.network.data_set_enable(true);
+        int loop_count = 0;
+        while (!public_func.check_network_status(context)) {
+            if (loop_count >= 100) {
+                break;
+            }
+            try {
+                //noinspection BusyWait
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            ++loop_count;
         }
     }
 }

@@ -9,7 +9,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -171,9 +170,9 @@ public class beacon_receiver_service extends Service {
                         if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
                             if (config.enable) {
-                                open_ap();
+                                remote_control_public.open_ap(wifi_manager);
                             } else {
-                                close_ap();
+                                remote_control_public.close_ap(wifi_manager);
                             }
                             message = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + getString(R.string.action_success);
                             network_progress_handle(message + "\nBeacon Rssi: " + detect_beacon.getRssi() + "dBm", chat_id, okhttp_client);
@@ -186,9 +185,9 @@ public class beacon_receiver_service extends Service {
                     if (not_found_count >= config.enable_count && !Paper.book().read("wifi_open", false)) {
                         not_found_count = 0;
                         if (config.enable) {
-                            close_ap();
+                            remote_control_public.close_ap(wifi_manager);
                         } else {
-                            open_ap();
+                            remote_control_public.open_ap(wifi_manager);
                         }
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
                     }
@@ -203,36 +202,6 @@ public class beacon_receiver_service extends Service {
             }
         }
 
-        private void close_ap() {
-            Paper.book().write("wifi_open", false);
-            com.qwe7002.root_kit.network.wifi_set_enable(false);
-            try {
-                while (wifi_manager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
-                    //noinspection BusyWait
-                    Thread.sleep(100);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        private void open_ap() {
-            Paper.book().write("wifi_open", true);
-            com.qwe7002.root_kit.network.wifi_set_enable(true);
-            try {
-                while (wifi_manager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                    //noinspection BusyWait
-                    Thread.sleep(100);
-                }
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-            } else {
-                com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-            }
-        }
 
         @Override
         public Context getApplicationContext() {

@@ -567,43 +567,10 @@ public class chat_command_service extends Service {
                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 assert wifiManager != null;
                 boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
-                if (wifiManager.isWifiEnabled()) {
-                    if (!com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
-                        wifi_open = false;
-                        Paper.book().write("wifi_open", false);
-                        com.qwe7002.root_kit.network.wifi_set_enable(false);
-                        try {
-                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
-                                Thread.sleep(100);
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
                 String result_ap;
                 if (!wifi_open) {
-                    Paper.book().write("wifi_open", true);
-                    String status = context.getString(R.string.action_failed);
-                    if (com.qwe7002.root_kit.network.wifi_set_enable(true)) {
-                        status = context.getString(R.string.action_success);
-                    }
-                    result_ap = getString(R.string.open_wifi) + status;
-                    new Thread(() -> {
-                        try {
-                            while (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                                Thread.sleep(100);
-                            }
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                        } else {
-                            com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-                        }
-                    }).start();
+                    result_ap = getString(R.string.open_wifi) + context.getString(R.string.action_success);
+                    new Thread(() -> remote_control_public.open_ap(wifiManager)).start();
                 } else {
                     Paper.book().write("wifi_open", false);
                     result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
@@ -841,9 +808,7 @@ public class chat_command_service extends Service {
                             if (!Paper.book().read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                                 assert wifiManager != null;
-                                if (wifiManager.isWifiEnabled()) {
-                                    com.qwe7002.root_kit.network.wifi_set_enable(false);
-                                }
+                                remote_control_public.close_ap(wifiManager);
                             }
                             break;
                         case "/switchdata":
