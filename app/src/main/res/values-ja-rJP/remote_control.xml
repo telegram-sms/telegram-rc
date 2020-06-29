@@ -16,4 +16,5 @@
     <string name="disable">無効にする</string>
     <string name="beacon_receiver">ビーコン受信機</string>
     <string name="beacon_receiver_configuration">ビーコン受信機構成</string>
+    <string name="enable_hotspot_when_beacon_is_detected">ビーコンが検出されたときにホットスポットを有効にする</string>
 </resources>

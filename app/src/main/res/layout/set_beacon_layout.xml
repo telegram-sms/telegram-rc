@@ -7,6 +7,15 @@
     android:paddingStart="20dp"
     android:paddingEnd="20dp">
 
+    <Switch
+        android:id="@+id/beacon_enable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:paddingStart="5dp"
+        android:text="@string/enable_hotspot_when_beacon_is_detected"
+        tools:ignore="ExtraText,RtlSymmetry" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"

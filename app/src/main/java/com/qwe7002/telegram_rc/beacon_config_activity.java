@@ -16,6 +16,7 @@ import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -153,6 +154,7 @@ public class beacon_config_activity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         LayoutInflater inflater = this.getLayoutInflater();
         @SuppressLint("InflateParams") View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
+        Switch enable = dialog_view.findViewById(R.id.beacon_enable);
         EditText delay = dialog_view.findViewById(R.id.beacon_delay);
         EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count);
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count);
@@ -163,6 +165,7 @@ public class beacon_config_activity extends AppCompatActivity {
         new AlertDialog.Builder(this).setTitle("Beacon configuration")
                 .setView(dialog_view)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
+                    config.enable = enable.isChecked();
                     config.delay = Long.parseLong(delay.getText().toString());
                     config.disable_count = Integer.parseInt(disable_count.getText().toString());
                     config.enable_count = Integer.parseInt(enable_count.getText().toString());

@@ -16,4 +16,5 @@
     <string name="disable">停用</string>
     <string name="beacon_receiver">信标接收器</string>
     <string name="beacon_receiver_configuration">信标接收器配置</string>
+    <string name="enable_hotspot_when_beacon_is_detected">检测到信标时启用热点</string>
 </resources>

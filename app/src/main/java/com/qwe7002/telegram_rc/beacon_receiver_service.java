@@ -170,7 +170,11 @@ public class beacon_receiver_service extends Service {
                         Log.d(TAG, "close ap action count: " + detect_singal_count);
                         if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
-                            close_ap();
+                            if (config.enable) {
+                                open_ap();
+                            } else {
+                                close_ap();
+                            }
                             message = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + getString(R.string.action_success);
                             network_progress_handle(message + "\nBeacon Rssi: " + detect_beacon.getRssi() + "dBm", chat_id, okhttp_client);
                         }
@@ -181,7 +185,11 @@ public class beacon_receiver_service extends Service {
                     Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
                     if (not_found_count >= config.enable_count && !Paper.book().read("wifi_open", false)) {
                         not_found_count = 0;
-                        open_ap();
+                        if (config.enable) {
+                            close_ap();
+                        } else {
+                            open_ap();
+                        }
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
                     }
                     ++not_found_count;
