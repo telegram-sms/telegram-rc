@@ -297,7 +297,7 @@ public class chat_command_service extends Service {
         assert subscriptionManager != null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Log.d(TAG, "get_cell_info: Set the default data SIM card:" + SubscriptionManager.getDefaultDataSubscriptionId());
-            telephonyManager.createForSubscriptionId(SubscriptionManager.getDefaultDataSubscriptionId());
+            telephonyManager = telephonyManager.createForSubscriptionId(SubscriptionManager.getDefaultDataSubscriptionId());
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             run_lock = false;
