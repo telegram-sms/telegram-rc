@@ -6,7 +6,7 @@
     <string name="switch_data">正在切换移动网络状态。</string>
     <string name="restart_network">重新启动移动网络。</string>
     <string name="switch_ap_message">/switch_ap - 打开或关闭无线热点</string>
-    <string name="config_adb_message">/switch_adb - 配置网络 adb 端口</string>
+    <string name="config_adb_message">"/set_adb_port - 配置网络 adb 端口\n/set_adb_key - 配置adb授权密钥"</string>
     <string name="current_data_card">数据卡</string>
     <string name="not_getting_root">没有获得 root 权限</string>
     <string name="adb_config">网络 adb 设置</string>

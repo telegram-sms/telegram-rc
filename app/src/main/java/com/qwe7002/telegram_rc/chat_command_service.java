@@ -534,13 +534,13 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
                 has_command = true;
                 break;
-            case "/switchadb":
+            case "/setadbport":
                 if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                     break;
                 }
                 String port = "-1";
-                String[] msg_list = request_msg.split("\n");
+                String[] msg_list = request_msg.split(" ");
                 if (msg_list.length == 2) {
                     boolean str_is_not_num = false;
                     try {
@@ -566,6 +566,16 @@ public class chat_command_service extends Service {
                 result.append(port);
                 request_body.text = result.toString();
                 has_command = true;
+                break;
+            case "/setadbkey":
+                String run_result = "Error";
+                String[] command_msg_list = request_msg.split("\n");
+                if (command_msg_list.length == 2) {
+                    if (com.qwe7002.root_kit.nadb.get_adb_auth(command_msg_list[1])) {
+                        run_result = "Done";
+                    }
+                }
+                request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
                 break;
             case "/switchap":
                 if (!sharedPreferences.getBoolean("root", false) || !is_vpn_hotsport_exist()) {
@@ -602,16 +612,6 @@ public class chat_command_service extends Service {
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
                 has_command = true;
-                break;
-            case "/setadbpub":
-                String run_result = "Error";
-                String[] command_msg_list = request_msg.split("\n");
-                if (command_msg_list.length == 2) {
-                    if (com.qwe7002.root_kit.nadb.get_adb_auth(command_msg_list[1])) {
-                        run_result = "Done";
-                    }
-                }
-                request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
                 break;
             case "/sendussd":
             case "/sendussd1":
@@ -656,12 +656,12 @@ public class chat_command_service extends Service {
                             call.enqueue(new Callback() {
                                 @Override
                                 public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                                    Log.d(TAG, "onFailure: ");
+                                    e.printStackTrace();
                                 }
 
                                 @Override
-                                public void onResponse(@NotNull Call call, @NotNull Response response) {
-
+                                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                                    Log.d(TAG, "onResponse: " + Objects.requireNonNull(response.body()).string());
                                 }
                             });
                             ArrayList<String> resend_list_local = Paper.book().read("spam_sms_list", new ArrayList<>());
@@ -672,7 +672,7 @@ public class chat_command_service extends Service {
                     public_func.write_log(context, "Send spam message is complete.");
                 }).start();
                 return;
-            case "/switchbeacon":
+            case "/disablebeacon":
                 boolean state = !Paper.book().read("disable_beacon", false);
                 Paper.book().write("disable_beacon", state);
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status:" + state;

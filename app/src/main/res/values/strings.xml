@@ -37,7 +37,7 @@
     <string name="chat_command_service_name">"Chat command "</string>
     <string name="success">Success</string>
     <string name="receive_sms_head">Receive SMS</string>
-    <string name="available_command">Available Commands:\n/getinfo - Get system information\n/log - Output the last 10 log records</string>
+    <string name="available_command">Available Commands:\n/help - Display help information\n/getinfo - Get system information\n/log - Output the last 10 log records</string>
     <string name="restart_service">Background service has been restarted.</string>
     <string name="status">"Status: "</string>
     <string name="send_failed">Failed</string>
@@ -79,7 +79,6 @@
     <string name="request">"Request: "</string>
     <string name="error_message">"Error message: "</string>
     <string name="send_ussd_command">/sendussd - Send USSD request</string>
-
     <string name="ussd_code_running">USSD code running…</string>
     <string name="privacy_reminder_information">You should be aware that using Telegram-SMS means you trust the way we handle your information. We fully understand that it is a significant responsibility, thus we work hard to protect your information and make sure you can take everything under control. Please refer to our privacy policy to understand your rights and better protect your privacy.</string>
     <string name="privacy_reminder_title">Privacy and terms</string>
