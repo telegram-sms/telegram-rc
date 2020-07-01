@@ -553,6 +553,7 @@ public class chat_command_service extends Service {
                         port = msg_list[1];
                     }
                 }
+                Paper.book().write("adb_port", port);
                 StringBuilder result = new StringBuilder();
                 result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
                 if (com.qwe7002.root_kit.nadb.set_nadb(port)) {
