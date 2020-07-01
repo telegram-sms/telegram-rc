@@ -540,11 +540,18 @@ public class chat_command_service extends Service {
                     break;
                 }
                 String port = "-1";
-                if (!Paper.book().read("net_adb_open", false)) {
-                    port = "5555";
-                    Paper.book().write("net_adb_open", true);
-                } else {
-                    Paper.book().write("net_adb_open", false);
+                String[] msg_list = request_msg.split("\n");
+                if (msg_list.length == 2) {
+                    boolean str_is_not_num = false;
+                    try {
+                        Integer.parseInt(msg_list[1]);
+                    } catch (NumberFormatException e) {
+                        str_is_not_num = true;
+                        e.printStackTrace();
+                    }
+                    if (!str_is_not_num) {
+                        port = msg_list[1];
+                    }
                 }
                 StringBuilder result = new StringBuilder();
                 result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
@@ -597,12 +604,11 @@ public class chat_command_service extends Service {
                 break;
             case "/setadbpub":
                 String run_result = "Error";
-                String[] msg_list = request_msg.split("\n");
-                if (msg_list.length == 2) {
-                    if (com.qwe7002.root_kit.nadb.get_adb_auth(msg_list[1])) {
+                String[] command_msg_list = request_msg.split("\n");
+                if (command_msg_list.length == 2) {
+                    if (com.qwe7002.root_kit.nadb.get_adb_auth(command_msg_list[1])) {
                         run_result = "Done";
                     }
-
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
                 break;
