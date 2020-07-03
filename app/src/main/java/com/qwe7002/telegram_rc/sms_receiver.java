@@ -35,6 +35,7 @@ import okhttp3.Response;
 
 
 public class sms_receiver extends BroadcastReceiver {
+    final static CodeauxLibPortable code_aux_lib = new CodeauxLibPortable();
     public void onReceive(final Context context, @NotNull Intent intent) {
         Paper.init(context);
         final String TAG = "sms_receiver";
@@ -46,9 +47,7 @@ public class sms_receiver extends BroadcastReceiver {
             Log.i(TAG, "Uninitialized, SMS receiver is deactivated.");
             return;
         }
-
         assert intent.getAction() != null;
-
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = public_func.get_url(bot_token, "sendMessage");
@@ -99,7 +98,6 @@ public class sms_receiver extends BroadcastReceiver {
         boolean is_verification_code = false;
         if (sharedPreferences.getBoolean("verification_code", false) && !is_trusted_phone) {
             if (message_body.length() <= 140) {
-                CodeauxLibPortable code_aux_lib = new CodeauxLibPortable();
                 String verification = code_aux_lib.find(message_body);
                 if (verification != null) {
                     request_body.parse_mode = "html";
