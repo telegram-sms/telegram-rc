@@ -57,9 +57,6 @@ public class beacon_receiver_service extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
         startForeground(99, notification);
-        if (Paper.book().read("disable_beacon", false)) {
-            stopSelf();
-        }
         return START_STICKY;
     }
 
