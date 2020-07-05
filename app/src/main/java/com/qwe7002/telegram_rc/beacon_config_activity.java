@@ -44,7 +44,7 @@ public class beacon_config_activity extends AppCompatActivity {
         if (beacon_static_data.beacons.size() > 0) {
             final ArrayList<BeaconModel> list = new ArrayList<>();
             for (Beacon beacon : beacon_static_data.beacons) {
-                Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
+                //Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
                 BeaconModel model = new BeaconModel();
                 model.title = beacon.getBluetoothName();
                 model.address = beacon.getBluetoothAddress();

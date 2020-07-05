@@ -598,6 +598,20 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                 has_command = true;
                 break;
+            case "/setdatacard":
+                if (!sharedPreferences.getBoolean("root", false)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
+                }
+                if (public_func.get_active_card(context) == 2) {
+                    String[] command_list_data = request_msg.split(" ");
+                    if (command_list_data.length == 2) {
+                        com.qwe7002.root_kit.network.set_data_sim(public_func.get_sub_id(context, Integer.parseInt(command_list_data[1]) - 1));
+                    }
+                    request_body.text = getString(R.string.system_message_head) + "\n" + "Current data card: " + public_func.get_data_sim_id(context);
+                    has_command = true;
+                }
+                break;
             case "/switchdata":
             case "/restartnetwork":
                 if (!sharedPreferences.getBoolean("root", false)) {

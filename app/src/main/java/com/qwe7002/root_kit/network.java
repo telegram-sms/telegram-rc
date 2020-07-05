@@ -12,12 +12,16 @@ public class network {
         shell.run_shell_command("settings put global airplane_mode_on " + set + " \nam broadcast -a android.intent.action.AIRPLANE_MODE --ez state " + state);
     }
 
-    public static boolean wifi_set_enable(boolean enable) {
+    public static void set_data_sim(int sub_id) {
+        shell.run_shell_command("settings put global multi_sim_data_call " + sub_id + " \nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED");
+    }
+
+    public static void wifi_set_enable(boolean enable) {
         String state = "disable";
         if (enable) {
             state = "enable";
         }
-        return shell.run_shell_command("svc wifi " + state);
+        shell.run_shell_command("svc wifi " + state);
     }
 
     public static void data_set_enable(boolean enable) {
