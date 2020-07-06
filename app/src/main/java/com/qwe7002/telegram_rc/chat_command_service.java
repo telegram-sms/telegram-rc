@@ -609,7 +609,7 @@ public class chat_command_service extends Service {
                         Paper.book("temp").write("sub_id", Integer.parseInt(command_list_data[1]) - 1);
                     }
 
-                    request_body.text = getString(R.string.system_message_head) + "\n" + "Current data card: " + public_func.get_data_sim_id(context);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + "Current data card: SIM" + public_func.get_data_sim_id(context);
                     has_command = true;
                 }
                 break;
@@ -840,8 +840,8 @@ public class chat_command_service extends Service {
                             com.qwe7002.root_kit.network.restart_network();
                             break;
                         case "/setdatacard":
-                            if (public_func.get_active_card(context) == 2 && Paper.book("temp").contains("sub_id")) {
-                                com.qwe7002.root_kit.network.set_data_sim(public_func.get_sub_id(context, Paper.book("temp").read("sub_id")));
+                            if (Paper.book("temp").contains("sub_id")) {
+                                com.qwe7002.root_kit.network.set_data_sim(Paper.book("temp").read("sub_id"));
                                 Paper.book("temp").destroy();
                             }
                             break;

@@ -151,6 +151,16 @@ public class sms_receiver extends BroadcastReceiver {
                             Log.i(TAG, "send_ussd: No permission.");
                         }
                         break;
+                    case "/setdatacard":
+                        if (!sharedPreferences.getBoolean("root", false)) {
+                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.not_getting_root);
+                            break;
+                        }
+                        if (public_func.get_active_card(context) == 2) {
+                            Paper.book("temp").write("sub_id", sub_id);
+                            request_body.text = context.getString(R.string.system_message_head) + "\n" + "Current data card: SIM" + public_func.get_data_sim_id(context);
+                        }
+                        break;
                     case "/sendsms":
                         if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
                             Log.i(TAG, "No SMS permission.");
@@ -168,6 +178,8 @@ public class sms_receiver extends BroadcastReceiver {
                             new Thread(() -> public_func.send_sms(context, msg_send_to, msg_send_content.toString(), slot, sub_id)).start();
                             return;
                         }
+                        break;
+
                 }
             }
         }
@@ -246,6 +258,12 @@ public class sms_receiver extends BroadcastReceiver {
                     break;
                 case "/restartnetwork":
                     com.qwe7002.root_kit.network.restart_network();
+                    break;
+                case "/setdatacard":
+                    if (Paper.book("temp").contains("sub_id")) {
+                        com.qwe7002.root_kit.network.set_data_sim(Paper.book("temp").read("sub_id"));
+                        Paper.book("temp").destroy();
+                    }
                     break;
             }
         }
