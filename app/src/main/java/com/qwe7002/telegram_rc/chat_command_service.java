@@ -193,7 +193,7 @@ public class chat_command_service extends Service {
         return false;
     }
 
-    public static String get_network_type(@NotNull Context context) {
+    public static String get_network_type(@NotNull Context context, boolean cell_info) {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connect_manager != null;
@@ -219,7 +219,10 @@ public class chat_command_service extends Service {
                                 Log.i("get_network_type", "No permission.");
                                 return net_type;
                             }
-                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att_sim(telephonyManager.getSimOperator())) + get_cell_info(context, telephonyManager);
+                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att_sim(telephonyManager.getSimOperator()));
+                            if (cell_info) {
+                                net_type += get_cell_info(context, telephonyManager, -1);
+                            }
                         }
                         if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
                             net_type = "Bluetooth";
@@ -240,7 +243,10 @@ public class chat_command_service extends Service {
                     net_type = "WIFI";
                     break;
                 case ConnectivityManager.TYPE_MOBILE:
-                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att_sim(telephonyManager.getSimOperator())) + get_cell_info(context, telephonyManager);
+                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att_sim(telephonyManager.getSimOperator()));
+                    if (cell_info) {
+                        net_type += get_cell_info(context, telephonyManager, -1);
+                    }
                     break;
             }
         }
@@ -286,18 +292,20 @@ public class chat_command_service extends Service {
         registerReceiver(broadcast_receiver, intentFilter);
     }
 
-    private static String get_cell_info(Context context, TelephonyManager telephonyManager) {
+    private static String get_cell_info(Context context, TelephonyManager telephonyManager, int sub_id) {
         String TAG = "get_cell_info";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "get_cell_info: No permission.");
             return "";
         }
         StringBuilder result_string = new StringBuilder();
-        SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-        assert subscriptionManager != null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Log.d(TAG, "get_cell_info: Set the default data SIM card:" + SubscriptionManager.getDefaultDataSubscriptionId());
-            telephonyManager = telephonyManager.createForSubscriptionId(SubscriptionManager.getDefaultDataSubscriptionId());
+            if (sub_id == -1) {
+                SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+                assert subscriptionManager != null;
+                sub_id = SubscriptionManager.getDefaultDataSubscriptionId();
+            }
+            telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             run_lock = false;
@@ -509,10 +517,13 @@ public class chat_command_service extends Service {
                     card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0);
                     if (public_func.get_active_card(context) == 2) {
                         String data_card = "";
+                        TelephonyManager telephonyManager = (TelephonyManager) context
+                                .getSystemService(Context.TELEPHONY_SERVICE);
+                        assert telephonyManager != null;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            data_card = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context);
+                            data_card = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0));
                         }
-                        card_info = data_card + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + "\nSIM2: " + public_func.get_sim_display_name(context, 1);
+                        card_info = data_card + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0)) + "\nSIM2: " + public_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 1));
                     }
                 }
                 String spam_count = "";
@@ -527,7 +538,7 @@ public class chat_command_service extends Service {
                         is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
                     }
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context) + is_hotspot_running + spam_count + card_info;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + card_info;
                 has_command = true;
                 break;
             case "/log":
@@ -593,7 +604,7 @@ public class chat_command_service extends Service {
                     Paper.book().write("wifi_open", false);
                     result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
                 }
-                result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context);
+                result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                 has_command = true;
