@@ -616,10 +616,16 @@ public class chat_command_service extends Service {
                 }
                 if (public_func.get_active_card(context) == 2) {
                     String[] command_list_data = request_msg.split(" ");
+                    int slot;
                     if (command_list_data.length == 2) {
-                        Paper.book("temp").write("sub_id", Integer.parseInt(command_list_data[1]) - 1);
+                        slot = Integer.parseInt(command_list_data[1]) - 1;
+                    } else {
+                        slot = 0;
+                        if (public_func.get_data_sim_id(context).equals("1")) {
+                            slot = 1;
+                        }
                     }
-
+                    Paper.book("temp").write("sub_id", public_func.get_sub_id(context, slot));
                     request_body.text = getString(R.string.system_message_head) + "\n" + "Current data card: SIM" + public_func.get_data_sim_id(context);
                     has_command = true;
                 }
