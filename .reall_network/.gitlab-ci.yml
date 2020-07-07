@@ -16,14 +16,28 @@ release_github:
     dependencies:
         - build
     stage: deploy
+    only:
+        - master
     script:
         - eval $(ssh-agent -s)
         - ssh-add - <<< $(curl https://${KEYSTORE_SERVER}/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
         - git push --set-upstream git@github.com:${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
-        # Release APK.
         - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
         - . .reall_network/github-key.env
         - ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
+release_nightly_github:
+    dependencies:
+        - build
+    stage: deploy
+    only:
+        - nightly
+    script:
+        - eval $(ssh-agent -s)
+        - ssh-add - <<< $(curl https://${KEYSTORE_SERVER}/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
+        - git push --set-upstream git@github.com:${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
+        - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
+        - . .reall_network/github-key.env
+        - ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk" --prerelease
 build:
     image: alvrme/alpine-android:android-30
     stage: build
