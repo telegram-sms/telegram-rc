@@ -446,11 +446,13 @@ public class chat_command_service extends Service {
                 int command_end_offset = command_offset + entities_obj_command.get("length").getAsInt();
                 temp_command = request_msg.substring(command_offset, command_end_offset).trim();
                 temp_command_lowercase = temp_command.toLowerCase().replace("_", "");
-                command = temp_command_lowercase;
-                if (temp_command_lowercase.contains("@")) {
-                    int command_at_location = temp_command_lowercase.indexOf("@");
+                int command_at_location = temp_command_lowercase.lastIndexOf("@");
+                
+                if (command_at_location != -1) {
                     command = temp_command_lowercase.substring(0, command_at_location);
                     command_bot_username = temp_command.substring(command_at_location + 1);
+                }else{
+                    command = temp_command_lowercase;
                 }
             }
         }
