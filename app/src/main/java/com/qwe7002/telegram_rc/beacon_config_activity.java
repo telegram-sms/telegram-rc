@@ -40,7 +40,7 @@ public class beacon_config_activity extends AppCompatActivity {
     };
 
     void flush() {
-        ListView beaconList = findViewById(R.id.beacon_list);
+        ListView beaconList = findViewById(R.id.beacon_listview);
         if (beacon_static_data.beacons.size() > 0) {
             final ArrayList<BeaconModel> list = new ArrayList<>();
             for (Beacon beacon : beacon_static_data.beacons) {
@@ -82,6 +82,37 @@ public class beacon_config_activity extends AppCompatActivity {
         String info;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        LayoutInflater inflater = this.getLayoutInflater();
+        @SuppressLint("InflateParams") View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
+        Switch enable = dialog_view.findViewById(R.id.beacon_enable_switch);
+        EditText delay = dialog_view.findViewById(R.id.beacon_delay_editview);
+        EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count_editview);
+        EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);
+        beacon_config config = Paper.book().read("beacon_config", new beacon_config());
+        delay.setText(String.valueOf(config.delay));
+        disable_count.setText(String.valueOf(config.disable_count));
+        enable_count.setText(String.valueOf(config.enable_count));
+        new AlertDialog.Builder(this).setTitle("Beacon configuration")
+                .setView(dialog_view)
+                .setPositiveButton(R.string.ok_button, (dialog, which) -> {
+                    config.enable = enable.isChecked();
+                    config.delay = Long.parseLong(delay.getText().toString());
+                    config.disable_count = Integer.parseInt(disable_count.getText().toString());
+                    config.enable_count = Integer.parseInt(enable_count.getText().toString());
+                    Paper.book().write("beacon_config", config);
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("reload_beacon_config"));
+                }).show();
+        return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.beacon_menu, menu);
+        return true;
+    }
+
     static class CustomBeaconAdapter extends BaseAdapter {
         ArrayList<BeaconModel> list;
         Context context;
@@ -114,9 +145,9 @@ public class beacon_config_activity extends AppCompatActivity {
             LayoutInflater inflater = LayoutInflater.from(context);
             @SuppressLint({"ViewHolder", "InflateParams"}) View view = inflater.inflate(R.layout.item_beacon, null);
 
-            TextView title_view = view.findViewById(R.id.beacon_title);
-            TextView address_view = view.findViewById(R.id.beacon_address);
-            TextView info_view = view.findViewById(R.id.beacon_info);
+            TextView title_view = view.findViewById(R.id.beacon_title_textview);
+            TextView address_view = view.findViewById(R.id.beacon_address_textview);
+            TextView info_view = view.findViewById(R.id.beacon_info_textview);
             final CheckBox check_box_view = view.findViewById(R.id.beacon_select_checkbox);
 
             title_view.setText(list.get(position).title);
@@ -142,37 +173,6 @@ public class beacon_config_activity extends AppCompatActivity {
 
             return view;
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.beacon_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        LayoutInflater inflater = this.getLayoutInflater();
-        @SuppressLint("InflateParams") View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
-        Switch enable = dialog_view.findViewById(R.id.beacon_enable);
-        EditText delay = dialog_view.findViewById(R.id.beacon_delay);
-        EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count);
-        EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count);
-        beacon_config config = Paper.book().read("beacon_config", new beacon_config());
-        delay.setText(String.valueOf(config.delay));
-        disable_count.setText(String.valueOf(config.disable_count));
-        enable_count.setText(String.valueOf(config.enable_count));
-        new AlertDialog.Builder(this).setTitle("Beacon configuration")
-                .setView(dialog_view)
-                .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                    config.enable = enable.isChecked();
-                    config.delay = Long.parseLong(delay.getText().toString());
-                    config.disable_count = Integer.parseInt(disable_count.getText().toString());
-                    config.enable_count = Integer.parseInt(enable_count.getText().toString());
-                    Paper.book().write("beacon_config", config);
-                    LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("reload_beacon_config"));
-                }).show();
-        return true;
     }
 }
 

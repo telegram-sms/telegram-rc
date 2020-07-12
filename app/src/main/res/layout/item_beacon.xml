@@ -11,7 +11,7 @@
         tools:ignore="UselessParent">
 
         <TextView
-            android:id="@+id/beacon_title"
+            android:id="@+id/beacon_title_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="12dp"
@@ -24,10 +24,10 @@
             tools:ignore="HardcodedText,RelativeOverlap" />
 
         <TextView
-            android:id="@+id/beacon_address"
+            android:id="@+id/beacon_address_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/beacon_title"
+            android:layout_below="@+id/beacon_title_textview"
             android:layout_marginLeft="12dp"
             android:layout_marginRight="12dp"
             android:maxEms="20"
@@ -37,10 +37,10 @@
             tools:ignore="HardcodedText" />
 
         <TextView
-            android:id="@+id/beacon_info"
+            android:id="@+id/beacon_info_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/beacon_address"
+            android:layout_below="@+id/beacon_address_textview"
             android:layout_marginLeft="12dp"
             android:layout_marginRight="12dp"
             android:maxEms="20"

@@ -573,7 +573,7 @@ public class main_activity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-            MenuItem set_proxy_item = menu.findItem(R.id.set_proxy);
+            MenuItem set_proxy_item = menu.findItem(R.id.set_proxy_menu_item);
             set_proxy_item.setVisible(false);
         }
         return true;
@@ -585,7 +585,7 @@ public class main_activity extends AppCompatActivity {
         LayoutInflater inflater = this.getLayoutInflater();
         String file_name = null;
         switch (item.getItemId()) {
-            case R.id.about:
+            case R.id.about_menu_item:
                 PackageManager packageManager = context.getPackageManager();
                 PackageInfo packageInfo;
                 String versionName = "";
@@ -602,23 +602,23 @@ public class main_activity extends AppCompatActivity {
                 builder.setPositiveButton(R.string.ok_button, null);
                 builder.show();
                 return true;
-            case R.id.scan:
+            case R.id.scan_menu_item:
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 0);
                 return true;
-            case R.id.logcat:
+            case R.id.logcat_menu_item:
                 startActivity(new Intent(main_activity.this, logcat_activity.class));
                 return true;
-            case R.id.config_qrcode:
+            case R.id.config_qrcode_menu_item:
                 if (sharedPreferences.getBoolean("initialized", false)) {
                     startActivity(new Intent(this, qrcode_show_activity.class));
                 } else {
                     Snackbar.make(findViewById(R.id.bot_token_editview), "Uninitialized.", Snackbar.LENGTH_LONG).show();
                 }
                 return true;
-            case R.id.set_beacon:
+            case R.id.set_beacon_menu_item:
                 startActivity(new Intent(main_activity.this, beacon_config_activity.class));
                 return true;
-            case R.id.set_notify:
+            case R.id.set_notify_menu_item:
                 if (!public_func.is_notify_listener(context)) {
                     Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -628,9 +628,9 @@ public class main_activity extends AppCompatActivity {
                 }
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
                 return true;
-            case R.id.spam_sms_keyword:
+            case R.id.spam_sms_keyword_edittext:
                 View spam_dialog_view = inflater.inflate(R.layout.set_keyword_layout, null);
-                final EditText editText = spam_dialog_view.findViewById(R.id.spam_sms_keyword);
+                final EditText editText = spam_dialog_view.findViewById(R.id.spam_sms_keyword_edittext);
                 ArrayList<String> black_keyword_list_old = Paper.book().read("black_keyword_list", new ArrayList<>());
                 StringBuilder black_keyword_list_old_string = new StringBuilder();
                 int count = 0;
@@ -651,15 +651,15 @@ public class main_activity extends AppCompatActivity {
                         })
                         .show();
                 return true;
-            case R.id.set_proxy:
+            case R.id.set_proxy_menu_item:
                 View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
                 final Switch doh_switch = findViewById(R.id.doh_switch);
-                final Switch proxy_enable = proxy_dialog_view.findViewById(R.id.proxy_enable);
-                final Switch proxy_doh_socks5 = proxy_dialog_view.findViewById(R.id.doh_over_socks5);
-                final EditText proxy_host = proxy_dialog_view.findViewById(R.id.proxy_host);
-                final EditText proxy_port = proxy_dialog_view.findViewById(R.id.proxy_port);
-                final EditText proxy_username = proxy_dialog_view.findViewById(R.id.proxy_username);
-                final EditText proxy_password = proxy_dialog_view.findViewById(R.id.proxy_password);
+                final Switch proxy_enable = proxy_dialog_view.findViewById(R.id.proxy_enable_switch);
+                final Switch proxy_doh_socks5 = proxy_dialog_view.findViewById(R.id.doh_over_socks5_switch);
+                final EditText proxy_host = proxy_dialog_view.findViewById(R.id.proxy_host_editview);
+                final EditText proxy_port = proxy_dialog_view.findViewById(R.id.proxy_port_editview);
+                final EditText proxy_username = proxy_dialog_view.findViewById(R.id.proxy_username_editview);
+                final EditText proxy_password = proxy_dialog_view.findViewById(R.id.proxy_password_editview);
                 proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
                 proxy_enable.setChecked(proxy_item.enable);
                 proxy_doh_socks5.setChecked(proxy_item.dns_over_socks5);
@@ -690,13 +690,13 @@ public class main_activity extends AppCompatActivity {
                         })
                         .show();
                 return true;
-            case R.id.user_manual:
+            case R.id.user_manual_menu_item:
                 file_name = "/wiki/" + context.getString(R.string.user_manual_url);
                 break;
-            case R.id.privacy_policy:
+            case R.id.privacy_policy_menu_item:
                 file_name = "/wiki/" + context.getString(R.string.privacy_policy_url);
                 break;
-            case R.id.donate:
+            case R.id.donate_menu_item:
                 file_name = "/donate";
                 break;
 

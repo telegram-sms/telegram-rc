@@ -8,7 +8,7 @@
     android:paddingEnd="20dp">
 
     <Switch
-        android:id="@+id/beacon_enable"
+        android:id="@+id/beacon_enable_switch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content">
 
         <EditText
-            android:id="@+id/beacon_delay"
+            android:id="@+id/beacon_delay_editview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Scan Delay"
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content">
 
         <EditText
-            android:id="@+id/beacon_enable_count"
+            android:id="@+id/beacon_enable_count_editview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Enable hotspot counter"
@@ -56,7 +56,7 @@
         android:layout_height="wrap_content">
 
         <EditText
-            android:id="@+id/beacon_disable_count"
+            android:id="@+id/beacon_disable_count_editview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Disable hotspot counter"
