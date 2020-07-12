@@ -40,7 +40,7 @@ public class beacon_config_activity extends AppCompatActivity {
     };
 
     void flush() {
-        ListView beaconList = findViewById(R.id.beacon_listview);
+        ListView beacon_list = findViewById(R.id.beacon_listview);
         if (beacon_static_data.beacons.size() > 0) {
             final ArrayList<BeaconModel> list = new ArrayList<>();
             for (Beacon beacon : beacon_static_data.beacons) {
@@ -53,7 +53,7 @@ public class beacon_config_activity extends AppCompatActivity {
             }
             runOnUiThread(() -> {
                 CustomBeaconAdapter adapter = new CustomBeaconAdapter(list, beacon_config_activity.this);
-                beaconList.setAdapter(adapter);
+                beacon_list.setAdapter(adapter);
             });
         }
     }
