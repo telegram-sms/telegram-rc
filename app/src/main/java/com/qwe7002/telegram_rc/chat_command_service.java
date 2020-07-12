@@ -60,6 +60,7 @@ import okhttp3.Response;
 
 @SuppressWarnings("BusyWait")
 public class chat_command_service extends Service {
+    private static final String TAG = "chat_command";
     //Global counter
     private static long offset = 0;
     private static int magnification = 1;
@@ -83,8 +84,7 @@ public class chat_command_service extends Service {
     private String send_to_temp;
     private String bot_username = "";
     private boolean privacy_mode;
-    final String TAG = "chat_command";
-    static Thread thread_main;
+    private static Thread thread_main;
     private String chat_id;
     private String bot_token;
 

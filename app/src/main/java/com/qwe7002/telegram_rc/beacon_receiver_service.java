@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -58,6 +59,26 @@ public class beacon_receiver_service extends Service {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
         startForeground(99, notification);
         return START_STICKY;
+    }
+
+    private Boolean is_charging() {
+        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, intentfilter);
+        assert batteryStatus != null;
+        switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
+            case BatteryManager.BATTERY_STATUS_CHARGING:
+            case BatteryManager.BATTERY_STATUS_FULL:
+                return true;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
+                    case BatteryManager.BATTERY_PLUGGED_AC:
+                    case BatteryManager.BATTERY_PLUGGED_USB:
+                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                        return true;
+                }
+        }
+        return false;
     }
 
     @Nullable
@@ -167,7 +188,9 @@ public class beacon_receiver_service extends Service {
                         if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
                             if (config.enable) {
-                                remote_control_public.open_ap(wifi_manager);
+                                if (is_charging()) {
+                                    remote_control_public.open_ap(wifi_manager);
+                                }
                             } else {
                                 remote_control_public.close_ap(wifi_manager);
                             }
@@ -184,7 +207,9 @@ public class beacon_receiver_service extends Service {
                         if (config.enable) {
                             remote_control_public.close_ap(wifi_manager);
                         } else {
-                            remote_control_public.open_ap(wifi_manager);
+                            if (is_charging()) {
+                                remote_control_public.open_ap(wifi_manager);
+                            }
                         }
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
                     }
