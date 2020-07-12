@@ -57,7 +57,7 @@ public class beacon_receiver_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
-        startForeground(99, notification);
+        startForeground(public_func.BEACON_SERVICE_NOTIFY_ID, notification);
         return START_STICKY;
     }
 
