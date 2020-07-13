@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 public class logcat_activity extends AppCompatActivity {
     private Context context;
     private file_observer observer;
-    private TextView logcat;
+    private TextView logcat_textview;
     private final int line = 100;
 
     @Override
@@ -24,11 +24,11 @@ public class logcat_activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
         setContentView(R.layout.activity_logcat);
-        logcat = findViewById(R.id.logcat_textview);
+        logcat_textview = findViewById(R.id.logcat_textview);
         this.setTitle(R.string.logcat);
-        logcat.setText(public_func.read_log(context, line));
-        observer = new file_observer(context, logcat);
-        logcat.setGravity(Gravity.BOTTOM);
+        logcat_textview.setText(public_func.read_log(context, line));
+        observer = new file_observer(context, logcat_textview);
+        logcat_textview.setGravity(Gravity.BOTTOM);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class logcat_activity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        logcat.setText(public_func.read_log(context, line));
+        logcat_textview.setText(public_func.read_log(context, line));
         observer.startWatching();
     }
 

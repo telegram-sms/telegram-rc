@@ -64,7 +64,7 @@ public class main_activity extends AppCompatActivity {
     private final String TAG = "main_activity";
     private static boolean set_permission_back = false;
     private SharedPreferences sharedPreferences;
-
+    private final String privacy_police = "/guide/" + context.getString(R.string.Lang) + "privacy-policy";
     @SuppressLint("BatteryLife")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -474,7 +474,7 @@ public class main_activity extends AppCompatActivity {
         builder.setPositiveButton(R.string.agree, (dialog, which) -> sharedPreferences.edit().putBoolean("privacy_dialog_agree", true).apply());
         builder.setNegativeButton(R.string.decline, null);
         builder.setNeutralButton(R.string.visit_page, (dialog, which) -> {
-            Uri uri = Uri.parse("https://get.telegram-sms.com/wiki/" + context.getString(R.string.privacy_policy_url));
+            Uri uri = Uri.parse("https://get.telegram-sms.com" + privacy_police);
             CustomTabsIntent.Builder privacy_builder = new CustomTabsIntent.Builder();
             privacy_builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
             CustomTabsIntent customTabsIntent = privacy_builder.build();
@@ -691,15 +691,17 @@ public class main_activity extends AppCompatActivity {
                         .show();
                 return true;
             case R.id.user_manual_menu_item:
-                file_name = "/wiki/" + context.getString(R.string.user_manual_url);
+                file_name = "/guide/" + context.getString(R.string.Lang) + "user-manual";
                 break;
             case R.id.privacy_policy_menu_item:
-                file_name = "/wiki/" + context.getString(R.string.privacy_policy_url);
+                file_name = privacy_police;
+                break;
+            case R.id.question_and_answer_menu_item:
+                file_name = "/guide/" + context.getString(R.string.Lang) + "Q&A";
                 break;
             case R.id.donate_menu_item:
                 file_name = "/donate";
                 break;
-
         }
         assert file_name != null;
         Uri uri = Uri.parse("https://get.telegram-sms.com" + file_name);
