@@ -513,15 +513,15 @@ public class chat_command_service extends Service {
             case "/ping":
             case "/getinfo":
                 String card_info = "";
+                TelephonyManager telephonyManager = (TelephonyManager) context
+                        .getSystemService(Context.TELEPHONY_SERVICE);
+                assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0);
+                    card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0));
                     if (public_func.get_active_card(context) == 2) {
                         String data_card = "";
-                        TelephonyManager telephonyManager = (TelephonyManager) context
-                                .getSystemService(Context.TELEPHONY_SERVICE);
-                        assert telephonyManager != null;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            data_card = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0));
+                            data_card = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context);
                         }
                         card_info = data_card + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0)) + "\nSIM2: " + public_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 1));
                     }
