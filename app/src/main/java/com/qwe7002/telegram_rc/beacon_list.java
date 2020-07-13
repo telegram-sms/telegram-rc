@@ -8,7 +8,7 @@ import org.altbeacon.beacon.Beacon;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class beacon_static_data {
+public class beacon_list {
     static Collection<Beacon> beacons = new Collection<Beacon>() {
         @Override
         public int size() {

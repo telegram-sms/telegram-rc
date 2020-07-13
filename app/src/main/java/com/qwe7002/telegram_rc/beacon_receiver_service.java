@@ -51,7 +51,6 @@ public class beacon_receiver_service extends Service {
     private BeaconManager beacon_manager;
     private long startup_time = 0;
     private beacon_config config;
-
     private beacon_service_consumer beacon_consumer;
 
     @Override
@@ -152,7 +151,7 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
-                beacon_static_data.beacons = beacons;
+                beacon_list.beacons = beacons;
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
                     return;

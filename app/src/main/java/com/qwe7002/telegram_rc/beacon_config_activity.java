@@ -40,11 +40,10 @@ public class beacon_config_activity extends AppCompatActivity {
     };
 
     void flush() {
-        ListView beacon_list = findViewById(R.id.beacon_listview);
-        if (beacon_static_data.beacons.size() > 0) {
+        ListView beacon_listview = findViewById(R.id.beacon_listview);
+        if (beacon_list.beacons.size() > 0) {
             final ArrayList<BeaconModel> list = new ArrayList<>();
-            for (Beacon beacon : beacon_static_data.beacons) {
-                //Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
+            for (Beacon beacon : beacon_list.beacons) {
                 BeaconModel model = new BeaconModel();
                 model.title = beacon.getBluetoothName();
                 model.address = beacon.getBluetoothAddress();
@@ -53,7 +52,7 @@ public class beacon_config_activity extends AppCompatActivity {
             }
             runOnUiThread(() -> {
                 CustomBeaconAdapter adapter = new CustomBeaconAdapter(list, beacon_config_activity.this);
-                beacon_list.setAdapter(adapter);
+                beacon_listview.setAdapter(adapter);
             });
         }
     }
