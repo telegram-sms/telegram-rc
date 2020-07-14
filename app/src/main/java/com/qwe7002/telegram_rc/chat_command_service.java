@@ -25,6 +25,7 @@ import android.os.PowerManager;
 import android.os.Process;
 import android.telephony.CellIdentityNr;
 import android.telephony.CellInfo;
+import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoNr;
 import android.telephony.CellInfoWcdma;
@@ -66,9 +67,7 @@ public class chat_command_service extends Service {
     private static int magnification = 1;
     private static int error_magnification = 1;
 
-    //cell info
-    private static int signal_arfcn = -1;
-    private static int signal_strength = 0;
+
 
     // global object
     private OkHttpClient okhttp_client;
@@ -293,6 +292,9 @@ public class chat_command_service extends Service {
     }
 
     private static String get_cell_info(Context context, TelephonyManager telephonyManager, int sub_id) {
+        final int[] signal_arfcn = {-1};
+        final int[] signal_strength = {0};
+        final int[] cell_registered_count = {0};
         String TAG = "get_cell_info";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "get_cell_info: No permission.");
@@ -314,26 +316,33 @@ public class chat_command_service extends Service {
             }
             telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
                 @Override
-                public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
-                    Log.d(TAG, "cellinfo_size: " + cellInfo.size());
-                    if (cellInfo.size() == 0) {
+                public void onCellInfo(@NonNull List<CellInfo> cell_info_result) {
+                    Log.d(TAG, "cellinfo_size: " + cell_info_result.size());
+                    if (cell_info_result.size() == 0) {
                         return;
                     }
-                    CellInfo info = cellInfo.get(0);
+                    for (CellInfo cell : cell_info_result) {
+                        if (cell.isRegistered()) {
+                            if (cell instanceof CellInfoLte) {
+                                ++cell_registered_count[0];
+                            }
+                        }
+                    }
+                    CellInfo info = cell_info_result.get(0);
                     Log.d(TAG, "cell_registered: " + info.isRegistered());
                     Log.d(TAG, "cell_updatetime: " + info.getTimeStamp());
                     if (info instanceof CellInfoNr) {
-                        signal_strength = ((CellInfoNr) info).getCellSignalStrength().getDbm();
+                        signal_strength[0] = ((CellInfoNr) info).getCellSignalStrength().getDbm();
                         CellIdentityNr cell_identity = (CellIdentityNr) ((CellInfoNr) info).getCellIdentity();
-                        signal_arfcn = cell_identity.getNrarfcn();
+                        signal_arfcn[0] = cell_identity.getNrarfcn();
                     }
                     if (info instanceof CellInfoLte) {
-                        signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
-                        signal_arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
+                        signal_strength[0] = ((CellInfoLte) info).getCellSignalStrength().getDbm();
+                        signal_arfcn[0] = ((CellInfoLte) info).getCellIdentity().getEarfcn();
                     }
                     if (info instanceof CellInfoWcdma) {
-                        signal_strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
-                        signal_arfcn = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
+                        signal_strength[0] = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
+                        signal_arfcn[0] = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
                     }
                     run_lock = true;
                 }
@@ -347,36 +356,49 @@ public class chat_command_service extends Service {
             }
 
         } else {
-            for (CellInfo info : telephonyManager.getAllCellInfo()) {
-                if (!info.isRegistered()) {
+            for (CellInfo cell : telephonyManager.getAllCellInfo()) {
+                if (!cell.isRegistered()) {
                     continue;
                 }
-                if (info instanceof CellInfoLte) {
-                    signal_strength = ((CellInfoLte) info).getCellSignalStrength().getDbm();
+                if (cell instanceof CellInfoLte) {
+                    ++cell_registered_count[0];
+                    signal_strength[0] = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        signal_arfcn = ((CellInfoLte) info).getCellIdentity().getEarfcn();
+                        signal_arfcn[0] = ((CellInfoLte) cell).getCellIdentity().getEarfcn();
                     }
                     break;
                 }
-                if (info instanceof CellInfoWcdma) {
-                    signal_strength = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
+                if (cell instanceof CellInfoWcdma) {
+                    signal_strength[0] = ((CellInfoWcdma) cell).getCellSignalStrength().getDbm();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        signal_arfcn = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
+                        signal_arfcn[0] = ((CellInfoWcdma) cell).getCellIdentity().getUarfcn();
                     }
+                }
+                if (cell instanceof CellInfoGsm) {
+                    signal_strength[0] = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        signal_arfcn[0] = ((CellInfoGsm) cell).getCellIdentity().getArfcn();
+                    }
+
                 }
             }
         }
-        Log.d(TAG, "signal_strength: " + signal_strength);
-        Log.d(TAG, "signal_arfcn: " + signal_arfcn);
+        Log.d(TAG, "signal_strength: " + signal_strength[0]);
+        Log.d(TAG, "signal_arfcn: " + signal_arfcn[0]);
         result_string.append(" (");
-        if (signal_strength != 0) {
-            result_string.append(signal_strength);
+        if (signal_strength[0] != 0) {
+            result_string.append(signal_strength[0]);
             result_string.append(" dBm");
         }
-        if (signal_arfcn != -1) {
+        if (signal_arfcn[0] != -1) {
             result_string.append(", ");
             result_string.append("ARFCN: ");
-            result_string.append(signal_arfcn);
+            result_string.append(signal_arfcn[0]);
+        }
+        Log.d(TAG, "get_cell_info: " + cell_registered_count[0]);
+        if (cell_registered_count[0] > 1) {
+            result_string.append(", ");
+            result_string.append("CA detected");
         }
         result_string.append(")");
         return result_string.toString();
