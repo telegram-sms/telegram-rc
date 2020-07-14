@@ -64,13 +64,14 @@ public class main_activity extends AppCompatActivity {
     private final String TAG = "main_activity";
     private static boolean set_permission_back = false;
     private SharedPreferences sharedPreferences;
-    private final String privacy_police = "/guide/" + context.getString(R.string.Lang) + "privacy-policy";
+    private static String privacy_police;
     @SuppressLint("BatteryLife")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = getApplicationContext();
+        privacy_police = "/guide/" + context.getString(R.string.Lang) + "privacy-policy";
         final EditText bot_token_editview = findViewById(R.id.bot_token_editview);
         final EditText chat_id_editview = findViewById(R.id.chat_id_editview);
         final EditText trusted_phone_number_editview = findViewById(R.id.trusted_phone_number_editview);

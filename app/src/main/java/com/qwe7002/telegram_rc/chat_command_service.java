@@ -499,7 +499,7 @@ public class chat_command_service extends Service {
                     config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
                 if (command.equals("/commandlist")) {
-                    request_body.text = (getString(R.string.available_command) + "\n" + sms_command + ussd_command + switch_ap + config_adb).replace("/", "");
+                    request_body.text = (getString(R.string.available_command) + sms_command + ussd_command + switch_ap + config_adb).replace("/", "");
                     break;
                 }
 
