@@ -67,8 +67,6 @@ public class chat_command_service extends Service {
     private static int magnification = 1;
     private static int error_magnification = 1;
 
-
-
     // global object
     private OkHttpClient okhttp_client;
     private broadcast_receiver broadcast_receiver;
@@ -107,7 +105,7 @@ public class chat_command_service extends Service {
         super.onDestroy();
     }
 
-    private static boolean run_lock = false;
+
 
 
     @Override
@@ -294,7 +292,7 @@ public class chat_command_service extends Service {
     private static String get_cell_info(Context context, TelephonyManager telephonyManager, int sub_id) {
         final int[] signal_arfcn = {-1};
         final int[] signal_strength = {0};
-        final int[] cell_registered_count = {0};
+        final boolean[] run_lock = {false};
         String TAG = "get_cell_info";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "get_cell_info: No permission.");
@@ -310,10 +308,11 @@ public class chat_command_service extends Service {
             telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            run_lock = false;
+            run_lock[0] = false;
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 Log.d("get_data_sim_id", "No permission.");
             }
+
             telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cell_info_result) {
@@ -321,16 +320,10 @@ public class chat_command_service extends Service {
                     if (cell_info_result.size() == 0) {
                         return;
                     }
-                    for (CellInfo cell : cell_info_result) {
-                        if (cell.isRegistered()) {
-                            if (cell instanceof CellInfoLte) {
-                                ++cell_registered_count[0];
-                            }
-                        }
-                    }
                     CellInfo info = cell_info_result.get(0);
                     Log.d(TAG, "cell_registered: " + info.isRegistered());
                     Log.d(TAG, "cell_updatetime: " + info.getTimeStamp());
+
                     if (info instanceof CellInfoNr) {
                         signal_strength[0] = ((CellInfoNr) info).getCellSignalStrength().getDbm();
                         CellIdentityNr cell_identity = (CellIdentityNr) ((CellInfoNr) info).getCellIdentity();
@@ -344,10 +337,10 @@ public class chat_command_service extends Service {
                         signal_strength[0] = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
                         signal_arfcn[0] = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
                     }
-                    run_lock = true;
+                    run_lock[0] = true;
                 }
             });
-            while (!run_lock) {
+            while (!run_lock[0]) {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -361,7 +354,6 @@ public class chat_command_service extends Service {
                     continue;
                 }
                 if (cell instanceof CellInfoLte) {
-                    ++cell_registered_count[0];
                     signal_strength[0] = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         signal_arfcn[0] = ((CellInfoLte) cell).getCellIdentity().getEarfcn();
@@ -394,11 +386,6 @@ public class chat_command_service extends Service {
             result_string.append(", ");
             result_string.append("ARFCN: ");
             result_string.append(signal_arfcn[0]);
-        }
-        Log.d(TAG, "get_cell_info: " + cell_registered_count[0]);
-        if (cell_registered_count[0] > 1) {
-            result_string.append(", ");
-            result_string.append("CA detected");
         }
         result_string.append(")");
         return result_string.toString();
