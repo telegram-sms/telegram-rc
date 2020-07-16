@@ -189,6 +189,9 @@ public class beacon_receiver_service extends Service {
                             if (config.enable) {
                                 if (is_charging()) {
                                     remote_control_public.open_ap(wifi_manager);
+                                } else {
+                                    Log.d(TAG, "Battery mode");
+                                    return;
                                 }
                             } else {
                                 remote_control_public.close_ap(wifi_manager);
@@ -208,6 +211,9 @@ public class beacon_receiver_service extends Service {
                         } else {
                             if (is_charging()) {
                                 remote_control_public.open_ap(wifi_manager);
+                            } else {
+                                Log.d(TAG, "Battery mode");
+                                return;
                             }
                         }
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
