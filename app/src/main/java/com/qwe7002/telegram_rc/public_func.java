@@ -396,10 +396,10 @@ class public_func {
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
         start_beacon_service(context);
         if (is_notify_listener(context)) {
-            ComponentName thisComponent = new ComponentName(context, notification_listener_service.class);
-            PackageManager pm = context.getPackageManager();
-            pm.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-            pm.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+            ComponentName this_component_name = new ComponentName(context, notification_listener_service.class);
+            PackageManager package_manager = context.getPackageManager();
+            package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+            package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (battery_switch) {
