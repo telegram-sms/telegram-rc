@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
 import android.util.Log;
@@ -101,6 +102,12 @@ public class battery_service extends Service {
                     break;
                 case Intent.ACTION_BATTERY_LOW:
                     prebody.append(context.getString(R.string.battery_low));
+                    if (Paper.book().read("wifi_open", false)) {
+                        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                        assert wifiManager != null;
+                        remote_control_public.close_ap(wifiManager);
+                        prebody.append("\n").append(getString(R.string.close_wifi)).append(context.getString(R.string.action_success));
+                    }
                     break;
                 case Intent.ACTION_POWER_CONNECTED:
                     prebody.append(context.getString(R.string.charger_connect));
