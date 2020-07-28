@@ -3,11 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.qwe7002.telegram_rc">
 
-    <uses-permission-sdk-23 android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission-sdk-23 android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission-sdk-23 android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission-sdk-23 android:name="android.permission.ACCESS_COARSE_UPDATES" />
-    <uses-permission-sdk-23 android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_UPDATES" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -36,14 +36,6 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
 
-        <service
-            android:name="org.altbeacon.beacon.service.BeaconService"
-            tools:node="replace">
-            <meta-data
-                android:name="longScanForcingEnabled"
-                android:value="true" />
-        </service>
-
         <receiver android:name=".sim_status_receiver">
             <intent-filter>
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
@@ -67,11 +59,7 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <service
-            android:name=".beacon_receiver_service"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location" />
+        <service android:name=".beacon_receiver_service" />
         <service
             android:name=".chat_command_service"
             android:enabled="true"
@@ -85,27 +73,12 @@
             android:name=".battery_service"
             android:enabled="true"
             android:exported="false"
-            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
             android:process=":battery">
-            <intent-filter>
-                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data android:scheme="sms" />
-                <data android:scheme="smsto" />
-                <data android:scheme="mms" />
-                <data android:scheme="mmsto" />
-            </intent-filter>
         </service>
 
         <receiver android:name=".boot_receiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-            <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
