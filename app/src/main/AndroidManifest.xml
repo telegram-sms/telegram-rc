@@ -36,6 +36,14 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
 
+        <service
+            android:name="org.altbeacon.beacon.service.BeaconService"
+            tools:node="replace">
+            <meta-data
+                android:name="longScanForcingEnabled"
+                android:value="true" />
+        </service>
+
         <receiver android:name=".sim_status_receiver">
             <intent-filter>
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
