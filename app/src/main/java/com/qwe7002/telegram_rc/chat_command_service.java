@@ -585,9 +585,7 @@ public class chat_command_service extends Service {
         wifilock.release();
         wakelock.release();
         unregisterReceiver(broadcast_receiver);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            connectivity_manager.unregisterNetworkCallback(callback);
-        }
+        connectivity_manager.unregisterNetworkCallback(callback);
         stopForeground(true);
         super.onDestroy();
     }
