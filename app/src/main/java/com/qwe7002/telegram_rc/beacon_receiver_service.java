@@ -154,9 +154,18 @@ public class beacon_receiver_service extends Service {
                 beacon_list.beacons = beacons;
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
+                    Log.d(TAG, "onBeaconServiceConnect: Startup time is too short");
                     return;
                 }
                 if (Paper.book().read("disable_beacon", false)) {
+                    not_found_count = 0;
+                    detect_singal_count = 0;
+                    return;
+                }
+                if (!is_charging() && !Paper.book().read("wifi_open", false) && !config.enable) {
+                    not_found_count = 0;
+                    detect_singal_count = 0;
+                    Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");
                     return;
                 }
                 String message = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + getString(R.string.action_success);
@@ -187,12 +196,7 @@ public class beacon_receiver_service extends Service {
                         if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
                             if (config.enable) {
-                                if (is_charging()) {
-                                    remote_control_public.open_ap(wifi_manager);
-                                } else {
-                                    Log.d(TAG, "Battery mode");
-                                    return;
-                                }
+                                remote_control_public.open_ap(wifi_manager);
                             } else {
                                 remote_control_public.close_ap(wifi_manager);
                             }
@@ -209,12 +213,7 @@ public class beacon_receiver_service extends Service {
                         if (config.enable) {
                             remote_control_public.close_ap(wifi_manager);
                         } else {
-                            if (is_charging()) {
-                                remote_control_public.open_ap(wifi_manager);
-                            } else {
-                                Log.d(TAG, "Battery mode");
-                                return;
-                            }
+                            remote_control_public.open_ap(wifi_manager);
                         }
                         network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
                     }
