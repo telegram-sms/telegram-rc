@@ -803,8 +803,6 @@ public class chat_command_service extends Service {
                         return;
                     }
                     CellInfo info = cell_info_result.get(0);
-                    Log.d(TAG, "cell_registered: " + info.isRegistered());
-                    Log.d(TAG, "cell_updatetime: " + info.getTimeStamp());
 
                     if (info instanceof CellInfoNr) {
                         signal_strength[0] = ((CellInfoNr) info).getCellSignalStrength().getDbm();

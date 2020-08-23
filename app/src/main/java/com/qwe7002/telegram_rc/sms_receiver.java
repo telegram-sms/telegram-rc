@@ -8,6 +8,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -36,6 +38,7 @@ import okhttp3.Response;
 
 public class sms_receiver extends BroadcastReceiver {
     final static CodeauxLibPortable code_aux_lib = new CodeauxLibPortable();
+
     public void onReceive(final Context context, @NotNull Intent intent) {
         Paper.init(context);
         final String TAG = "sms_receiver";
@@ -52,10 +55,18 @@ public class sms_receiver extends BroadcastReceiver {
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = public_func.get_url(bot_token, "sendMessage");
 
-        final int slot = extras.getInt("slot", -1);
+        int slot = extras.getInt("slot", -1);
+        final int sub_id = extras.getInt("subscription", -1);
+        if (public_func.get_active_card(context) >= 2 && slot == -1) {
+            SubscriptionManager manager = SubscriptionManager.from(context);
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                SubscriptionInfo info = manager.getActiveSubscriptionInfo(sub_id);
+                slot = info.getSimSlotIndex();
+            }
+        }
+        final int final_slot = slot;
         String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
 
-        final int sub_id = extras.getInt("subscription", -1);
         Object[] pdus = (Object[]) extras.get("pdus");
         assert pdus != null;
         final SmsMessage[] messages = new SmsMessage[pdus.length];
@@ -175,7 +186,7 @@ public class sms_receiver extends BroadcastReceiver {
                                 }
                                 msg_send_content.append(message_command_list[i]);
                             }
-                            new Thread(() -> public_func.send_sms(context, msg_send_to, msg_send_content.toString(), slot, sub_id)).start();
+                            new Thread(() -> public_func.send_sms(context, msg_send_to, msg_send_content.toString(), final_slot, sub_id)).start();
                             return;
                         }
                         break;
@@ -241,7 +252,7 @@ public class sms_receiver extends BroadcastReceiver {
                         public_func.write_log(context, "[" + message_address + "] Not a regular phone number.");
                         return;
                     }
-                    public_func.add_message_list(public_func.get_message_id(result), message_address, slot, sub_id);
+                    public_func.add_message_list(public_func.get_message_id(result), message_address, final_slot, sub_id);
                 }
                 command_handle(sharedPreferences, message_body, data_enable);
             }
