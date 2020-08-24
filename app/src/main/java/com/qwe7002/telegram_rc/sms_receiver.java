@@ -64,6 +64,7 @@ public class sms_receiver extends BroadcastReceiver {
                 slot = info.getSimSlotIndex();
             }
         }
+        Log.d(TAG, "onReceive: " + slot);
         final int final_slot = slot;
         String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
 

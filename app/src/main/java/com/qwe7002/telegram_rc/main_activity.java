@@ -58,14 +58,15 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-
+@SuppressLint("UseSwitchCompatOrMaterialCode")
 public class main_activity extends AppCompatActivity {
     private Context context = null;
     private final String TAG = "main_activity";
     private static boolean set_permission_back = false;
     private SharedPreferences sharedPreferences;
     private static String privacy_police;
-    @SuppressLint("BatteryLife")
+
+    @SuppressLint({"BatteryLife", "QueryPermissionsNeeded"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -171,13 +172,11 @@ public class main_activity extends AppCompatActivity {
             doh_switch.setEnabled(!Paper.book().read("proxy_config", new proxy_config()).enable);
         }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                 assert tm != null;
                 if (tm.getPhoneCount() <= 1) {
                     display_dual_sim_display_name_switch.setVisibility(View.GONE);
                 }
-            }
         }
         display_dual_sim_display_name_switch.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -330,23 +329,21 @@ public class main_activity extends AppCompatActivity {
                 show_privacy_dialog();
                 return;
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                List<String> permission_base = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
-                List<String> permission = new ArrayList<>(permission_base);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    permission.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
-                }
-                ActivityCompat.requestPermissions(main_activity.this, permission.toArray(new String[0]), 1);
+            List<String> permission_base = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
+            List<String> permission = new ArrayList<>(permission_base);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                permission.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+            }
+            ActivityCompat.requestPermissions(main_activity.this, permission.toArray(new String[0]), 1);
 
-                PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-                assert powerManager != null;
-                boolean has_ignored = powerManager.isIgnoringBatteryOptimizations(getPackageName());
-                if (!has_ignored) {
-                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
-                    if (intent.resolveActivityInfo(getPackageManager(), PackageManager.MATCH_DEFAULT_ONLY) != null) {
-                        startActivity(intent);
-                    }
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            assert powerManager != null;
+            boolean has_ignored = powerManager.isIgnoringBatteryOptimizations(getPackageName());
+            if (!has_ignored) {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                if (intent.resolveActivityInfo(getPackageManager(), PackageManager.MATCH_DEFAULT_ONLY) != null) {
+                    startActivity(intent);
                 }
             }
 
@@ -498,7 +495,7 @@ public class main_activity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case 0:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "No camera permissions.");
                     Snackbar.make(findViewById(R.id.bot_token_editview), R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
                     return;
@@ -508,16 +505,13 @@ public class main_activity extends AppCompatActivity {
                 break;
             case 1:
                 Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim_switch);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                         TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                         assert telephony_manager != null;
                         if (telephony_manager.getPhoneCount() <= 1 || public_func.get_active_card(context) < 2) {
-                            //display_dual_sim_display_name.setVisibility(View.GONE);
                             display_dual_sim_display_name.setEnabled(false);
                             display_dual_sim_display_name.setChecked(false);
                         }
-                    }
                 }
                 break;
         }
@@ -573,10 +567,6 @@ public class main_activity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-            MenuItem set_proxy_item = menu.findItem(R.id.set_proxy_menu_item);
-            set_proxy_item.setVisible(false);
-        }
         return true;
     }
 
