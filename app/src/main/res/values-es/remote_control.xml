@@ -1,0 +1,20 @@
+<resources>
+    <string name="action_failed">ha fallado.</string>
+    <string name="action_success">exitosamente.</string>
+    <string name="close_wifi">"Desactivar el anclaje a red "</string>
+    <string name="open_wifi">"Habilitar anclaje "</string>
+    <string name="switch_data">Cambiando estado de la red móvil.</string>
+    <string name="restart_network">Reiniciando la red móvil.</string>
+    <string name="switch_ap_message">/switch_ap - Activar o desactivar el anclaje a red</string>
+    <string name="config_adb_message">"/set_adb_port - Configurar puerto adb de red\n/set_adb_key - Configurar clave de autorización adb"</string>
+    <string name="current_data_card">Tarjeta de datos</string>
+    <string name="not_getting_root">No se obteniendo privilegios de root.</string>
+    <string name="adb_config">"Configuración de adb de red "</string>
+    <string name="root_switch">[Root] Permitir funciones avanzadas</string>
+    <string name="hotspot_status">"Estado de anclaje: "</string>
+    <string name="enable">Habilitar</string>
+    <string name="disable">Deshabilitado</string>
+    <string name="beacon_receiver">"Receptor de baliza "</string>
+    <string name="beacon_receiver_configuration">Ajustes receptor de baliza</string>
+    <string name="enable_hotspot_when_beacon_is_detected">Habilitar el punto de acceso cuando se detecte una baliza</string>
+</resources>
