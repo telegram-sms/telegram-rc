@@ -5,8 +5,8 @@
     <string name="open_wifi">WI-FIホットスポットを開く</string>
     <string name="switch_data">モバイルネットワークのステータスを切り替えます。</string>
     <string name="restart_network">モバイルネットワークを再起動します。</string>
-    <string name="switch_ap_message">/switch_ap - WiFiホットスポットをオンまたはオフにする</string>
-    <string name="config_adb_message">"/set_adb_port - 構成ネットワーク adb ポート\n/set_adb_key - 設定adb認証キー"</string>
+    <string name="switch_ap_message">/switchap - WiFiホットスポットをオンまたはオフにする</string>
+    <string name="config_adb_message">"/setadbport - 構成ネットワーク adb ポート\n/setadbkey - 設定adb認証キー"</string>
     <string name="current_data_card">データカード</string>
     <string name="not_getting_root">ルート権限を取得していません。</string>
     <string name="adb_config">ネットワーク adb のセットアップが完了しました。</string>

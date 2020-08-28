@@ -5,8 +5,8 @@
     <string name="open_wifi">開啟無線網路基地台</string>
     <string name="switch_data">正在切換行動網路狀態。</string>
     <string name="restart_network">重新啟動行動網路。</string>
-    <string name="switch_ap_message">/switch_ap - 開啟或關閉無線網路基地台</string>
-    <string name="config_adb_message">"/set_adb_port - 配置网络 adb 端口\n/set_adb_key - 配置adb授權密鑰"</string>
+    <string name="switch_ap_message">/switchap - 開啟或關閉無線網路基地台</string>
+    <string name="config_adb_message">"/setadbport - 配置网络 adb 端口\n/setadbkey - 配置adb授權密鑰"</string>
     <string name="current_data_card">數據卡</string>
     <string name="not_getting_root">沒有獲得 root 權限。</string>
     <string name="adb_config">網絡 adb 設置</string>

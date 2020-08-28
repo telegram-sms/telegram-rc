@@ -6,8 +6,8 @@
     <string name="open_wifi">"Enable tethering "</string>
     <string name="switch_data">Switching mobile network status.</string>
     <string name="restart_network">Restarting the mobile network.</string>
-    <string name="switch_ap_message">/switch_ap - Turn tethering on or off</string>
-    <string name="config_adb_message">"/set_adb_port - Config network adb port\n/set_adb_key - Config adb Authorization key"</string>
+    <string name="switch_ap_message">/switchap - Turn tethering on or off</string>
+    <string name="config_adb_message">"/setadbport - Config network adb port\n/setadbkey - Config adb Authorization key"</string>
     <string name="current_data_card">Data card</string>
     <string name="not_getting_root">Not getting root privileges.</string>
     <string name="adb_config">"Network adb setup "</string>
