@@ -5,7 +5,7 @@
     <string name="open_wifi">"Habilitar anclaje "</string>
     <string name="switch_data">Cambiando estado de la red móvil.</string>
     <string name="restart_network">Reiniciando la red móvil.</string>
-    <string name="switch_ap_message">/switchap - Activar o desactivar el anclaje a red</string>
+    <string name="switch_ap_message">/switchap - Alternar el interruptor de anclaje\n/switchdata - Alternar interruptor de datos\n/restartnetwork - Restablecer la red del operador\n/setdatacard - Configurar tarjeta de datos</string>
     <string name="config_adb_message">"/setadbport - Configurar puerto adb de red\n/setadbkey - Configurar clave de autorización adb"</string>
     <string name="current_data_card">Tarjeta de datos</string>
     <string name="not_getting_root">No se obteniendo privilegios de root.</string>
