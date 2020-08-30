@@ -322,7 +322,7 @@ public class chat_command_service extends Service {
                         }
                     }
                     Paper.book("temp").write("sub_id", public_func.get_sub_id(context, slot));
-                    request_body.text = getString(R.string.system_message_head) + "\n" + "Current data card: SIM" + public_func.get_data_sim_id(context);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + "Current data card: SIM" + slot;
                     has_command = true;
                 }
                 break;
