@@ -699,7 +699,7 @@ public class chat_command_service extends Service {
                                 Log.i("get_network_type", "No permission.");
                                 return net_type;
                             }
-                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType(), is_att_sim(telephonyManager.getSimOperator()));
+                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
                             if (cell_info) {
                                 net_type += get_cell_info(context, telephonyManager, -1);
                             }
@@ -723,7 +723,7 @@ public class chat_command_service extends Service {
                     net_type = "WIFI";
                     break;
                 case ConnectivityManager.TYPE_MOBILE:
-                    net_type = check_cellular_network_type(network_info.getSubtype(), is_att_sim(telephonyManager.getSimOperator()));
+                    net_type = check_cellular_network_type(network_info.getSubtype());
                     if (cell_info) {
                         net_type += get_cell_info(context, telephonyManager, -1);
                     }
@@ -878,47 +878,17 @@ public class chat_command_service extends Service {
         public static final int WAITING_TO_SEND_STATUS = 2;
     }
 
-    private static boolean is_att_sim(String mcc_mnc) {
-        int int_mcc_mnc = -1;
-        try {
-            int_mcc_mnc = Integer.parseInt(mcc_mnc);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-        switch (int_mcc_mnc) {
-            case 310150:
-            case 310680:
-            case 310070:
-            case 310560:
-            case 310410:
-            case 310380:
-            case 310170:
-            case 310980:
-                return true;
-        }
-        return false;
-    }
 
-    private static String check_cellular_network_type(int type, boolean is_att) {
+    private static String check_cellular_network_type(int type) {
         String net_type = "Unknown";
         switch (type) {
             case TelephonyManager.NETWORK_TYPE_NR:
                 net_type = "5G";
-                if (is_att) {
-                    net_type = "5G+";
-                }
                 break;
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
-                if (is_att) {
-                    net_type = "5G E";
-                }
                 break;
             case TelephonyManager.NETWORK_TYPE_HSPAP:
-                if (is_att) {
-                    net_type = "4G";
-                    break;
-                }
             case TelephonyManager.NETWORK_TYPE_EVDO_0:
             case TelephonyManager.NETWORK_TYPE_EVDO_A:
             case TelephonyManager.NETWORK_TYPE_EVDO_B:

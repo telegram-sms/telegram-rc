@@ -72,7 +72,7 @@ public class main_activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = getApplicationContext();
-        privacy_police = "/guide/" + context.getString(R.string.Lang) + "privacy-policy";
+        privacy_police = "/guide/" + context.getString(R.string.Lang) + "/privacy-policy";
         final EditText bot_token_editview = findViewById(R.id.bot_token_editview);
         final EditText chat_id_editview = findViewById(R.id.chat_id_editview);
         final EditText trusted_phone_number_editview = findViewById(R.id.trusted_phone_number_editview);
@@ -328,6 +328,13 @@ public class main_activity extends AppCompatActivity {
             if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
                 show_privacy_dialog();
                 return;
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                //Cancel the bug of automatic revoke permission
+                final PackageManager pm = getApplicationContext().getPackageManager();
+                if (!pm.isAutoRevokeWhitelisted()) {
+                    startActivity(new Intent(Intent.ACTION_AUTO_REVOKE_PERMISSIONS));
+                }
             }
             List<String> permission_base = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
             List<String> permission = new ArrayList<>(permission_base);
