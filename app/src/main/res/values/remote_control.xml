@@ -6,7 +6,7 @@
     <string name="open_wifi">"Enable tethering "</string>
     <string name="switch_data">Switching mobile network status.</string>
     <string name="restart_network">Restarting the mobile network.</string>
-    <string name="switch_ap_message">/switchap - Toggle tethering switch\n/switchdata - Toggle data switch\n/restartnetwork - Reset carrier network\n/setdatacard - Set up data card</string>
+    <string name="switch_ap_message">/switchap - Toggle tethering switch\n/switchdata - Toggle data switch\n/restartnetwork - Reset carrier network</string>
     <string name="config_adb_message">"/setadbport - Config network adb port\n/setadbkey - Config adb Authorization key"</string>
     <string name="current_data_card">Data card</string>
     <string name="not_getting_root">Not getting root privileges.</string>
@@ -18,4 +18,5 @@
     <string name="beacon_receiver">"Beacon receiver "</string>
     <string name="beacon_receiver_configuration">Beacon receiver configuration</string>
     <string name="enable_hotspot_when_beacon_is_detected">Enable hotspot when Beacon is detected</string>
+    <string name="set_data_card">/setdatacard - Set up data card</string>
 </resources>

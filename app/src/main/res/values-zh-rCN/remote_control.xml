@@ -5,7 +5,7 @@
     <string name="open_wifi">打开无线热点</string>
     <string name="switch_data">正在切换移动网络状态。</string>
     <string name="restart_network">重新启动移动网络。</string>
-    <string name="switch_ap_message">/switchap - 切换网络共享开关\n/switchdata - 切换数据开关\n/restartnetwork - 重置运营商网络\n/setdatacard - 設置數據卡</string>
+    <string name="switch_ap_message">/switchap - 切换网络共享开关\n/switchdata - 切换数据开关\n/restartnetwork - 重置运营商网络</string>
     <string name="config_adb_message">"/setadbport - 配置网络 adb 端口\n/setadbkey - 配置adb授权密钥"</string>
     <string name="current_data_card">数据卡</string>
     <string name="not_getting_root">没有获得 root 权限</string>
@@ -17,4 +17,5 @@
     <string name="beacon_receiver">信标接收器</string>
     <string name="beacon_receiver_configuration">信标接收器配置</string>
     <string name="enable_hotspot_when_beacon_is_detected">检测到信标时启用热点</string>
+    <string name="set_data_card">/setdatacard - 设置数据卡</string>
 </resources>

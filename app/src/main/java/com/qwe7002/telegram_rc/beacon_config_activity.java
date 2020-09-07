@@ -85,7 +85,7 @@ public class beacon_config_activity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         LayoutInflater inflater = this.getLayoutInflater();
         @SuppressLint("InflateParams") View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
-        Switch enable = dialog_view.findViewById(R.id.beacon_enable_switch);
+        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch enable = dialog_view.findViewById(R.id.beacon_enable_switch);
         EditText delay = dialog_view.findViewById(R.id.beacon_delay_editview);
         EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count_editview);
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);

@@ -171,8 +171,12 @@ public class chat_command_service extends Service {
             case "/start":
             case "/commandlist":
                 String sms_command = "\n" + getString(R.string.sendsms);
+                String data_switch_command = "";
                 if (public_func.get_active_card(context) == 2) {
                     sms_command = "\n" + getString(R.string.sendsms_dual);
+                    if (sharedPreferences.getBoolean("root", false)) {
+                        data_switch_command = "\n" + getString(R.string.set_data_card);
+                    }
                 }
                 sms_command += "\n" + getString(R.string.get_spam_sms);
 
@@ -199,7 +203,7 @@ public class chat_command_service extends Service {
                     break;
                 }
 
-                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap + config_adb;
+                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap + data_switch_command + config_adb;
                 if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
                     result_string = result_string.replace(" -", "@" + bot_username + " -");
                 }

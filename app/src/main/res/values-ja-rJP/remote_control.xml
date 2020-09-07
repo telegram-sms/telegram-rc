@@ -5,7 +5,7 @@
     <string name="open_wifi">WI-FIホットスポットを開く</string>
     <string name="switch_data">モバイルネットワークのステータスを切り替えます。</string>
     <string name="restart_network">モバイルネットワークを再起動します。</string>
-    <string name="switch_ap_message">/switchap - テザリングスイッチを切り替え\n/switchdata - データを切り替え\n/restartnetwork - ネットワークをリセット\n/setdatacard - データカードを設定</string>
+    <string name="switch_ap_message">/switchap - テザリングスイッチを切り替え\n/switchdata - データを切り替え\n/restartnetwork - ネットワークをリセット</string>
     <string name="config_adb_message">"/setadbport - 構成ネットワーク adb ポート\n/setadbkey - 設定adb認証キー"</string>
     <string name="current_data_card">データカード</string>
     <string name="not_getting_root">ルート権限を取得していません。</string>
@@ -17,4 +17,5 @@
     <string name="beacon_receiver">ビーコン受信機</string>
     <string name="beacon_receiver_configuration">ビーコン受信機構成</string>
     <string name="enable_hotspot_when_beacon_is_detected">ビーコンが検出されたときにホットスポットを有効にする</string>
+    <string name="set_data_card">/setdatacard - データカードを設定</string>
 </resources>
