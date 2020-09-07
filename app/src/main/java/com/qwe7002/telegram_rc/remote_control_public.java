@@ -7,7 +7,7 @@ import io.paperdb.Paper;
 
 public class remote_control_public {
 
-    public static void close_ap(WifiManager wifi_manager) {
+    public static void disable_ap(WifiManager wifi_manager) {
         Paper.book().write("wifi_open", false);
         com.qwe7002.root_kit.network.wifi_set_enable(false);
         try {
@@ -20,7 +20,7 @@ public class remote_control_public {
         }
     }
 
-    public static void open_ap(WifiManager wifi_manager) {
+    public static void enable_ap(WifiManager wifi_manager) {
         if (wifi_manager.isWifiEnabled()) {
             com.qwe7002.root_kit.network.wifi_set_enable(false);
             try {

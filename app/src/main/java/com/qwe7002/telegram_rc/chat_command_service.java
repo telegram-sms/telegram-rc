@@ -298,11 +298,11 @@ public class chat_command_service extends Service {
                 boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
                 String result_ap;
                 if (!wifi_open) {
-                    result_ap = getString(R.string.open_wifi) + context.getString(R.string.action_success);
-                    new Thread(() -> remote_control_public.open_ap(wifiManager)).start();
+                    result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
+                    new Thread(() -> remote_control_public.enable_ap(wifiManager)).start();
                 } else {
                     Paper.book().write("wifi_open", false);
-                    result_ap = getString(R.string.close_wifi) + context.getString(R.string.action_success);
+                    result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                 }
                 result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
 
@@ -547,7 +547,7 @@ public class chat_command_service extends Service {
                             if (!Paper.book().read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                                 assert wifiManager != null;
-                                remote_control_public.close_ap(wifiManager);
+                                remote_control_public.disable_ap(wifiManager);
                             }
                             break;
                         case "/switchdata":

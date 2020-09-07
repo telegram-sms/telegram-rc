@@ -1,8 +1,8 @@
 <resources>
     <string name="action_success">成功。</string>
     <string name="action_failed">失敗。</string>
-    <string name="close_wifi">關閉無線網路基地台</string>
-    <string name="open_wifi">開啟無線網路基地台</string>
+    <string name="disable_wifi">關閉無線網路基地台</string>
+    <string name="enable_wifi">開啟無線網路基地台</string>
     <string name="switch_data">正在切換行動網路狀態。</string>
     <string name="restart_network">重新啟動行動網路。</string>
     <string name="switch_ap_message">/switchap - 切換網絡共享開關\n/switchdata - 切換數據開關\n/restartnetwork - 重置運營商網絡</string>

@@ -1,8 +1,8 @@
 <resources>
     <string name="action_success">成功。</string>
     <string name="action_failed">失败。</string>
-    <string name="close_wifi">关闭无线热点</string>
-    <string name="open_wifi">打开无线热点</string>
+    <string name="disable_wifi">关闭无线热点</string>
+    <string name="enable_wifi">打开无线热点</string>
     <string name="switch_data">正在切换移动网络状态。</string>
     <string name="restart_network">重新启动移动网络。</string>
     <string name="switch_ap_message">/switchap - 切换网络共享开关\n/switchdata - 切换数据开关\n/restartnetwork - 重置运营商网络</string>
