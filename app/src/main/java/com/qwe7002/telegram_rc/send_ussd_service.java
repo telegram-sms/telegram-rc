@@ -24,8 +24,6 @@ import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import io.paperdb.Paper;
@@ -37,38 +35,6 @@ import okhttp3.Response;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class send_ussd_service extends Service {
-    private static Map<Character, Integer> getNineKeyMap() {
-        return new HashMap<Character, Integer>() {
-            {
-                put('A', 2);
-                put('B', 2);
-                put('C', 2);
-                put('D', 3);
-                put('E', 3);
-                put('F', 3);
-                put('G', 4);
-                put('H', 4);
-                put('I', 4);
-                put('J', 5);
-                put('K', 5);
-                put('L', 5);
-                put('M', 6);
-                put('N', 6);
-                put('O', 6);
-                put('P', 7);
-                put('Q', 7);
-                put('R', 7);
-                put('S', 7);
-                put('T', 8);
-                put('U', 8);
-                put('V', 8);
-                put('W', 9);
-                put('X', 9);
-                put('Y', 9);
-                put('Z', 9);
-            }
-        };
-    }
 
     @Nullable
     @Override
@@ -101,18 +67,9 @@ public class send_ussd_service extends Service {
         int sub_id = intent.getIntExtra("sub_id", -1);
 
         assert ussd != null;
-        ussd = ussd.toUpperCase();
-        StringBuilder ussd_sb = new StringBuilder();
-        final Map<Character, Integer> nine_key_map = getNineKeyMap();
-        char[] ussd_char_array = ussd.toCharArray();
-        for (char c : ussd_char_array) {
-            if (Character.isUpperCase(c)) {
-                ussd_sb.append(nine_key_map.get(c));
-            } else {
-                ussd_sb.append(c);
-            }
-        }
-        ussd = ussd_sb.toString();
+
+        ussd = public_func.get_nine_key_map_convert(ussd);
+
         Log.d(TAG, "ussd: " + ussd);
         Log.d(TAG, "subid: " + sub_id);
 
