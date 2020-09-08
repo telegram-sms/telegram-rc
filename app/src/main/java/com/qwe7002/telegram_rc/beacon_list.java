@@ -28,6 +28,7 @@ public class beacon_list {
         @NonNull
         @Override
         public Iterator<Beacon> iterator() {
+            //noinspection ConstantConditions
             return null;
         }
 
@@ -40,6 +41,7 @@ public class beacon_list {
         @NonNull
         @Override
         public <T> T[] toArray(@NonNull T[] a) {
+            //noinspection ConstantConditions
             return null;
         }
 

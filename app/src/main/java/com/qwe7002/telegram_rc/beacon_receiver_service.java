@@ -2,6 +2,7 @@ package com.qwe7002.telegram_rc;
 
 import android.app.Notification;
 import android.app.Service;
+import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +25,7 @@ import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.service.ScanJob;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -143,6 +145,10 @@ public class beacon_receiver_service extends Service {
     public void onDestroy() {
         Log.d(TAG, "onDestroy: ");
         beacon_manager.unbind(beacon_consumer);
+        JobScheduler jobScheduler = (JobScheduler)
+                context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        jobScheduler.cancel(ScanJob.getImmediateScanJobId(context));
+        jobScheduler.cancel(ScanJob.getPeriodicScanJobId(context));
         stopForeground(true);
         super.onDestroy();
     }
