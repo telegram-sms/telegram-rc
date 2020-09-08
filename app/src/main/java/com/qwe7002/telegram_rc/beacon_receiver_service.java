@@ -143,7 +143,6 @@ public class beacon_receiver_service extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy: ");
         beacon_manager.unbind(beacon_consumer);
         JobScheduler jobScheduler = (JobScheduler)
                 context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
@@ -174,7 +173,6 @@ public class beacon_receiver_service extends Service {
                     Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");
                     return;
                 }
-                boolean found_beacon = false;
                 ArrayList<String> listen_beacon_list = Paper.book().read("beacon_address", new ArrayList<>());
                 if (listen_beacon_list.size() == 0) {
                     not_found_count = 0;
@@ -182,6 +180,7 @@ public class beacon_receiver_service extends Service {
                     Log.d(TAG, "onBeaconServiceConnect: Watchlist is empty");
                     return;
                 }
+                boolean found_beacon = false;
                 Beacon detect_beacon = null;
                 for (Beacon beacon : beacons) {
                     Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
@@ -212,13 +211,13 @@ public class beacon_receiver_service extends Service {
                 int switch_status = STATUS_STANDBY;
                 if (Paper.book().read("wifi_open", false)) {
                     if (!config.enable) {
-                        if (detect_singal_count >= config.disable_count) {
+                        if (detect_singal_count > config.disable_count) {
                             detect_singal_count = 0;
                             remote_control_public.disable_ap(wifi_manager);
                             switch_status = STATUS_DISABLE_AP;
                         }
                     } else {
-                        if (detect_singal_count >= config.enable_count) {
+                        if (detect_singal_count > config.enable_count) {
                             detect_singal_count = 0;
                             remote_control_public.enable_ap(wifi_manager);
                             switch_status = STATUS_ENABLE_AP;
@@ -226,13 +225,13 @@ public class beacon_receiver_service extends Service {
                     }
                 } else {
                     if (!config.enable) {
-                        if (not_found_count >= config.enable_count) {
+                        if (not_found_count > config.enable_count) {
                             not_found_count = 0;
                             remote_control_public.enable_ap(wifi_manager);
                             switch_status = STATUS_ENABLE_AP;
                         }
                     } else {
-                        if (not_found_count >= config.disable_count) {
+                        if (not_found_count > config.disable_count) {
                             not_found_count = 0;
                             remote_control_public.disable_ap(wifi_manager);
                             switch_status = STATUS_DISABLE_AP;
