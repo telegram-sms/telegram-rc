@@ -26,7 +26,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Switch;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -36,6 +35,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -58,7 +58,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-@SuppressLint("UseSwitchCompatOrMaterialCode")
 public class main_activity extends AppCompatActivity {
     private Context context = null;
     private final String TAG = "main_activity";
@@ -76,17 +75,17 @@ public class main_activity extends AppCompatActivity {
         final EditText bot_token_editview = findViewById(R.id.bot_token_editview);
         final EditText chat_id_editview = findViewById(R.id.chat_id_editview);
         final EditText trusted_phone_number_editview = findViewById(R.id.trusted_phone_number_editview);
-        final Switch chat_command_switch = findViewById(R.id.chat_command_switch);
-        final Switch fallback_sms_switch = findViewById(R.id.fallback_sms_switch);
-        final Switch battery_monitoring_switch = findViewById(R.id.battery_monitoring_switch);
-        final Switch doh_switch = findViewById(R.id.doh_switch);
-        final Switch charger_status_switch = findViewById(R.id.charger_status_switch);
-        final Switch verification_code_switch = findViewById(R.id.verification_code_switch);
-        final Switch root_switch = findViewById(R.id.root_switch);
-        final Switch privacy_mode_switch = findViewById(R.id.privacy_switch);
+        final SwitchMaterial chat_command_switch = findViewById(R.id.chat_command_switch);
+        final SwitchMaterial fallback_sms_switch = findViewById(R.id.fallback_sms_switch);
+        final SwitchMaterial battery_monitoring_switch = findViewById(R.id.battery_monitoring_switch);
+        final SwitchMaterial doh_switch = findViewById(R.id.doh_switch);
+        final SwitchMaterial charger_status_switch = findViewById(R.id.charger_status_switch);
+        final SwitchMaterial verification_code_switch = findViewById(R.id.verification_code_switch);
+        final SwitchMaterial root_switch = findViewById(R.id.root_switch);
+        final SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
         final Button save_button = findViewById(R.id.save_button);
         final Button get_id_button = findViewById(R.id.get_id_button);
-        final Switch display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
+        final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
@@ -444,7 +443,7 @@ public class main_activity extends AppCompatActivity {
 
     }
 
-    private void set_privacy_mode_checkbox(String chat_id, Switch chat_command, Switch privacy_mode_switch) {
+    private void set_privacy_mode_checkbox(String chat_id, SwitchMaterial chat_command, SwitchMaterial privacy_mode_switch) {
         if (!chat_command.isChecked()) {
             privacy_mode_switch.setVisibility(View.GONE);
             privacy_mode_switch.setChecked(false);
@@ -511,7 +510,7 @@ public class main_activity extends AppCompatActivity {
                 startActivityForResult(intent, 1);
                 break;
             case 1:
-                Switch display_dual_sim_display_name = findViewById(R.id.display_dual_sim_switch);
+                SwitchMaterial display_dual_sim_display_name = findViewById(R.id.display_dual_sim_switch);
                     if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                         TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                         assert telephony_manager != null;
@@ -533,10 +532,10 @@ public class main_activity extends AppCompatActivity {
                     JsonObject json_config = JsonParser.parseString(Objects.requireNonNull(data.getStringExtra("config_json"))).getAsJsonObject();
                     ((EditText) findViewById(R.id.bot_token_editview)).setText(json_config.get("bot_token").getAsString());
                     ((EditText) findViewById(R.id.chat_id_editview)).setText(json_config.get("chat_id").getAsString());
-                    ((Switch) findViewById(R.id.battery_monitoring_switch)).setChecked(json_config.get("battery_monitoring_switch").getAsBoolean());
-                    ((Switch) findViewById(R.id.verification_code_switch)).setChecked(json_config.get("verification_code").getAsBoolean());
+                    ((SwitchMaterial) findViewById(R.id.battery_monitoring_switch)).setChecked(json_config.get("battery_monitoring_switch").getAsBoolean());
+                    ((SwitchMaterial) findViewById(R.id.verification_code_switch)).setChecked(json_config.get("verification_code").getAsBoolean());
 
-                    Switch charger_status = findViewById(R.id.charger_status_switch);
+                    SwitchMaterial charger_status = findViewById(R.id.charger_status_switch);
                     if (json_config.get("battery_monitoring_switch").getAsBoolean()) {
                         charger_status.setChecked(json_config.get("charger_status").getAsBoolean());
                         charger_status.setVisibility(View.VISIBLE);
@@ -545,16 +544,16 @@ public class main_activity extends AppCompatActivity {
                         charger_status.setVisibility(View.GONE);
                     }
 
-                    Switch chat_command = findViewById(R.id.chat_command_switch);
+                    SwitchMaterial chat_command = findViewById(R.id.chat_command_switch);
                     chat_command.setChecked(json_config.get("chat_command").getAsBoolean());
-                    Switch privacy_mode_switch = findViewById(R.id.privacy_switch);
+                    SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
                     privacy_mode_switch.setChecked(json_config.get("privacy_mode").getAsBoolean());
 
                     set_privacy_mode_checkbox(json_config.get("chat_id").getAsString(), chat_command, privacy_mode_switch);
 
                     EditText trusted_phone_number = findViewById(R.id.trusted_phone_number_editview);
                     trusted_phone_number.setText(json_config.get("trusted_phone_number").getAsString());
-                    Switch fallback_sms = findViewById(R.id.fallback_sms_switch);
+                    SwitchMaterial fallback_sms = findViewById(R.id.fallback_sms_switch);
                     fallback_sms.setChecked(json_config.get("fallback_sms").getAsBoolean());
                     if (trusted_phone_number.length() != 0) {
                         fallback_sms.setVisibility(View.VISIBLE);
@@ -651,9 +650,9 @@ public class main_activity extends AppCompatActivity {
                 return true;
             case R.id.set_proxy_menu_item:
                 View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
-                final Switch doh_switch = findViewById(R.id.doh_switch);
-                final Switch proxy_enable = proxy_dialog_view.findViewById(R.id.proxy_enable_switch);
-                final Switch proxy_doh_socks5 = proxy_dialog_view.findViewById(R.id.doh_over_socks5_switch);
+                final SwitchMaterial doh_switch = findViewById(R.id.doh_switch);
+                final SwitchMaterial proxy_enable = proxy_dialog_view.findViewById(R.id.proxy_enable_switch);
+                final SwitchMaterial proxy_doh_socks5 = proxy_dialog_view.findViewById(R.id.doh_over_socks5_switch);
                 final EditText proxy_host = proxy_dialog_view.findViewById(R.id.proxy_host_editview);
                 final EditText proxy_port = proxy_dialog_view.findViewById(R.id.proxy_port_editview);
                 final EditText proxy_username = proxy_dialog_view.findViewById(R.id.proxy_username_editview);
