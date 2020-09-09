@@ -203,6 +203,7 @@ public class beacon_receiver_service extends Service {
                     ++detect_singal_count;
                 } else {
                     beacon_status = "\nBeacon Not Found.";
+                    detect_singal_count = 0;
                     ++not_found_count;
                 }
                 final int STATUS_STANDBY = -1;

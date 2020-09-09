@@ -18,4 +18,5 @@
     <string name="beacon_receiver_configuration">Ajustes receptor de baliza</string>
     <string name="enable_hotspot_when_beacon_is_detected">Habilitar el punto de acceso cuando se detecte una baliza</string>
     <string name="set_data_card">/setdatacard - Configurar tarjeta de datos</string>
+    <string name="mobile_data_usage">Uso de datos móviles: </string>
 </resources>

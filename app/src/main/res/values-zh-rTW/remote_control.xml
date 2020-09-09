@@ -18,4 +18,5 @@
     <string name="beacon_receiver_configuration">信標接收器配置</string>
     <string name="enable_hotspot_when_beacon_is_detected">檢測到信標時啟用熱點</string>
     <string name="set_data_card">/setdatacard - 設置數據卡</string>
+    <string name="mobile_data_usage">行動數據使用量: </string>
 </resources>

@@ -4,6 +4,7 @@
 
 > Fight COVID-19. Stay at home. Save lives.
 
+
 A robot running on your Android device.
 
 The primary language used for commit messages is Simplified Chinese. However, you're welcome to use English in commit messages when making contributions.

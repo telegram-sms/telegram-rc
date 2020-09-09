@@ -63,15 +63,8 @@ public class send_ussd_service extends Service {
         startForeground(public_func.SEND_USSD_SERVCE_NOTIFY_ID, notification.build());
 
         Handler handler = new Handler();
-        String ussd = intent.getStringExtra("ussd");
+        final String ussd = public_func.get_nine_key_map_convert(intent.getStringExtra("ussd"));
         int sub_id = intent.getIntExtra("sub_id", -1);
-
-        assert ussd != null;
-
-        ussd = public_func.get_nine_key_map_convert(ussd);
-
-        Log.d(TAG, "ussd: " + ussd);
-        Log.d(TAG, "subid: " + sub_id);
 
         TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         assert telephonyManager != null;
@@ -97,7 +90,6 @@ public class send_ussd_service extends Service {
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
-        String finalUssd = ussd;
         TelephonyManager finalTelephonyManager = telephonyManager;
         new Thread(() -> {
             String message_id_string = "-1";
@@ -108,7 +100,7 @@ public class send_ussd_service extends Service {
                 e.printStackTrace();
             }
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                finalTelephonyManager.sendUssdRequest(finalUssd, new ussd_request_callback(context, sharedPreferences, Long.parseLong(message_id_string)), handler);
+                finalTelephonyManager.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, Long.parseLong(message_id_string)), handler);
             }
             stopSelf();
         }).start();

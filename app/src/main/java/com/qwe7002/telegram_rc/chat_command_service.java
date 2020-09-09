@@ -4,6 +4,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.Service;
+import android.app.usage.NetworkStats;
+import android.app.usage.NetworkStatsManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +25,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Process;
+import android.os.RemoteException;
 import android.telephony.CellIdentityNr;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
@@ -46,7 +49,9 @@ import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -213,17 +218,34 @@ public class chat_command_service extends Service {
             case "/ping":
             case "/getinfo":
                 String card_info = "";
+                String network_stats = "";
                 TelephonyManager telephonyManager = (TelephonyManager) context
                         .getSystemService(Context.TELEPHONY_SERVICE);
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                    NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
+                    Calendar c = Calendar.getInstance();
+                    //noinspection ConstantConditions
+                    if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) >= 1) {//Set the month of acquisition
+                        c.add(Calendar.MONTH, 0);
+                    } else {
+                        c.add(Calendar.MONTH, -1);
+                    }
+                    c.set(Calendar.DAY_OF_MONTH, 1);
+                    c.set(Calendar.HOUR_OF_DAY, 0);
+                    c.set(Calendar.MINUTE, 0);
+                    c.set(Calendar.SECOND, 0);
+                    long from = c.getTimeInMillis();
+                    try {
+                        NetworkStats.Bucket bucket =
+                                service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, null, from, System.currentTimeMillis());
+                        network_stats = "\n" + getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                     card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0));
                     if (public_func.get_active_card(context) == 2) {
-                        String data_card = "";
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            data_card = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context);
-                        }
-                        card_info = data_card + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0)) + "\nSIM2: " + public_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 1));
+                        card_info = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context) + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0)) + "\nSIM2: " + public_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 1));
                     }
                 }
                 String spam_count = "";
@@ -234,11 +256,11 @@ public class chat_command_service extends Service {
                 String is_hotspot_running = "";
                 if (sharedPreferences.getBoolean("root", false)) {
                     is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
-                    if (com.qwe7002.root_kit.activity_manage.check_service_is_running("be.mygod.vpnhotspot", ".RepeaterService")) {
+                    if (com.qwe7002.root_kit.activity_manage.check_service_is_running(public_func.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
                         is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
                     }
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + card_info;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + card_info + network_stats;
                 has_command = true;
                 break;
             case "/log":
@@ -915,11 +937,63 @@ public class chat_command_service extends Service {
         return net_type;
     }
 
+    private String get_size(long size) {
+        final int GB = 1024 * 1024 * 1024;
+        final int MB = 1024 * 1024;
+        final int KB = 1024;
+        DecimalFormat df = new DecimalFormat("0.00");
+        String resultSize;
+        if (size / GB >= 1) {
+            resultSize = df.format(size / (float) GB) + "GB";
+        } else if (size / MB >= 1) {
+            resultSize = df.format(size / (float) MB) + "MB";
+        } else if (size / KB >= 1) {
+            resultSize = df.format(size / (float) KB) + "KB";
+        } else {
+            resultSize = size + "Byte";
+
+        }
+        return resultSize;
+    }
+
+
+    private void when_network_change() {
+        if (public_func.check_network_status(context)) {
+            if (!thread_main.isAlive()) {
+                public_func.write_log(context, "Network connections has been restored.");
+                thread_main = new Thread(new thread_main_runnable());
+                thread_main.start();
+            }
+        }
+    }
+
+    private class broadcast_receiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, @NotNull Intent intent) {
+            Log.d(TAG, "onReceive: " + intent.getAction());
+            assert intent.getAction() != null;
+            if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
+                Log.i(TAG, "Received stop signal, quitting now...");
+                stopSelf();
+                Process.killProcess(Process.myPid());
+            }
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private class network_callback extends ConnectivityManager.NetworkCallback {
+        @Override
+        public void onAvailable(@NotNull Network network) {
+            Log.d(TAG, "onAvailable");
+            when_network_change();
+        }
+    }
+
     class thread_main_runnable implements Runnable {
         @Override
         public void run() {
             Log.d(TAG, "run: thread main start");
-            if (public_func.parse_long(chat_id) < 0) {
+            if (public_func.parse_string_to_long(chat_id) < 0) {
                 bot_username = Paper.book().read("bot_username", null);
                 if (bot_username == null) {
                     while (!get_me()) {
@@ -1016,39 +1090,6 @@ public class chat_command_service extends Service {
                     }
                 }
             }
-        }
-    }
-
-
-    private void when_network_change() {
-        if (public_func.check_network_status(context)) {
-            if (!thread_main.isAlive()) {
-                public_func.write_log(context, "Network connections has been restored.");
-                thread_main = new Thread(new thread_main_runnable());
-                thread_main.start();
-            }
-        }
-    }
-
-    private class broadcast_receiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, @NotNull Intent intent) {
-            Log.d(TAG, "onReceive: " + intent.getAction());
-            assert intent.getAction() != null;
-            if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
-                Log.i(TAG, "Received stop signal, quitting now...");
-                stopSelf();
-                Process.killProcess(Process.myPid());
-            }
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private class network_callback extends ConnectivityManager.NetworkCallback {
-        @Override
-        public void onAvailable(@NotNull Network network) {
-            Log.d(TAG, "onAvailable");
-            when_network_change();
         }
     }
 }

@@ -162,7 +162,7 @@ class public_func {
         return network_status;
     }
 
-    static long parse_long(String int_str) {
+    static long parse_string_to_long(String int_str) {
         long result = 0;
         try {
             result = Long.parseLong(int_str);
