@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -223,25 +224,28 @@ public class chat_command_service extends Service {
                         .getSystemService(Context.TELEPHONY_SERVICE);
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
-                    Calendar c = Calendar.getInstance();
-                    //noinspection ConstantConditions
-                    if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) >= 1) {//Set the month of acquisition
-                        c.add(Calendar.MONTH, 0);
-                    } else {
-                        c.add(Calendar.MONTH, -1);
-                    }
-                    c.set(Calendar.DAY_OF_MONTH, 1);
-                    c.set(Calendar.HOUR_OF_DAY, 0);
-                    c.set(Calendar.MINUTE, 0);
-                    c.set(Calendar.SECOND, 0);
-                    long from = c.getTimeInMillis();
-                    try {
-                        NetworkStats.Bucket bucket =
-                                service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, null, from, System.currentTimeMillis());
-                        network_stats = "\n" + getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
+                    if (public_func.is_data_usage(context)) {
+                        NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
+                        Calendar c = Calendar.getInstance();
+                        Date date = new Date();
+                        //noinspection deprecation
+                        if (date.getDay() >= 1) {//Set the month of acquisition
+                            c.add(Calendar.MONTH, 0);
+                        } else {
+                            c.add(Calendar.MONTH, -1);
+                        }
+                        c.set(Calendar.DAY_OF_MONTH, 1);
+                        c.set(Calendar.HOUR_OF_DAY, 0);
+                        c.set(Calendar.MINUTE, 0);
+                        c.set(Calendar.SECOND, 0);
+                        long from = c.getTimeInMillis();
+                        try {
+                            NetworkStats.Bucket bucket =
+                                    service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, null, from, System.currentTimeMillis());
+                            network_stats = "\n" + getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
                     }
                     card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0));
                     if (public_func.get_active_card(context) == 2) {

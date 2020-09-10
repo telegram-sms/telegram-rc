@@ -2,7 +2,6 @@ package com.qwe7002.telegram_rc;
 
 import android.app.Notification;
 import android.app.Service;
-import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,7 +24,6 @@ import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.Region;
-import org.altbeacon.beacon.service.ScanJob;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -131,12 +129,12 @@ public class beacon_receiver_service extends Service {
         // Detect the URL frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
-
         beacon_manager.setBackgroundScanPeriod(config.delay);
         beacon_manager.setForegroundScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(config.delay);
         beacon_manager.bind(beacon_consumer);
+
         startup_time = System.currentTimeMillis();
 
     }
@@ -144,10 +142,8 @@ public class beacon_receiver_service extends Service {
     @Override
     public void onDestroy() {
         beacon_manager.unbind(beacon_consumer);
-        JobScheduler jobScheduler = (JobScheduler)
-                context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        jobScheduler.cancel(ScanJob.getImmediateScanJobId(context));
-        jobScheduler.cancel(ScanJob.getPeriodicScanJobId(context));
+        beacon_manager.disableForegroundServiceScanning();
+
         stopForeground(true);
         super.onDestroy();
     }
@@ -255,7 +251,7 @@ public class beacon_receiver_service extends Service {
 
 
             try {
-                beacon_manager.startRangingBeaconsInRegion(new Region(getPackageName(), null, null, null));
+                beacon_manager.startRangingBeaconsInRegion(new Region("com.qwe7002.telegram_rc", null, null, null));
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
