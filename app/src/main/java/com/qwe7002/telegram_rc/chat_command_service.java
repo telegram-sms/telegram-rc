@@ -241,7 +241,7 @@ public class chat_command_service extends Service {
                         long from = c.getTimeInMillis();
                         try {
                             NetworkStats.Bucket bucket =
-                                    service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, null, from, System.currentTimeMillis());
+                                    service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, public_func.get_data_sim_sub_id(context), from, System.currentTimeMillis());
                             network_stats = "\n" + getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
                         } catch (RemoteException e) {
                             e.printStackTrace();

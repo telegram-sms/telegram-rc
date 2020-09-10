@@ -297,6 +297,19 @@ class public_func {
         return result;
     }
 
+    @NotNull
+    @TargetApi(Build.VERSION_CODES.N)
+    static String get_data_sim_sub_id(Context context) {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("get_data_sim_id", "No permission.");
+            //noinspection ConstantConditions
+            return null;
+        }
+        SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+        assert subscriptionManager != null;
+        return String.valueOf(SubscriptionManager.getDefaultDataSubscriptionId());
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     static void send_ussd(Context context, String ussd, int sub_id) {
         Intent send_ussd_service = new Intent(context, com.qwe7002.telegram_rc.send_ussd_service.class);
