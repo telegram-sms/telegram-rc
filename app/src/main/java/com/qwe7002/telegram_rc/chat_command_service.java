@@ -224,17 +224,17 @@ public class chat_command_service extends Service {
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                     if (public_func.is_data_usage(context)) {
+                        int data_flush_day = sharedPreferences.getInt("data_flush_day", 1);
                         NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
                         Calendar c = Calendar.getInstance();
                         Calendar cal = Calendar.getInstance();
                         cal.setTime(new Date());
-                        Log.d(TAG, "receive_handle: " + cal.get(Calendar.DAY_OF_MONTH));
-                        if (cal.get(Calendar.DAY_OF_MONTH) >= 1) {//Set the month of acquisition
+                        if (cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {//Set the month of acquisition
                             c.add(Calendar.MONTH, 0);
                         } else {
                             c.add(Calendar.MONTH, -1);
                         }
-                        c.set(Calendar.DAY_OF_MONTH, 1);
+                        c.set(Calendar.DAY_OF_MONTH, data_flush_day);
                         c.set(Calendar.HOUR_OF_DAY, 0);
                         c.set(Calendar.MINUTE, 0);
                         c.set(Calendar.SECOND, 0);
