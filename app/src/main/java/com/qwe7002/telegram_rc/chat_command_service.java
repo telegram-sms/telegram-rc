@@ -195,7 +195,6 @@ public class chat_command_service extends Service {
                         }
                     }
                 }
-
                 String config_adb = "";
                 String switch_ap = "";
                 if (sharedPreferences.getBoolean("root", false)) {
@@ -227,9 +226,11 @@ public class chat_command_service extends Service {
                     if (public_func.is_data_usage(context)) {
                         NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
                         Calendar c = Calendar.getInstance();
-                        Date date = new Date();
-                        //noinspection deprecation
-                        if (date.getDay() >= 1) {//Set the month of acquisition
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime(new Date());
+                        Log.d(TAG, "receive_handle: " + cal.get(Calendar.DAY_OF_MONTH));
+                        //noinspection ConstantConditions
+                        if (cal.get(Calendar.DAY_OF_MONTH) >= 1) {//Set the month of acquisition
                             c.add(Calendar.MONTH, 0);
                         } else {
                             c.add(Calendar.MONTH, -1);
@@ -240,15 +241,17 @@ public class chat_command_service extends Service {
                         c.set(Calendar.SECOND, 0);
                         long from = c.getTimeInMillis();
                         try {
+                            //Since the IMSI of SIM2 cannot be obtained in Android 10, SIM2 traffic statistics are not implemented
                             NetworkStats.Bucket bucket =
-                                    service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, public_func.get_data_sim_sub_id(context), from, System.currentTimeMillis());
-                            network_stats = "\n" + getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
+                                    service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, null, from, System.currentTimeMillis());
+                            network_stats = getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
                         } catch (RemoteException e) {
                             e.printStackTrace();
                         }
                     }
                     card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0));
                     if (public_func.get_active_card(context) == 2) {
+                        network_stats = "(SIM1) " + network_stats;
                         card_info = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context) + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0)) + "\nSIM2: " + public_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 1));
                     }
                 }
@@ -264,7 +267,7 @@ public class chat_command_service extends Service {
                         is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
                     }
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + card_info + network_stats;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + card_info + "\n" + network_stats;
                 has_command = true;
                 break;
             case "/log":

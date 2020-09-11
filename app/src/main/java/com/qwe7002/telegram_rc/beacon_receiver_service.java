@@ -210,12 +210,14 @@ public class beacon_receiver_service extends Service {
                     if (!config.enable) {
                         if (detect_singal_count > config.disable_count) {
                             detect_singal_count = 0;
+                            not_found_count = 0;
                             remote_control_public.disable_ap(wifi_manager);
                             switch_status = STATUS_DISABLE_AP;
                         }
                     } else {
                         if (detect_singal_count > config.enable_count) {
                             detect_singal_count = 0;
+                            not_found_count = 0;
                             remote_control_public.enable_ap(wifi_manager);
                             switch_status = STATUS_ENABLE_AP;
                         }
@@ -223,12 +225,14 @@ public class beacon_receiver_service extends Service {
                 } else {
                     if (!config.enable) {
                         if (not_found_count > config.enable_count) {
+                            detect_singal_count = 0;
                             not_found_count = 0;
                             remote_control_public.enable_ap(wifi_manager);
                             switch_status = STATUS_ENABLE_AP;
                         }
                     } else {
                         if (not_found_count > config.disable_count) {
+                            detect_singal_count = 0;
                             not_found_count = 0;
                             remote_control_public.disable_ap(wifi_manager);
                             switch_status = STATUS_DISABLE_AP;
