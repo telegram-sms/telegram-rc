@@ -206,16 +206,18 @@ public class beacon_receiver_service extends Service {
                 final int STATUS_ENABLE_AP = 0;
                 final int STATUS_DISABLE_AP = 1;
                 int switch_status = STATUS_STANDBY;
-                if (Paper.book().read("wifi_open", false)) {
+                Log.d(TAG, "detect_singal_count: " + detect_singal_count);
+                Log.d(TAG, "not_found_count: " + not_found_count);
+                if (Paper.book().read("wifi_open", false) && found_beacon) {
                     if (!config.enable) {
-                        if (detect_singal_count > config.disable_count) {
+                        if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
                             remote_control_public.disable_ap(wifi_manager);
                             switch_status = STATUS_DISABLE_AP;
                         }
                     } else {
-                        if (detect_singal_count > config.enable_count) {
+                        if (detect_singal_count >= config.enable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
                             remote_control_public.enable_ap(wifi_manager);
@@ -224,14 +226,14 @@ public class beacon_receiver_service extends Service {
                     }
                 } else {
                     if (!config.enable) {
-                        if (not_found_count > config.enable_count) {
+                        if (not_found_count >= config.enable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
                             remote_control_public.enable_ap(wifi_manager);
                             switch_status = STATUS_ENABLE_AP;
                         }
                     } else {
-                        if (not_found_count > config.disable_count) {
+                        if (not_found_count >= config.disable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
                             remote_control_public.disable_ap(wifi_manager);
