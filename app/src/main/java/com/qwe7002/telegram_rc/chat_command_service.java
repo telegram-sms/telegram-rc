@@ -229,7 +229,6 @@ public class chat_command_service extends Service {
                         Calendar cal = Calendar.getInstance();
                         cal.setTime(new Date());
                         Log.d(TAG, "receive_handle: " + cal.get(Calendar.DAY_OF_MONTH));
-                        //noinspection ConstantConditions
                         if (cal.get(Calendar.DAY_OF_MONTH) >= 1) {//Set the month of acquisition
                             c.add(Calendar.MONTH, 0);
                         } else {
