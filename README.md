@@ -4,6 +4,9 @@
 
 > Fight COVID-19. Stay at home. Save lives.
 
+![Min Android Version](https://img.shields.io/badge/Min%20Android%20Version-7.0-orange.svg?style=flat-square)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/telegram-sms/telegram-rc/blob/master/LICENSE)
+[![GitHub Releases](https://img.shields.io/github/downloads/telegram-sms/telegram-rc/latest/app-release.apk?style=flat-square)](https://github.com/telegram-sms/telegram-rc/releases/latest)
 
 A robot running on your Android device.
 
