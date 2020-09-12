@@ -50,6 +50,7 @@ public class beacon_receiver_service extends Service {
     private String request_url;
     private BeaconManager beacon_manager;
     private long startup_time = 0;
+    private long last_receive_time = 0;
     private beacon_config config;
     private beacon_service_consumer beacon_consumer;
 
@@ -156,8 +157,14 @@ public class beacon_receiver_service extends Service {
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
                     Log.d(TAG, "onBeaconServiceConnect: Startup time is too short");
+                    last_receive_time = System.currentTimeMillis();
                     return;
                 }
+                if ((System.currentTimeMillis() - last_receive_time) < config.delay) {
+                    Log.d(TAG, "onBeaconServiceConnect: Last time is too short");
+                    return;
+                }
+                last_receive_time = System.currentTimeMillis();
                 if (Paper.book().read("disable_beacon", false)) {
                     not_found_count = 0;
                     detect_singal_count = 0;
@@ -208,7 +215,8 @@ public class beacon_receiver_service extends Service {
                 int switch_status = STATUS_STANDBY;
                 Log.d(TAG, "detect_singal_count: " + detect_singal_count);
                 Log.d(TAG, "not_found_count: " + not_found_count);
-                if (Paper.book().read("wifi_open", false) && found_beacon) {
+                final boolean wifi_is_enable_status = Paper.book().read("wifi_open", false);
+                if (wifi_is_enable_status && found_beacon) {
                     if (!config.enable) {
                         if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
@@ -224,7 +232,8 @@ public class beacon_receiver_service extends Service {
                             switch_status = STATUS_ENABLE_AP;
                         }
                     }
-                } else {
+                }
+                if (!wifi_is_enable_status && !found_beacon) {
                     if (!config.enable) {
                         if (not_found_count >= config.enable_count) {
                             detect_singal_count = 0;
