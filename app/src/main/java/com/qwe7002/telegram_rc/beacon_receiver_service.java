@@ -116,9 +116,10 @@ public class beacon_receiver_service extends Service {
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
-
+        // Detect iBeacon:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+
         // Detect the main identifier (UID) frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
@@ -130,6 +131,7 @@ public class beacon_receiver_service extends Service {
         // Detect the URL frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
+
         beacon_manager.setBackgroundScanPeriod(config.delay);
         beacon_manager.setForegroundScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(config.delay);
@@ -153,6 +155,7 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
+                final boolean wifi_is_enable_status = Paper.book().read("wifi_open", false);
                 beacon_list.beacons = beacons;
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
@@ -170,7 +173,7 @@ public class beacon_receiver_service extends Service {
                     detect_singal_count = 0;
                     return;
                 }
-                if (!is_charging() && !Paper.book().read("wifi_open", false) && !config.enable) {
+                if (!is_charging() && !wifi_is_enable_status && !config.enable) {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");
@@ -215,7 +218,6 @@ public class beacon_receiver_service extends Service {
                 int switch_status = STATUS_STANDBY;
                 Log.d(TAG, "detect_singal_count: " + detect_singal_count);
                 Log.d(TAG, "not_found_count: " + not_found_count);
-                final boolean wifi_is_enable_status = Paper.book().read("wifi_open", false);
                 if (wifi_is_enable_status && found_beacon) {
                     if (!config.enable) {
                         if (detect_singal_count >= config.disable_count) {
