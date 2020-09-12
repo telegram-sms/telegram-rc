@@ -10,6 +10,8 @@
 
 A robot running on your Android device.
 
+**The precompiled version of this version does not support non-64-bit instruction set devices.**
+
 The primary language used for commit messages is Simplified Chinese. However, you're welcome to use English in commit messages when making contributions.
 
 Please visit [https://reall.uk](https://reall.uk) to submit and discuss issues regarding this project.
