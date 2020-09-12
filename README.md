@@ -20,7 +20,7 @@ You can follow the Telegram channel [Telegram SMS 更新日志 (tg_sms_changelog
 
 [Download](https://github.com/telegram-sms/telegram_remote_control/releases)
 
-The program's wireless hotspot feature relies on [VPNHotspot] (https://github.com/Mygod/VPNHotspot/) and requires dependent software to be installed for use.
+The program's wireless hotspot feature relies on [VPNHotspot](https://github.com/Mygod/VPNHotspot/) and requires dependent software to be installed for use.
 
 The user manual is not available in this program, please refer to the user manual of Telegram SMS.
 
@@ -68,6 +68,8 @@ I would also like to thank the following people for their hard work to localise 
 - Japanese
   - [@Lollycc](https://github.com/lollycc)
   - [@AisakaMk2](https://github.com/AisakaMk2)
+- Spanish
+  - [@David Alonso](https://github.com/lpdavidgc)
 
 This APP uses the following public DNS service:
 
