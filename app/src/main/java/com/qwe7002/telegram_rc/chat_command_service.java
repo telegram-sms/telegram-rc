@@ -67,7 +67,6 @@ import okhttp3.Response;
 
 @SuppressWarnings("BusyWait")
 public class chat_command_service extends Service {
-
     private static final String TAG = "chat_command";
     //Global counter
     private static long offset = 0;

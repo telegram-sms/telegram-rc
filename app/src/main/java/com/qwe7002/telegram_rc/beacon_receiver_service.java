@@ -39,7 +39,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class beacon_receiver_service extends Service {
-
     private final static String TAG = "beacon_receviver";
     private Context context;
     private WifiManager wifi_manager;
