@@ -67,13 +67,13 @@ import okhttp3.Response;
 
 @SuppressWarnings("BusyWait")
 public class chat_command_service extends Service {
-    private int send_sms_next_status = -1;
 
     private static final String TAG = "chat_command";
     //Global counter
     private static long offset = 0;
     private static int magnification = 1;
     private static int error_magnification = 1;
+    private static int send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
     // global object
     private OkHttpClient okhttp_client;
     private broadcast_receiver broadcast_receiver;
