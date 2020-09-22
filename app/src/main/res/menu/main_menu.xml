@@ -37,6 +37,10 @@
         android:title="@string/beacon_receiver_configuration"
         app:showAsAction="never" />
     <item
+        android:id="@+id/set_data_flush_day"
+        android:title="@string/set_data_flush_day"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/config_qrcode_menu_item"
         android:title="@string/transfer_configuration"
         app:showAsAction="never" />

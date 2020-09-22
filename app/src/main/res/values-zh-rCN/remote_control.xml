@@ -18,5 +18,6 @@
     <string name="beacon_receiver_configuration">信标接收器配置</string>
     <string name="enable_hotspot_when_beacon_is_detected">检测到信标时启用热点</string>
     <string name="set_data_card">/setdatacard - 设置数据卡</string>
-    <string name="mobile_data_usage">"移动数据使用量: "</string>
+    <string name="mobile_data_usage">"数据使用量: "</string>
+    <string name="set_data_flush_day">设置数据刷新日</string>
 </resources>

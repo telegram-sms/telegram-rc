@@ -223,21 +223,21 @@ public class chat_command_service extends Service {
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                     if (public_func.is_data_usage(context)) {
-                        int data_flush_day = sharedPreferences.getInt("data_flush_day", 1);
+                        int data_flush_day = Paper.book().read("data_flush_day", 1);
                         NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
-                        Calendar c = Calendar.getInstance();
                         Calendar cal = Calendar.getInstance();
-                        cal.setTime(new Date());
-                        if (cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {//Set the month of acquisition
-                            c.add(Calendar.MONTH, 0);
+                        Calendar now_time_cal = Calendar.getInstance();
+                        now_time_cal.setTime(new Date());
+                        if (now_time_cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {//Set the month of acquisition
+                            cal.add(Calendar.MONTH, 0);
                         } else {
-                            c.add(Calendar.MONTH, -1);
+                            cal.add(Calendar.MONTH, -1);
                         }
-                        c.set(Calendar.DAY_OF_MONTH, data_flush_day);
-                        c.set(Calendar.HOUR_OF_DAY, 0);
-                        c.set(Calendar.MINUTE, 0);
-                        c.set(Calendar.SECOND, 0);
-                        long from = c.getTimeInMillis();
+                        cal.set(Calendar.DAY_OF_MONTH, data_flush_day);
+                        cal.set(Calendar.HOUR_OF_DAY, 0);
+                        cal.set(Calendar.MINUTE, 0);
+                        cal.set(Calendar.SECOND, 0);
+                        long from = cal.getTimeInMillis();
                         try {
                             //Since the IMSI of SIM2 cannot be obtained in Android 10, SIM2 traffic statistics are not implemented
                             NetworkStats.Bucket bucket =

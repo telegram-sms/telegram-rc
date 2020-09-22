@@ -20,4 +20,5 @@
     <string name="enable_hotspot_when_beacon_is_detected">Enable hotspot when Beacon is detected</string>
     <string name="set_data_card">/setdatacard - Set up data card</string>
     <string name="mobile_data_usage">"Mobile data usage: "</string>
+    <string name="set_data_flush_day">set data flush day</string>
 </resources>

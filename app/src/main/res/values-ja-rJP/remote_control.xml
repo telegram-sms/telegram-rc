@@ -19,4 +19,5 @@
     <string name="enable_hotspot_when_beacon_is_detected">ビーコンが検出されたときにホットスポットを有効にする</string>
     <string name="set_data_card">/setdatacard - データカードを設定</string>
     <string name="mobile_data_usage">"モバイルデータの使用: "</string>
+    <string name="set_data_flush_day">データフラッシュ日を設定する</string>
 </resources>

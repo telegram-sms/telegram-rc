@@ -2,6 +2,7 @@ package com.qwe7002.telegram_rc;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -46,6 +47,7 @@ import com.qwe7002.root_kit.shell;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -411,9 +413,11 @@ public class main_activity extends AppCompatActivity {
                         proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
                         beacon_config beacon_config_item = Paper.book().read("beacon_config", new beacon_config());
                         ArrayList<String> beacon_listen_list = Paper.book().read("beacon_address", new ArrayList<>());
+                        int data_flush_day = Paper.book().read("data_flush_day", 1);
                         Paper.book().destroy();
                         Paper.book().write("notify_listen_list", notify_listen_list).write("black_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
                         Paper.book().write("beacon_address", beacon_config_item).write("beacon_address", beacon_listen_list);
+                        Paper.book().write("data_flush_day", data_flush_day);
                     }
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);
@@ -690,6 +694,14 @@ public class main_activity extends AppCompatActivity {
                             }).start();
                         })
                         .show();
+                return true;
+            case R.id.set_data_flush_day:
+                final Calendar calendar = Calendar.getInstance();
+                new DatePickerDialog(this,
+                        (DatePickerDialog.OnDateSetListener) (view, year, month, dayOfMonth) -> Paper.book().write("data_flush_day", dayOfMonth),
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        Paper.book().read("data_flush_day", 1)).show();
                 return true;
             case R.id.user_manual_menu_item:
                 file_name = "/guide/" + context.getString(R.string.Lang) + "/user-manual";
