@@ -77,3 +77,10 @@ task pull_language_pack(type: Exec) {
     workingDir 'language_pack/'
     commandLine "git", "pull"
 }
+task pull_submodule(type: Exec) {
+    description 'Pulls git.'
+    workingDir 'src/main/java/com/github/sumimakito/awesomeqrcode'
+    commandLine "git", "pull"
+    workingDir 'src/main/java/com/github/sumimakito/codeauxlib'
+    commandLine "git", "pull"
+}
