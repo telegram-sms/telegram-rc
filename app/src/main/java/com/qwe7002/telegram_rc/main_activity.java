@@ -634,27 +634,7 @@ public class main_activity extends AppCompatActivity {
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
                 return true;
             case R.id.spam_sms_keyword_edittext:
-                View spam_dialog_view = inflater.inflate(R.layout.set_keyword_layout, null);
-                final EditText editText = spam_dialog_view.findViewById(R.id.spam_sms_keyword_edittext);
-                ArrayList<String> black_keyword_list_old = Paper.book().read("black_keyword_list", new ArrayList<>());
-                StringBuilder black_keyword_list_old_string = new StringBuilder();
-                int count = 0;
-                for (String list_item : black_keyword_list_old) {
-                    if (count != 0) {
-                        black_keyword_list_old_string.append(";");
-                    }
-                    ++count;
-                    black_keyword_list_old_string.append(list_item);
-                }
-                editText.setText(black_keyword_list_old_string);
-                new AlertDialog.Builder(this).setTitle(R.string.spam_keyword_dialog_title)
-                        .setView(spam_dialog_view)
-                        .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                            String input = editText.getText().toString();
-                            String[] black_keyword_list = input.split(";");
-                            Paper.book().write("black_keyword_list", new ArrayList<>(Arrays.asList(black_keyword_list)));
-                        })
-                        .show();
+                startActivity(new Intent(this, spam_list_activity.class));
                 return true;
             case R.id.set_proxy_menu_item:
                 View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
@@ -698,7 +678,7 @@ public class main_activity extends AppCompatActivity {
             case R.id.set_data_flush_day:
                 final Calendar calendar = Calendar.getInstance();
                 new DatePickerDialog(this,
-                        (DatePickerDialog.OnDateSetListener) (view, year, month, dayOfMonth) -> Paper.book().write("data_flush_day", dayOfMonth),
+                        (view, year, month, dayOfMonth) -> Paper.book().write("data_flush_day", dayOfMonth),
                         calendar.get(Calendar.YEAR),
                         calendar.get(Calendar.MONTH),
                         Paper.book().read("data_flush_day", 1)).show();
