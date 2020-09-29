@@ -29,6 +29,7 @@ public class boot_receiver extends BroadcastReceiver {
                 public_func.start_resend_service(context);
             }
             if (sharedPreferences.getBoolean("root", false)) {
+                com.qwe7002.root_kit.network.add_dummy_device();
                 WifiManager wifi_manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 assert wifi_manager != null;
                 if (Paper.book().read("wifi_open", false)) {

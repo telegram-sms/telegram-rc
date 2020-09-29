@@ -21,6 +21,7 @@ public class remote_control_public {
     }
 
     public static void enable_ap(WifiManager wifi_manager) {
+        com.qwe7002.root_kit.network.add_dummy_device();
         if (wifi_manager.isWifiEnabled()) {
             com.qwe7002.root_kit.network.wifi_set_enable(false);
             try {
