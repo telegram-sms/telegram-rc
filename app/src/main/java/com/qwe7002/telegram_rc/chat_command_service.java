@@ -436,6 +436,31 @@ public class chat_command_service extends Service {
                 Paper.book().write("disable_beacon", state);
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status: " + state;
                 break;
+            case "/setdummy":
+                if (!sharedPreferences.getBoolean("root", false)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
+                }
+                String[] command_list = request_msg.split(" ");
+                if (command_list.length == 2) {
+                    com.qwe7002.root_kit.network.add_dummy_device(command_list[1]);
+                    Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
+                } else {
+                    String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr", null);
+                    if (dummy_ip_addr != null) {
+                        com.qwe7002.root_kit.network.add_dummy_device(dummy_ip_addr);
+                    }
+                }
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
+                break;
+            case "/deldummy":
+                if (!sharedPreferences.getBoolean("root", false)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
+                }
+                com.qwe7002.root_kit.network.del_dummy_device();
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
+                break;
             case "/sendsms":
             case "/sendsms1":
             case "/sendsms2":
