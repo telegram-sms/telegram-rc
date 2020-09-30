@@ -12,7 +12,6 @@ public class remote_control_public {
         com.qwe7002.root_kit.network.wifi_set_enable(false);
         try {
             while (wifi_manager.getWifiState() != WifiManager.WIFI_STATE_DISABLED) {
-                //noinspection BusyWait
                 Thread.sleep(100);
             }
         } catch (InterruptedException e) {
@@ -21,7 +20,6 @@ public class remote_control_public {
     }
 
     public static void enable_ap(WifiManager wifi_manager) {
-        com.qwe7002.root_kit.network.add_dummy_device();
         if (wifi_manager.isWifiEnabled()) {
             com.qwe7002.root_kit.network.wifi_set_enable(false);
             try {
@@ -36,7 +34,6 @@ public class remote_control_public {
         com.qwe7002.root_kit.network.wifi_set_enable(true);
         try {
             while (wifi_manager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-                //noinspection BusyWait
                 Thread.sleep(100);
             }
             Thread.sleep(1000);
