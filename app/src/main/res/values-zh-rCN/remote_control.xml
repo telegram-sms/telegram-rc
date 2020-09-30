@@ -20,4 +20,5 @@
     <string name="set_data_card">/setdatacard - 设置数据卡</string>
     <string name="mobile_data_usage">"数据使用量: "</string>
     <string name="set_data_flush_day">设置数据刷新日</string>
+    <string name="set_sim_imsi">设置SIM卡IMSI</string>
 </resources>

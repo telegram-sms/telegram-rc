@@ -20,4 +20,5 @@
     <string name="set_data_card">/setdatacard - データカードを設定</string>
     <string name="mobile_data_usage">"モバイルデータの使用: "</string>
     <string name="set_data_flush_day">データフラッシュ日を設定する</string>
+    <string name="set_sim_imsi">SIMカードIMSIを設定します</string>
 </resources>

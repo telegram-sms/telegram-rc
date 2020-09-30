@@ -83,6 +83,453 @@ public class chat_command_service extends Service {
     private ConnectivityManager connectivity_manager;
     private network_callback callback;
 
+    private static String get_data_stats(Context context) {
+        String result = "";
+        if (public_func.is_data_usage(context)) {
+            int data_flush_day = Paper.book("system_config").read("data_flush_day", 1);
+
+            Calendar cal = Calendar.getInstance();
+            Calendar now_time_cal = Calendar.getInstance();
+            now_time_cal.setTime(new Date());
+            if (now_time_cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {//Set the month of acquisition
+                cal.add(Calendar.MONTH, 0);
+            } else {
+                cal.add(Calendar.MONTH, -1);
+            }
+            cal.set(Calendar.DAY_OF_MONTH, data_flush_day);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            long from = cal.getTimeInMillis();
+            try {
+                switch (public_func.get_active_card(context)) {
+                    case 1:
+                        result = get_data_usage(context, null, from);
+                        break;
+                    case 2:
+                        String imsi1 = Paper.book("system_config").read("sim1_imsi", "");
+                        if (imsi1.equals("")) {
+                            imsi1 = null;
+                        }
+                        result = "SIM1 " + get_data_usage(context, imsi1, from);
+                        String sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
+                        if (!sim2_imsi.equals("")) {
+                            result += "\nSIM2 " + get_data_usage(context, Paper.book("system_config").read("sim2_imsi", null), from);
+                        }
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    private int send_slot_temp = -1;
+    private String send_to_temp;
+    private String bot_username = "";
+    private boolean privacy_mode;
+    private static Thread thread_main;
+    private String chat_id;
+    private String bot_token;
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Notification notification = public_func.get_notification_obj(context, getString(R.string.chat_command_service_name));
+        startForeground(public_func.CHAT_COMMAND_NOTIFY_ID, notification);
+        return START_STICKY;
+    }
+
+
+    @Override
+    public void onDestroy() {
+        wifilock.release();
+        wakelock.release();
+        unregisterReceiver(broadcast_receiver);
+        connectivity_manager.unregisterNetworkCallback(callback);
+        stopForeground(true);
+        super.onDestroy();
+    }
+
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    boolean is_vpn_hotsport_exist() {
+        ApplicationInfo info;
+        try {
+            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            info = null;
+        }
+
+        return info != null;
+    }
+
+
+    @NotNull
+    public static String get_battery_info(@NotNull Context context) {
+        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+        assert batteryManager != null;
+        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        if (battery_level > 100) {
+            Log.i("get_battery_info", "The previous battery is over 100%, and the correction is 100%.");
+            battery_level = 100;
+        }
+        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, intentfilter);
+        assert batteryStatus != null;
+        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        StringBuilder battery_string_builder = new StringBuilder().append(battery_level).append("%");
+        switch (charge_status) {
+            case BatteryManager.BATTERY_STATUS_CHARGING:
+            case BatteryManager.BATTERY_STATUS_FULL:
+                battery_string_builder.append(" (").append(context.getString(R.string.charging)).append(")");
+                break;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
+                    case BatteryManager.BATTERY_PLUGGED_AC:
+                    case BatteryManager.BATTERY_PLUGGED_USB:
+                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                        battery_string_builder.append(" (").append(context.getString(R.string.not_charging)).append(")");
+                        break;
+                }
+                break;
+        }
+        return battery_string_builder.toString();
+    }
+
+    private boolean get_me() {
+        OkHttpClient okhttp_client_new = okhttp_client;
+        String request_uri = public_func.get_url(bot_token, "getMe");
+        Request request = new Request.Builder().url(request_uri).build();
+        Call call = okhttp_client_new.newCall(request);
+        Response response;
+        try {
+            response = call.execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+            public_func.write_log(context, "Get username failed:" + e.getMessage());
+            return false;
+        }
+        if (response.code() == 200) {
+            String result;
+            try {
+                result = Objects.requireNonNull(response.body()).string();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
+            if (result_obj.get("ok").getAsBoolean()) {
+                bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
+                public_func.write_log(context, "Get the bot username: " + bot_username);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public static String get_network_type(@NotNull Context context, boolean cell_info) {
+        String net_type = "Unknown";
+        ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        assert connect_manager != null;
+        TelephonyManager telephonyManager = (TelephonyManager) context
+                .getSystemService(Context.TELEPHONY_SERVICE);
+        assert telephonyManager != null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Network[] networks = connect_manager.getAllNetworks();
+            if (networks.length != 0) {
+                for (Network network : networks) {
+                    NetworkCapabilities network_capabilities = connect_manager.getNetworkCapabilities(network);
+                    assert network_capabilities != null;
+                    if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                            net_type = "WIFI";
+                            break;
+                        }
+                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                            if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_IMS)) {
+                                continue;
+                            }
+                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                                Log.i("get_network_type", "No permission.");
+                                return net_type;
+                            }
+                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
+                            if (cell_info) {
+                                net_type += get_cell_info(context, telephonyManager, -1);
+                            }
+                        }
+                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
+                            net_type = "Bluetooth";
+                        }
+                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                            net_type = "Ethernet";
+                        }
+                    }
+                }
+            }
+        } else {
+            NetworkInfo network_info = connect_manager.getActiveNetworkInfo();
+            if (network_info == null) {
+                return net_type;
+            }
+            switch (network_info.getType()) {
+                case ConnectivityManager.TYPE_WIFI:
+                    net_type = "WIFI";
+                    break;
+                case ConnectivityManager.TYPE_MOBILE:
+                    net_type = check_cellular_network_type(network_info.getSubtype());
+                    if (cell_info) {
+                        net_type += get_cell_info(context, telephonyManager, -1);
+                    }
+                    break;
+            }
+        }
+
+        return net_type;
+    }
+
+    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        context = getApplicationContext();
+        connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        Paper.init(context);
+
+        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+
+        chat_id = sharedPreferences.getString("chat_id", "");
+        bot_token = sharedPreferences.getString("bot_token", "");
+        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
+        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
+        wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
+        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
+        wifilock.setReferenceCounted(false);
+        wakelock.setReferenceCounted(false);
+        if (!wifilock.isHeld()) {
+            wifilock.acquire();
+        }
+        if (!wakelock.isHeld()) {
+            wakelock.acquire();
+        }
+        thread_main = new Thread(new thread_main_runnable());
+        thread_main.start();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
+        NetworkRequest network_request = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                .build();
+        callback = new network_callback();
+        connectivity_manager.registerNetworkCallback(network_request, callback);
+        broadcast_receiver = new broadcast_receiver();
+        registerReceiver(broadcast_receiver, intentFilter);
+    }
+
+    private static String get_cell_info(Context context, TelephonyManager telephonyManager, int sub_id) {
+        final int[] signal_arfcn = {-1};
+        final int[] signal_strength = {0};
+        final boolean[] run_lock = {false};
+        String TAG = "get_cell_info";
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "get_cell_info: No permission.");
+            return "";
+        }
+        StringBuilder result_string = new StringBuilder();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (sub_id == -1) {
+                SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+                assert subscriptionManager != null;
+                sub_id = SubscriptionManager.getDefaultDataSubscriptionId();
+            }
+            telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                Log.d("get_data_sim_id", "No permission.");
+            }
+
+            telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
+                @Override
+                public void onCellInfo(@NonNull List<CellInfo> cell_info_result) {
+                    Log.d(TAG, "cellinfo_size: " + cell_info_result.size());
+                    if (cell_info_result.size() == 0) {
+                        return;
+                    }
+                    CellInfo info = cell_info_result.get(0);
+
+                    if (info instanceof CellInfoNr) {
+                        signal_strength[0] = ((CellInfoNr) info).getCellSignalStrength().getDbm();
+                        CellIdentityNr cell_identity = (CellIdentityNr) ((CellInfoNr) info).getCellIdentity();
+                        signal_arfcn[0] = cell_identity.getNrarfcn();
+                    }
+                    if (info instanceof CellInfoLte) {
+                        signal_strength[0] = ((CellInfoLte) info).getCellSignalStrength().getDbm();
+                        signal_arfcn[0] = ((CellInfoLte) info).getCellIdentity().getEarfcn();
+                    }
+                    if (info instanceof CellInfoWcdma) {
+                        signal_strength[0] = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
+                        signal_arfcn[0] = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
+                    }
+                    run_lock[0] = true;
+                }
+            });
+            while (!run_lock[0]) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        } else {
+            for (CellInfo cell : telephonyManager.getAllCellInfo()) {
+                if (!cell.isRegistered()) {
+                    continue;
+                }
+                if (cell instanceof CellInfoLte) {
+                    signal_strength[0] = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        signal_arfcn[0] = ((CellInfoLte) cell).getCellIdentity().getEarfcn();
+                    }
+                    break;
+                }
+                if (cell instanceof CellInfoWcdma) {
+                    signal_strength[0] = ((CellInfoWcdma) cell).getCellSignalStrength().getDbm();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        signal_arfcn[0] = ((CellInfoWcdma) cell).getCellIdentity().getUarfcn();
+                    }
+                }
+                if (cell instanceof CellInfoGsm) {
+                    signal_strength[0] = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        signal_arfcn[0] = ((CellInfoGsm) cell).getCellIdentity().getArfcn();
+                    }
+
+                }
+            }
+        }
+        Log.d(TAG, "signal_strength: " + signal_strength[0]);
+        Log.d(TAG, "signal_arfcn: " + signal_arfcn[0]);
+        result_string.append(" (");
+        if (signal_strength[0] != 0) {
+            result_string.append(signal_strength[0]);
+            result_string.append(" dBm");
+        }
+        if (signal_arfcn[0] != -1) {
+            result_string.append(", ");
+            result_string.append("ARFCN: ");
+            result_string.append(signal_arfcn[0]);
+        }
+        result_string.append(")");
+        return result_string.toString();
+    }
+
+    private static class SEND_SMS_STATUS {
+        public static final int STANDBY_STATUS = -1;
+        public static final int PHONE_INPUT_STATUS = 0;
+        public static final int MESSAGE_INPUT_STATUS = 1;
+        public static final int WAITING_TO_SEND_STATUS = 2;
+    }
+
+
+    private static String check_cellular_network_type(int type) {
+        String net_type = "Unknown";
+        switch (type) {
+            case TelephonyManager.NETWORK_TYPE_NR:
+                net_type = "5G";
+                break;
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                net_type = "LTE";
+                break;
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+            case TelephonyManager.NETWORK_TYPE_EVDO_0:
+            case TelephonyManager.NETWORK_TYPE_EVDO_A:
+            case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_EHRPD:
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+                net_type = "3G";
+                break;
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+            case TelephonyManager.NETWORK_TYPE_CDMA:
+            case TelephonyManager.NETWORK_TYPE_1xRTT:
+            case TelephonyManager.NETWORK_TYPE_IDEN:
+                net_type = "2G";
+                break;
+        }
+        return net_type;
+    }
+
+
+    private void when_network_change() {
+        if (public_func.check_network_status(context)) {
+            if (!thread_main.isAlive()) {
+                public_func.write_log(context, "Network connections has been restored.");
+                thread_main = new Thread(new thread_main_runnable());
+                thread_main.start();
+            }
+        }
+    }
+
+    private class broadcast_receiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, @NotNull Intent intent) {
+            Log.d(TAG, "onReceive: " + intent.getAction());
+            assert intent.getAction() != null;
+            if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
+                Log.i(TAG, "Received stop signal, quitting now...");
+                stopSelf();
+                Process.killProcess(Process.myPid());
+            }
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private class network_callback extends ConnectivityManager.NetworkCallback {
+        @Override
+        public void onAvailable(@NotNull Network network) {
+            Log.d(TAG, "onAvailable");
+            when_network_change();
+        }
+    }
+
+    private static String get_data_usage(Context context, String sub_id, long from) throws RemoteException {
+        NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
+        NetworkStats.Bucket bucket =
+                service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, sub_id, from, System.currentTimeMillis());
+        return context.getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
+    }
+
+    private static String get_size(long size) {
+        final int GB = 1024 * 1024 * 1024;
+        final int MB = 1024 * 1024;
+        final int KB = 1024;
+        DecimalFormat df = new DecimalFormat("0.00");
+        String resultSize;
+        if (size / GB >= 1) {
+            resultSize = df.format(size / (float) GB) + "GB";
+        } else if (size / MB >= 1) {
+            resultSize = df.format(size / (float) MB) + "MB";
+        } else if (size / KB >= 1) {
+            resultSize = df.format(size / (float) KB) + "KB";
+        } else {
+            resultSize = size + "Byte";
+
+        }
+        return resultSize;
+    }
+
     private void receive_handle(@NotNull JsonObject result_obj) {
         String message_type = "";
         long update_id = result_obj.get("update_id").getAsLong();
@@ -222,34 +669,9 @@ public class chat_command_service extends Service {
                         .getSystemService(Context.TELEPHONY_SERVICE);
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    if (public_func.is_data_usage(context)) {
-                        int data_flush_day = Paper.book().read("data_flush_day", 1);
-                        NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
-                        Calendar cal = Calendar.getInstance();
-                        Calendar now_time_cal = Calendar.getInstance();
-                        now_time_cal.setTime(new Date());
-                        if (now_time_cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {//Set the month of acquisition
-                            cal.add(Calendar.MONTH, 0);
-                        } else {
-                            cal.add(Calendar.MONTH, -1);
-                        }
-                        cal.set(Calendar.DAY_OF_MONTH, data_flush_day);
-                        cal.set(Calendar.HOUR_OF_DAY, 0);
-                        cal.set(Calendar.MINUTE, 0);
-                        cal.set(Calendar.SECOND, 0);
-                        long from = cal.getTimeInMillis();
-                        try {
-                            //Since the IMSI of SIM2 cannot be obtained in Android 10, SIM2 traffic statistics are not implemented
-                            NetworkStats.Bucket bucket =
-                                    service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, null, from, System.currentTimeMillis());
-                            network_stats = getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    network_stats = get_data_stats(context);
                     card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0));
                     if (public_func.get_active_card(context) == 2) {
-                        network_stats = "(SIM1) " + network_stats;
                         card_info = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context) + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0)) + "\nSIM2: " + public_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 1));
                     }
                 }
@@ -618,405 +1040,6 @@ public class chat_command_service extends Service {
                 }
             }
         });
-    }
-
-    private int send_slot_temp = -1;
-    private String send_to_temp;
-    private String bot_username = "";
-    private boolean privacy_mode;
-    private static Thread thread_main;
-    private String chat_id;
-    private String bot_token;
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(context, getString(R.string.chat_command_service_name));
-        startForeground(public_func.CHAT_COMMAND_NOTIFY_ID, notification);
-        return START_STICKY;
-    }
-
-
-    @Override
-    public void onDestroy() {
-        wifilock.release();
-        wakelock.release();
-        unregisterReceiver(broadcast_receiver);
-        connectivity_manager.unregisterNetworkCallback(callback);
-        stopForeground(true);
-        super.onDestroy();
-    }
-
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    boolean is_vpn_hotsport_exist() {
-        ApplicationInfo info;
-        try {
-            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            info = null;
-        }
-
-        return info != null;
-    }
-
-
-    @NotNull
-    public static String get_battery_info(@NotNull Context context) {
-        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-        assert batteryManager != null;
-        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-        if (battery_level > 100) {
-            Log.i("get_battery_info", "The previous battery is over 100%, and the correction is 100%.");
-            battery_level = 100;
-        }
-        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = context.registerReceiver(null, intentfilter);
-        assert batteryStatus != null;
-        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        StringBuilder battery_string_builder = new StringBuilder().append(battery_level).append("%");
-        switch (charge_status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING:
-            case BatteryManager.BATTERY_STATUS_FULL:
-                battery_string_builder.append(" (").append(context.getString(R.string.charging)).append(")");
-                break;
-            case BatteryManager.BATTERY_STATUS_DISCHARGING:
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
-                    case BatteryManager.BATTERY_PLUGGED_AC:
-                    case BatteryManager.BATTERY_PLUGGED_USB:
-                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        battery_string_builder.append(" (").append(context.getString(R.string.not_charging)).append(")");
-                        break;
-                }
-                break;
-        }
-        return battery_string_builder.toString();
-    }
-
-    private boolean get_me() {
-        OkHttpClient okhttp_client_new = okhttp_client;
-        String request_uri = public_func.get_url(bot_token, "getMe");
-        Request request = new Request.Builder().url(request_uri).build();
-        Call call = okhttp_client_new.newCall(request);
-        Response response;
-        try {
-            response = call.execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-            public_func.write_log(context, "Get username failed:" + e.getMessage());
-            return false;
-        }
-        if (response.code() == 200) {
-            String result;
-            try {
-                result = Objects.requireNonNull(response.body()).string();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-            if (result_obj.get("ok").getAsBoolean()) {
-                bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                public_func.write_log(context, "Get the bot username: " + bot_username);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    public static String get_network_type(@NotNull Context context, boolean cell_info) {
-        String net_type = "Unknown";
-        ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        assert connect_manager != null;
-        TelephonyManager telephonyManager = (TelephonyManager) context
-                .getSystemService(Context.TELEPHONY_SERVICE);
-        assert telephonyManager != null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Network[] networks = connect_manager.getAllNetworks();
-            if (networks.length != 0) {
-                for (Network network : networks) {
-                    NetworkCapabilities network_capabilities = connect_manager.getNetworkCapabilities(network);
-                    assert network_capabilities != null;
-                    if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                            net_type = "WIFI";
-                            break;
-                        }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                            if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_IMS)) {
-                                continue;
-                            }
-                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                                Log.i("get_network_type", "No permission.");
-                                return net_type;
-                            }
-                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
-                            if (cell_info) {
-                                net_type += get_cell_info(context, telephonyManager, -1);
-                            }
-                        }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
-                            net_type = "Bluetooth";
-                        }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                            net_type = "Ethernet";
-                        }
-                    }
-                }
-            }
-        } else {
-            NetworkInfo network_info = connect_manager.getActiveNetworkInfo();
-            if (network_info == null) {
-                return net_type;
-            }
-            switch (network_info.getType()) {
-                case ConnectivityManager.TYPE_WIFI:
-                    net_type = "WIFI";
-                    break;
-                case ConnectivityManager.TYPE_MOBILE:
-                    net_type = check_cellular_network_type(network_info.getSubtype());
-                    if (cell_info) {
-                        net_type += get_cell_info(context, telephonyManager, -1);
-                    }
-                    break;
-            }
-        }
-
-        return net_type;
-    }
-
-    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        context = getApplicationContext();
-        connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        Paper.init(context);
-
-        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-
-        chat_id = sharedPreferences.getString("chat_id", "");
-        bot_token = sharedPreferences.getString("bot_token", "");
-        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
-        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
-        wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
-        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
-        wifilock.setReferenceCounted(false);
-        wakelock.setReferenceCounted(false);
-        if (!wifilock.isHeld()) {
-            wifilock.acquire();
-        }
-        if (!wakelock.isHeld()) {
-            wakelock.acquire();
-        }
-        thread_main = new Thread(new thread_main_runnable());
-        thread_main.start();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
-        NetworkRequest network_request = new NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                .build();
-        callback = new network_callback();
-        connectivity_manager.registerNetworkCallback(network_request, callback);
-        broadcast_receiver = new broadcast_receiver();
-        registerReceiver(broadcast_receiver, intentFilter);
-    }
-
-    private static String get_cell_info(Context context, TelephonyManager telephonyManager, int sub_id) {
-        final int[] signal_arfcn = {-1};
-        final int[] signal_strength = {0};
-        final boolean[] run_lock = {false};
-        String TAG = "get_cell_info";
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "get_cell_info: No permission.");
-            return "";
-        }
-        StringBuilder result_string = new StringBuilder();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (sub_id == -1) {
-                SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-                assert subscriptionManager != null;
-                sub_id = SubscriptionManager.getDefaultDataSubscriptionId();
-            }
-            telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                Log.d("get_data_sim_id", "No permission.");
-            }
-
-            telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
-                @Override
-                public void onCellInfo(@NonNull List<CellInfo> cell_info_result) {
-                    Log.d(TAG, "cellinfo_size: " + cell_info_result.size());
-                    if (cell_info_result.size() == 0) {
-                        return;
-                    }
-                    CellInfo info = cell_info_result.get(0);
-
-                    if (info instanceof CellInfoNr) {
-                        signal_strength[0] = ((CellInfoNr) info).getCellSignalStrength().getDbm();
-                        CellIdentityNr cell_identity = (CellIdentityNr) ((CellInfoNr) info).getCellIdentity();
-                        signal_arfcn[0] = cell_identity.getNrarfcn();
-                    }
-                    if (info instanceof CellInfoLte) {
-                        signal_strength[0] = ((CellInfoLte) info).getCellSignalStrength().getDbm();
-                        signal_arfcn[0] = ((CellInfoLte) info).getCellIdentity().getEarfcn();
-                    }
-                    if (info instanceof CellInfoWcdma) {
-                        signal_strength[0] = ((CellInfoWcdma) info).getCellSignalStrength().getDbm();
-                        signal_arfcn[0] = ((CellInfoWcdma) info).getCellIdentity().getUarfcn();
-                    }
-                    run_lock[0] = true;
-                }
-            });
-            while (!run_lock[0]) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        } else {
-            for (CellInfo cell : telephonyManager.getAllCellInfo()) {
-                if (!cell.isRegistered()) {
-                    continue;
-                }
-                if (cell instanceof CellInfoLte) {
-                    signal_strength[0] = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        signal_arfcn[0] = ((CellInfoLte) cell).getCellIdentity().getEarfcn();
-                    }
-                    break;
-                }
-                if (cell instanceof CellInfoWcdma) {
-                    signal_strength[0] = ((CellInfoWcdma) cell).getCellSignalStrength().getDbm();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        signal_arfcn[0] = ((CellInfoWcdma) cell).getCellIdentity().getUarfcn();
-                    }
-                }
-                if (cell instanceof CellInfoGsm) {
-                    signal_strength[0] = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        signal_arfcn[0] = ((CellInfoGsm) cell).getCellIdentity().getArfcn();
-                    }
-
-                }
-            }
-        }
-        Log.d(TAG, "signal_strength: " + signal_strength[0]);
-        Log.d(TAG, "signal_arfcn: " + signal_arfcn[0]);
-        result_string.append(" (");
-        if (signal_strength[0] != 0) {
-            result_string.append(signal_strength[0]);
-            result_string.append(" dBm");
-        }
-        if (signal_arfcn[0] != -1) {
-            result_string.append(", ");
-            result_string.append("ARFCN: ");
-            result_string.append(signal_arfcn[0]);
-        }
-        result_string.append(")");
-        return result_string.toString();
-    }
-
-    private static class SEND_SMS_STATUS {
-        public static final int STANDBY_STATUS = -1;
-        public static final int PHONE_INPUT_STATUS = 0;
-        public static final int MESSAGE_INPUT_STATUS = 1;
-        public static final int WAITING_TO_SEND_STATUS = 2;
-    }
-
-
-    private static String check_cellular_network_type(int type) {
-        String net_type = "Unknown";
-        switch (type) {
-            case TelephonyManager.NETWORK_TYPE_NR:
-                net_type = "5G";
-                break;
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                net_type = "LTE";
-                break;
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_EHRPD:
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-                net_type = "3G";
-                break;
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-            case TelephonyManager.NETWORK_TYPE_CDMA:
-            case TelephonyManager.NETWORK_TYPE_1xRTT:
-            case TelephonyManager.NETWORK_TYPE_IDEN:
-                net_type = "2G";
-                break;
-        }
-        return net_type;
-    }
-
-    private String get_size(long size) {
-        final int GB = 1024 * 1024 * 1024;
-        final int MB = 1024 * 1024;
-        final int KB = 1024;
-        DecimalFormat df = new DecimalFormat("0.00");
-        String resultSize;
-        if (size / GB >= 1) {
-            resultSize = df.format(size / (float) GB) + "GB";
-        } else if (size / MB >= 1) {
-            resultSize = df.format(size / (float) MB) + "MB";
-        } else if (size / KB >= 1) {
-            resultSize = df.format(size / (float) KB) + "KB";
-        } else {
-            resultSize = size + "Byte";
-
-        }
-        return resultSize;
-    }
-
-
-    private void when_network_change() {
-        if (public_func.check_network_status(context)) {
-            if (!thread_main.isAlive()) {
-                public_func.write_log(context, "Network connections has been restored.");
-                thread_main = new Thread(new thread_main_runnable());
-                thread_main.start();
-            }
-        }
-    }
-
-    private class broadcast_receiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, @NotNull Intent intent) {
-            Log.d(TAG, "onReceive: " + intent.getAction());
-            assert intent.getAction() != null;
-            if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
-                Log.i(TAG, "Received stop signal, quitting now...");
-                stopSelf();
-                Process.killProcess(Process.myPid());
-            }
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private class network_callback extends ConnectivityManager.NetworkCallback {
-        @Override
-        public void onAvailable(@NotNull Network network) {
-            Log.d(TAG, "onAvailable");
-            when_network_change();
-        }
     }
 
     class thread_main_runnable implements Runnable {

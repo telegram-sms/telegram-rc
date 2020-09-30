@@ -413,11 +413,9 @@ public class main_activity extends AppCompatActivity {
                         proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
                         beacon_config beacon_config_item = Paper.book().read("beacon_config", new beacon_config());
                         ArrayList<String> beacon_listen_list = Paper.book().read("beacon_address", new ArrayList<>());
-                        int data_flush_day = Paper.book().read("data_flush_day", 1);
                         Paper.book().destroy();
                         Paper.book().write("notify_listen_list", notify_listen_list).write("black_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
                         Paper.book().write("beacon_address", beacon_config_item).write("beacon_address", beacon_listen_list);
-                        Paper.book().write("data_flush_day", data_flush_day);
                     }
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);
@@ -581,6 +579,11 @@ public class main_activity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        if (public_func.get_active_card(context) == 2) {
+            MenuItem set_sim_imsi = menu.findItem(R.id.set_sim_imsi);
+            set_sim_imsi.setVisible(true);
+        }
+
         return true;
     }
 
@@ -636,6 +639,21 @@ public class main_activity extends AppCompatActivity {
             case R.id.spam_sms_keyword_edittext:
                 startActivity(new Intent(this, spam_list_activity.class));
                 return true;
+            case R.id.set_sim_imsi:
+                View imsi_dialog_view = inflater.inflate(R.layout.set_imsi_layout, null);
+                final EditText imsi1 = imsi_dialog_view.findViewById(R.id.imsi1_editview);
+                final EditText imsi2 = imsi_dialog_view.findViewById(R.id.imsi2_editview);
+                imsi1.setText(Paper.book("system_config").read("sim1_imsi", ""));
+                imsi2.setText(Paper.book("system_config").read("sim2_imsi", ""));
+                new AlertDialog.Builder(this).setTitle(R.string.set_sim_imsi)
+                        .setView(imsi_dialog_view)
+                        .setPositiveButton(R.string.ok_button, (dialog, which) -> {
+                            String sim1_imsi = imsi1.getText().toString();
+                            String sim2_imsi = imsi2.getText().toString();
+                            Paper.book("system_config").write("sim1_imsi", sim1_imsi).write("sim2_imsi", sim2_imsi);
+                        })
+                        .show();
+                return true;
             case R.id.set_proxy_menu_item:
                 View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
                 final SwitchMaterial doh_switch = findViewById(R.id.doh_switch);
@@ -678,10 +696,10 @@ public class main_activity extends AppCompatActivity {
             case R.id.set_data_flush_day:
                 final Calendar calendar = Calendar.getInstance();
                 new DatePickerDialog(this,
-                        (view, year, month, dayOfMonth) -> Paper.book().write("data_flush_day", dayOfMonth),
+                        (view, year, month, dayOfMonth) -> Paper.book("system_config").write("data_flush_day", dayOfMonth),
                         calendar.get(Calendar.YEAR),
                         calendar.get(Calendar.MONTH),
-                        Paper.book().read("data_flush_day", 1)).show();
+                        Paper.book("system_config").read("data_flush_day", 1)).show();
                 return true;
             case R.id.user_manual_menu_item:
                 file_name = "/guide/" + context.getString(R.string.Lang) + "/user-manual";

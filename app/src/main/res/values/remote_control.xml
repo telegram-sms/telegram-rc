@@ -20,4 +20,5 @@
     <string name="set_data_card">/setdatacard - Set up data card</string>
     <string name="mobile_data_usage">"Data usage: "</string>
     <string name="set_data_flush_day">Set data flush day</string>
+    <string name="set_sim_imsi">Set SIM card IMSI</string>
 </resources>
