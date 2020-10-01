@@ -127,7 +127,7 @@ public class chat_command_service extends Service {
                             assert telephonyManager != null;
                             sim1_imsi = telephonyManager.getSubscriberId();
                         }
-                        result = "\nSIM1 " + get_data_usage(context, sim1_imsi, from);
+                        result = "\nSIM1 " + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sim1_imsi, from);
                         String sim2_result_usage = "";
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             String sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
@@ -290,6 +290,9 @@ public class chat_command_service extends Service {
                                 return net_type;
                             }
                             net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
+                            if (is_nr_connected(telephonyManager) && net_type.equals("LTE")) {
+                                net_type += "&NR";
+                            }
                             if (cell_info) {
                                 net_type += get_cell_info(context, telephonyManager, -1);
                             }
@@ -322,6 +325,27 @@ public class chat_command_service extends Service {
         }
 
         return net_type;
+    }
+
+    public static boolean is_nr_connected(TelephonyManager telephonyManager) {
+        try {
+            //noinspection RedundantArrayCreation
+            Object obj = Class.forName(telephonyManager.getClass().getName())
+                    .getDeclaredMethod("getServiceState", new Class[0]).invoke(telephonyManager, new Object[0]);
+            // try extracting from string
+            assert obj != null;
+            String serviceState = obj.toString();
+            boolean is5gActive = serviceState.contains("nrState=CONNECTED") ||
+                    serviceState.contains("nsaState=5") ||
+                    (serviceState.contains("EnDc=true") &&
+                            serviceState.contains("5G Allocated=true"));
+            if (is5gActive) {
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
