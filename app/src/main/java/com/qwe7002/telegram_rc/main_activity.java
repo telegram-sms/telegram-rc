@@ -579,9 +579,11 @@ public class main_activity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        if (public_func.get_active_card(context) == 2) {
-            MenuItem set_sim_imsi = menu.findItem(R.id.set_sim_imsi);
-            set_sim_imsi.setVisible(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (public_func.get_active_card(context) == 2) {
+                MenuItem set_sim_imsi = menu.findItem(R.id.set_sim_imsi);
+                set_sim_imsi.setVisible(true);
+            }
         }
 
         return true;

@@ -83,6 +83,7 @@ public class chat_command_service extends Service {
     private ConnectivityManager connectivity_manager;
     private network_callback callback;
 
+    @SuppressLint({"HardwareIds", "MissingPermission"})
     private static String get_data_stats(Context context) {
         String result = "";
         if (public_func.is_data_usage(context)) {
@@ -104,18 +105,47 @@ public class chat_command_service extends Service {
             try {
                 switch (public_func.get_active_card(context)) {
                     case 1:
-                        result = get_data_usage(context, null, from);
+                        String sub_id = null;
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                            TelephonyManager telephonyManager = (TelephonyManager) context
+                                    .getSystemService(Context.TELEPHONY_SERVICE);
+                            assert telephonyManager != null;
+                            sub_id = telephonyManager.getSubscriberId();
+                        }
+                        result = "\n" + get_data_usage(context, sub_id, from);
                         break;
                     case 2:
-                        String imsi1 = Paper.book("system_config").read("sim1_imsi", "");
-                        if (imsi1.equals("")) {
-                            imsi1 = null;
+                        String sim1_imsi;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            sim1_imsi = Paper.book("system_config").read("sim1_imsi", "");
+                            if (sim1_imsi.equals("")) {
+                                sim1_imsi = null;
+                            }
+                        } else {
+                            TelephonyManager telephonyManager = (TelephonyManager) context
+                                    .getSystemService(Context.TELEPHONY_SERVICE);
+                            assert telephonyManager != null;
+                            sim1_imsi = telephonyManager.getSubscriberId();
                         }
-                        result = "SIM1 " + get_data_usage(context, imsi1, from);
-                        String sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
-                        if (!sim2_imsi.equals("")) {
-                            result += "\nSIM2 " + get_data_usage(context, Paper.book("system_config").read("sim2_imsi", null), from);
+                        result = "\nSIM1 " + get_data_usage(context, sim1_imsi, from);
+                        String sim2_result_usage = "";
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            String sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
+                            if (!sim2_imsi.equals("")) {
+                                sim2_result_usage = get_data_usage(context, Paper.book("system_config").read("sim2_imsi", null), from);
+                            }
+                        } else {
+                            TelephonyManager telephonyManager = (TelephonyManager) context
+                                    .getSystemService(Context.TELEPHONY_SERVICE);
+                            assert telephonyManager != null;
+                            telephonyManager = telephonyManager.createForSubscriptionId(public_func.get_sub_id(context, 1));
+                            String sim2_imsi = telephonyManager.getSubscriberId();
+                            sim2_result_usage = get_data_usage(context, sim2_imsi, from);
                         }
+                        if (!sim2_result_usage.equals("")) {
+                            result += "\nSIM2 " + context.getString(R.string.mobile_data_usage) + sim2_result_usage;
+                        }
+
                 }
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -443,7 +473,7 @@ public class chat_command_service extends Service {
         String net_type = "Unknown";
         switch (type) {
             case TelephonyManager.NETWORK_TYPE_NR:
-                net_type = "5G";
+                net_type = "NR";
                 break;
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
@@ -508,7 +538,7 @@ public class chat_command_service extends Service {
         NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
         NetworkStats.Bucket bucket =
                 service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, sub_id, from, System.currentTimeMillis());
-        return context.getString(R.string.mobile_data_usage) + get_size(bucket.getTxBytes() + bucket.getRxBytes());
+        return get_size(bucket.getTxBytes() + bucket.getRxBytes());
     }
 
     private static String get_size(long size) {
@@ -687,7 +717,7 @@ public class chat_command_service extends Service {
                         is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
                     }
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + card_info + "\n" + network_stats;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + network_stats + card_info;
                 has_command = true;
                 break;
             case "/log":
