@@ -112,7 +112,7 @@ public class chat_command_service extends Service {
                             assert telephonyManager != null;
                             sub_id = telephonyManager.getSubscriberId();
                         }
-                        result = "\n" + get_data_usage(context, sub_id, from);
+                        result = "\n" + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sub_id, from);
                         break;
                     case 2:
                         String sim1_imsi;
