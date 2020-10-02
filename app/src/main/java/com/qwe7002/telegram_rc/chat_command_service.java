@@ -290,9 +290,6 @@ public class chat_command_service extends Service {
                                 return net_type;
                             }
                             net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
-                            if (is_nr_connected(telephonyManager) && net_type.equals("LTE")) {
-                                net_type += "&NR";
-                            }
                             if (cell_info) {
                                 net_type += get_cell_info(context, telephonyManager, -1);
                             }
@@ -325,27 +322,6 @@ public class chat_command_service extends Service {
         }
 
         return net_type;
-    }
-
-    public static boolean is_nr_connected(TelephonyManager telephonyManager) {
-        try {
-            //noinspection RedundantArrayCreation
-            Object obj = Class.forName(telephonyManager.getClass().getName())
-                    .getDeclaredMethod("getServiceState", new Class[0]).invoke(telephonyManager, new Object[0]);
-            // try extracting from string
-            assert obj != null;
-            String serviceState = obj.toString();
-            boolean is5gActive = serviceState.contains("nrState=CONNECTED") ||
-                    serviceState.contains("nsaState=5") ||
-                    (serviceState.contains("EnDc=true") &&
-                            serviceState.contains("5G Allocated=true"));
-            if (is5gActive) {
-                return true;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
     }
 
     @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
@@ -417,7 +393,6 @@ public class chat_command_service extends Service {
                         return;
                     }
                     CellInfo info = cell_info_result.get(0);
-
                     if (info instanceof CellInfoNr) {
                         signal_strength[0] = ((CellInfoNr) info).getCellSignalStrength().getDbm();
                         CellIdentityNr cell_identity = (CellIdentityNr) ((CellInfoNr) info).getCellIdentity();
@@ -501,6 +476,12 @@ public class chat_command_service extends Service {
                 break;
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
+                if (com.qwe7002.root_kit.radio.is_LTE_CA()) {
+                    net_type = "LTE+";
+                }
+                if (com.qwe7002.root_kit.radio.is_NR_Connected()) {
+                    net_type = "LTE & NR";
+                }
                 break;
             case TelephonyManager.NETWORK_TYPE_HSPAP:
             case TelephonyManager.NETWORK_TYPE_EVDO_0:

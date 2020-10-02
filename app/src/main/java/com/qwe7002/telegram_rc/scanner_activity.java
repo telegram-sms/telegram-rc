@@ -58,7 +58,6 @@ public class scanner_activity extends Activity implements ZXingScannerView.Resul
             Intent intent = new Intent().putExtra("config_json", rawResult.getText());
             setResult(public_func.RESULT_CONFIG_JSON, intent);
         }
-
         finish();
     }
 
