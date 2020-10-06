@@ -198,12 +198,12 @@ public class sms_receiver extends BroadcastReceiver {
         Log.d(TAG, "onReceive: " + is_verification_code);
         if (!is_verification_code && !is_trusted_phone) {
             Log.d(TAG, "onReceive: ");
-            ArrayList<String> black_list_array = Paper.book().read("black_keyword_list", new ArrayList<>());
-            for (String black_list_item : black_list_array) {
-                if (black_list_item.isEmpty()) {
+            ArrayList<String> black_list_array = Paper.book("system_config").read("block_keyword_list", new ArrayList<>());
+            for (String block_list_item : black_list_array) {
+                if (block_list_item.isEmpty()) {
                     continue;
                 }
-                if (message_body.contains(black_list_item)) {
+                if (message_body.contains(block_list_item)) {
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(context.getString(R.string.time_format), Locale.UK);
                     String write_message = request_body.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(new Date(System.currentTimeMillis()));
                     ArrayList<String> spam_sms_list;
@@ -222,7 +222,7 @@ public class sms_receiver extends BroadcastReceiver {
 
 
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS forward failed:";

@@ -106,6 +106,11 @@ public class main_activity extends AppCompatActivity {
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+            if (!Paper.book("system_config").read("convert", false)) {
+                convert_system_config_storage();
+            }
+        } else {
+            Paper.book("system_config").write("convert", true);
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -170,7 +175,7 @@ public class main_activity extends AppCompatActivity {
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            doh_switch.setEnabled(!Paper.book().read("proxy_config", new proxy_config()).enable);
+            doh_switch.setEnabled(!Paper.book("system_config").read("proxy_config", new proxy_config()).enable);
         }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
@@ -225,7 +230,7 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setCancelable(false);
             progress_dialog.show();
             String request_uri = public_func.get_url(bot_token_editview.getText().toString().trim(), "getUpdates");
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book().read("proxy_config", new proxy_config()));
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy_config()));
             okhttp_client = okhttp_client.newBuilder()
                     .readTimeout(60, TimeUnit.SECONDS)
                     .build();
@@ -374,7 +379,7 @@ public class main_activity extends AppCompatActivity {
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);
             RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book().read("proxy_config", new proxy_config()));
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy_config()));
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send message failed:";
@@ -408,13 +413,9 @@ public class main_activity extends AppCompatActivity {
                     }
                     if (!new_bot_token.equals(bot_token_save)) {
                         Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
-                        List<String> notify_listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
-                        ArrayList<String> black_keyword_list = Paper.book().read("black_keyword_list", new ArrayList<>());
-                        proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
                         beacon_config beacon_config_item = Paper.book().read("beacon_config", new beacon_config());
                         ArrayList<String> beacon_listen_list = Paper.book().read("beacon_address", new ArrayList<>());
                         Paper.book().destroy();
-                        Paper.book().write("notify_listen_list", notify_listen_list).write("black_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
                         Paper.book().write("beacon_address", beacon_config_item).write("beacon_address", beacon_listen_list);
                     }
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
@@ -446,6 +447,18 @@ public class main_activity extends AppCompatActivity {
                 }
             });
         });
+
+    }
+
+    private void convert_system_config_storage() {
+        List<String> notify_listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
+        ArrayList<String> black_keyword_list = Paper.book().read("black_keyword_list", new ArrayList<>());
+        proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
+        Paper.book("system_config").write("notify_listen_list", notify_listen_list).write("block_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
+        Paper.book("system_config").write("convert", true);
+        Paper.book().delete("notify_listen_list");
+        Paper.book().delete("black_keyword_list");
+        Paper.book().delete("proxy_config");
 
     }
 
@@ -665,7 +678,7 @@ public class main_activity extends AppCompatActivity {
                 final EditText proxy_port = proxy_dialog_view.findViewById(R.id.proxy_port_editview);
                 final EditText proxy_username = proxy_dialog_view.findViewById(R.id.proxy_username_editview);
                 final EditText proxy_password = proxy_dialog_view.findViewById(R.id.proxy_password_editview);
-                proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
+                proxy_config proxy_item = Paper.book("system_config").read("proxy_config", new proxy_config());
                 proxy_enable.setChecked(proxy_item.enable);
                 proxy_doh_socks5.setChecked(proxy_item.dns_over_socks5);
                 proxy_host.setText(proxy_item.proxy_host);

@@ -324,44 +324,6 @@ public class chat_command_service extends Service {
         return net_type;
     }
 
-    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        context = getApplicationContext();
-        connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        Paper.init(context);
-
-        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-
-        chat_id = sharedPreferences.getString("chat_id", "");
-        bot_token = sharedPreferences.getString("bot_token", "");
-        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
-        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
-        wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
-        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
-        wifilock.setReferenceCounted(false);
-        wakelock.setReferenceCounted(false);
-        if (!wifilock.isHeld()) {
-            wifilock.acquire();
-        }
-        if (!wakelock.isHeld()) {
-            wakelock.acquire();
-        }
-        thread_main = new Thread(new thread_main_runnable());
-        thread_main.start();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
-        NetworkRequest network_request = new NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                .build();
-        callback = new network_callback();
-        connectivity_manager.registerNetworkCallback(network_request, callback);
-        broadcast_receiver = new broadcast_receiver();
-        registerReceiver(broadcast_receiver, intentFilter);
-    }
-
     private static String get_cell_info(Context context, TelephonyManager telephonyManager, int sub_id) {
         final int[] signal_arfcn = {-1};
         final int[] signal_strength = {0};
@@ -411,7 +373,7 @@ public class chat_command_service extends Service {
             });
             while (!run_lock[0]) {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -460,14 +422,6 @@ public class chat_command_service extends Service {
         return result_string.toString();
     }
 
-    private static class SEND_SMS_STATUS {
-        public static final int STANDBY_STATUS = -1;
-        public static final int PHONE_INPUT_STATUS = 0;
-        public static final int MESSAGE_INPUT_STATUS = 1;
-        public static final int WAITING_TO_SEND_STATUS = 2;
-    }
-
-
     private static String check_cellular_network_type(int type) {
         String net_type = "Unknown";
         switch (type) {
@@ -477,10 +431,10 @@ public class chat_command_service extends Service {
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
                 if (com.qwe7002.root_kit.radio.is_LTE_CA()) {
-                    net_type = "LTE+";
+                    net_type += "+";
                 }
                 if (com.qwe7002.root_kit.radio.is_NR_Connected()) {
-                    net_type = "LTE & NR";
+                    net_type += " & NR";
                 }
                 break;
             case TelephonyManager.NETWORK_TYPE_HSPAP:
@@ -504,6 +458,51 @@ public class chat_command_service extends Service {
                 break;
         }
         return net_type;
+    }
+
+    private static class SEND_SMS_STATUS {
+        public static final int STANDBY_STATUS = -1;
+        public static final int PHONE_INPUT_STATUS = 0;
+        public static final int MESSAGE_INPUT_STATUS = 1;
+        public static final int WAITING_TO_SEND_STATUS = 2;
+    }
+
+    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        context = getApplicationContext();
+        connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        Paper.init(context);
+
+        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+
+        chat_id = sharedPreferences.getString("chat_id", "");
+        bot_token = sharedPreferences.getString("bot_token", "");
+        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
+        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
+        wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
+        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
+        wifilock.setReferenceCounted(false);
+        wakelock.setReferenceCounted(false);
+        if (!wifilock.isHeld()) {
+            wifilock.acquire();
+        }
+        if (!wakelock.isHeld()) {
+            wakelock.acquire();
+        }
+        thread_main = new Thread(new thread_main_runnable());
+        thread_main.start();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
+        NetworkRequest network_request = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                .build();
+        callback = new network_callback();
+        connectivity_manager.registerNetworkCallback(network_request, callback);
+        broadcast_receiver = new broadcast_receiver();
+        registerReceiver(broadcast_receiver, intentFilter);
     }
 
 
@@ -859,7 +858,7 @@ public class chat_command_service extends Service {
                 }
                 new Thread(() -> {
                     if (public_func.check_network_status(context)) {
-                        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
+                        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
                         for (String item : spam_sms_list) {
                             message_json send_sms_request_body = new message_json();
                             send_sms_request_body.chat_id = chat_id;
