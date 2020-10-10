@@ -629,7 +629,7 @@ public class main_activity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 0);
                 return true;
             case R.id.logcat_menu_item:
-                startActivity(new Intent(main_activity.this, logcat_activity.class));
+                startActivity(new Intent(this, logcat_activity.class));
                 return true;
             case R.id.config_qrcode_menu_item:
                 if (sharedPreferences.getBoolean("initialized", false)) {
@@ -639,7 +639,7 @@ public class main_activity extends AppCompatActivity {
                 }
                 return true;
             case R.id.set_beacon_menu_item:
-                startActivity(new Intent(main_activity.this, beacon_config_activity.class));
+                startActivity(new Intent(this, beacon_config_activity.class));
                 return true;
             case R.id.set_notify_menu_item:
                 if (!public_func.is_notify_listener(context)) {
@@ -649,7 +649,7 @@ public class main_activity extends AppCompatActivity {
                     set_permission_back = true;
                     return false;
                 }
-                startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
+                startActivity(new Intent(this, notify_apps_list_activity.class));
                 return true;
             case R.id.spam_sms_keyword_edittext:
                 startActivity(new Intent(this, spam_list_activity.class));
