@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -81,6 +82,18 @@ class public_func {
     static final int RESULT_BOT_TOKEN = 2;
     private static final String TELEGRAM_API_DOMAIN = "api.telegram.org";
     private static final String DNS_OVER_HTTP_ADDRSS = "https://cloudflare-dns.com/dns-query";
+
+    static boolean is_vpn_hotsport_exist(Context context) {
+        ApplicationInfo info;
+        try {
+            info = context.getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            info = null;
+        }
+
+        return info != null;
+    }
 
     static boolean is_data_usage(Context context) {
         AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
@@ -222,31 +235,27 @@ class public_func {
                 .writeTimeout(15, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true);
         Proxy proxy = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (proxy_item.enable) {
-                InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.proxy_host, proxy_item.proxy_port);
-                proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
-                Authenticator.setDefault(new Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        if (getRequestingHost().equalsIgnoreCase(proxy_item.proxy_host)) {
-                            if (proxy_item.proxy_port == getRequestingPort()) {
-                                return new PasswordAuthentication(proxy_item.username, proxy_item.password.toCharArray());
-                            }
+        if (proxy_item.enable) {
+            InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.proxy_host, proxy_item.proxy_port);
+            proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
+            Authenticator.setDefault(new Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    if (getRequestingHost().equalsIgnoreCase(proxy_item.proxy_host)) {
+                        if (proxy_item.proxy_port == getRequestingPort()) {
+                            return new PasswordAuthentication(proxy_item.username, proxy_item.password.toCharArray());
                         }
-                        return null;
                     }
-                });
-                okhttp.proxy(proxy);
-                doh_switch = true;
-            }
+                    return null;
+                }
+            });
+            okhttp.proxy(proxy);
+            doh_switch = true;
         }
         if (doh_switch) {
             OkHttpClient.Builder doh_http_client = new OkHttpClient.Builder().retryOnConnectionFailure(true);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                if (proxy_item.enable && proxy_item.dns_over_socks5) {
-                    doh_http_client.proxy(proxy);
-                }
+            if (proxy_item.enable && proxy_item.dns_over_socks5) {
+                doh_http_client.proxy(proxy);
             }
             okhttp.dns(new DnsOverHttps.Builder().client(doh_http_client.build())
                     .url(HttpUrl.get(DNS_OVER_HTTP_ADDRSS))
@@ -412,18 +421,12 @@ class public_func {
 
     @NotNull
     static Notification get_notification_obj(Context context, String notification_name) {
-        Notification.Builder notification;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(notification_name, notification_name,
-                    NotificationManager.IMPORTANCE_MIN);
-            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            assert manager != null;
-            manager.createNotificationChannel(channel);
-            notification = new Notification.Builder(context, notification_name);
-        } else {
-            notification = new Notification.Builder(context).setPriority(Notification.PRIORITY_MIN);
-        }
-        notification.setAutoCancel(false)
+        NotificationChannel channel = new NotificationChannel(notification_name, notification_name,
+                NotificationManager.IMPORTANCE_MIN);
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        assert manager != null;
+        manager.createNotificationChannel(channel);
+        Notification.Builder notification = new Notification.Builder(context, notification_name).setAutoCancel(false)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setOngoing(true)
                 .setTicker(context.getString(R.string.app_name))

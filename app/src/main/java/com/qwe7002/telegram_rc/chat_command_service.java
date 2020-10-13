@@ -11,12 +11,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -26,6 +24,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.telephony.CellIdentityNr;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
@@ -186,17 +185,6 @@ public class chat_command_service extends Service {
         return null;
     }
 
-    boolean is_vpn_hotsport_exist() {
-        ApplicationInfo info;
-        try {
-            info = getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            info = null;
-        }
-
-        return info != null;
-    }
 
 
     @NotNull
@@ -270,54 +258,36 @@ public class chat_command_service extends Service {
         TelephonyManager telephonyManager = (TelephonyManager) context
                 .getSystemService(Context.TELEPHONY_SERVICE);
         assert telephonyManager != null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Network[] networks = connect_manager.getAllNetworks();
-            if (networks.length != 0) {
-                for (Network network : networks) {
-                    NetworkCapabilities network_capabilities = connect_manager.getNetworkCapabilities(network);
-                    assert network_capabilities != null;
-                    if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                            net_type = "WIFI";
-                            break;
+        Network[] networks = connect_manager.getAllNetworks();
+        if (networks.length != 0) {
+            for (Network network : networks) {
+                NetworkCapabilities network_capabilities = connect_manager.getNetworkCapabilities(network);
+                assert network_capabilities != null;
+                if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                    if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        net_type = "WIFI";
+                        break;
+                    }
+                    if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                        if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_IMS)) {
+                            continue;
                         }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                            if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_IMS)) {
-                                continue;
-                            }
-                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                                Log.i("get_network_type", "No permission.");
-                                return net_type;
-                            }
-                            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
-                            if (cell_info) {
-                                net_type += get_cell_info(context, telephonyManager, -1);
-                            }
+                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                            Log.i("get_network_type", "No permission.");
+                            return net_type;
                         }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
-                            net_type = "Bluetooth";
+                        net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
+                        if (cell_info) {
+                            net_type += get_cell_info(context, telephonyManager, -1);
                         }
-                        if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                            net_type = "Ethernet";
-                        }
+                    }
+                    if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
+                        net_type = "Bluetooth";
+                    }
+                    if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                        net_type = "Ethernet";
                     }
                 }
-            }
-        } else {
-            NetworkInfo network_info = connect_manager.getActiveNetworkInfo();
-            if (network_info == null) {
-                return net_type;
-            }
-            switch (network_info.getType()) {
-                case ConnectivityManager.TYPE_WIFI:
-                    net_type = "WIFI";
-                    break;
-                case ConnectivityManager.TYPE_MOBILE:
-                    net_type = check_cellular_network_type(network_info.getSubtype());
-                    if (cell_info) {
-                        net_type += get_cell_info(context, telephonyManager, -1);
-                    }
-                    break;
             }
         }
 
@@ -334,14 +304,12 @@ public class chat_command_service extends Service {
             return "";
         }
         StringBuilder result_string = new StringBuilder();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (sub_id == -1) {
-                SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-                assert subscriptionManager != null;
-                sub_id = SubscriptionManager.getDefaultDataSubscriptionId();
-            }
-            telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
+        if (sub_id == -1) {
+            SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+            assert subscriptionManager != null;
+            sub_id = SubscriptionManager.getDefaultDataSubscriptionId();
         }
+        telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 Log.d("get_data_sim_id", "No permission.");
@@ -386,22 +354,16 @@ public class chat_command_service extends Service {
                 }
                 if (cell instanceof CellInfoLte) {
                     signal_strength[0] = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        signal_arfcn[0] = ((CellInfoLte) cell).getCellIdentity().getEarfcn();
-                    }
+                    signal_arfcn[0] = ((CellInfoLte) cell).getCellIdentity().getEarfcn();
                     break;
                 }
                 if (cell instanceof CellInfoWcdma) {
                     signal_strength[0] = ((CellInfoWcdma) cell).getCellSignalStrength().getDbm();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        signal_arfcn[0] = ((CellInfoWcdma) cell).getCellIdentity().getUarfcn();
-                    }
+                    signal_arfcn[0] = ((CellInfoWcdma) cell).getCellIdentity().getUarfcn();
                 }
                 if (cell instanceof CellInfoGsm) {
                     signal_strength[0] = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        signal_arfcn[0] = ((CellInfoGsm) cell).getCellIdentity().getArfcn();
-                    }
+                    signal_arfcn[0] = ((CellInfoGsm) cell).getCellIdentity().getArfcn();
 
                 }
             }
@@ -678,9 +640,13 @@ public class chat_command_service extends Service {
                 String config_adb = "";
                 String switch_ap = "";
                 if (sharedPreferences.getBoolean("root", false)) {
-                    if (is_vpn_hotsport_exist()) {
-                        switch_ap = "\n" + getString(R.string.switch_ap_message);
+                    if (Settings.System.canWrite(context)) {
+                        switch_ap += "\n" + getString(R.string.switch_ap_message);
                     }
+                    if (public_func.is_vpn_hotsport_exist(context)) {
+                        switch_ap += "\n" + getString(R.string.switch_ap_message).replace("/switchap", "/switchvpnap");
+                    }
+                    switch_ap += getString(R.string.switch_data_message);
                     config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
                 if (command.equals("/commandlist")) {
@@ -772,24 +738,41 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
                 break;
             case "/switchap":
-                if (!sharedPreferences.getBoolean("root", false) || !is_vpn_hotsport_exist()) {
+                if (Settings.System.canWrite(context)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
+                }
+                boolean ap_status = remote_control_public.check_is_tether_active(context);
+                String result_ap;
+                if (!ap_status) {
+                    result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
+                    remote_control_public.enable_tether(context);
+                } else {
+                    Paper.book().write("tether_open", false);
+                    result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
+                }
+                result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
+                request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
+                break;
+            case "/switchvpnap":
+                if (!sharedPreferences.getBoolean("root", false) || !public_func.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                     break;
                 }
                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 assert wifiManager != null;
                 boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
-                String result_ap;
+                String result_vpn_ap;
                 if (!wifi_open) {
-                    result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                    new Thread(() -> remote_control_public.enable_ap(wifiManager)).start();
+                    result_vpn_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
+                    new Thread(() -> remote_control_public.enable_vpn_ap(wifiManager)).start();
                 } else {
                     Paper.book().write("wifi_open", false);
-                    result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
+                    result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                 }
-                result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
+                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
 
-                request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
+                request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
                 has_command = true;
                 break;
             case "/setdatacard":
@@ -1052,10 +1035,15 @@ public class chat_command_service extends Service {
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
                     switch (final_command.replace("_", "")) {
                         case "/switchap":
+                            if (!Paper.book().read("tether_open", false)) {
+                                remote_control_public.disable_tether(context);
+                            }
+                            break;
+                        case "/switchvpnap":
                             if (!Paper.book().read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                                 assert wifiManager != null;
-                                remote_control_public.disable_ap(wifiManager);
+                                remote_control_public.disable_vpn_ap(wifiManager);
                             }
                             break;
                         case "/switchdata":

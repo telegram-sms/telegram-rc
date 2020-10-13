@@ -87,6 +87,10 @@ public class beacon_config_activity extends AppCompatActivity {
         LayoutInflater inflater = this.getLayoutInflater();
         View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
         SwitchMaterial enable = dialog_view.findViewById(R.id.beacon_enable_switch);
+        SwitchMaterial use_vpn_switch = dialog_view.findViewById(R.id.beacon_use_vpn_hotspot_switch);
+        if (public_func.is_vpn_hotsport_exist(getApplicationContext())) {
+            use_vpn_switch.setEnabled(true);
+        }
         EditText delay = dialog_view.findViewById(R.id.beacon_delay_editview);
         EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count_editview);
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);
@@ -98,6 +102,7 @@ public class beacon_config_activity extends AppCompatActivity {
                 .setView(dialog_view)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                     config.enable = enable.isChecked();
+                    config.use_vpn_hotspot = use_vpn_switch.isChecked();
                     config.delay = Long.parseLong(delay.getText().toString());
                     config.disable_count = Integer.parseInt(disable_count.getText().toString());
                     config.enable_count = Integer.parseInt(enable_count.getText().toString());

@@ -154,7 +154,12 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
-                final boolean wifi_is_enable_status = Paper.book().read("wifi_open", false);
+                boolean wifi_is_enable_status;
+                if (!config.use_vpn_hotspot) {
+                    wifi_is_enable_status = remote_control_public.check_is_tether_active(context);
+                } else {
+                    wifi_is_enable_status = Paper.book().read("wifi_open", false);
+                }
                 beacon_list.beacons = beacons;
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
@@ -222,14 +227,22 @@ public class beacon_receiver_service extends Service {
                         if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
-                            remote_control_public.disable_ap(wifi_manager);
+                            if (config.use_vpn_hotspot) {
+                                remote_control_public.disable_vpn_ap(wifi_manager);
+                            } else {
+                                remote_control_public.disable_tether(context);
+                            }
                             switch_status = STATUS_DISABLE_AP;
                         }
                     } else {
                         if (detect_singal_count >= config.enable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
-                            remote_control_public.enable_ap(wifi_manager);
+                            if (config.use_vpn_hotspot) {
+                                remote_control_public.enable_vpn_ap(wifi_manager);
+                            } else {
+                                remote_control_public.enable_tether(context);
+                            }
                             switch_status = STATUS_ENABLE_AP;
                         }
                     }
@@ -239,14 +252,22 @@ public class beacon_receiver_service extends Service {
                         if (not_found_count >= config.enable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
-                            remote_control_public.enable_ap(wifi_manager);
+                            if (config.use_vpn_hotspot) {
+                                remote_control_public.enable_vpn_ap(wifi_manager);
+                            } else {
+                                remote_control_public.enable_tether(context);
+                            }
                             switch_status = STATUS_ENABLE_AP;
                         }
                     } else {
                         if (not_found_count >= config.disable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
-                            remote_control_public.disable_ap(wifi_manager);
+                            if (config.use_vpn_hotspot) {
+                                remote_control_public.disable_vpn_ap(wifi_manager);
+                            } else {
+                                remote_control_public.disable_tether(context);
+                            }
                             switch_status = STATUS_DISABLE_AP;
                         }
                     }

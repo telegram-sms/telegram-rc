@@ -17,6 +17,17 @@
         android:text="@string/enable_hotspot_when_beacon_is_detected"
         tools:ignore="ExtraText,RtlSymmetry" />
 
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/beacon_use_vpn_hotspot_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:enabled="false"
+        android:paddingStart="5dp"
+        android:text="Use VPN hotspot"
+        tools:ignore="ExtraText,HardcodedText,RtlSymmetry" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

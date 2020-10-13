@@ -106,9 +106,6 @@ public class main_activity extends AppCompatActivity {
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
-            if (!Paper.book("system_config").read("convert", false)) {
-                convert_system_config_storage();
-            }
         } else {
             Paper.book("system_config").write("convert", true);
         }
@@ -174,9 +171,7 @@ public class main_activity extends AppCompatActivity {
         verification_code_switch.setChecked(sharedPreferences.getBoolean("verification_code", false));
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            doh_switch.setEnabled(!Paper.book("system_config").read("proxy_config", new proxy_config()).enable);
-        }
+        doh_switch.setEnabled(!Paper.book("system_config").read("proxy_config", new proxy_config()).enable);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                 assert tm != null;
@@ -222,10 +217,14 @@ public class main_activity extends AppCompatActivity {
                 return;
             }
             new Thread(() -> public_func.stop_all_service(context)).start();
+            //noinspection deprecation
             final ProgressDialog progress_dialog = new ProgressDialog(main_activity.this);
+            //noinspection deprecation
             progress_dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progress_dialog.setTitle(getString(R.string.get_recent_chat_title));
+            //noinspection deprecation
             progress_dialog.setMessage(getString(R.string.get_recent_chat_message));
+            //noinspection deprecation
             progress_dialog.setIndeterminate(false);
             progress_dialog.setCancelable(false);
             progress_dialog.show();
@@ -335,13 +334,10 @@ public class main_activity extends AppCompatActivity {
                 show_privacy_dialog();
                 return;
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                //Cancel the bug of automatic revoke permission
-                final PackageManager pm = getApplicationContext().getPackageManager();
-                if (!pm.isAutoRevokeWhitelisted()) {
-                    startActivity(new Intent(Intent.ACTION_AUTO_REVOKE_PERMISSIONS));
-                }
-            }
+
+            Intent write_system_intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+            startActivity(write_system_intent);
+
             if (!public_func.is_data_usage(context)) {
                 Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
                 startActivity(intent);
@@ -364,10 +360,14 @@ public class main_activity extends AppCompatActivity {
                 }
             }
 
+            //noinspection deprecation
             final ProgressDialog progress_dialog = new ProgressDialog(main_activity.this);
+            //noinspection deprecation
             progress_dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progress_dialog.setTitle(getString(R.string.connect_wait_title));
+            //noinspection deprecation
             progress_dialog.setMessage(getString(R.string.connect_wait_message));
+            //noinspection deprecation
             progress_dialog.setIndeterminate(false);
             progress_dialog.setCancelable(false);
             progress_dialog.show();
@@ -450,17 +450,6 @@ public class main_activity extends AppCompatActivity {
 
     }
 
-    private void convert_system_config_storage() {
-        List<String> notify_listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
-        ArrayList<String> black_keyword_list = Paper.book().read("black_keyword_list", new ArrayList<>());
-        proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
-        Paper.book("system_config").write("notify_listen_list", notify_listen_list).write("block_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
-        Paper.book("system_config").write("convert", true);
-        Paper.book().delete("notify_listen_list");
-        Paper.book().delete("black_keyword_list");
-        Paper.book().delete("proxy_config");
-
-    }
 
     private void set_privacy_mode_checkbox(String chat_id, SwitchMaterial chat_command, SwitchMaterial privacy_mode_switch) {
         if (!chat_command.isChecked()) {
