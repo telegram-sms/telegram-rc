@@ -1,8 +1,8 @@
 <resources>
     <string name="action_success">成功。</string>
     <string name="action_failed">失败。</string>
-    <string name="close_wifi">关闭无线热点</string>
-    <string name="open_wifi">打开无线热点</string>
+    <string name="disable_wifi">关闭无线热点</string>
+    <string name="enable_wifi">打开无线热点</string>
     <string name="switch_data">正在切换移动网络状态。</string>
     <string name="restart_network">重新启动移动网络。</string>
     <string name="switch_ap_message">/switchap - 切换网络共享开关\n/switchdata - 切换数据开关\n/restartnetwork - 重置运营商网络</string>
@@ -18,4 +18,7 @@
     <string name="beacon_receiver_configuration">信标接收器配置</string>
     <string name="enable_hotspot_when_beacon_is_detected">检测到信标时启用热点</string>
     <string name="set_data_card">/setdatacard - 设置数据卡</string>
+    <string name="mobile_data_usage">"数据使用量: "</string>
+    <string name="set_data_flush_day">设置数据刷新日</string>
+    <string name="set_sim_imsi">设置SIM卡IMSI</string>
 </resources>

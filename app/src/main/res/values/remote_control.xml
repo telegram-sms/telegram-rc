@@ -1,9 +1,8 @@
 <resources>
-    <string name="app_name" translatable="false">Telegram remote control</string>
     <string name="action_success">successfully.</string>
     <string name="action_failed">failed.</string>
-    <string name="close_wifi">"Disable tethering "</string>
-    <string name="open_wifi">"Enable tethering "</string>
+    <string name="disable_wifi">"Disable tethering "</string>
+    <string name="enable_wifi">"Enable tethering "</string>
     <string name="switch_data">Switching mobile network status.</string>
     <string name="restart_network">Restarting the mobile network.</string>
     <string name="switch_ap_message">/switchap - Toggle tethering switch\n/switchdata - Toggle data switch\n/restartnetwork - Reset carrier network</string>
@@ -19,4 +18,7 @@
     <string name="beacon_receiver_configuration">Beacon receiver configuration</string>
     <string name="enable_hotspot_when_beacon_is_detected">Enable hotspot when Beacon is detected</string>
     <string name="set_data_card">/setdatacard - Set up data card</string>
+    <string name="mobile_data_usage">"Data usage: "</string>
+    <string name="set_data_flush_day">Set data flush day</string>
+    <string name="set_sim_imsi">Set SIM card IMSI</string>
 </resources>

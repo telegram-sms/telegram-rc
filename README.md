@@ -4,7 +4,13 @@
 
 > Fight COVID-19. Stay at home. Save lives.
 
+![Min Android Version](https://img.shields.io/badge/Min%20Android%20Version-7.0-orange.svg?style=flat-square)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/telegram-sms/telegram-rc/blob/master/LICENSE)
+[![GitHub Releases](https://img.shields.io/github/downloads/telegram-sms/telegram-rc/latest/app-release.apk?style=flat-square)](https://github.com/telegram-sms/telegram-rc/releases/latest)
+
 A robot running on your Android device.
+
+**The precompiled version of this version does not support non-64-bit instruction set devices.**
 
 The primary language used for commit messages is Simplified Chinese. However, you're welcome to use English in commit messages when making contributions.
 
@@ -14,7 +20,7 @@ You can follow the Telegram channel [Telegram SMS 更新日志 (tg_sms_changelog
 
 [Download](https://github.com/telegram-sms/telegram_remote_control/releases)
 
-The program's wireless hotspot feature relies on [VPNHotspot] (https://github.com/Mygod/VPNHotspot/) and requires dependent software to be installed for use.
+The program's wireless hotspot feature relies on [VPNHotspot](https://github.com/Mygod/VPNHotspot/) and requires dependent software to be installed for use.
 
 The user manual is not available in this program, please refer to the user manual of Telegram SMS.
 
@@ -62,6 +68,8 @@ I would also like to thank the following people for their hard work to localise 
 - Japanese
   - [@Lollycc](https://github.com/lollycc)
   - [@AisakaMk2](https://github.com/AisakaMk2)
+- Spanish
+  - [@David Alonso](https://github.com/lpdavidgc)
 
 This APP uses the following public DNS service:
 

@@ -33,12 +33,20 @@ public class network {
     }
 
     public static void restart_network() {
-        com.qwe7002.root_kit.network.set_airplane_mode(true);
+        network.set_airplane_mode(true);
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        com.qwe7002.root_kit.network.set_airplane_mode(false);
+        network.set_airplane_mode(false);
+    }
+
+    public static void add_dummy_device(String ip_addr) {
+        shell.run_shell_command("ip link add dummy0 type dummy\nip addr add " + ip_addr + "/32 dev dummy0");
+    }
+
+    public static void del_dummy_device() {
+        shell.run_shell_command("ip link del dummy0");
     }
 }

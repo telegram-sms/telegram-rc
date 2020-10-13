@@ -1,7 +1,6 @@
 
 package com.qwe7002.telegram_rc;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -39,7 +38,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
     private List<app_info> scan_app_list(PackageManager packageManager) {
         List<app_info> app_info_list = new ArrayList<>();
         try {
-            @SuppressLint("QueryPermissionsNeeded") List<PackageInfo> package_info_list = packageManager.getInstalledPackages(0);
+            List<PackageInfo> package_info_list = packageManager.getInstalledPackages(0);
             for (int i = 0; i < package_info_list.size(); i++) {
                 PackageInfo package_info = package_info_list.get(i);
                 app_info app_info = new app_info();

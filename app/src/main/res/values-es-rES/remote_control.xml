@@ -1,8 +1,8 @@
 <resources>
     <string name="action_failed">ha fallado.</string>
     <string name="action_success">exitosamente.</string>
-    <string name="close_wifi">"Desactivar el anclaje a red "</string>
-    <string name="open_wifi">"Habilitar anclaje "</string>
+    <string name="disable_wifi">"Desactivar el anclaje a red "</string>
+    <string name="enable_wifi">"Habilitar anclaje "</string>
     <string name="switch_data">Cambiando estado de la red móvil.</string>
     <string name="restart_network">Reiniciando la red móvil.</string>
     <string name="switch_ap_message">/switchap - Alternar el interruptor de anclaje\n/switchdata - Alternar interruptor de datos\n/restartnetwork - Restablecer la red del operador</string>
@@ -18,4 +18,7 @@
     <string name="beacon_receiver_configuration">Ajustes receptor de baliza</string>
     <string name="enable_hotspot_when_beacon_is_detected">Habilitar el punto de acceso cuando se detecte una baliza</string>
     <string name="set_data_card">/setdatacard - Configurar tarjeta de datos</string>
+    <string name="mobile_data_usage">"Uso de datos móviles: "</string>
+    <string name="set_data_flush_day">establecer día de descarga de datos</string>
+    <string name="set_sim_imsi">Configurar IMSI de la tarjeta SIM</string>
 </resources>

@@ -50,22 +50,28 @@ public class sim_status_receiver extends BroadcastReceiver {
             return;
         }
         last_status = state;
-        String status;
+        String status_message;
         switch (state) {
             case TelephonyManager.SIM_STATE_UNKNOWN:
             case TelephonyManager.SIM_STATE_ABSENT:
-                status = context.getString(R.string.sim_card_remove);
+                status_message = context.getString(R.string.sim_card_remove);
                 break;
             case TelephonyManager.SIM_STATE_PIN_REQUIRED:
             case TelephonyManager.SIM_STATE_PUK_REQUIRED:
             case TelephonyManager.SIM_STATE_NETWORK_LOCKED:
-                status = context.getString(R.string.sim_card_lock);
+                status_message = context.getString(R.string.sim_card_lock);
                 break;
+            case TelephonyManager.SIM_STATE_CARD_IO_ERROR:
+            case TelephonyManager.SIM_STATE_CARD_RESTRICTED:
+            case TelephonyManager.SIM_STATE_NOT_READY:
+            case TelephonyManager.SIM_STATE_PERM_DISABLED:
+            case TelephonyManager.SIM_STATE_READY:
             default:
                 Log.d("sim_status", "onReceive: " + state);
                 return;
+
         }
-        String message = context.getString(R.string.system_message_head) + "\n" + status;
+        String message = context.getString(R.string.system_message_head) + "\n" + status_message;
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         request_body.text = message;

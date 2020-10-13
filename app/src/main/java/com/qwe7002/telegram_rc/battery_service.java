@@ -105,8 +105,8 @@ public class battery_service extends Service {
                     if (Paper.book().read("wifi_open", false)) {
                         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         assert wifiManager != null;
-                        remote_control_public.close_ap(wifiManager);
-                        prebody.append("\n").append(getString(R.string.close_wifi)).append(context.getString(R.string.action_success));
+                        remote_control_public.disable_ap(wifiManager);
+                        prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     break;
                 case Intent.ACTION_POWER_CONNECTED:

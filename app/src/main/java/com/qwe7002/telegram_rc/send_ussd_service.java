@@ -35,6 +35,13 @@ import okhttp3.Response;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class send_ussd_service extends Service {
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
     @Override
     public int onStartCommand(@NotNull Intent intent, int flags, int startId) {
         String TAG = "send_ussd_service";
@@ -56,21 +63,8 @@ public class send_ussd_service extends Service {
         startForeground(public_func.SEND_USSD_SERVCE_NOTIFY_ID, notification.build());
 
         Handler handler = new Handler();
-        String ussd = intent.getStringExtra("ussd");
+        final String ussd = public_func.get_nine_key_map_convert(intent.getStringExtra("ussd"));
         int sub_id = intent.getIntExtra("sub_id", -1);
-
-        assert ussd != null;
-        ussd = ussd.toUpperCase();
-        ussd = ussd.replaceAll("[ABC]", "2");
-        ussd = ussd.replaceAll("[DEF]", "3");
-        ussd = ussd.replaceAll("[GHI]", "4");
-        ussd = ussd.replaceAll("[JKL]", "5");
-        ussd = ussd.replaceAll("[MNO]", "6");
-        ussd = ussd.replaceAll("[P-S]", "7");
-        ussd = ussd.replaceAll("[TUV]", "8");
-        ussd = ussd.replaceAll("[W-Z]", "9");
-        Log.d(TAG, "ussd: " + ussd);
-        Log.d(TAG, "subid: " + sub_id);
 
         TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         assert telephonyManager != null;
@@ -96,7 +90,6 @@ public class send_ussd_service extends Service {
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
-        String finalUssd = ussd;
         TelephonyManager finalTelephonyManager = telephonyManager;
         new Thread(() -> {
             String message_id_string = "-1";
@@ -107,7 +100,7 @@ public class send_ussd_service extends Service {
                 e.printStackTrace();
             }
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                finalTelephonyManager.sendUssdRequest(finalUssd, new ussd_request_callback(context, sharedPreferences, Long.parseLong(message_id_string)), handler);
+                finalTelephonyManager.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, Long.parseLong(message_id_string)), handler);
             }
             stopSelf();
         }).start();
@@ -115,12 +108,4 @@ public class send_ussd_service extends Service {
 
         return START_NOT_STICKY;
     }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-
 }

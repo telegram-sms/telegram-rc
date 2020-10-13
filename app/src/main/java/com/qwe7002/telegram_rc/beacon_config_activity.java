@@ -16,13 +16,14 @@ import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import org.altbeacon.beacon.Beacon;
 
@@ -84,8 +85,8 @@ public class beacon_config_activity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         LayoutInflater inflater = this.getLayoutInflater();
-        @SuppressLint("InflateParams") View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
-        @SuppressLint("UseSwitchCompatOrMaterialCode") Switch enable = dialog_view.findViewById(R.id.beacon_enable_switch);
+        View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
+        SwitchMaterial enable = dialog_view.findViewById(R.id.beacon_enable_switch);
         EditText delay = dialog_view.findViewById(R.id.beacon_delay_editview);
         EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count_editview);
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);

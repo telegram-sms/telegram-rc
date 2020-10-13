@@ -39,7 +39,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class beacon_receiver_service extends Service {
-
     private final static String TAG = "beacon_receviver";
     private Context context;
     private WifiManager wifi_manager;
@@ -50,6 +49,7 @@ public class beacon_receiver_service extends Service {
     private String request_url;
     private BeaconManager beacon_manager;
     private long startup_time = 0;
+    private long last_receive_time = 0;
     private beacon_config config;
     private beacon_service_consumer beacon_consumer;
 
@@ -115,9 +115,10 @@ public class beacon_receiver_service extends Service {
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book().read("proxy_config", new proxy_config()));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
-
+        // Detect iBeacon:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+
         // Detect the main identifier (UID) frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
@@ -135,14 +136,16 @@ public class beacon_receiver_service extends Service {
         beacon_manager.setForegroundBetweenScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(config.delay);
         beacon_manager.bind(beacon_consumer);
+
         startup_time = System.currentTimeMillis();
 
     }
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy: ");
         beacon_manager.unbind(beacon_consumer);
+        beacon_manager.disableForegroundServiceScanning();
+
         stopForeground(true);
         super.onDestroy();
     }
@@ -151,36 +154,43 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
+                final boolean wifi_is_enable_status = Paper.book().read("wifi_open", false);
                 beacon_list.beacons = beacons;
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
                     Log.d(TAG, "onBeaconServiceConnect: Startup time is too short");
+                    last_receive_time = System.currentTimeMillis();
                     return;
                 }
+                if ((System.currentTimeMillis() - last_receive_time) < config.delay) {
+                    Log.d(TAG, "onBeaconServiceConnect: Last time is too short");
+                    return;
+                }
+                last_receive_time = System.currentTimeMillis();
                 if (Paper.book().read("disable_beacon", false)) {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     return;
                 }
-                if (!is_charging() && !Paper.book().read("wifi_open", false) && !config.enable) {
+                if (!is_charging() && !wifi_is_enable_status && !config.enable) {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");
                     return;
                 }
-                String message = getString(R.string.system_message_head) + "\n" + getString(R.string.open_wifi) + getString(R.string.action_success);
-                boolean found_beacon = false;
                 ArrayList<String> listen_beacon_list = Paper.book().read("beacon_address", new ArrayList<>());
                 if (listen_beacon_list.size() == 0) {
+                    not_found_count = 0;
+                    detect_singal_count = 0;
                     Log.d(TAG, "onBeaconServiceConnect: Watchlist is empty");
                     return;
                 }
+                boolean found_beacon = false;
                 Beacon detect_beacon = null;
                 for (Beacon beacon : beacons) {
                     Log.d(TAG, "Mac address: " + beacon.getBluetoothAddress() + " Rssi: " + beacon.getRssi() + " Power: " + beacon.getTxPower() + " Distance: " + beacon.getDistance());
                     for (String beacon_address : listen_beacon_list) {
                         if (beacon.getBluetoothAddress().equals(beacon_address)) {
-                            not_found_count = 0;
                             found_beacon = true;
                             break;
                         }
@@ -190,39 +200,74 @@ public class beacon_receiver_service extends Service {
                         break;
                     }
                 }
+
+                String beacon_status;
                 if (found_beacon) {
-                    if (Paper.book().read("wifi_open", false)) {
-                        Log.d(TAG, "close ap action count: " + detect_singal_count);
+                    beacon_status = "\nBeacon Rssi: " + detect_beacon.getRssi() + "dBm";
+                    not_found_count = 0;
+                    ++detect_singal_count;
+                } else {
+                    beacon_status = "\nBeacon Not Found.";
+                    detect_singal_count = 0;
+                    ++not_found_count;
+                }
+                final int STATUS_STANDBY = -1;
+                final int STATUS_ENABLE_AP = 0;
+                final int STATUS_DISABLE_AP = 1;
+                int switch_status = STATUS_STANDBY;
+                Log.d(TAG, "detect_singal_count: " + detect_singal_count);
+                Log.d(TAG, "not_found_count: " + not_found_count);
+                if (wifi_is_enable_status && found_beacon) {
+                    if (!config.enable) {
                         if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
-                            if (config.enable) {
-                                remote_control_public.open_ap(wifi_manager);
-                            } else {
-                                remote_control_public.close_ap(wifi_manager);
-                            }
-                            message = getString(R.string.system_message_head) + "\n" + getString(R.string.close_wifi) + getString(R.string.action_success);
-                            network_progress_handle(message + "\nBeacon Rssi: " + detect_beacon.getRssi() + "dBm", chat_id, okhttp_client);
+                            not_found_count = 0;
+                            remote_control_public.disable_ap(wifi_manager);
+                            switch_status = STATUS_DISABLE_AP;
                         }
-                        ++detect_singal_count;
-                    }
-
-                } else {
-                    Log.d(TAG, "Beacon not found, beacons size:" + beacons.size());
-                    if (not_found_count >= config.enable_count && !Paper.book().read("wifi_open", false)) {
-                        not_found_count = 0;
-                        if (config.enable) {
-                            remote_control_public.close_ap(wifi_manager);
-                        } else {
-                            remote_control_public.open_ap(wifi_manager);
+                    } else {
+                        if (detect_singal_count >= config.enable_count) {
+                            detect_singal_count = 0;
+                            not_found_count = 0;
+                            remote_control_public.enable_ap(wifi_manager);
+                            switch_status = STATUS_ENABLE_AP;
                         }
-                        network_progress_handle(message + "\nBeacon Not Found.", chat_id, okhttp_client);
                     }
-                    ++not_found_count;
+                }
+                if (!wifi_is_enable_status && !found_beacon) {
+                    if (!config.enable) {
+                        if (not_found_count >= config.enable_count) {
+                            detect_singal_count = 0;
+                            not_found_count = 0;
+                            remote_control_public.enable_ap(wifi_manager);
+                            switch_status = STATUS_ENABLE_AP;
+                        }
+                    } else {
+                        if (not_found_count >= config.disable_count) {
+                            detect_singal_count = 0;
+                            not_found_count = 0;
+                            remote_control_public.disable_ap(wifi_manager);
+                            switch_status = STATUS_DISABLE_AP;
+                        }
+                    }
+                }
+                String message = null;
+                switch (switch_status) {
+                    case STATUS_ENABLE_AP:
+                        message = getString(R.string.system_message_head) + "\n" + getString(R.string.enable_wifi) + getString(R.string.action_success) + beacon_status;
+                        break;
+                    case STATUS_DISABLE_AP:
+                        message = getString(R.string.system_message_head) + "\n" + getString(R.string.disable_wifi) + getString(R.string.action_success) + beacon_status;
+                        break;
+                }
+                if (message != null) {
+                    network_progress_handle(message, chat_id, okhttp_client);
                 }
             });
 
+
             try {
-                beacon_manager.startRangingBeaconsInRegion(new Region(getPackageName(), null, null, null));
+                beacon_manager.startRangingBeaconsInRegion(new Region("com.qwe7002.telegram_rc", null, null, null));
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -243,7 +288,6 @@ public class beacon_receiver_service extends Service {
             return false;
         }
     }
-
     private void network_progress_handle(String message, String chat_id, @NotNull OkHttpClient okhttp_client) {
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
