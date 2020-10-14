@@ -1,6 +1,9 @@
 package com.qwe7002.root_kit;
 
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class network {
     private static void set_airplane_mode(boolean enable) {
         int set = 0;
@@ -43,7 +46,11 @@ public class network {
     }
 
     public static void add_dummy_device(String ip_addr) {
-        shell.run_shell_command("ip link add dummy0 type dummy\nip addr add " + ip_addr + "/32 dev dummy0");
+        Pattern reg = Pattern.compile("^(10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})|(172\\.((1[6-9])|(2\\d)|(3[01]))\\.\\d{1,3}\\.\\d{1,3})|(192\\.168\\.\\d{1,3}\\.\\d{1,3})$");
+        Matcher match = reg.matcher(ip_addr);
+        if (match.find()) {
+            shell.run_shell_command("ip link add dummy0 type dummy\nip addr add " + ip_addr + "/32 dev dummy0");
+        }
     }
 
     public static void del_dummy_device() {
