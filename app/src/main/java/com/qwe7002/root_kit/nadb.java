@@ -2,7 +2,6 @@ package com.qwe7002.root_kit;
 
 import android.util.Log;
 
-@SuppressWarnings("SpellCheckingInspection")
 public class nadb {
     public static boolean set_nadb(String port) {
         final String TAG = "nadb";
