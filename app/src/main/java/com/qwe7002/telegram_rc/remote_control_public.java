@@ -4,13 +4,13 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 
-import com.fitc.wifihotspot.WifiManager;
+import com.fitc.wifihotspot.TetherManager;
 
 import io.paperdb.Paper;
 
 public class remote_control_public {
     @SuppressLint("StaticFieldLeak")
-    static WifiManager wifimanager;
+    static TetherManager wifimanager;
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         Paper.book().write("wifi_open", false);
@@ -55,7 +55,7 @@ public class remote_control_public {
     public static void enable_tether(Context context) {
         Paper.book().write("tether_open", true);
         if (wifimanager == null) {
-            wifimanager = new WifiManager(context);
+            wifimanager = new TetherManager(context);
         }
         wifimanager.startTethering(null);
     }
@@ -63,14 +63,14 @@ public class remote_control_public {
     public static void disable_tether(Context context) {
         Paper.book().write("tether_open", false);
         if (wifimanager == null) {
-            wifimanager = new WifiManager(context);
+            wifimanager = new TetherManager(context);
         }
         wifimanager.stopTethering();
     }
 
-    public static boolean check_is_tether_active(Context context) {
+    public static boolean is_tether_active(Context context) {
         if (wifimanager == null) {
-            wifimanager = new WifiManager(context);
+            wifimanager = new TetherManager(context);
         }
         Paper.book().write("tether_open", wifimanager.isTetherActive());
         return wifimanager.isTetherActive();

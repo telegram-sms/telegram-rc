@@ -156,7 +156,7 @@ public class beacon_receiver_service extends Service {
             beacon_manager.addRangeNotifier((beacons, region) -> {
                 boolean wifi_is_enable_status;
                 if (!config.use_vpn_hotspot) {
-                    wifi_is_enable_status = remote_control_public.check_is_tether_active(context);
+                    wifi_is_enable_status = remote_control_public.is_tether_active(context);
                 } else {
                     wifi_is_enable_status = Paper.book().read("wifi_open", false);
                 }

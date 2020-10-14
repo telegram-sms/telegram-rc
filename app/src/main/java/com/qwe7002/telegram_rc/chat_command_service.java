@@ -747,7 +747,7 @@ public class chat_command_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                     break;
                 }
-                boolean ap_status = remote_control_public.check_is_tether_active(context);
+                boolean ap_status = remote_control_public.is_tether_active(context);
                 String result_ap;
                 if (!ap_status) {
                     result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);

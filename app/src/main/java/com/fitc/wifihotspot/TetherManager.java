@@ -16,13 +16,13 @@ import java.util.Arrays;
  * Created by jonro on 19/03/2018.
  */
 
-public class WifiManager {
-    private static final String TAG = WifiManager.class.getSimpleName();
+public class TetherManager {
+    private static final String TAG = TetherManager.class.getSimpleName();
 
     private final Context mContext;
     private final ConnectivityManager mConnectivityManager;
 
-    public WifiManager(Context context) {
+    public TetherManager(Context context) {
         mContext = context;
         mConnectivityManager = (ConnectivityManager) mContext.getSystemService(ConnectivityManager.class);
     }
@@ -78,10 +78,14 @@ public class WifiManager {
                     .dexCache(outputDir).handler((proxy1, method, args) -> {
                         switch (method.getName()) {
                             case "onTetheringStarted":
-                                callback.onTetheringStarted();
+                                if (callback != null) {
+                                    callback.onTetheringStarted();
+                                }
                                 break;
                             case "onTetheringFailed":
-                                callback.onTetheringFailed();
+                                if (callback != null) {
+                                    callback.onTetheringFailed();
+                                }
                                 break;
                             default:
                                 ProxyBuilder.callSuper(proxy1, method, args);
