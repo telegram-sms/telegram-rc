@@ -1,6 +1,5 @@
 package com.qwe7002.telegram_rc;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 
@@ -9,8 +8,6 @@ import com.fitc.wifihotspot.TetherManager;
 import io.paperdb.Paper;
 
 public class remote_control_public {
-    @SuppressLint("StaticFieldLeak")
-    static TetherManager wifimanager;
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         Paper.book().write("wifi_open", false);
@@ -54,25 +51,19 @@ public class remote_control_public {
 
     public static void enable_tether(Context context) {
         Paper.book().write("tether_open", true);
-        if (wifimanager == null) {
-            wifimanager = new TetherManager(context);
-        }
-        wifimanager.startTethering(null);
+        TetherManager manager = new TetherManager(context);
+        manager.startTethering(null);
     }
 
     public static void disable_tether(Context context) {
         Paper.book().write("tether_open", false);
-        if (wifimanager == null) {
-            wifimanager = new TetherManager(context);
-        }
-        wifimanager.stopTethering();
+        TetherManager manager = new TetherManager(context);
+        manager.stopTethering();
     }
 
     public static boolean is_tether_active(Context context) {
-        if (wifimanager == null) {
-            wifimanager = new TetherManager(context);
-        }
-        Paper.book().write("tether_open", wifimanager.isTetherActive());
-        return wifimanager.isTetherActive();
+        TetherManager manager = new TetherManager(context);
+        Paper.book().write("tether_open", manager.isTetherActive());
+        return manager.isTetherActive();
     }
 }
