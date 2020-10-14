@@ -44,6 +44,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.qwe7002.shell_kit.radio;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -392,11 +393,15 @@ public class chat_command_service extends Service {
                 break;
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
-                if (com.qwe7002.root_kit.radio.is_LTE_CA()) {
+                if (radio.is_LTE_CA()) {
                     net_type += "+";
                 }
-                if (com.qwe7002.root_kit.radio.is_NR_Connected()) {
+                if (radio.is_NR_connected()) {
                     net_type += " & NR";
+                    break;
+                }
+                if (radio.is_NR_standby()) {
+                    net_type += " (NR Standby)";
                 }
                 break;
             case TelephonyManager.NETWORK_TYPE_HSPAP:
