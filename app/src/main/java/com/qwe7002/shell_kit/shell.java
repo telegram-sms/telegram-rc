@@ -6,7 +6,7 @@ import android.util.Log;
 import java.io.DataOutputStream;
 import java.util.Objects;
 
-public class shell {
+class shell {
     static boolean run_shell_command(String command) {
         final String TAG = "shell";
         Process process;
