@@ -2,7 +2,6 @@ package com.qwe7002.telegram_rc;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.AppOpsManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -13,7 +12,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -82,25 +80,6 @@ class public_func {
     static final int RESULT_BOT_TOKEN = 2;
     private static final String TELEGRAM_API_DOMAIN = "api.telegram.org";
     private static final String DNS_OVER_HTTP_ADDRSS = "https://cloudflare-dns.com/dns-query";
-
-    static boolean is_vpn_hotsport_exist(Context context) {
-        ApplicationInfo info;
-        try {
-            info = context.getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            info = null;
-        }
-
-        return info != null;
-    }
-
-    static boolean is_data_usage(Context context) {
-        AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
-        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
-                android.os.Process.myUid(), context.getPackageName());
-        return mode == AppOpsManager.MODE_ALLOWED;
-    }
 
     static String get_nine_key_map_convert(String input) {
         final Map<Character, Integer> nine_key_map = new HashMap<Character, Integer>() {

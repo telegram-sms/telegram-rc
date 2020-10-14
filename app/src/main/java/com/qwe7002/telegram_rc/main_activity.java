@@ -334,11 +334,12 @@ public class main_activity extends AppCompatActivity {
                 show_privacy_dialog();
                 return;
             }
+            if (!Settings.System.canWrite(context)) {
+                Intent write_system_intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+                startActivity(write_system_intent);
+            }
 
-            Intent write_system_intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
-            startActivity(write_system_intent);
-
-            if (!public_func.is_data_usage(context)) {
+            if (!remote_control_public.is_data_usage(context)) {
                 Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
                 startActivity(intent);
             }
@@ -687,7 +688,7 @@ public class main_activity extends AppCompatActivity {
                             proxy_item.proxy_port = Integer.parseInt(proxy_port.getText().toString());
                             proxy_item.username = proxy_username.getText().toString();
                             proxy_item.password = proxy_password.getText().toString();
-                            Paper.book().write("proxy_config", proxy_item);
+                            Paper.book("system_config").write("proxy_config", proxy_item);
                             new Thread(() -> {
                                 public_func.stop_all_service(context);
                                 if (sharedPreferences.getBoolean("initialized", false)) {

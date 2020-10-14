@@ -86,7 +86,7 @@ public class chat_command_service extends Service {
     @SuppressLint({"HardwareIds", "MissingPermission"})
     private static String get_data_stats(Context context) {
         String result = "";
-        if (public_func.is_data_usage(context)) {
+        if (remote_control_public.is_data_usage(context)) {
             int data_flush_day = Paper.book("system_config").read("data_flush_day", 1);
 
             Calendar cal = Calendar.getInstance();
@@ -648,10 +648,10 @@ public class chat_command_service extends Service {
                     if (Settings.System.canWrite(context)) {
                         switch_ap += "\n" + getString(R.string.switch_ap_message);
                     }
-                    if (public_func.is_vpn_hotsport_exist(context)) {
+                    if (remote_control_public.is_vpn_hotsport_exist(context)) {
                         switch_ap += "\n" + getString(R.string.switch_ap_message).replace("/switchap", "/switchvpnap");
                     }
-                    switch_ap += getString(R.string.switch_data_message);
+                    switch_ap += "\n" + getString(R.string.switch_data_message);
                     config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
                 if (command.equals("/commandlist")) {
@@ -685,11 +685,17 @@ public class chat_command_service extends Service {
                 if (spam_list.size() != 0) {
                     spam_count = "\n" + getString(R.string.spam_count_title) + spam_list.size();
                 }
-                String is_hotspot_running = "";
-                if (sharedPreferences.getBoolean("root", false)) {
+                String is_hotspot_running;
+                if (remote_control_public.is_tether_active(context)) {
+                    is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
+                } else {
                     is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
+                }
+                if (sharedPreferences.getBoolean("root", false)) {
                     if (com.qwe7002.root_kit.activity_manage.check_service_is_running(public_func.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
-                        is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
+                        is_hotspot_running += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.enable);
+                    } else {
+                        is_hotspot_running += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.disable);
                     }
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + network_stats + card_info;
@@ -743,8 +749,8 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
                 break;
             case "/switchap":
-                if (Settings.System.canWrite(context)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                if (!Settings.System.canWrite(context)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + "No permission";
                     break;
                 }
                 boolean ap_status = remote_control_public.is_tether_active(context);
@@ -760,7 +766,7 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                 break;
             case "/switchvpnap":
-                if (!sharedPreferences.getBoolean("root", false) || !public_func.is_vpn_hotsport_exist(context)) {
+                if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
                     break;
                 }

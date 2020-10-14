@@ -88,7 +88,7 @@ public class beacon_config_activity extends AppCompatActivity {
         View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
         SwitchMaterial enable = dialog_view.findViewById(R.id.beacon_enable_switch);
         SwitchMaterial use_vpn_switch = dialog_view.findViewById(R.id.beacon_use_vpn_hotspot_switch);
-        if (public_func.is_vpn_hotsport_exist(getApplicationContext())) {
+        if (remote_control_public.is_vpn_hotsport_exist(getApplicationContext())) {
             use_vpn_switch.setEnabled(true);
         }
         EditText delay = dialog_view.findViewById(R.id.beacon_delay_editview);
