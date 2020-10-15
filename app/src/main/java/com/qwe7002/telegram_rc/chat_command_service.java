@@ -55,6 +55,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.paperdb.Paper;
 import okhttp3.Call;
@@ -904,8 +906,12 @@ public class chat_command_service extends Service {
                 }
                 String[] command_list = request_msg.split(" ");
                 if (command_list.length == 2) {
-                    com.qwe7002.root_kit.network.add_dummy_device(command_list[1]);
-                    Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
+                    Pattern reg = Pattern.compile("^(10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})|(172\\.((1[6-9])|(2\\d)|(3[01]))\\.\\d{1,3}\\.\\d{1,3})|(192\\.168\\.\\d{1,3}\\.\\d{1,3})$");
+                    Matcher match = reg.matcher(command_list[1]);
+                    if (match.find()) {
+                        com.qwe7002.root_kit.network.add_dummy_device(command_list[1]);
+                        Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
+                    }
                 } else {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr", null);
                     if (dummy_ip_addr != null) {
