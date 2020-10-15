@@ -765,6 +765,17 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                 has_command = true;
                 break;
+            case "/switchwifi":
+                if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    break;
+                }
+                WifiManager wifimanager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                assert wifimanager != null;
+                com.qwe7002.root_kit.network.wifi_set_enable(!wifimanager.isWifiEnabled());
+                request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
+                has_command = true;
+                break;
             case "/switchvpnap":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
