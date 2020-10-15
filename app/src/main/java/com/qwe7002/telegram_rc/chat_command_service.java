@@ -44,7 +44,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.qwe7002.shell_kit.radio;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -145,7 +144,6 @@ public class chat_command_service extends Service {
                         if (!sim2_result_usage.equals("")) {
                             result += "\nSIM2 " + context.getString(R.string.mobile_data_usage) + sim2_result_usage;
                         }
-
                 }
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -393,14 +391,14 @@ public class chat_command_service extends Service {
                 break;
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
-                if (radio.is_LTE_CA()) {
+                if (com.qwe7002.root_kit.radio.is_LTE_CA()) {
                     net_type += "+";
                 }
-                if (radio.is_NR_connected()) {
+                if (com.qwe7002.root_kit.radio.is_NR_connected()) {
                     net_type += " & NR";
                     break;
                 }
-                if (radio.is_NR_standby()) {
+                if (com.qwe7002.root_kit.radio.is_NR_standby()) {
                     net_type += " (NR Standby)";
                 }
                 break;
@@ -747,6 +745,7 @@ public class chat_command_service extends Service {
                     }
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
+                has_command = true;
                 break;
             case "/switchap":
                 if (!Settings.System.canWrite(context)) {
@@ -764,6 +763,7 @@ public class chat_command_service extends Service {
                 }
                 result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
+                has_command = true;
                 break;
             case "/switchvpnap":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
@@ -1043,13 +1043,13 @@ public class chat_command_service extends Service {
                     assert response.body() != null;
                     public_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
                 }
+                if (final_command.replace("_", "").equals("/switchap")) {
+                    if (!Paper.book().read("tether_open", false)) {
+                        remote_control_public.disable_tether(context);
+                    }
+                }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
                     switch (final_command.replace("_", "")) {
-                        case "/switchap":
-                            if (!Paper.book().read("tether_open", false)) {
-                                remote_control_public.disable_tether(context);
-                            }
-                            break;
                         case "/switchvpnap":
                             if (!Paper.book().read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -1100,7 +1100,6 @@ public class chat_command_service extends Service {
                         .readTimeout(http_timeout, TimeUnit.SECONDS)
                         .writeTimeout(http_timeout, TimeUnit.SECONDS)
                         .build();
-                //Log.d(TAG, "run: Current timeout:" + timeout);
                 String request_uri = public_func.get_url(bot_token, "getUpdates");
                 polling_json request_body = new polling_json();
                 request_body.offset = offset;
