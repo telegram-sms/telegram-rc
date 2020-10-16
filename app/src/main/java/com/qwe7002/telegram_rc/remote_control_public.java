@@ -12,6 +12,11 @@ import io.paperdb.Paper;
 
 public class remote_control_public {
 
+    public static boolean is_miui() {
+        String manufacturer = Build.MANUFACTURER;
+        return "xiaomi".equalsIgnoreCase(manufacturer);
+    }
+
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         Paper.book().write("wifi_open", false);

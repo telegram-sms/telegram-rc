@@ -12,6 +12,7 @@ import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -154,10 +155,19 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
+                SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
                 boolean wifi_is_enable_status;
                 if (!config.use_vpn_hotspot) {
+                    if (!Settings.System.canWrite(context)) {
+                        Log.d(TAG, "onBeaconServiceConnect: No permission");
+                        return;
+                    }
                     wifi_is_enable_status = remote_control_public.is_tether_active(context);
                 } else {
+                    if (!sharedPreferences.getBoolean("root", false)) {
+                        Log.d(TAG, "onBeaconServiceConnect: No permission");
+                        return;
+                    }
                     wifi_is_enable_status = Paper.book().read("wifi_open", false);
                 }
                 beacon_list.beacons = beacons;

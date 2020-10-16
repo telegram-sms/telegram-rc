@@ -55,6 +55,12 @@
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".wifi_status_change_receiver">
+            <intent-filter>
+                <action android:name="android.net.wifi.STATE_CHANGE" />
+                <!--action android:name="android.net.wifi.WIFI_STATE_CHANGED"/-->
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".beacon_config_activity"
