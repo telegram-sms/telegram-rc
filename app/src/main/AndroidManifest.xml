@@ -46,6 +46,12 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
+        <service
+            android:name=".wifi_connect_status_service"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.INTERNET"
+            android:process=":network" />
         <activity
             android:name=".spam_list_activity"
             android:label="@string/spam_sms_keyword_title" />
@@ -53,12 +59,6 @@
         <receiver android:name=".sim_status_receiver">
             <intent-filter>
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name=".wifi_status_change_receiver">
-            <intent-filter>
-                <action android:name="android.net.wifi.STATE_CHANGE" />
-                <!--action android:name="android.net.wifi.WIFI_STATE_CHANGED"/-->
             </intent-filter>
         </receiver>
 

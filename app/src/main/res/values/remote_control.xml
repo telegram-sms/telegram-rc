@@ -22,4 +22,5 @@
     <string name="mobile_data_usage">"Data usage: "</string>
     <string name="set_data_flush_day">Set data flush day</string>
     <string name="set_sim_imsi">Set SIM card IMSI</string>
+    <string name="wifi_status">WIFI status monitoring</string>
 </resources>

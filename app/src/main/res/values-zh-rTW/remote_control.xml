@@ -22,4 +22,5 @@
     <string name="mobile_data_usage">"行動數據使用量: "</string>
     <string name="set_data_flush_day">設置數據刷新日</string>
     <string name="set_sim_imsi">设置SIM卡IMSI</string>
+    <string name="wifi_status">WIFI 狀態監控</string>
 </resources>
