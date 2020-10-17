@@ -32,7 +32,7 @@ public class wifi_connect_status_service extends Service {
     private static final String TAG = "wifi_status_change_receiver";
     private Context context;
     private wifi_status_change_receiver wifi_status_change_receiver = null;
-
+    private static NetworkInfo.State last_connect_status = NetworkInfo.State.DISCONNECTED;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.wifi_status));
@@ -48,7 +48,6 @@ public class wifi_connect_status_service extends Service {
         Paper.init(context);
         wifi_status_change_receiver = new wifi_status_change_receiver();
         IntentFilter filter = new IntentFilter();
-        //filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         filter.addAction(public_func.BROADCAST_STOP_SERVICE);
         registerReceiver(wifi_status_change_receiver, filter);
@@ -77,7 +76,6 @@ public class wifi_connect_status_service extends Service {
                 android.os.Process.killProcess(android.os.Process.myPid());
                 return;
             }
-            Paper.init(context);
             Log.d(TAG, "Receive action: " + intent.getAction());
             final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
             if (!sharedPreferences.getBoolean("initialized", false)) {
@@ -89,9 +87,12 @@ public class wifi_connect_status_service extends Service {
             String request_uri = public_func.get_url(bot_token, "sendMessage");
             NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
             if (info.getState().equals(NetworkInfo.State.CONNECTED)) {
+                if (last_connect_status == NetworkInfo.State.CONNECTED) {
+                    return;
+                }
+                last_connect_status = info.getState();
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                Log.i(TAG, "Connect to the network: " + wifiInfo.getSSID());
                 String message = context.getString(R.string.system_message_head) + "\n" + "Connect to the network: " + wifiInfo.getSSID();
                 message_json request_body = new message_json();
                 request_body.chat_id = chat_id;
