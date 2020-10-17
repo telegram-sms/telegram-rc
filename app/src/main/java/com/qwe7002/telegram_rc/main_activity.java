@@ -85,13 +85,28 @@ public class main_activity extends AppCompatActivity {
         final SwitchMaterial verification_code_switch = findViewById(R.id.verification_code_switch);
         final SwitchMaterial root_switch = findViewById(R.id.root_switch);
         final SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
+        final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
         final Button save_button = findViewById(R.id.save_button);
         final Button get_id_button = findViewById(R.id.get_id_button);
-        final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
+        final Button usage_button = findViewById(R.id.usage_button);
+        final Button write_settings_button = findViewById(R.id.write_settings_button);
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
-
+        if (remote_control_public.is_data_usage_access(context)) {
+            usage_button.setVisibility(View.GONE);
+        }
+        if (Settings.System.canWrite(context)) {
+            write_settings_button.setVisibility(View.GONE);
+        }
+        usage_button.setOnClickListener(v -> {
+            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            startActivity(intent);
+        });
+        write_settings_button.setOnClickListener(v -> {
+            Intent write_system_intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+            startActivity(write_system_intent);
+        });
         if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
             show_privacy_dialog();
         }
@@ -334,15 +349,8 @@ public class main_activity extends AppCompatActivity {
                 show_privacy_dialog();
                 return;
             }
-            if (!Settings.System.canWrite(context)) {
-                Intent write_system_intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
-                startActivity(write_system_intent);
-            }
 
-            if (!remote_control_public.is_data_usage(context)) {
-                Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-                startActivity(intent);
-            }
+
             List<String> permission_base = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
             List<String> permission = new ArrayList<>(permission_base);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

@@ -130,6 +130,7 @@
                 android:paddingStart="3dp"
                 android:text="@string/using_privacy_mode"
                 tools:ignore="RtlSymmetry" />
+
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/doh_switch"
                 android:layout_width="match_parent"
@@ -139,11 +140,26 @@
                 tools:ignore="RtlSymmetry" />
 
             <Button
+                android:id="@+id/usage_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:alpha="@dimen/button_alpha"
+                android:text="@string/data_usage_permissions_button" />
+
+            <Button
+                android:id="@+id/write_settings_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:alpha="@dimen/button_alpha"
+                android:text="@string/get_permission_to_write_system_settings" />
+
+            <Button
                 android:id="@+id/get_id_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:alpha="@dimen/button_alpha"
                 android:text="@string/get_recent_chat_id" />
+
             <Button
                 android:id="@+id/save_button"
                 android:layout_width="match_parent"

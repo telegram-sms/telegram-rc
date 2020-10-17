@@ -23,4 +23,6 @@
     <string name="set_data_flush_day">establecer día de descarga de datos</string>
     <string name="set_sim_imsi">Configurar IMSI de la tarjeta SIM</string>
     <string name="wifi_status">"Monitoreo del estado de WIFI "</string>
+    <string name="data_usage_permissions_button">Obtenga permisos de uso de datos</string>
+    <string name="get_permission_to_write_system_settings">Obtenga permiso para escribir la configuración del sistema</string>
 </resources>

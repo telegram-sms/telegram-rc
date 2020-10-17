@@ -102,6 +102,10 @@ public class battery_service extends Service {
                     break;
                 case Intent.ACTION_BATTERY_LOW:
                     prebody.append(context.getString(R.string.battery_low));
+                    if (remote_control_public.is_tether_active(context)) {
+                        remote_control_public.disable_tether(context);
+                        prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
+                    }
                     if (Paper.book().read("wifi_open", false)) {
                         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         assert wifiManager != null;

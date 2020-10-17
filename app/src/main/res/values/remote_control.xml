@@ -23,4 +23,6 @@
     <string name="set_data_flush_day">Set data flush day</string>
     <string name="set_sim_imsi">Set SIM card IMSI</string>
     <string name="wifi_status">"WIFI status monitoring "</string>
+    <string name="data_usage_permissions_button">Obtain data usage permissions</string>
+    <string name="get_permission_to_write_system_settings">Get permission to write system settings</string>
 </resources>

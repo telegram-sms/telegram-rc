@@ -51,7 +51,6 @@ public class wifi_connect_status_service extends Service {
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         filter.addAction(public_func.BROADCAST_STOP_SERVICE);
         registerReceiver(wifi_status_change_receiver, filter);
-
     }
 
     @Override
@@ -88,6 +87,7 @@ public class wifi_connect_status_service extends Service {
             NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
             if (info.getState().equals(NetworkInfo.State.CONNECTED)) {
                 if (last_connect_status == NetworkInfo.State.CONNECTED) {
+                    Log.d(TAG, "onReceive: Repeat broadcast");
                     return;
                 }
                 last_connect_status = info.getState();

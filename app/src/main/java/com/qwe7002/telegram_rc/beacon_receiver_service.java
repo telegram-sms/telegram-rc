@@ -54,12 +54,12 @@ public class beacon_receiver_service extends Service {
     private beacon_config config;
     private beacon_service_consumer beacon_consumer;
 
-    @Override
+   /* @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
         startForeground(public_func.BEACON_SERVICE_NOTIFY_ID, notification);
         return START_STICKY;
-    }
+    }*/
 
     private Boolean is_charging() {
         IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -131,21 +131,19 @@ public class beacon_receiver_service extends Service {
         // Detect the URL frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
-
-        beacon_manager.setBackgroundScanPeriod(config.delay);
+        Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
+        beacon_manager.enableForegroundServiceScanning(notification, public_func.BEACON_SERVICE_NOTIFY_ID);
+        startForeground(public_func.BEACON_SERVICE_NOTIFY_ID, notification);
         beacon_manager.setForegroundScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(config.delay);
-        beacon_manager.setForegroundBetweenScanPeriod(config.delay);
-        beacon_manager.bind(beacon_consumer);
-
         startup_time = System.currentTimeMillis();
-
+        beacon_manager.setEnableScheduledScanJobs(false);
+        beacon_manager.bind(beacon_consumer);
     }
 
     @Override
     public void onDestroy() {
         beacon_manager.unbind(beacon_consumer);
-        beacon_manager.disableForegroundServiceScanning();
 
         stopForeground(true);
         super.onDestroy();
@@ -307,17 +305,22 @@ public class beacon_receiver_service extends Service {
 
         @Override
         public Context getApplicationContext() {
-            return null;
+            //return getActivity().getApplicationContext();
+            return beacon_receiver_service.this.getApplicationContext();
         }
 
         @Override
         public void unbindService(ServiceConnection serviceConnection) {
+            //getActivity().unbindService(serviceConnection);
+            beacon_receiver_service.this.unbindService(serviceConnection);
         }
 
         @Override
         public boolean bindService(Intent intent, ServiceConnection serviceConnection, int i) {
-            return false;
+            //return getActivity().bindService(intent, serviceConnection, i);
+            return beacon_receiver_service.this.bindService(intent, serviceConnection, i);
         }
+
     }
     private void network_progress_handle(String message, String chat_id, @NotNull OkHttpClient okhttp_client) {
         message_json request_body = new message_json();

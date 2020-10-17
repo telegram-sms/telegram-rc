@@ -23,4 +23,6 @@
     <string name="set_data_flush_day">设置数据刷新日</string>
     <string name="set_sim_imsi">设置SIM卡IMSI</string>
     <string name="wifi_status">WIFI 状态监控</string>
+    <string name="data_usage_permissions_button">获取数据使用权限</string>
+    <string name="get_permission_to_write_system_settings">获得写系统设置的权限</string>
 </resources>

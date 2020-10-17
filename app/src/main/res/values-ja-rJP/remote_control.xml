@@ -23,4 +23,6 @@
     <string name="set_data_flush_day">データフラッシュ日を設定する</string>
     <string name="set_sim_imsi">SIMカードIMSIを設定します</string>
     <string name="wifi_status">WIFIステータスモニタリング</string>
+    <string name="data_usage_permissions_button">データ使用許可を取得する</string>
+    <string name="get_permission_to_write_system_settings">システム設定を書き込む権限を取得する</string>
 </resources>

@@ -87,7 +87,7 @@ public class chat_command_service extends Service {
     @SuppressLint({"HardwareIds", "MissingPermission"})
     private static String get_data_stats(Context context) {
         String result = "";
-        if (remote_control_public.is_data_usage(context)) {
+        if (remote_control_public.is_data_usage_access(context)) {
             int data_flush_day = Paper.book("system_config").read("data_flush_day", 1);
 
             Calendar cal = Calendar.getInstance();
