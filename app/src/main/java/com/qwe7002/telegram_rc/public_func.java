@@ -67,11 +67,11 @@ import okhttp3.dnsoverhttps.DnsOverHttps;
 
 
 class public_func {
-    static final int BATTERY_NOTIFY_ID = 1;
-    static final int CHAT_COMMAND_NOTIFY_ID = 2;
     static final String BROADCAST_STOP_SERVICE = "com.qwe7002.telegram_rc.stop_all";
     static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
+    static final int BATTERY_NOTIFY_ID = 1;
+    static final int CHAT_COMMAND_NOTIFY_ID = 2;
     static final int NOTIFICATION_LISTENER_SERVICE_NOTIFY_ID = 3;
     static final int SEND_USSD_SERVCE_NOTIFY_ID = 4;
     static final int RESEND_SERVICE_NOTIFY_ID = 5;
