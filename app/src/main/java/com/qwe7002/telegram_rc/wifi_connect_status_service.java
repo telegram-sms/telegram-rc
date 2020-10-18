@@ -85,12 +85,13 @@ public class wifi_connect_status_service extends Service {
             String chat_id = sharedPreferences.getString("chat_id", "");
             String request_uri = public_func.get_url(bot_token, "sendMessage");
             NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+            last_connect_status = info.getState();
             if (info.getState().equals(NetworkInfo.State.CONNECTED)) {
                 if (last_connect_status == NetworkInfo.State.CONNECTED) {
                     Log.d(TAG, "onReceive: Repeat broadcast");
                     return;
                 }
-                last_connect_status = info.getState();
+
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
                 String message = context.getString(R.string.system_message_head) + "\n" + "Connect to the network: " + wifiInfo.getSSID();
