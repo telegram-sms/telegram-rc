@@ -40,7 +40,7 @@ public class wifi_connect_status_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.wifi_status));
-        startForeground(98, notification);
+        startForeground(public_func.WIFI_CONNECT_STATUS_NOTIFY_ID, notification);
         return START_STICKY;
     }
 

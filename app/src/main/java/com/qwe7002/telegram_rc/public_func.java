@@ -76,6 +76,7 @@ class public_func {
     static final int SEND_USSD_SERVCE_NOTIFY_ID = 4;
     static final int RESEND_SERVICE_NOTIFY_ID = 5;
     static final int BEACON_SERVICE_NOTIFY_ID = 6;
+    static final int WIFI_CONNECT_STATUS_NOTIFY_ID = 7;
     static final int RESULT_CONFIG_JSON = 1;
     static final int RESULT_BOT_TOKEN = 2;
     private static final String TELEGRAM_API_DOMAIN = "api.telegram.org";
