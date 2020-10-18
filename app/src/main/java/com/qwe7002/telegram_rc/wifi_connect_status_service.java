@@ -29,10 +29,14 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class wifi_connect_status_service extends Service {
+    private String chat_id;
+    private String request_uri;
+    private boolean doh_switch;
     private static final String TAG = "wifi_status_change_receiver";
     private Context context;
     private wifi_status_change_receiver wifi_status_change_receiver = null;
     private static NetworkInfo.State last_connect_status = NetworkInfo.State.DISCONNECTED;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.wifi_status));
@@ -51,6 +55,16 @@ public class wifi_connect_status_service extends Service {
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         filter.addAction(public_func.BROADCAST_STOP_SERVICE);
         registerReceiver(wifi_status_change_receiver, filter);
+        final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
+        if (!sharedPreferences.getBoolean("initialized", false)) {
+            Log.i(TAG, "Uninitialized, wifi status receiver is deactivated.");
+            return;
+        }
+        String bot_token = sharedPreferences.getString("bot_token", "");
+        chat_id = sharedPreferences.getString("chat_id", "");
+        request_uri = public_func.get_url(bot_token, "sendMessage");
+        doh_switch = sharedPreferences.getBoolean("doh_switch", true);
+
     }
 
     @Override
@@ -76,22 +90,12 @@ public class wifi_connect_status_service extends Service {
                 return;
             }
             Log.d(TAG, "Receive action: " + intent.getAction());
-            final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
-            if (!sharedPreferences.getBoolean("initialized", false)) {
-                Log.i(TAG, "Uninitialized, wifi status receiver is deactivated.");
-                return;
-            }
-            String bot_token = sharedPreferences.getString("bot_token", "");
-            String chat_id = sharedPreferences.getString("chat_id", "");
-            String request_uri = public_func.get_url(bot_token, "sendMessage");
             NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-            last_connect_status = info.getState();
             if (info.getState().equals(NetworkInfo.State.CONNECTED)) {
                 if (last_connect_status == NetworkInfo.State.CONNECTED) {
                     Log.d(TAG, "onReceive: Repeat broadcast");
                     return;
                 }
-
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
                 String message = context.getString(R.string.system_message_head) + "\n" + "Connect to the network: " + wifiInfo.getSSID();
@@ -100,7 +104,7 @@ public class wifi_connect_status_service extends Service {
                 request_body.text = message;
                 String request_body_json = new Gson().toJson(request_body);
                 RequestBody body = RequestBody.create(request_body_json, public_func.JSON);
-                OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
+                OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch, Paper.book("system_config").read("proxy_config", new proxy_config()));
                 Request request = new Request.Builder().url(request_uri).method("POST", body).build();
                 Call call = okhttp_client.newCall(request);
                 final String error_head = "Send wifi status failed:";
@@ -122,6 +126,7 @@ public class wifi_connect_status_service extends Service {
                     }
                 });
             }
+            last_connect_status = info.getState();
         }
     }
 
