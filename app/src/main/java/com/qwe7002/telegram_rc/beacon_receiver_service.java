@@ -54,32 +54,31 @@ public class beacon_receiver_service extends Service {
     private beacon_config config;
     private beacon_service_consumer beacon_consumer;
 
-   /* @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
-        startForeground(public_func.BEACON_SERVICE_NOTIFY_ID, notification);
-        return START_STICKY;
-    }*/
-
-    private Boolean is_charging() {
+    @NotNull
+    private battery_info get_battery_info() {
+        battery_info info = new battery_info();
+        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+        assert batteryManager != null;
+        info.battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
         IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = context.registerReceiver(null, intentfilter);
         assert batteryStatus != null;
-        switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
+        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+
+        switch (charge_status) {
             case BatteryManager.BATTERY_STATUS_CHARGING:
             case BatteryManager.BATTERY_STATUS_FULL:
-                return true;
-            case BatteryManager.BATTERY_STATUS_DISCHARGING:
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
-                    case BatteryManager.BATTERY_PLUGGED_AC:
-                    case BatteryManager.BATTERY_PLUGGED_USB:
-                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        return true;
-                }
+                info.is_charging = true;
+                break;
         }
-        return false;
+        return info;
     }
+
+    static class battery_info {
+        int battery_level = 0;
+        boolean is_charging = false;
+    }
+
 
     @Nullable
     @Override
@@ -185,7 +184,9 @@ public class beacon_receiver_service extends Service {
                     detect_singal_count = 0;
                     return;
                 }
-                if (!is_charging() && !wifi_is_enable_status && !config.enable) {
+                //if (!is_charging() && !wifi_is_enable_status && !config.enable) {
+                battery_info info = get_battery_info();
+                if (!info.is_charging && info.battery_level <= 25 && !wifi_is_enable_status && !config.enable) {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");

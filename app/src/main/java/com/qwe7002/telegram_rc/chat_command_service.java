@@ -89,11 +89,10 @@ public class chat_command_service extends Service {
         String result = "";
         if (remote_control_public.is_data_usage_access(context)) {
             int data_flush_day = Paper.book("system_config").read("data_flush_day", 1);
-
             Calendar cal = Calendar.getInstance();
             Calendar now_time_cal = Calendar.getInstance();
             now_time_cal.setTime(new Date());
-            if (now_time_cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {//Set the month of acquisition
+            if (now_time_cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {
                 cal.add(Calendar.MONTH, 0);
             } else {
                 cal.add(Calendar.MONTH, -1);
