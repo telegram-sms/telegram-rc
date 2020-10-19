@@ -188,7 +188,7 @@ public class chat_command_service extends Service {
 
 
     @NotNull
-    public static String get_battery_info(@NotNull Context context) {
+    static String get_battery_info(@NotNull Context context) {
         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
         int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
