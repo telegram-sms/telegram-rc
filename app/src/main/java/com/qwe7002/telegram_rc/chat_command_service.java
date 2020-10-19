@@ -707,7 +707,7 @@ public class chat_command_service extends Service {
                 break;
             case "/setadbport":
                 if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 String port = "-1";
@@ -751,7 +751,7 @@ public class chat_command_service extends Service {
                 break;
             case "/switchap":
                 if (!Settings.System.canWrite(context)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + "No permission";
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 boolean ap_status = remote_control_public.is_tether_active(context);
@@ -769,7 +769,7 @@ public class chat_command_service extends Service {
                 break;
             case "/switchwifi":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 WifiManager wifimanager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -780,7 +780,7 @@ public class chat_command_service extends Service {
                 break;
             case "/switchvpnap":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -801,7 +801,7 @@ public class chat_command_service extends Service {
                 break;
             case "/setdatacard":
                 if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 if (public_func.get_active_card(context) == 2) {
@@ -823,7 +823,7 @@ public class chat_command_service extends Service {
             case "/switchdata":
             case "/restartnetwork":
                 if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 String result_data;
@@ -901,7 +901,7 @@ public class chat_command_service extends Service {
                 break;
             case "/setdummy":
                 if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 String[] command_list = request_msg.split(" ");
@@ -922,7 +922,7 @@ public class chat_command_service extends Service {
                 break;
             case "/deldummy":
                 if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.not_getting_root);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 com.qwe7002.root_kit.network.del_dummy_device();

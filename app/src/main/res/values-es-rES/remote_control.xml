@@ -9,7 +9,7 @@
     <string name="switch_data_message">/switchdata - Alternar interruptor de datos\n/restartnetwork - Restablecer la red del operador</string>
     <string name="config_adb_message">"/setadbport - Configurar puerto adb de red\n/setadbkey - Configurar clave de autorización adb"</string>
     <string name="current_data_card">Tarjeta de datos</string>
-    <string name="not_getting_root">No se obteniendo privilegios de root.</string>
+    <string name="no_permission">No se obteniendo privilegios.</string>
     <string name="adb_config">"Configuración de adb de red "</string>
     <string name="root_switch">[Root] Permitir funciones avanzadas</string>
     <string name="hotspot_status">"Estado de anclaje: "</string>
@@ -26,3 +26,4 @@
     <string name="data_usage_permissions_button">Obtenga permisos de uso de datos</string>
     <string name="get_permission_to_write_system_settings">Obtenga permiso para escribir la configuración del sistema</string>
 </resources>
+

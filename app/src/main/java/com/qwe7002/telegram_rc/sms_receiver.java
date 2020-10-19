@@ -165,7 +165,7 @@ public class sms_receiver extends BroadcastReceiver {
                         break;
                     case "/setdatacard":
                         if (!sharedPreferences.getBoolean("root", false)) {
-                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.not_getting_root);
+                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.no_permission);
                             break;
                         }
                         if (public_func.get_active_card(context) == 2) {
