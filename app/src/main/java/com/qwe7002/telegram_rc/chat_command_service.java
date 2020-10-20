@@ -320,6 +320,7 @@ public class chat_command_service extends Service {
                 public void onCellInfo(@NonNull List<CellInfo> cell_info_result) {
                     Log.d(TAG, "cellinfo_size: " + cell_info_result.size());
                     if (cell_info_result.size() == 0) {
+                        run_lock[0] = true;
                         return;
                     }
                     CellInfo info = cell_info_result.get(0);
@@ -684,11 +685,13 @@ public class chat_command_service extends Service {
                 if (spam_list.size() != 0) {
                     spam_count = "\n" + getString(R.string.spam_count_title) + spam_list.size();
                 }
-                String is_hotspot_running;
-                if (remote_control_public.is_tether_active(context)) {
-                    is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
-                } else {
-                    is_hotspot_running = "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
+                String is_hotspot_running = "";
+                if (Settings.System.canWrite(context)) {
+                    if (remote_control_public.is_tether_active(context)) {
+                        is_hotspot_running += "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
+                    } else {
+                        is_hotspot_running += "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
+                    }
                 }
                 if (sharedPreferences.getBoolean("root", false)) {
                     if (com.qwe7002.root_kit.activity_manage.check_service_is_running(public_func.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
@@ -699,6 +702,7 @@ public class chat_command_service extends Service {
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + network_stats + card_info;
                 has_command = true;
+                Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
                 request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
