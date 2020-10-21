@@ -174,17 +174,17 @@ public class beacon_receiver_service extends Service {
                     last_receive_time = System.currentTimeMillis();
                     return;
                 }
-                if ((System.currentTimeMillis() - last_receive_time) < config.delay) {
+                long current_time = System.currentTimeMillis();
+                if ((current_time - last_receive_time) < config.delay) {
                     Log.d(TAG, "onBeaconServiceConnect: Last time is too short");
                     return;
                 }
-                last_receive_time = System.currentTimeMillis();
+                last_receive_time = current_time;
                 if (Paper.book().read("disable_beacon", false)) {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     return;
                 }
-                //if (!is_charging() && !wifi_is_enable_status && !config.enable) {
                 battery_info info = get_battery_info();
                 if (!info.is_charging && info.battery_level <= 25 && !wifi_is_enable_status && !config.enable) {
                     not_found_count = 0;
