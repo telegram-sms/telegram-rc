@@ -98,7 +98,7 @@ public class wifi_connect_status_service extends Service {
                 }
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                String message = context.getString(R.string.system_message_head) + "\n" + "Connect to the network: " + wifiInfo.getSSID();
+                String message = context.getString(R.string.system_message_head) + "\n" + getString(R.string.connect_to_the_network) + wifiInfo.getSSID();
                 message_json request_body = new message_json();
                 request_body.chat_id = chat_id;
                 request_body.text = message;
