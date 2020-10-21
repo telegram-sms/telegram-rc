@@ -314,7 +314,6 @@ public class chat_command_service extends Service {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 Log.d("get_data_sim_id", "No permission.");
             }
-
             telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cell_info_result) {
