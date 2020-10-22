@@ -66,6 +66,8 @@ public class main_activity extends AppCompatActivity {
     private static boolean set_permission_back = false;
     private SharedPreferences sharedPreferences;
     private static String privacy_police;
+    private Button usage_button;
+    private Button write_settings_button;
 
     @SuppressLint({"BatteryLife", "QueryPermissionsNeeded"})
     @Override
@@ -88,17 +90,12 @@ public class main_activity extends AppCompatActivity {
         final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
         final Button save_button = findViewById(R.id.save_button);
         final Button get_id_button = findViewById(R.id.get_id_button);
-        final Button usage_button = findViewById(R.id.usage_button);
-        final Button write_settings_button = findViewById(R.id.write_settings_button);
+        usage_button = findViewById(R.id.usage_button);
+        write_settings_button = findViewById(R.id.write_settings_button);
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
-        if (remote_control_public.is_data_usage_access(context)) {
-            usage_button.setVisibility(View.GONE);
-        }
-        if (Settings.System.canWrite(context)) {
-            write_settings_button.setVisibility(View.GONE);
-        }
+
         usage_button.setOnClickListener(v -> {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
             startActivity(intent);
@@ -484,6 +481,12 @@ public class main_activity extends AppCompatActivity {
             if (public_func.is_notify_listener(context)) {
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
             }
+        }
+        if (remote_control_public.is_data_usage_access(context)) {
+            usage_button.setVisibility(View.GONE);
+        }
+        if (Settings.System.canWrite(context)) {
+            write_settings_button.setVisibility(View.GONE);
         }
     }
 
