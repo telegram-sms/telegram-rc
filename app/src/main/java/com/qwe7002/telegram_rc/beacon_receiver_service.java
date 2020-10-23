@@ -89,13 +89,16 @@ public class beacon_receiver_service extends Service {
     private final BroadcastReceiver reload_config_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            beacon_manager.unbind(beacon_consumer);
             config = Paper.book().read("beacon_config", new beacon_config());
             beacon_manager.setBackgroundScanPeriod(config.delay);
             beacon_manager.setForegroundScanPeriod(config.delay);
             beacon_manager.setForegroundBetweenScanPeriod(config.delay);
             beacon_manager.setForegroundBetweenScanPeriod(config.delay);
-            beacon_manager.bind(beacon_consumer);
+            try {
+                beacon_manager.updateScanPeriods();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
             startup_time = System.currentTimeMillis();
         }
     };
@@ -115,6 +118,7 @@ public class beacon_receiver_service extends Service {
         okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
+        BeaconManager.setAndroidLScanningDisabled(false);
         // Detect iBeacon:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
@@ -186,7 +190,7 @@ public class beacon_receiver_service extends Service {
                     return;
                 }
                 battery_info info = get_battery_info();
-                if (!info.is_charging && info.battery_level <= 25 && !wifi_is_enable_status && !config.enable) {
+                if (!info.is_charging && !wifi_is_enable_status && !config.enable) {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");
@@ -306,19 +310,16 @@ public class beacon_receiver_service extends Service {
 
         @Override
         public Context getApplicationContext() {
-            //return getActivity().getApplicationContext();
             return beacon_receiver_service.this.getApplicationContext();
         }
 
         @Override
         public void unbindService(ServiceConnection serviceConnection) {
-            //getActivity().unbindService(serviceConnection);
             beacon_receiver_service.this.unbindService(serviceConnection);
         }
 
         @Override
         public boolean bindService(Intent intent, ServiceConnection serviceConnection, int i) {
-            //return getActivity().bindService(intent, serviceConnection, i);
             return beacon_receiver_service.this.bindService(intent, serviceConnection, i);
         }
 
