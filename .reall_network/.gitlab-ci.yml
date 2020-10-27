@@ -6,11 +6,10 @@ cache:
     paths:
         - .gradle/
 
-
 variables:
     OWNER: telegram-sms
     REPO: telegram-rc
-    KEYSTORE_SERVER: keystore.reallserver.cn
+    KEYSTORE_SERVER: keystore.reallct.uk
 
 release_github:
     dependencies:
