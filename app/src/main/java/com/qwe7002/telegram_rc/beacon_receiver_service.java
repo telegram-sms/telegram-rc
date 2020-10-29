@@ -70,6 +70,16 @@ public class beacon_receiver_service extends Service {
             case BatteryManager.BATTERY_STATUS_FULL:
                 info.is_charging = true;
                 break;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
+                    case BatteryManager.BATTERY_PLUGGED_AC:
+                    case BatteryManager.BATTERY_PLUGGED_USB:
+                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                        info.is_charging = true;
+                        break;
+                }
+                break;
         }
         return info;
     }
