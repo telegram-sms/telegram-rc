@@ -1,5 +1,6 @@
 package com.qwe7002.telegram_rc;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -11,6 +12,7 @@ import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Log;
@@ -53,6 +55,7 @@ public class beacon_receiver_service extends Service {
     private long last_receive_time = 0;
     private beacon_config config;
     private beacon_service_consumer beacon_consumer;
+    private PowerManager.WakeLock wakelock;
 
     @NotNull
     private battery_info get_battery_info() {
@@ -113,11 +116,19 @@ public class beacon_receiver_service extends Service {
         }
     };
 
+    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
     @Override
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
         Paper.init(context);
+
+        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "beacon_receive");
+        wakelock.setReferenceCounted(false);
+        if (!wakelock.isHeld()) {
+            wakelock.acquire();
+        }
+
         config = Paper.book().read("beacon_config", new beacon_config());
         LocalBroadcastManager.getInstance(this).registerReceiver(reload_config_receiver,
                 new IntentFilter("reload_beacon_config"));
@@ -157,7 +168,7 @@ public class beacon_receiver_service extends Service {
     @Override
     public void onDestroy() {
         beacon_manager.unbind(beacon_consumer);
-
+        wakelock.release();
         stopForeground(true);
         super.onDestroy();
     }
@@ -166,21 +177,23 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
-                SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-                boolean wifi_is_enable_status;
-                if (!config.use_vpn_hotspot) {
+                boolean wifi_is_enable_status = false;
+                if (config.use_vpn_hotspot) {
+                    if (!remote_control_public.is_vpn_hotsport_exist(context) && Settings.System.canWrite(context)) {
+                        config.use_vpn_hotspot = false;
+                        wifi_is_enable_status = Paper.book().read("wifi_open", false);
+                    }
+                    if (!config.use_vpn_hotspot) {
+                        wifi_is_enable_status = remote_control_public.is_tether_active(context);
+                    }
+                } else {
                     if (!Settings.System.canWrite(context)) {
                         Log.d(TAG, "onBeaconServiceConnect: No permission");
                         return;
                     }
                     wifi_is_enable_status = remote_control_public.is_tether_active(context);
-                } else {
-                    if (!sharedPreferences.getBoolean("root", false)) {
-                        Log.d(TAG, "onBeaconServiceConnect: No permission");
-                        return;
-                    }
-                    wifi_is_enable_status = Paper.book().read("wifi_open", false);
                 }
+
                 beacon_list.beacons = beacons;
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
@@ -204,6 +217,7 @@ public class beacon_receiver_service extends Service {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");
+
                     return;
                 }
                 ArrayList<String> listen_beacon_list = Paper.book().read("beacon_address", new ArrayList<>());

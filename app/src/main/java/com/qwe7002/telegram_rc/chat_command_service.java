@@ -752,24 +752,6 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
                 has_command = true;
                 break;
-            case "/switchap":
-                if (!Settings.System.canWrite(context)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
-                }
-                boolean ap_status = remote_control_public.is_tether_active(context);
-                String result_ap;
-                if (!ap_status) {
-                    result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                    remote_control_public.enable_tether(context);
-                } else {
-                    Paper.book().write("tether_open", false);
-                    result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
-                }
-                result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
-                request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
-                has_command = true;
-                break;
             case "/switchwifi":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
@@ -781,6 +763,24 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
                 has_command = true;
                 break;
+            case "/switchap":
+                if (Settings.System.canWrite(context)) {
+                    boolean ap_status = remote_control_public.is_tether_active(context);
+                    String result_ap;
+                    if (!ap_status) {
+                        result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
+                        remote_control_public.enable_tether(context);
+                    } else {
+                        Paper.book().write("tether_open", false);
+                        result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
+                    }
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
+                    has_command = true;
+                    break;
+                } else {
+                    command = "/switchvpnap";
+                }
             case "/switchvpnap":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
