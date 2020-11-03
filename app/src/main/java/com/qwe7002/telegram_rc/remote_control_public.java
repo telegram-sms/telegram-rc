@@ -5,17 +5,15 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.util.Log;
 
 import com.fitc.wifihotspot.TetherManager;
+
+import org.jetbrains.annotations.NotNull;
 
 import io.paperdb.Paper;
 
 public class remote_control_public {
-
-    public static boolean is_miui() {
-        String manufacturer = Build.MANUFACTURER;
-        return "xiaomi".equalsIgnoreCase(manufacturer);
-    }
 
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
@@ -25,6 +23,15 @@ public class remote_control_public {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
                 Thread.sleep(100);
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        com.qwe7002.root_kit.network.wifi_set_enable(true);
+        try {
+            while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
+                Thread.sleep(100);
+            }
+            Log.d("disable_vpn_ap: ", "restart ok");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -76,7 +83,7 @@ public class remote_control_public {
         return manager.isTetherActive();
     }
 
-    static boolean is_vpn_hotsport_exist(Context context) {
+    static boolean is_vpn_hotsport_exist(@NotNull Context context) {
         ApplicationInfo info;
         try {
             info = context.getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
@@ -88,7 +95,7 @@ public class remote_control_public {
         return info != null;
     }
 
-    static boolean is_data_usage_access(Context context) {
+    static boolean is_data_usage_access(@NotNull Context context) {
         AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
         int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
                 android.os.Process.myUid(), context.getPackageName());
