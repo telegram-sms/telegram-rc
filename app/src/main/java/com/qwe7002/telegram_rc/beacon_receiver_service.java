@@ -177,23 +177,21 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
-                boolean wifi_is_enable_status = false;
+                boolean wifi_is_enable_status;
                 if (config.use_vpn_hotspot) {
                     if (!remote_control_public.is_vpn_hotsport_exist(context) && Settings.System.canWrite(context)) {
                         config.use_vpn_hotspot = false;
-                        wifi_is_enable_status = Paper.book().read("wifi_open", false);
-                    }
-                    if (!config.use_vpn_hotspot) {
-                        wifi_is_enable_status = remote_control_public.is_tether_active(context);
                     }
                 } else {
-                    if (!Settings.System.canWrite(context)) {
-                        Log.d(TAG, "onBeaconServiceConnect: No permission");
-                        return;
+                    if (!Settings.System.canWrite(context) && remote_control_public.is_vpn_hotsport_exist(context)) {
+                        config.use_vpn_hotspot = true;
                     }
+                }
+                if (config.use_vpn_hotspot) {
+                    wifi_is_enable_status = Paper.book().read("wifi_open", false);
+                } else {
                     wifi_is_enable_status = remote_control_public.is_tether_active(context);
                 }
-
                 beacon_list.beacons = beacons;
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {

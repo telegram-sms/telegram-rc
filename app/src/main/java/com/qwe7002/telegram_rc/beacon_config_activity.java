@@ -94,12 +94,15 @@ public class beacon_config_activity extends AppCompatActivity {
         EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count_editview);
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);
         beacon_config config = Paper.book().read("beacon_config", new beacon_config());
-        if (remote_control_public.is_vpn_hotsport_exist(context)) {
-            if (Settings.System.canWrite(context)) {
-                use_vpn_switch.setEnabled(true);
-            } else {
-                use_vpn_switch.setClickable(true);
-            }
+
+        if (!remote_control_public.is_vpn_hotsport_exist(context)) {
+            use_vpn_switch.setClickable(false);
+        }
+        if (!Settings.System.canWrite(context) && remote_control_public.is_vpn_hotsport_exist(context)) {
+            use_vpn_switch.setClickable(true);
+        }
+        if (Settings.System.canWrite(context) && remote_control_public.is_vpn_hotsport_exist(context)) {
+            use_vpn_switch.setEnabled(true);
         }
 
         use_vpn_switch.setClickable(config.use_vpn_hotspot);
