@@ -23,6 +23,7 @@ public class remote_control_public {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
                 Thread.sleep(100);
             }
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
