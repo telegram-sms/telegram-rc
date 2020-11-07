@@ -14,8 +14,9 @@ import io.paperdb.Paper;
 public class remote_control_public {
 
 
-    /*public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
+    public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         Paper.book().write("wifi_open", false);
+        com.qwe7002.root_kit.activity_manage.force_stop_package(public_func.VPN_HOTSPOT_PACKAGE_NAME);
         com.qwe7002.root_kit.network.wifi_set_enable(false);
         try {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
@@ -30,14 +31,9 @@ public class remote_control_public {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100);
             }
-            Log.d("disable_vpn_ap: ", "restart ok");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }*/
-    public static void disable_vpn_ap() {
-        Paper.book().write("wifi_open", false);
-        com.qwe7002.root_kit.activity_manage.force_stop_package(public_func.VPN_HOTSPOT_PACKAGE_NAME);
     }
 
     public static void enable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
