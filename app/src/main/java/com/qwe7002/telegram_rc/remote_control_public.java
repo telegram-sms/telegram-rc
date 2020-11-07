@@ -4,8 +4,6 @@ import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.util.Log;
 
 import com.fitc.wifihotspot.TetherManager;
 
@@ -16,7 +14,7 @@ import io.paperdb.Paper;
 public class remote_control_public {
 
 
-    public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
+    /*public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         Paper.book().write("wifi_open", false);
         com.qwe7002.root_kit.network.wifi_set_enable(false);
         try {
@@ -36,6 +34,10 @@ public class remote_control_public {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }*/
+    public static void disable_vpn_ap() {
+        Paper.book().write("wifi_open", false);
+        com.qwe7002.root_kit.activity_manage.force_stop_package(public_func.VPN_HOTSPOT_PACKAGE_NAME);
     }
 
     public static void enable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
@@ -60,11 +62,8 @@ public class remote_control_public {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-        } else {
-            com.qwe7002.root_kit.activity_manage.start_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
-        }
+
+        com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
     }
 
     public static void enable_tether(Context context) {
