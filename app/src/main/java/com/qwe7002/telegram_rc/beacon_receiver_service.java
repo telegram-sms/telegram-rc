@@ -242,7 +242,7 @@ public class beacon_receiver_service extends Service {
                     return;
                 }
                 battery_info info = get_battery_info();
-                if (!info.is_charging && info.battery_level < 25 && !wifi_is_enable_status && !config.enable) {
+                if (!info.is_charging && info.battery_level < 25 && !wifi_is_enable_status && !config.opposite) {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");
@@ -293,7 +293,7 @@ public class beacon_receiver_service extends Service {
                 Log.d(TAG, "detect_singal_count: " + detect_singal_count);
                 Log.d(TAG, "not_found_count: " + not_found_count);
                 if (wifi_is_enable_status && found_beacon) {
-                    if (!config.enable) {
+                    if (!config.opposite) {
                         if (detect_singal_count >= config.disable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;
@@ -318,7 +318,7 @@ public class beacon_receiver_service extends Service {
                     }
                 }
                 if (!wifi_is_enable_status && !found_beacon) {
-                    if (!config.enable) {
+                    if (!config.opposite) {
                         if (not_found_count >= config.enable_count) {
                             detect_singal_count = 0;
                             not_found_count = 0;

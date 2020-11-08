@@ -111,7 +111,7 @@ public class beacon_config_activity extends AppCompatActivity {
         new AlertDialog.Builder(this).setTitle("Beacon configuration")
                 .setView(dialog_view)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                    config.enable = enable.isChecked();
+                    config.opposite = enable.isChecked();
                     config.use_vpn_hotspot = use_vpn_switch.isChecked();
                     config.delay = Long.parseLong(delay.getText().toString());
                     config.disable_count = Integer.parseInt(disable_count.getText().toString());
