@@ -57,6 +57,11 @@ public class beacon_receiver_service extends Service {
     private beacon_service_consumer beacon_consumer;
     private PowerManager.WakeLock wakelock;
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
+    }
+
     @NotNull
     private battery_info get_battery_info() {
         battery_info info = new battery_info();
@@ -159,7 +164,9 @@ public class beacon_receiver_service extends Service {
         beacon_manager.enableForegroundServiceScanning(notification, public_func.BEACON_SERVICE_NOTIFY_ID);
         startForeground(public_func.BEACON_SERVICE_NOTIFY_ID, notification);
         beacon_manager.setForegroundScanPeriod(config.delay);
-        beacon_manager.setForegroundBetweenScanPeriod(config.delay);
+        beacon_manager.setForegroundBetweenScanPeriod(500);
+        beacon_manager.setBackgroundScanPeriod(config.delay);
+        beacon_manager.setForegroundBetweenScanPeriod(500);
         startup_time = System.currentTimeMillis();
         beacon_manager.setEnableScheduledScanJobs(false);
         beacon_manager.bind(beacon_consumer);
@@ -171,6 +178,28 @@ public class beacon_receiver_service extends Service {
         wakelock.release();
         stopForeground(true);
         super.onDestroy();
+    }
+
+    private void network_progress_handle(String message, String chat_id, @NotNull OkHttpClient okhttp_client) {
+        message_json request_body = new message_json();
+        request_body.chat_id = chat_id;
+        request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context, true);
+        String request_body_json = new Gson().toJson(request_body);
+        RequestBody body = RequestBody.create(request_body_json, public_func.JSON);
+        Request request_obj = new Request.Builder().url(request_url).method("POST", body).build();
+        Call call = okhttp_client.newCall(request_obj);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                public_func.add_resend_loop(context, request_body.text);
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                Log.d(TAG, "onResponse: " + Objects.requireNonNull(response.body()).string());
+            }
+        });
     }
 
     class beacon_service_consumer implements BeaconConsumer {
@@ -196,6 +225,8 @@ public class beacon_receiver_service extends Service {
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
                     Log.d(TAG, "onBeaconServiceConnect: Startup time is too short");
+                    not_found_count = 0;
+                    detect_singal_count = 0;
                     last_receive_time = System.currentTimeMillis();
                     return;
                 }
@@ -211,7 +242,7 @@ public class beacon_receiver_service extends Service {
                     return;
                 }
                 battery_info info = get_battery_info();
-                if (!info.is_charging && !wifi_is_enable_status && !config.enable) {
+                if (!info.is_charging && info.battery_level < 25 && !wifi_is_enable_status && !config.enable) {
                     not_found_count = 0;
                     detect_singal_count = 0;
                     Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation");
@@ -244,11 +275,15 @@ public class beacon_receiver_service extends Service {
                 String beacon_status;
                 if (found_beacon) {
                     beacon_status = "\nBeacon Rssi: " + detect_beacon.getRssi() + "dBm";
+                    //if (detect_singal_count > 2) {
                     not_found_count = 0;
+                    //}
                     ++detect_singal_count;
                 } else {
                     beacon_status = "\nBeacon Not Found.";
-                    detect_singal_count = 0;
+                    if (not_found_count > 1) {
+                        detect_singal_count = 0;
+                    }
                     ++not_found_count;
                 }
                 final int STATUS_STANDBY = -1;
@@ -345,25 +380,5 @@ public class beacon_receiver_service extends Service {
             return beacon_receiver_service.this.bindService(intent, serviceConnection, i);
         }
 
-    }
-    private void network_progress_handle(String message, String chat_id, @NotNull OkHttpClient okhttp_client) {
-        message_json request_body = new message_json();
-        request_body.chat_id = chat_id;
-        request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context, true);
-        String request_body_json = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_json, public_func.JSON);
-        Request request_obj = new Request.Builder().url(request_url).method("POST", body).build();
-        Call call = okhttp_client.newCall(request_obj);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                Log.d(TAG, "onResponse: " + Objects.requireNonNull(response.body()).string());
-            }
-        });
     }
 }
