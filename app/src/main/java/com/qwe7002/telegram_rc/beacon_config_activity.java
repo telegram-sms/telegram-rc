@@ -68,7 +68,6 @@ public class beacon_config_activity extends AppCompatActivity {
         flush();
         LocalBroadcastManager.getInstance(this).registerReceiver(flush_receiver,
                 new IntentFilter("flush_view"));
-
     }
 
     @Override
