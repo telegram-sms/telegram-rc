@@ -206,7 +206,9 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onBeaconServiceConnect() {
             beacon_manager.addRangeNotifier((beacons, region) -> {
+                beacon_list.beacons = beacons;
                 boolean wifi_is_enable_status;
+                LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if (config.use_vpn_hotspot) {
                     if (!remote_control_public.is_vpn_hotsport_exist(context) && Settings.System.canWrite(context)) {
                         config.use_vpn_hotspot = false;
@@ -221,8 +223,6 @@ public class beacon_receiver_service extends Service {
                 } else {
                     wifi_is_enable_status = remote_control_public.is_tether_active(context);
                 }
-                beacon_list.beacons = beacons;
-                LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
                     Log.d(TAG, "onBeaconServiceConnect: Startup time is too short");
                     not_found_count = 0;
