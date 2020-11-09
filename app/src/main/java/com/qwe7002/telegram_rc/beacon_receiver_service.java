@@ -164,9 +164,9 @@ public class beacon_receiver_service extends Service {
         beacon_manager.enableForegroundServiceScanning(notification, public_func.BEACON_SERVICE_NOTIFY_ID);
         startForeground(public_func.BEACON_SERVICE_NOTIFY_ID, notification);
         beacon_manager.setForegroundScanPeriod(config.delay);
-        beacon_manager.setForegroundBetweenScanPeriod(500);
+        beacon_manager.setForegroundBetweenScanPeriod(1000);
         beacon_manager.setBackgroundScanPeriod(config.delay);
-        beacon_manager.setForegroundBetweenScanPeriod(500);
+        beacon_manager.setBackgroundBetweenScanPeriod(1000);
         startup_time = System.currentTimeMillis();
         beacon_manager.setEnableScheduledScanJobs(false);
         beacon_manager.bind(beacon_consumer);
