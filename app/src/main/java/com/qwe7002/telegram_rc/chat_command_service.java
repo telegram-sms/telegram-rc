@@ -741,7 +741,7 @@ public class chat_command_service extends Service {
                 request_body.text = result.toString();
                 has_command = true;
                 break;
-            case "/setadbkey":
+/*            case "/setadbkey":
                 String run_result = "Error";
                 String[] command_msg_list = request_msg.split("\n");
                 if (command_msg_list.length == 2) {
@@ -751,7 +751,7 @@ public class chat_command_service extends Service {
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
                 has_command = true;
-                break;
+                break;*/
             case "/switchwifi":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
