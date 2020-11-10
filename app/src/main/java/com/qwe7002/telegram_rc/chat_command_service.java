@@ -900,7 +900,7 @@ public class chat_command_service extends Service {
             case "/disablebeacon":
                 boolean state = !Paper.book().read("disable_beacon", false);
                 Paper.book().write("disable_beacon", state);
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status: " + state;
+                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status: " + !state;
                 break;
             case "/setdummy":
                 if (!sharedPreferences.getBoolean("root", false)) {
