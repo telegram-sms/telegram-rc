@@ -40,8 +40,7 @@ public class boot_receiver extends BroadcastReceiver {
                     Paper.book().delete("black_keyword_list");
                     Paper.book().delete("proxy_config");
                 }
-            }
-            if (!intent.getAction().equals("android.intent.action.MY_PACKAGE_REPLACED")) {
+            } else {
                 if (sharedPreferences.getBoolean("root", false)) {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr", null);
                     if (dummy_ip_addr != null) {
