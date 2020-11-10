@@ -26,5 +26,6 @@
     <string name="data_usage_permissions_button">Obtenga permisos de uso de datos</string>
     <string name="get_permission_to_write_system_settings">Obtenga permiso para escribir la configuración del sistema</string>
     <string name="connect_to_the_network">"Conectarse a la red: "</string>
+    <string name="wifi_status_monitoring">monitoreo de estado wifi</string>
 </resources>
 

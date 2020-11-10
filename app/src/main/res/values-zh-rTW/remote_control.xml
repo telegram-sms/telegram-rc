@@ -26,4 +26,5 @@
     <string name="data_usage_permissions_button">獲取數據使用權限</string>
     <string name="get_permission_to_write_system_settings">獲得寫系統設置的權限</string>
     <string name="connect_to_the_network">"連接到網絡: "</string>
+    <string name="wifi_status_monitoring">wifi狀態監控</string>
 </resources>

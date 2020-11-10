@@ -424,17 +424,19 @@ class public_func {
         }
     }
 
-    static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch) {
+    static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch, Boolean wifi_status_monitor_switch) {
         Intent battery_service = new Intent(context, battery_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
         Intent wifi_connect_ststus_service = new Intent(context, wifi_connect_status_service.class);
-        context.startForegroundService(wifi_connect_ststus_service);
         start_beacon_service(context);
         if (is_notify_listener(context)) {
             ComponentName this_component_name = new ComponentName(context, notification_listener_service.class);
             PackageManager package_manager = context.getPackageManager();
             package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
             package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+        }
+        if (wifi_status_monitor_switch) {
+            context.startForegroundService(wifi_connect_ststus_service);
         }
         if (battery_switch) {
             context.startForegroundService(battery_service);

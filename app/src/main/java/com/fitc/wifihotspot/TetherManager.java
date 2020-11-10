@@ -24,7 +24,7 @@ public class TetherManager {
 
     public TetherManager(Context context) {
         mContext = context;
-        mConnectivityManager = (ConnectivityManager) mContext.getSystemService(ConnectivityManager.class);
+        mConnectivityManager = mContext.getSystemService(ConnectivityManager.class);
     }
 
 
@@ -38,15 +38,12 @@ public class TetherManager {
     public boolean isTetherActive() {
         try {
             @SuppressLint("DiscouragedPrivateApi") Method method = mConnectivityManager.getClass().getDeclaredMethod("getTetheredIfaces");
-            if (method == null) {
-                Log.e(TAG, "getTetheredIfaces is null");
-            } else {
-                String[] res = (String[]) method.invoke(mConnectivityManager);
-                Log.d(TAG, "getTetheredIfaces invoked");
-                Log.d(TAG, Arrays.toString(res));
-                if (res.length > 0) {
-                    return true;
-                }
+            String[] res = (String[]) method.invoke(mConnectivityManager);
+            Log.d(TAG, "getTetheredIfaces invoked");
+            Log.d(TAG, Arrays.toString(res));
+            assert res != null;
+            if (res.length > 0) {
+                return true;
             }
         } catch (Exception e) {
             Log.e(TAG, "Error in getTetheredIfaces");
@@ -101,12 +98,8 @@ public class TetherManager {
         Method method;
         try {
             method = mConnectivityManager.getClass().getDeclaredMethod("startTethering", int.class, boolean.class, OnStartTetheringCallbackClass(), Handler.class);
-            if (method == null) {
-                Log.e(TAG, "startTetheringMethod is null");
-            } else {
-                method.invoke(mConnectivityManager, ConnectivityManager.TYPE_MOBILE, false, proxy, null);
-                Log.d(TAG, "startTethering invoked");
-            }
+            method.invoke(mConnectivityManager, ConnectivityManager.TYPE_MOBILE, false, proxy, null);
+            Log.d(TAG, "startTethering invoked");
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Error in enableTethering");
@@ -118,12 +111,8 @@ public class TetherManager {
     public void stopTethering() {
         try {
             Method method = mConnectivityManager.getClass().getDeclaredMethod("stopTethering", int.class);
-            if (method == null) {
-                Log.e(TAG, "stopTetheringMethod is null");
-            } else {
-                method.invoke(mConnectivityManager, ConnectivityManager.TYPE_MOBILE);
-                Log.d(TAG, "stopTethering invoked");
-            }
+            method.invoke(mConnectivityManager, ConnectivityManager.TYPE_MOBILE);
+            Log.d(TAG, "stopTethering invoked");
         } catch (Exception e) {
             Log.e(TAG, "stopTethering error: " + e.toString());
             e.printStackTrace();

@@ -88,6 +88,7 @@ public class main_activity extends AppCompatActivity {
         final SwitchMaterial root_switch = findViewById(R.id.root_switch);
         final SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
         final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
+        final SwitchMaterial wifi_status_switch = findViewById(R.id.wifi_status_switch);
         final Button save_button = findViewById(R.id.save_button);
         final Button get_id_button = findViewById(R.id.get_id_button);
         usage_button = findViewById(R.id.usage_button);
@@ -95,7 +96,7 @@ public class main_activity extends AppCompatActivity {
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
-
+        wifi_status_switch.setClickable(sharedPreferences.getBoolean("wifi_monitor_switch", false));
         usage_button.setOnClickListener(v -> {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
             startActivity(intent);
@@ -117,7 +118,7 @@ public class main_activity extends AppCompatActivity {
         }
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
-            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
         } else {
             Paper.book("system_config").write("convert", true);
         }
@@ -441,10 +442,11 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("privacy_mode", privacy_mode_switch.isChecked());
                     editor.putBoolean("initialized", true);
                     editor.putBoolean("privacy_dialog_agree", true);
+                    editor.putBoolean("wifi_monitor_switch", wifi_status_switch.isChecked());
                     editor.apply();
                     new Thread(() -> {
                         public_func.stop_all_service(context);
-                        public_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked());
+                        public_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked(), wifi_status_switch.isChecked());
                     }).start();
                     Looper.prepare();
                     Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)
@@ -698,7 +700,7 @@ public class main_activity extends AppCompatActivity {
                             new Thread(() -> {
                                 public_func.stop_all_service(context);
                                 if (sharedPreferences.getBoolean("initialized", false)) {
-                                    public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+                                    public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
                                 }
                             }).start();
                         })
