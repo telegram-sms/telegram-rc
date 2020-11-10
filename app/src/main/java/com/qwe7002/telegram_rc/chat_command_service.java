@@ -786,7 +786,7 @@ public class chat_command_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
-                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 assert wifiManager != null;
                 boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
                 String result_vpn_ap;
