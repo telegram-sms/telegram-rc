@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
@@ -45,15 +44,6 @@ public class boot_receiver extends BroadcastReceiver {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr", null);
                     if (dummy_ip_addr != null) {
                         com.qwe7002.root_kit.network.add_dummy_device(dummy_ip_addr);
-                    }
-                    if (Paper.book().read("tether_open", false)) {
-                        Paper.book().write("wifi_open", false);
-                        remote_control_public.enable_tether(context);
-                    }
-                    if (Paper.book().read("wifi_open", false)) {
-                        WifiManager wifi_manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                        assert wifi_manager != null;
-                        remote_control_public.enable_vpn_ap(wifi_manager);
                     }
                     String adb_port = Paper.book().read("adb_port", "-1");
                     if (!adb_port.equals("-1")) {
