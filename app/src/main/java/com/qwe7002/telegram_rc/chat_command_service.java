@@ -315,7 +315,6 @@ public class chat_command_service extends Service {
                 Log.d("get_data_sim_id", "No permission.");
             }
             telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
-                @SuppressWarnings("RedundantCast")
                 @Override
                 public void onCellInfo(@NonNull List<CellInfo> cell_info_result) {
                     Log.d(TAG, "cellinfo_size: " + cell_info_result.size());
