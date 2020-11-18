@@ -53,6 +53,7 @@ public class beacon_receiver_service extends Service {
     private BeaconManager beacon_manager;
     private long startup_time = 0;
     private long last_receive_time = 0;
+    private long last_action_time = 0;
     private beacon_config config;
     private beacon_service_consumer beacon_consumer;
     private PowerManager.WakeLock wakelock;
@@ -223,19 +224,24 @@ public class beacon_receiver_service extends Service {
                 } else {
                     wifi_is_enable_status = remote_control_public.is_tether_active(context);
                 }
+                long current_time = System.currentTimeMillis();
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
                     Log.d(TAG, "onBeaconServiceConnect: Startup time is too short");
                     not_found_count = 0;
                     detect_singal_count = 0;
-                    last_receive_time = System.currentTimeMillis();
                     return;
                 }
-                long current_time = System.currentTimeMillis();
                 if ((current_time - last_receive_time) < config.delay) {
-                    Log.d(TAG, "onBeaconServiceConnect: Last time is too short");
+                    Log.d(TAG, "onBeaconServiceConnect: Last receive boardcast time is too short");
                     return;
                 }
                 last_receive_time = current_time;
+                if ((current_time - last_action_time) <= 5000L) {
+                    not_found_count = 0;
+                    detect_singal_count = 0;
+                    Log.d(TAG, "onBeaconServiceConnect: Last action time is too short");
+                    return;
+                }
                 if (Paper.book().read("disable_beacon", false)) {
                     not_found_count = 0;
                     detect_singal_count = 0;
@@ -295,6 +301,7 @@ public class beacon_receiver_service extends Service {
                 if (wifi_is_enable_status && found_beacon) {
                     if (!config.opposite) {
                         if (detect_singal_count >= config.disable_count) {
+                            last_action_time = current_time;
                             detect_singal_count = 0;
                             not_found_count = 0;
                             if (config.use_vpn_hotspot) {
@@ -306,6 +313,7 @@ public class beacon_receiver_service extends Service {
                         }
                     } else {
                         if (detect_singal_count >= config.enable_count) {
+                            last_action_time = current_time;
                             detect_singal_count = 0;
                             not_found_count = 0;
                             if (config.use_vpn_hotspot) {
@@ -320,6 +328,7 @@ public class beacon_receiver_service extends Service {
                 if (!wifi_is_enable_status && !found_beacon) {
                     if (!config.opposite) {
                         if (not_found_count >= config.enable_count) {
+                            last_action_time = current_time;
                             detect_singal_count = 0;
                             not_found_count = 0;
                             if (config.use_vpn_hotspot) {
@@ -331,6 +340,7 @@ public class beacon_receiver_service extends Service {
                         }
                     } else {
                         if (not_found_count >= config.disable_count) {
+                            last_action_time = current_time;
                             detect_singal_count = 0;
                             not_found_count = 0;
                             if (config.use_vpn_hotspot) {
