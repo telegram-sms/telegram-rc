@@ -35,6 +35,8 @@ public class battery_service extends Service {
     static boolean doh_switch;
     private Context context;
     private battery_receiver battery_receiver = null;
+    static long last_receive_time = 0;
+    static long last_receive_message_id = -1;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -81,6 +83,7 @@ public class battery_service extends Service {
     class battery_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(final Context context, @NotNull final Intent intent) {
+
             String TAG = "battery_receiver";
             assert intent.getAction() != null;
             Log.d(TAG, "Receive action: " + intent.getAction());
@@ -90,7 +93,6 @@ public class battery_service extends Service {
                 android.os.Process.killProcess(android.os.Process.myPid());
                 return;
             }
-            String request_uri = public_func.get_url(battery_service.bot_token, "sendMessage");
             final message_json request_body = new message_json();
             request_body.chat_id = battery_service.chat_id;
             StringBuilder prebody = new StringBuilder(context.getString(R.string.system_message_head) + "\n");
@@ -128,17 +130,25 @@ public class battery_service extends Service {
             }
 
             request_body.text = prebody.append("\n").append(context.getString(R.string.current_battery_level)).append(battery_level).append("%").toString();
+            String request_uri = public_func.get_url(battery_service.bot_token, "sendMessage");
+            if (System.currentTimeMillis() - last_receive_time < 5000 && last_receive_message_id != -1) {
+                request_uri = public_func.get_url(bot_token, "editMessageText");
+                request_body.message_id = last_receive_message_id;
+            }
+            last_receive_time = System.currentTimeMillis();
             OkHttpClient okhttp_client = public_func.get_okhttp_obj(battery_service.doh_switch, Paper.book("system_config").read("proxy_config", new proxy_config()));
             String request_body_raw = new Gson().toJson(request_body);
             RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send battery info failed:";
+
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     e.printStackTrace();
                     public_func.write_log(context, error_head + e.getMessage());
+                    last_receive_message_id = -1;
                     if (action.equals(Intent.ACTION_BATTERY_LOW)) {
                         public_func.send_fallback_sms(context, request_body.text, -1);
                         public_func.add_resend_loop(context, request_body.text);
@@ -150,10 +160,14 @@ public class battery_service extends Service {
                     if (response.code() != 200) {
                         assert response.body() != null;
                         public_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                        last_receive_message_id = -1;
                         if (action.equals(Intent.ACTION_BATTERY_LOW)) {
                             public_func.send_fallback_sms(context, request_body.text, -1);
                             public_func.add_resend_loop(context, request_body.text);
                         }
+                    }
+                    if (response.code() == 200) {
+                        last_receive_message_id = Long.getLong(public_func.get_message_id(Objects.requireNonNull(response.body()).string()));
                     }
                 }
             });
