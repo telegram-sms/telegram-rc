@@ -17,6 +17,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.os.Build;
+import android.os.StrictMode;
 import android.telephony.SmsManager;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
@@ -215,6 +216,8 @@ class public_func {
                 .retryOnConnectionFailure(true);
         Proxy proxy = null;
         if (proxy_item.enable) {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
             InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.proxy_host, proxy_item.proxy_port);
             proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
             Authenticator.setDefault(new Authenticator() {
@@ -311,9 +314,12 @@ class public_func {
         }
     }
 
-
     static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
-        if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
+        send_sms(context, send_to, content, slot, sub_id, -1);
+    }
+
+    static void send_sms(Context context, String send_to, String content, int slot, int sub_id, long message_id) {
+        if (PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             Log.d("send_sms", "No permission.");
             return;
         }
@@ -325,9 +331,13 @@ class public_func {
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = public_func.get_url(bot_token, "sendMessage");
+        if (message_id != -1) {
+            Log.d("send_sms", "Find the message_id and switch to edit mode.");
+            request_uri = public_func.get_url(bot_token, "editMessageText");
+        }
         message_json request_body = new message_json();
         request_body.chat_id = chat_id;
-        android.telephony.SmsManager sms_manager;
+        SmsManager sms_manager;
         if (sub_id == -1) {
             sms_manager = SmsManager.getDefault();
         } else {
@@ -335,8 +345,8 @@ class public_func {
         }
         String dual_sim = get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
         String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + send_to + "\n" + context.getString(R.string.content) + content;
-        String message_id = "-1";
         request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.sending);
+        request_body.message_id = message_id;
         Gson gson = new Gson();
         String request_body_raw = gson.toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
@@ -348,7 +358,9 @@ class public_func {
             if (response.code() != 200 || response.body() == null) {
                 throw new IOException(String.valueOf(response.code()));
             }
-            message_id = get_message_id(Objects.requireNonNull(response.body()).string());
+            if (message_id == -1) {
+                message_id = Long.getLong(get_message_id(Objects.requireNonNull(response.body()).string()));
+            }
         } catch (IOException e) {
             e.printStackTrace();
             public_func.write_log(context, "failed to send message:" + e.getMessage());

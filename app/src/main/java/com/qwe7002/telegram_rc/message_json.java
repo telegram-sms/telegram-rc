@@ -7,4 +7,6 @@ class message_json {
     String parse_mode;
     String chat_id;
     String text;
+    keyboard.keyboard_markup reply_markup;
 }
+

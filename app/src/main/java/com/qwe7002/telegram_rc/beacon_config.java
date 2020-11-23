@@ -4,6 +4,7 @@ public class beacon_config {
     boolean opposite = false;
     boolean use_vpn_hotspot = false;
     Long delay = 10000L;
+    int rssi_strenght = -100;
     int disable_count = 3;
     int enable_count = 5;
 }

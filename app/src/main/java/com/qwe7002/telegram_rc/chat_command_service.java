@@ -155,11 +155,14 @@ public class chat_command_service extends Service {
 
     private int send_slot_temp = -1;
     private String send_to_temp;
+    private String send_message_temp;
+    private String send_message_id_temp;
     private String bot_username = "";
     private boolean privacy_mode;
     private static Thread thread_main;
     private String chat_id;
     private String bot_token;
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -426,84 +429,6 @@ public class chat_command_service extends Service {
         return net_type;
     }
 
-    private static class SEND_SMS_STATUS {
-        public static final int STANDBY_STATUS = -1;
-        public static final int PHONE_INPUT_STATUS = 0;
-        public static final int MESSAGE_INPUT_STATUS = 1;
-        public static final int WAITING_TO_SEND_STATUS = 2;
-    }
-
-    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        context = getApplicationContext();
-        connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        Paper.init(context);
-
-        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-
-        chat_id = sharedPreferences.getString("chat_id", "");
-        bot_token = sharedPreferences.getString("bot_token", "");
-        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
-        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
-        wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
-        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
-        wifilock.setReferenceCounted(false);
-        wakelock.setReferenceCounted(false);
-        if (!wifilock.isHeld()) {
-            wifilock.acquire();
-        }
-        if (!wakelock.isHeld()) {
-            wakelock.acquire();
-        }
-        thread_main = new Thread(new thread_main_runnable());
-        thread_main.start();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
-        NetworkRequest network_request = new NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                .build();
-        callback = new network_callback();
-        connectivity_manager.registerNetworkCallback(network_request, callback);
-        broadcast_receiver = new broadcast_receiver();
-        registerReceiver(broadcast_receiver, intentFilter);
-    }
-
-
-    private void when_network_change() {
-        if (public_func.check_network_status(context)) {
-            if (!thread_main.isAlive()) {
-                public_func.write_log(context, "Network connections has been restored.");
-                thread_main = new Thread(new thread_main_runnable());
-                thread_main.start();
-            }
-        }
-    }
-
-    private class broadcast_receiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, @NotNull Intent intent) {
-            Log.d(TAG, "onReceive: " + intent.getAction());
-            assert intent.getAction() != null;
-            if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
-                Log.i(TAG, "Received stop signal, quitting now...");
-                stopSelf();
-                Process.killProcess(Process.myPid());
-            }
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private class network_callback extends ConnectivityManager.NetworkCallback {
-        @Override
-        public void onAvailable(@NotNull Network network) {
-            Log.d(TAG, "onAvailable");
-            when_network_change();
-        }
-    }
-
     private static String get_data_usage(Context context, String sub_id, long from) throws RemoteException {
         NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
         NetworkStats.Bucket bucket =
@@ -537,6 +462,7 @@ public class chat_command_service extends Service {
         final message_json request_body = new message_json();
         request_body.chat_id = chat_id;
         JsonObject message_obj = null;
+        String callback_data = null;
         if (result_obj.has("message")) {
             message_obj = result_obj.get("message").getAsJsonObject();
             message_type = message_obj.get("chat").getAsJsonObject().get("type").getAsString();
@@ -544,6 +470,25 @@ public class chat_command_service extends Service {
         if (result_obj.has("channel_post")) {
             message_type = "channel";
             message_obj = result_obj.get("channel_post").getAsJsonObject();
+        }
+        if (result_obj.has("callback_query")) {
+            message_type = "callback_query";
+            JsonObject callback_query = result_obj.get("callback_query").getAsJsonObject();
+            callback_data = callback_query.get("data").getAsString();
+        }
+        if (message_type.equals("callback_query") && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
+            if (callback_data.equals("cancel")) {
+                set_sms_send_status_standby();
+                return;
+            }
+            int sub_id = -1;
+            if (public_func.get_active_card(context) == 1) {
+                send_slot_temp = -1;
+            } else {
+                sub_id = public_func.get_sub_id(context, send_slot_temp);
+            }
+            public_func.send_sms(context, send_to_temp, send_message_temp, send_slot_temp, sub_id, Long.parseLong(send_message_id_temp));
+            set_sms_send_status_standby();
         }
         if (message_obj == null) {
             public_func.write_log(context, "Request type is not allowed by security policy.");
@@ -592,12 +537,14 @@ public class chat_command_service extends Service {
                 return;
             }
         }
+        boolean has_command = false;
         if (message_obj.has("entities")) {
             String temp_command;
             String temp_command_lowercase;
             JsonArray entities_arr = message_obj.get("entities").getAsJsonArray();
             JsonObject entities_obj_command = entities_arr.get(0).getAsJsonObject();
             if (entities_obj_command.get("type").getAsString().equals("bot_command")) {
+                has_command = true;
                 int command_offset = entities_obj_command.get("offset").getAsInt();
                 int command_end_offset = command_offset + entities_obj_command.get("length").getAsInt();
                 temp_command = request_msg.substring(command_offset, command_end_offset).trim();
@@ -617,7 +564,7 @@ public class chat_command_service extends Service {
         }
 
         Log.d(TAG, "Command: " + command);
-        boolean has_command = false;
+
         switch (command) {
             case "/help":
             case "/start":
@@ -663,7 +610,6 @@ public class chat_command_service extends Service {
                     result_string = result_string.replace(" -", "@" + bot_username + " -");
                 }
                 request_body.text = result_string;
-                has_command = true;
                 break;
             case "/ping":
             case "/getinfo":
@@ -700,12 +646,10 @@ public class chat_command_service extends Service {
                     }
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + network_stats + card_info;
-                has_command = true;
                 Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
                 request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
-                has_command = true;
                 break;
             case "/setadbport":
                 if (!sharedPreferences.getBoolean("root", false)) {
@@ -738,19 +682,7 @@ public class chat_command_service extends Service {
                 result.append("port: ");
                 result.append(port);
                 request_body.text = result.toString();
-                has_command = true;
                 break;
-/*            case "/setadbkey":
-                String run_result = "Error";
-                String[] command_msg_list = request_msg.split("\n");
-                if (command_msg_list.length == 2) {
-                    if (com.qwe7002.root_kit.nadb.get_adb_auth(command_msg_list[1])) {
-                        run_result = "Done";
-                    }
-                }
-                request_body.text = getString(R.string.system_message_head) + "\n Status: " + run_result;
-                has_command = true;
-                break;*/
             case "/switchwifi":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
@@ -760,7 +692,6 @@ public class chat_command_service extends Service {
                 assert wifimanager != null;
                 com.qwe7002.root_kit.network.wifi_set_enable(!wifimanager.isWifiEnabled());
                 request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
-                has_command = true;
                 break;
             case "/switchap":
                 if (Settings.System.canWrite(context)) {
@@ -775,7 +706,6 @@ public class chat_command_service extends Service {
                     }
                     result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
                     request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
-                    has_command = true;
                     break;
                 } else {
                     command = "/switchvpnap";
@@ -799,7 +729,6 @@ public class chat_command_service extends Service {
                 result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
-                has_command = true;
                 break;
             case "/setdatacard":
                 if (!sharedPreferences.getBoolean("root", false)) {
@@ -819,7 +748,6 @@ public class chat_command_service extends Service {
                     }
                     Paper.book("temp").write("sub_id", public_func.get_sub_id(context, slot));
                     request_body.text = getString(R.string.system_message_head) + "\nCurrent data card: SIM" + public_func.get_data_sim_id(context) + "\nSet data card: SIM" + (slot + 1);
-                    has_command = true;
                 }
                 break;
             case "/switchdata":
@@ -835,7 +763,6 @@ public class chat_command_service extends Service {
                     result_data = context.getString(R.string.switch_data);
                 }
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
-                has_command = true;
                 break;
             case "/sendussd":
             case "/sendussd1":
@@ -933,7 +860,6 @@ public class chat_command_service extends Service {
             case "/sendsms":
             case "/sendsms1":
             case "/sendsms2":
-                has_command = true;
                 String[] msg_send_list = request_msg.split("\n");
                 if (msg_send_list.length > 2) {
                     String msg_send_to = public_func.get_send_phone_number(msg_send_list[1]);
@@ -992,9 +918,7 @@ public class chat_command_service extends Service {
                 break;
         }
         if (has_command) {
-            send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
-            send_slot_temp = -1;
-            send_to_temp = null;
+            set_sms_send_status_standby();
         }
         if (!has_command && send_sms_next_status != -1) {
             Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.");
@@ -1012,31 +936,26 @@ public class chat_command_service extends Service {
                     break;
                 case SEND_SMS_STATUS.MESSAGE_INPUT_STATUS:
                     String temp_to = public_func.get_send_phone_number(request_msg);
-                    Log.d(TAG, "receive_handle: " + temp_to);
                     if (public_func.is_phone_number(temp_to)) {
                         send_to_temp = temp_to;
                         result_send = getString(R.string.enter_content);
                         send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;
                     } else {
-                        send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
-                        send_slot_temp = -1;
-                        send_to_temp = null;
+                        set_sms_send_status_standby();
                         result_send = getString(R.string.unable_get_phone_number);
                     }
                     break;
                 case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
-                    if (public_func.get_active_card(context) == 1) {
-                        public_func.send_sms(context, send_to_temp, request_msg, -1, -1);
-                        return;
-                    }
-                    int sub_id = public_func.get_sub_id(context, send_slot_temp);
-                    if (sub_id != -1) {
-                        public_func.send_sms(context, send_to_temp, request_msg, send_slot_temp, sub_id);
-                        send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
-                        send_slot_temp = -1;
-                        send_to_temp = null;
-                        return;
-                    }
+                    send_message_temp = request_msg;
+                    keyboard.keyboard_markup keyboardMarkup = new keyboard.keyboard_markup();
+
+                    ArrayList<ArrayList<keyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
+                    inlineKeyboardButtons.add(keyboard.get_inline_keyboard_obj(context.getString(R.string.ok_button), "send"));
+                    inlineKeyboardButtons.add(keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), "cancel"));
+                    keyboardMarkup.inline_keyboard = inlineKeyboardButtons;
+                    request_body.reply_markup = keyboardMarkup;
+                    result_send = context.getString(R.string.to) + send_to_temp + "\n" + context.getString(R.string.content) + send_message_temp;
+                    send_sms_next_status = SEND_SMS_STATUS.SEND_STATUS;
                     break;
             }
             request_body.text = head + "\n" + result_send;
@@ -1044,6 +963,7 @@ public class chat_command_service extends Service {
 
         String request_uri = public_func.get_url(bot_token, "sendMessage");
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+        Log.d(TAG, "receive_handle: " + new Gson().toJson(request_body));
         Request send_request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(send_request);
         final String error_head = "Send reply failed:";
@@ -1058,9 +978,15 @@ public class chat_command_service extends Service {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                assert response.body() != null;
+                String response_string = response.body().string();
                 if (response.code() != 200) {
-                    assert response.body() != null;
-                    public_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                    public_func.write_log(context, error_head + response.code() + " " + response_string);
+                    return;
+                }
+                if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
+                    send_message_id_temp = public_func.get_message_id(response_string);
+                    Log.d(TAG, "onResponse: " + send_message_id_temp);
                 }
                 if (final_command.replace("_", "").equals("/switchap")) {
                     if (!Paper.book().read("tether_open", false)) {
@@ -1085,13 +1011,98 @@ public class chat_command_service extends Service {
                         case "/setdatacard":
                             if (Paper.book("temp").contains("sub_id")) {
                                 com.qwe7002.root_kit.network.set_data_sim(Paper.book("temp").read("sub_id"));
-                                Paper.book("temp").destroy();
+                                Paper.book("temp").delete("sub_id");
                             }
                             break;
                     }
                 }
             }
         });
+    }
+
+    private void set_sms_send_status_standby() {
+        send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
+        send_slot_temp = -1;
+        send_to_temp = null;
+        send_message_temp = "";
+    }
+
+    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        context = getApplicationContext();
+        connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        Paper.init(context);
+
+        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+
+        chat_id = sharedPreferences.getString("chat_id", "");
+        bot_token = sharedPreferences.getString("bot_token", "");
+        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
+        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
+        wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
+        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
+        wifilock.setReferenceCounted(false);
+        wakelock.setReferenceCounted(false);
+        if (!wifilock.isHeld()) {
+            wifilock.acquire();
+        }
+        if (!wakelock.isHeld()) {
+            wakelock.acquire();
+        }
+        thread_main = new Thread(new thread_main_runnable());
+        thread_main.start();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
+        NetworkRequest network_request = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                .build();
+        callback = new network_callback();
+        connectivity_manager.registerNetworkCallback(network_request, callback);
+        broadcast_receiver = new broadcast_receiver();
+        registerReceiver(broadcast_receiver, intentFilter);
+    }
+
+    private void when_network_change() {
+        if (public_func.check_network_status(context)) {
+            if (!thread_main.isAlive()) {
+                public_func.write_log(context, "Network connections has been restored.");
+                thread_main = new Thread(new thread_main_runnable());
+                thread_main.start();
+            }
+        }
+    }
+
+    private static class SEND_SMS_STATUS {
+        public static final int STANDBY_STATUS = -1;
+        public static final int PHONE_INPUT_STATUS = 0;
+        public static final int MESSAGE_INPUT_STATUS = 1;
+        public static final int WAITING_TO_SEND_STATUS = 2;
+        public static final int SEND_STATUS = 3;
+    }
+
+    private class broadcast_receiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, @NotNull Intent intent) {
+            Log.d(TAG, "onReceive: " + intent.getAction());
+            assert intent.getAction() != null;
+            if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
+                Log.i(TAG, "Received stop signal, quitting now...");
+                stopSelf();
+                Process.killProcess(Process.myPid());
+            }
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private class network_callback extends ConnectivityManager.NetworkCallback {
+        @Override
+        public void onAvailable(@NotNull Network network) {
+            Log.d(TAG, "onAvailable");
+            when_network_change();
+        }
     }
 
     class thread_main_runnable implements Runnable {
@@ -1165,6 +1176,7 @@ public class chat_command_service extends Service {
                         e.printStackTrace();
                         continue;
                     }
+                    Log.d(TAG, "run: " + result);
                     JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                     if (result_obj.get("ok").getAsBoolean()) {
                         JsonArray result_array = result_obj.get("result").getAsJsonArray();
@@ -1196,5 +1208,6 @@ public class chat_command_service extends Service {
             }
         }
     }
+
 }
 

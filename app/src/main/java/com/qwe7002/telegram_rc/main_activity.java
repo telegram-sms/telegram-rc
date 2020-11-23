@@ -96,7 +96,7 @@ public class main_activity extends AppCompatActivity {
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
-        wifi_status_switch.setClickable(sharedPreferences.getBoolean("wifi_monitor_switch", false));
+        wifi_status_switch.setChecked(sharedPreferences.getBoolean("wifi_monitor_switch", false));
         usage_button.setOnClickListener(v -> {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
             startActivity(intent);

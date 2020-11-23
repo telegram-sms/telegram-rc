@@ -281,17 +281,20 @@ public class beacon_receiver_service extends Service {
                 String beacon_status;
                 if (found_beacon) {
                     beacon_status = "\nBeacon Rssi: " + detect_beacon.getRssi() + "dBm";
-                    //if (detect_singal_count > 2) {
                     not_found_count = 0;
-                    //}
-                    ++detect_singal_count;
+                    if (detect_beacon.getRssi() < config.rssi_strenght) {
+                        Log.d(TAG, "onBeaconServiceConnect: Signal is too weak, no operation");
+                        ++detect_singal_count;
+                    }
                 } else {
                     beacon_status = "\nBeacon Not Found.";
                     if (not_found_count > 1) {
                         detect_singal_count = 0;
                     }
+
                     ++not_found_count;
                 }
+
                 final int STATUS_STANDBY = -1;
                 final int STATUS_ENABLE_AP = 0;
                 final int STATUS_DISABLE_AP = 1;

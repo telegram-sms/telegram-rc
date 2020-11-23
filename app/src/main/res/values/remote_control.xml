@@ -26,5 +26,5 @@
     <string name="data_usage_permissions_button">Obtain data usage permissions</string>
     <string name="get_permission_to_write_system_settings">Get permission to write system settings</string>
     <string name="connect_to_the_network">"Connect to the network: "</string>
-    <string name="wifi_status_monitoring">wifi status monitoring</string>
+    <string name="wifi_status_monitoring">Wi-Fi status monitoring</string>
 </resources>
