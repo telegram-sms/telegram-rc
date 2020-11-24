@@ -362,7 +362,7 @@ class public_func {
                 throw new IOException(String.valueOf(response.code()));
             }
             if (message_id == -1) {
-                message_id = Long.getLong(get_message_id(Objects.requireNonNull(response.body()).string()));
+                message_id = get_message_id(Objects.requireNonNull(response.body()).string());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -408,9 +408,9 @@ class public_func {
         sms_manager.sendMultipartTextMessage(trust_number, null, divideContents, null, null);
     }
 
-    static String get_message_id(String result) {
+    static Long get_message_id(String result) {
         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject().get("result").getAsJsonObject();
-        return result_obj.get("message_id").getAsString();
+        return result_obj.get("message_id").getAsLong();
     }
 
     @NotNull
@@ -594,12 +594,12 @@ class public_func {
         }
     }
 
-    static void add_message_list(String message_id, String phone, int slot) {
+    static void add_message_list(long message_id, String phone, int slot) {
         message_item item = new message_item();
         item.phone = phone;
         item.card = slot;
         //item.sub_id = sub_id;
-        Paper.book().write(message_id, item);
+        Paper.book().write(String.valueOf(message_id), item);
         Log.d("add_message_list", "add_message_list: " + message_id);
     }
 

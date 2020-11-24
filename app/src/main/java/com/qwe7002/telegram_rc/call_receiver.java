@@ -11,8 +11,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
 
@@ -108,13 +106,13 @@ public class call_receiver extends BroadcastReceiver {
                             public_func.add_resend_loop(context, request_body.text);
                         } else {
                             String result = Objects.requireNonNull(response.body()).string();
-                            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject().get("result").getAsJsonObject();
-                            String message_id = result_obj.get("message_id").getAsString();
+                            //JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject().get("result").getAsJsonObject();
+                            //String message_id = result_obj.get("message_id").getAsString();
                             if (!public_func.is_phone_number(incoming_number)) {
                                 public_func.write_log(context, "[" + incoming_number + "] Not a regular phone number.");
                                 return;
                             }
-                            public_func.add_message_list(message_id, incoming_number, slot);
+                            public_func.add_message_list(public_func.get_message_id(result), incoming_number, slot);
                         }
                     }
                 });

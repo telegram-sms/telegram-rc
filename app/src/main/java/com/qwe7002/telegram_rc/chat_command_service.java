@@ -1000,7 +1000,7 @@ public class chat_command_service extends Service {
                     return;
                 }
                 if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
-                    Paper.book("send_temp").write("message_id", Long.getLong(public_func.get_message_id(response_string)));
+                    Paper.book("send_temp").write("message_id", public_func.get_message_id(response_string));
                 }
                 if (final_command.replace("_", "").equals("/switchap")) {
                     if (!Paper.book().read("tether_open", false)) {

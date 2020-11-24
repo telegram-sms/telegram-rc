@@ -159,9 +159,10 @@ public class battery_service extends Service {
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    String result = Objects.requireNonNull(response.body()).string();
                     if (response.code() != 200) {
                         assert response.body() != null;
-                        public_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                        public_func.write_log(context, error_head + response.code() + " " + result);
                         last_receive_message_id = -1;
                         if (action.equals(Intent.ACTION_BATTERY_LOW)) {
                             public_func.send_fallback_sms(context, request_body.text, -1);
@@ -169,7 +170,9 @@ public class battery_service extends Service {
                         }
                     }
                     if (response.code() == 200) {
-                        last_receive_message_id = Long.getLong(public_func.get_message_id(Objects.requireNonNull(response.body()).string()));
+                        Log.d(TAG, "onResponse: " + result);
+                        Log.d(TAG, "onResponse: " + public_func.get_message_id(result));
+                        last_receive_message_id = public_func.get_message_id(result);
                     }
                 }
             });

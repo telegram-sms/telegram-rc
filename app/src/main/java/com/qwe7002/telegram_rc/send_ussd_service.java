@@ -94,15 +94,15 @@ public class send_ussd_service extends Service {
         Call call = okhttp_client.newCall(request);
         TelephonyManager finalTelephonyManager = telephonyManager;
         new Thread(() -> {
-            String message_id_string = "-1";
+            long message_id = -1;
             try {
                 Response response = call.execute();
-                message_id_string = public_func.get_message_id(Objects.requireNonNull(response.body()).string());
+                message_id = public_func.get_message_id(Objects.requireNonNull(response.body()).string());
             } catch (IOException e) {
                 e.printStackTrace();
             }
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                finalTelephonyManager.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, Long.parseLong(message_id_string)), handler);
+                finalTelephonyManager.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, message_id), handler);
             }
             stopSelf();
         }).start();
