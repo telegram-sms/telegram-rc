@@ -481,7 +481,7 @@ public class chat_command_service extends Service {
             JsonObject callback_query = result_obj.get("callback_query").getAsJsonObject();
             callback_data = callback_query.get("data").getAsString();
         }
-        if (message_type.equals("callback_query") && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
+        if (message_type.equals("callback_query") && send_sms_next_status != SEND_SMS_STATUS.STANDBY_STATUS) {
             int slot = Paper.book("send_temp").read("slot", -1);
             long message_id = Paper.book("send_temp").read("message_id", -1L);
             String to = Paper.book("send_temp").read("to", "");
@@ -960,6 +960,9 @@ public class chat_command_service extends Service {
             String head = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]";
             String result_send = getString(R.string.failed_to_get_information);
             Log.d(TAG, "Sending mode status: " + send_sms_next_status);
+            reply_markup_keyboard.keyboard_markup keyboardMarkup = new reply_markup_keyboard.keyboard_markup();
+            ArrayList<ArrayList<reply_markup_keyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
+            inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), "cancel"));
             switch (send_sms_next_status) {
                 case SEND_SMS_STATUS.PHONE_INPUT_STATUS:
                     send_sms_next_status = SEND_SMS_STATUS.MESSAGE_INPUT_STATUS;
@@ -980,11 +983,7 @@ public class chat_command_service extends Service {
                 case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
                     Paper.book("send_temp").write("content", request_msg);
                     //send_message_temp = request_msg;
-                    reply_markup_keyboard.keyboard_markup keyboardMarkup = new reply_markup_keyboard.keyboard_markup();
-
-                    ArrayList<ArrayList<reply_markup_keyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
-                    inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.ok_button), "send"));
-                    inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), "cancel"));
+                    inlineKeyboardButtons.add(0, reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.ok_button), "send"));
                     keyboardMarkup.inline_keyboard = inlineKeyboardButtons;
                     request_body.reply_markup = keyboardMarkup;
                     result_send = context.getString(R.string.to) + Paper.book("send_temp").read("to") + "\n" + context.getString(R.string.content) + Paper.book("send_temp").read("content", "");
