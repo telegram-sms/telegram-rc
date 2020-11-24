@@ -1,5 +1,5 @@
 package com.qwe7002.telegram_rc.data_structure;
-
+@SuppressWarnings({"unused", "RedundantSuppression"})
 public class proxy_config {
     public int proxy_port = 1080;
     public String proxy_host = "";

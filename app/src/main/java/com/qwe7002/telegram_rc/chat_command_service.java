@@ -482,7 +482,8 @@ public class chat_command_service extends Service {
             callback_data = callback_query.get("data").getAsString();
         }
         if (message_type.equals("callback_query") && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
-            if (callback_data.equals("cancel")) {
+            //todo
+            if (!callback_data.equals(getString(R.string.ok_button))) {
                 set_sms_send_status_standby();
                 return;
             }

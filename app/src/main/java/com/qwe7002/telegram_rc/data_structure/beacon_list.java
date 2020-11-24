@@ -7,7 +7,7 @@ import org.altbeacon.beacon.Beacon;
 
 import java.util.Collection;
 import java.util.Iterator;
-
+@SuppressWarnings({"unused", "RedundantSuppression"})
 public class beacon_list {
     public static Collection<Beacon> beacons = new Collection<Beacon>() {
         @Override
