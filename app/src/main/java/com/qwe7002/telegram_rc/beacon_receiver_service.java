@@ -21,6 +21,9 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.gson.Gson;
+import com.qwe7002.telegram_rc.data_structure.beacon_list;
+import com.qwe7002.telegram_rc.data_structure.message_json;
+import com.qwe7002.telegram_rc.data_structure.proxy_config;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;

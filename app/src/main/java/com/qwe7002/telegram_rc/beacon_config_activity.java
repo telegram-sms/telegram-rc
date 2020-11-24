@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.qwe7002.telegram_rc.data_structure.beacon_list;
 
 import org.altbeacon.beacon.Beacon;
 

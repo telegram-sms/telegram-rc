@@ -17,6 +17,8 @@ import androidx.core.app.ActivityCompat;
 
 import com.github.sumimakito.codeauxlib.CodeauxLibPortable;
 import com.google.gson.Gson;
+import com.qwe7002.telegram_rc.data_structure.message_json;
+import com.qwe7002.telegram_rc.data_structure.proxy_config;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -253,7 +255,7 @@ public class sms_receiver extends BroadcastReceiver {
                         public_func.write_log(context, "[" + message_address + "] Not a regular phone number.");
                         return;
                     }
-                    public_func.add_message_list(public_func.get_message_id(result), message_address, final_slot, sub_id);
+                    public_func.add_message_list(public_func.get_message_id(result), message_address, final_slot);
                 }
                 command_handle(sharedPreferences, message_body, data_enable);
             }

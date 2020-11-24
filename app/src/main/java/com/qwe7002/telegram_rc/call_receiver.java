@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.qwe7002.telegram_rc.data_structure.message_json;
+import com.qwe7002.telegram_rc.data_structure.proxy_config;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -112,7 +114,7 @@ public class call_receiver extends BroadcastReceiver {
                                 public_func.write_log(context, "[" + incoming_number + "] Not a regular phone number.");
                                 return;
                             }
-                            public_func.add_message_list(message_id, incoming_number, slot, public_func.get_sub_id(context, slot));
+                            public_func.add_message_list(message_id, incoming_number, slot);
                         }
                     }
                 });

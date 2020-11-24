@@ -31,6 +31,9 @@ import androidx.core.content.PermissionChecker;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.qwe7002.telegram_rc.data_structure.message_item;
+import com.qwe7002.telegram_rc.data_structure.message_json;
+import com.qwe7002.telegram_rc.data_structure.proxy_config;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -591,11 +594,11 @@ class public_func {
         }
     }
 
-    static void add_message_list(String message_id, String phone, int slot, int sub_id) {
+    static void add_message_list(String message_id, String phone, int slot) {
         message_item item = new message_item();
         item.phone = phone;
         item.card = slot;
-        item.sub_id = sub_id;
+        //item.sub_id = sub_id;
         Paper.book().write(message_id, item);
         Log.d("add_message_list", "add_message_list: " + message_id);
     }

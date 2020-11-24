@@ -43,6 +43,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.qwe7002.root_kit.shell;
+import com.qwe7002.telegram_rc.data_structure.message_json;
+import com.qwe7002.telegram_rc.data_structure.polling_json;
+import com.qwe7002.telegram_rc.data_structure.proxy_config;
 
 import java.io.IOException;
 import java.util.ArrayList;

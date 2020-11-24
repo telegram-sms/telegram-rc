@@ -1,9 +1,9 @@
-package com.qwe7002.telegram_rc;
+package com.qwe7002.telegram_rc.data_structure;
 
 import java.util.ArrayList;
 
-class keyboard {
-    static ArrayList<InlineKeyboardButton> get_inline_keyboard_obj(String text, String callback_data) {
+public class keyboard {
+    public static ArrayList<InlineKeyboardButton> get_inline_keyboard_obj(String text, String callback_data) {
         keyboard.InlineKeyboardButton button = new keyboard.InlineKeyboardButton();
         button.text = text;
         button.callback_data = callback_data;
@@ -12,13 +12,13 @@ class keyboard {
         return button_ArrayList;
     }
 
-    static class keyboard_markup {
-        ArrayList<ArrayList<InlineKeyboardButton>> inline_keyboard;
+    public static class keyboard_markup {
+        public ArrayList<ArrayList<InlineKeyboardButton>> inline_keyboard;
         @SuppressWarnings({"unused", "RedundantSuppression"})
         boolean one_time_keyboard = true;
     }
 
-    static class InlineKeyboardButton {
+    public static class InlineKeyboardButton {
         String text;
         String callback_data;
     }

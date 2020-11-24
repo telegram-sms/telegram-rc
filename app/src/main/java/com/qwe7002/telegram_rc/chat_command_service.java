@@ -44,6 +44,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.qwe7002.telegram_rc.data_structure.keyboard;
+import com.qwe7002.telegram_rc.data_structure.message_item;
+import com.qwe7002.telegram_rc.data_structure.message_json;
+import com.qwe7002.telegram_rc.data_structure.polling_json;
+import com.qwe7002.telegram_rc.data_structure.proxy_config;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -525,12 +530,10 @@ public class chat_command_service extends Service {
             if (save_item != null) {
                 String phone_number = save_item.phone;
                 int card_slot = save_item.card;
-                int sub_id = save_item.sub_id;
-                if (card_slot != -1 && sub_id == -1) {
-                    sub_id = public_func.get_sub_id(context, card_slot);
-                }
-                public_func.send_sms(context, phone_number, request_msg, card_slot, sub_id);
-                return;
+                send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;
+                send_slot_temp = card_slot;
+                send_to_temp = phone_number;
+                send_message_temp = request_msg;
             }
             if (!message_type_is_private) {
                 Log.i(TAG, "receive_handle: The message id could not be found, ignored.");

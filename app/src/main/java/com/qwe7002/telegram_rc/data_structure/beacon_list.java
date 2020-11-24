@@ -1,4 +1,4 @@
-package com.qwe7002.telegram_rc;
+package com.qwe7002.telegram_rc.data_structure;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 public class beacon_list {
-    static Collection<Beacon> beacons = new Collection<Beacon>() {
+    public static Collection<Beacon> beacons = new Collection<Beacon>() {
         @Override
         public int size() {
             return 0;

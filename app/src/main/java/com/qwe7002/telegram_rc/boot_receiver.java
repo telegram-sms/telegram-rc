@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.qwe7002.telegram_rc.data_structure.proxy_config;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
