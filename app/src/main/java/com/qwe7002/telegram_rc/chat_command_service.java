@@ -963,12 +963,15 @@ public class chat_command_service extends Service {
             reply_markup_keyboard.keyboard_markup keyboardMarkup = new reply_markup_keyboard.keyboard_markup();
             ArrayList<ArrayList<reply_markup_keyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
             inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), "cancel"));
+            keyboardMarkup.inline_keyboard = inlineKeyboardButtons;
             switch (send_sms_next_status) {
                 case SEND_SMS_STATUS.PHONE_INPUT_STATUS:
+                    request_body.reply_markup = keyboardMarkup;
                     send_sms_next_status = SEND_SMS_STATUS.MESSAGE_INPUT_STATUS;
                     result_send = getString(R.string.enter_number);
                     break;
                 case SEND_SMS_STATUS.MESSAGE_INPUT_STATUS:
+                    request_body.reply_markup = keyboardMarkup;
                     String temp_to = public_func.get_send_phone_number(request_msg);
                     if (public_func.is_phone_number(temp_to)) {
                         //send_to_temp = temp_to;
