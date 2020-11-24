@@ -482,13 +482,32 @@ public class chat_command_service extends Service {
             callback_data = callback_query.get("data").getAsString();
         }
         if (message_type.equals("callback_query") && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
-            //todo
             int slot = Paper.book("send_temp").read("slot", -1);
-            long message_id = Paper.book("send_temp").read("message_id", -1);
+            long message_id = Paper.book("send_temp").read("message_id", -1L);
             String to = Paper.book("send_temp").read("to", "");
             String content = Paper.book("send_temp").read("content", "");
-            if (!callback_data.equals(getString(R.string.ok_button))) {
+            if (!callback_data.equals("send")) {
                 set_sms_send_status_standby();
+                String request_uri = public_func.get_url(bot_token, "editMessageText");
+                String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
+                String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + to + "\n" + context.getString(R.string.content) + content;
+                request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.cancel_button);
+                request_body.message_id = message_id;
+                Gson gson = new Gson();
+                String request_body_raw = gson.toJson(request_body);
+                RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
+                OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
+                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+                Call call = okhttp_client.newCall(request);
+                try {
+                    Response response = call.execute();
+                    if (response.code() != 200 || response.body() == null) {
+                        throw new IOException(String.valueOf(response.code()));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    public_func.write_log(context, "failed to send message:" + e.getMessage());
+                }
                 return;
             }
             int sub_id = -1;
@@ -499,11 +518,13 @@ public class chat_command_service extends Service {
             }
             public_func.send_sms(context, to, content, slot, sub_id, message_id);
             set_sms_send_status_standby();
+            return;
         }
         if (message_obj == null) {
             public_func.write_log(context, "Request type is not allowed by security policy.");
             return;
         }
+
         JsonObject from_obj = null;
         final boolean message_type_is_private = message_type.equals("private");
         if (message_obj.has("from")) {
@@ -536,9 +557,6 @@ public class chat_command_service extends Service {
                 String phone_number = save_item.phone;
                 int card_slot = save_item.card;
                 send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;
-                //send_slot_temp = card_slot;
-                //send_to_temp = phone_number;
-                //send_message_temp = request_msg;
                 Paper.book("send_temp").write("slot", card_slot);
                 Paper.book("send_temp").write("to", phone_number);
                 Paper.book("send_temp").write("content", request_msg);
@@ -960,7 +978,7 @@ public class chat_command_service extends Service {
                     }
                     break;
                 case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
-                    Paper.book("send_temp").write("contnet", request_msg);
+                    Paper.book("send_temp").write("content", request_msg);
                     //send_message_temp = request_msg;
                     reply_markup_keyboard.keyboard_markup keyboardMarkup = new reply_markup_keyboard.keyboard_markup();
 
@@ -969,7 +987,7 @@ public class chat_command_service extends Service {
                     inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), "cancel"));
                     keyboardMarkup.inline_keyboard = inlineKeyboardButtons;
                     request_body.reply_markup = keyboardMarkup;
-                    result_send = context.getString(R.string.to) + Paper.book("send_temp").read("to") + "\n" + context.getString(R.string.content) + Paper.book("send_temp").read("content");
+                    result_send = context.getString(R.string.to) + Paper.book("send_temp").read("to") + "\n" + context.getString(R.string.content) + Paper.book("send_temp").read("content", "");
                     send_sms_next_status = SEND_SMS_STATUS.SEND_STATUS;
                     break;
             }
