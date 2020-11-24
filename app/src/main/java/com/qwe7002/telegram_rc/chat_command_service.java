@@ -158,10 +158,10 @@ public class chat_command_service extends Service {
         return result;
     }
 
-    private int send_slot_temp = -1;
-    private String send_to_temp;
-    private String send_message_temp;
-    private String send_message_id_temp;
+    //private int send_slot_temp = -1;
+    //private String send_to_temp;
+    //private String send_message_temp;
+    //private String send_message_id_temp;
     private String bot_username = "";
     private boolean privacy_mode;
     private static Thread thread_main;
@@ -483,17 +483,21 @@ public class chat_command_service extends Service {
         }
         if (message_type.equals("callback_query") && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
             //todo
+            int slot = Paper.book("send_temp").read("slot", -1);
+            long message_id = Paper.book("send_temp").read("message_id", -1);
+            String to = Paper.book("send_temp").read("to", "");
+            String content = Paper.book("send_temp").read("content", "");
             if (!callback_data.equals(getString(R.string.ok_button))) {
                 set_sms_send_status_standby();
                 return;
             }
             int sub_id = -1;
             if (public_func.get_active_card(context) == 1) {
-                send_slot_temp = -1;
+                slot = -1;
             } else {
-                sub_id = public_func.get_sub_id(context, send_slot_temp);
+                sub_id = public_func.get_sub_id(context, slot);
             }
-            public_func.send_sms(context, send_to_temp, send_message_temp, send_slot_temp, sub_id, Long.parseLong(send_message_id_temp));
+            public_func.send_sms(context, to, content, slot, sub_id, message_id);
             set_sms_send_status_standby();
         }
         if (message_obj == null) {
@@ -528,13 +532,16 @@ public class chat_command_service extends Service {
         }
         if (message_obj.has("reply_to_message")) {
             message_item save_item = Paper.book().read(message_obj.get("reply_to_message").getAsJsonObject().get("message_id").getAsString(), null);
-            if (save_item != null) {
+            if (save_item != null && !request_msg.isEmpty()) {
                 String phone_number = save_item.phone;
                 int card_slot = save_item.card;
                 send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;
-                send_slot_temp = card_slot;
-                send_to_temp = phone_number;
-                send_message_temp = request_msg;
+                //send_slot_temp = card_slot;
+                //send_to_temp = phone_number;
+                //send_message_temp = request_msg;
+                Paper.book("send_temp").write("slot", card_slot);
+                Paper.book("send_temp").write("to", phone_number);
+                Paper.book("send_temp").write("content", request_msg);
             }
             if (!message_type_is_private) {
                 Log.i(TAG, "receive_handle: The message id could not be found, ignored.");
@@ -895,21 +902,22 @@ public class chat_command_service extends Service {
                             return;
                         }
                     }
-                } else if (message_type_is_private) {
+                } else {
                     has_command = false;
                     send_sms_next_status = SEND_SMS_STATUS.PHONE_INPUT_STATUS;
-                    send_slot_temp = -1;
+                    int send_slot = -1;
                     if (public_func.get_active_card(context) > 1) {
                         switch (command) {
                             case "/sendsms":
                             case "/sendsms1":
-                                send_slot_temp = 0;
+                                send_slot = 0;
                                 break;
                             case "/sendsms2":
-                                send_slot_temp = 1;
+                                send_slot = 1;
                                 break;
                         }
                     }
+                    Paper.book("send_temp").write("slot", send_slot);
                 }
                 request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                 break;
@@ -927,6 +935,7 @@ public class chat_command_service extends Service {
         if (!has_command && send_sms_next_status != -1) {
             Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.");
             String dual_sim = "";
+            int send_slot_temp = Paper.book("send_temp").read("slot", -1);
             if (send_slot_temp != -1) {
                 dual_sim = "SIM" + (send_slot_temp + 1) + " ";
             }
@@ -941,7 +950,8 @@ public class chat_command_service extends Service {
                 case SEND_SMS_STATUS.MESSAGE_INPUT_STATUS:
                     String temp_to = public_func.get_send_phone_number(request_msg);
                     if (public_func.is_phone_number(temp_to)) {
-                        send_to_temp = temp_to;
+                        //send_to_temp = temp_to;
+                        Paper.book("send_temp").write("to", temp_to);
                         result_send = getString(R.string.enter_content);
                         send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;
                     } else {
@@ -950,7 +960,8 @@ public class chat_command_service extends Service {
                     }
                     break;
                 case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
-                    send_message_temp = request_msg;
+                    Paper.book("send_temp").write("contnet", request_msg);
+                    //send_message_temp = request_msg;
                     reply_markup_keyboard.keyboard_markup keyboardMarkup = new reply_markup_keyboard.keyboard_markup();
 
                     ArrayList<ArrayList<reply_markup_keyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
@@ -958,7 +969,7 @@ public class chat_command_service extends Service {
                     inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), "cancel"));
                     keyboardMarkup.inline_keyboard = inlineKeyboardButtons;
                     request_body.reply_markup = keyboardMarkup;
-                    result_send = context.getString(R.string.to) + send_to_temp + "\n" + context.getString(R.string.content) + send_message_temp;
+                    result_send = context.getString(R.string.to) + Paper.book("send_temp").read("to") + "\n" + context.getString(R.string.content) + Paper.book("send_temp").read("content");
                     send_sms_next_status = SEND_SMS_STATUS.SEND_STATUS;
                     break;
             }
@@ -989,8 +1000,7 @@ public class chat_command_service extends Service {
                     return;
                 }
                 if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
-                    send_message_id_temp = public_func.get_message_id(response_string);
-                    Log.d(TAG, "onResponse: " + send_message_id_temp);
+                    Paper.book("send_temp").write("message_id", Long.getLong(public_func.get_message_id(response_string)));
                 }
                 if (final_command.replace("_", "").equals("/switchap")) {
                     if (!Paper.book().read("tether_open", false)) {
@@ -1026,9 +1036,7 @@ public class chat_command_service extends Service {
 
     private void set_sms_send_status_standby() {
         send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
-        send_slot_temp = -1;
-        send_to_temp = null;
-        send_message_temp = "";
+        Paper.book("send_temp").destroy();
     }
 
     @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
@@ -1038,7 +1046,7 @@ public class chat_command_service extends Service {
         context = getApplicationContext();
         connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         Paper.init(context);
-
+        set_sms_send_status_standby();
         sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
 
         chat_id = sharedPreferences.getString("chat_id", "");
