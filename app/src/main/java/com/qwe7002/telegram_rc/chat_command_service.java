@@ -44,11 +44,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.qwe7002.telegram_rc.data_structure.keyboard;
 import com.qwe7002.telegram_rc.data_structure.message_item;
 import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
+import com.qwe7002.telegram_rc.data_structure.reply_markup_keyboard;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -950,11 +950,11 @@ public class chat_command_service extends Service {
                     break;
                 case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
                     send_message_temp = request_msg;
-                    keyboard.keyboard_markup keyboardMarkup = new keyboard.keyboard_markup();
+                    reply_markup_keyboard.keyboard_markup keyboardMarkup = new reply_markup_keyboard.keyboard_markup();
 
-                    ArrayList<ArrayList<keyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
-                    inlineKeyboardButtons.add(keyboard.get_inline_keyboard_obj(context.getString(R.string.ok_button), "send"));
-                    inlineKeyboardButtons.add(keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), "cancel"));
+                    ArrayList<ArrayList<reply_markup_keyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
+                    inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.ok_button), "send"));
+                    inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), "cancel"));
                     keyboardMarkup.inline_keyboard = inlineKeyboardButtons;
                     request_body.reply_markup = keyboardMarkup;
                     result_send = context.getString(R.string.to) + send_to_temp + "\n" + context.getString(R.string.content) + send_message_temp;
