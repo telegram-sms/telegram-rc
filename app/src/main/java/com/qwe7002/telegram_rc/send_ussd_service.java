@@ -96,7 +96,7 @@ public class send_ussd_service extends Service {
         Call call = okhttp_client.newCall(request);
         TelephonyManager finalTelephonyManager = telephonyManager;
         new Thread(() -> {
-            long message_id = -1;
+            long message_id = -1L;
             try {
                 Response response = call.execute();
                 message_id = public_func.get_message_id(Objects.requireNonNull(response.body()).string());
