@@ -114,8 +114,8 @@ public class beacon_receiver_service extends Service {
             config = Paper.book().read("beacon_config", new beacon_config());
             beacon_manager.setBackgroundScanPeriod(config.delay);
             beacon_manager.setForegroundScanPeriod(config.delay);
-            beacon_manager.setForegroundBetweenScanPeriod(config.delay);
-            beacon_manager.setForegroundBetweenScanPeriod(config.delay);
+            beacon_manager.setForegroundBetweenScanPeriod(1000);
+            beacon_manager.setForegroundBetweenScanPeriod(1000);
             try {
                 beacon_manager.updateScanPeriods();
             } catch (RemoteException e) {
