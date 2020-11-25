@@ -11,8 +11,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
+import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 
@@ -76,7 +76,7 @@ public class sim_status_receiver extends BroadcastReceiver {
 
         }
         String message = context.getString(R.string.system_message_head) + "\n" + status_message;
-        message_json request_body = new message_json();
+        request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         request_body.text = message;
         String request_body_json = new Gson().toJson(request_body);

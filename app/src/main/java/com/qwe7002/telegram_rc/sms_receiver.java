@@ -17,8 +17,8 @@ import androidx.core.app.ActivityCompat;
 
 import com.github.sumimakito.codeauxlib.CodeauxLibPortable;
 import com.google.gson.Gson;
-import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
+import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 
@@ -101,7 +101,7 @@ public class sms_receiver extends BroadcastReceiver {
             is_trusted_phone = message_address.contains(trusted_phone_number);
         }
         Log.d(TAG, "onReceive: " + is_trusted_phone);
-        final message_json request_body = new message_json();
+        final request_message request_body = new request_message();
         request_body.chat_id = chat_id;
 
         String message_body_html = message_body;

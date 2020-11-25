@@ -20,8 +20,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
-import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
+import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 
@@ -86,7 +86,7 @@ public class send_ussd_service extends Service {
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = public_func.get_url(bot_token, "sendMessage");
-        message_json request_body = new message_json();
+        request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         request_body.text = context.getString(R.string.send_ussd_head) + "\n" + context.getString(R.string.ussd_code_running);
         String request_body_raw = new Gson().toJson(request_body);

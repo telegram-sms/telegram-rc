@@ -1,6 +1,6 @@
 package com.qwe7002.telegram_rc.data_structure;
 @SuppressWarnings({"unused", "RedundantSuppression"})
-public class message_json {
+public class request_message {
     public final boolean disable_web_page_preview = true;
     public long message_id;
     public String parse_mode;

@@ -22,8 +22,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.data_structure.beacon_list;
-import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
+import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 
@@ -187,7 +187,7 @@ public class beacon_receiver_service extends Service {
     }
 
     private void network_progress_handle(String message, String chat_id, @NotNull OkHttpClient okhttp_client) {
-        message_json request_body = new message_json();
+        request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context, true);
         String request_body_json = new Gson().toJson(request_body);

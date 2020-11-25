@@ -34,9 +34,9 @@ import com.google.gson.JsonParser;
 import com.qwe7002.telegram_rc.R;
 import com.qwe7002.telegram_rc.beacon_receiver_service;
 import com.qwe7002.telegram_rc.chat_command_service;
-import com.qwe7002.telegram_rc.data_structure.message_item;
-import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
+import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.data_structure.sms_request_info;
 import com.qwe7002.telegram_rc.notification_listener_service;
 import com.qwe7002.telegram_rc.resend_service;
 import com.qwe7002.telegram_rc.sms_send_receiver;
@@ -333,7 +333,7 @@ public class public_func {
             Log.d("send_sms", "Find the message_id and switch to edit mode.");
             request_uri = public_func.get_url(bot_token, "editMessageText");
         }
-        message_json request_body = new message_json();
+        request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         SmsManager sms_manager;
         if (sub_id == -1) {
@@ -590,7 +590,7 @@ public class public_func {
     }
 
     public static void add_message_list(long message_id, String phone, int slot) {
-        message_item item = new message_item();
+        sms_request_info item = new sms_request_info();
         item.phone = phone;
         item.card = slot;
         Paper.book().write(String.valueOf(message_id), item);

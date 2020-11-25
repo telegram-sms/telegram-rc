@@ -44,11 +44,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.qwe7002.telegram_rc.data_structure.message_item;
-import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
 import com.qwe7002.telegram_rc.data_structure.reply_markup_keyboard;
+import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.data_structure.sms_request_info;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 
@@ -159,11 +159,6 @@ public class chat_command_service extends Service {
         }
         return result;
     }
-
-    //private int send_slot_temp = -1;
-    //private String send_to_temp;
-    //private String send_message_temp;
-    //private String send_message_id_temp;
     private String bot_username = "";
     private boolean privacy_mode;
     private static Thread thread_main;
@@ -334,7 +329,9 @@ public class chat_command_service extends Service {
                     }
                     CellInfo info = cell_info_result.get(0);
                     if (info instanceof CellInfoNr) {
+                        //noinspection RedundantCast
                         signal_strength[0] = ((CellInfoNr) info).getCellSignalStrength().getDbm();
+                        //noinspection RedundantCast
                         CellIdentityNr cell_identity = (CellIdentityNr) ((CellInfoNr) info).getCellIdentity();
                         signal_arfcn[0] = cell_identity.getNrarfcn();
                     }
@@ -466,7 +463,7 @@ public class chat_command_service extends Service {
         String message_type = "";
         long update_id = result_obj.get("update_id").getAsLong();
         offset = update_id + 1;
-        final message_json request_body = new message_json();
+        final request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         JsonObject message_obj = null;
         String callback_data = null;
@@ -488,6 +485,7 @@ public class chat_command_service extends Service {
             long message_id = Paper.book("send_temp").read("message_id", -1L);
             String to = Paper.book("send_temp").read("to", "");
             String content = Paper.book("send_temp").read("content", "");
+            assert callback_data != null;
             if (!callback_data.equals("send")) {
                 set_sms_send_status_standby();
                 String request_uri = public_func.get_url(bot_token, "editMessageText");
@@ -554,7 +552,7 @@ public class chat_command_service extends Service {
             request_msg = message_obj.get("text").getAsString();
         }
         if (message_obj.has("reply_to_message")) {
-            message_item save_item = Paper.book().read(message_obj.get("reply_to_message").getAsJsonObject().get("message_id").getAsString(), null);
+            sms_request_info save_item = Paper.book().read(message_obj.get("reply_to_message").getAsJsonObject().get("message_id").getAsString(), null);
             if (save_item != null && !request_msg.isEmpty()) {
                 String phone_number = save_item.phone;
                 int card_slot = save_item.card;
@@ -827,7 +825,7 @@ public class chat_command_service extends Service {
                     if (public_func.check_network_status(context)) {
                         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
                         for (String item : spam_sms_list) {
-                            message_json send_sms_request_body = new message_json();
+                            request_message send_sms_request_body = new request_message();
                             send_sms_request_body.chat_id = chat_id;
                             send_sms_request_body.text = item;
                             String request_uri = public_func.get_url(bot_token, "sendMessage");
@@ -987,7 +985,6 @@ public class chat_command_service extends Service {
                     break;
                 case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
                     Paper.book("send_temp").write("content", request_msg);
-                    //send_message_temp = request_msg;
                     inlineKeyboardButtons.add(0, reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.ok_button), "send"));
                     keyboardMarkup.inline_keyboard = inlineKeyboardButtons;
                     request_body.reply_markup = keyboardMarkup;
@@ -1016,7 +1013,7 @@ public class chat_command_service extends Service {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 assert response.body() != null;
-                String response_string = response.body().string();
+                String response_string = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
                     public_func.write_log(context, error_head + response.code() + " " + response_string);
                     return;
