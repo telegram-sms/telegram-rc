@@ -51,7 +51,6 @@ public class wifi_connect_status_service extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate: ");
         context = getApplicationContext();
         Paper.init(context);
         wifi_status_change_receiver = new wifi_status_change_receiver();
