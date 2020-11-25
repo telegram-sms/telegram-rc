@@ -6,6 +6,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import com.fitc.wifihotspot.TetherManager;
+import com.qwe7002.telegram_rc.static_class.public_value;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +17,7 @@ public class remote_control_public {
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         Paper.book().write("wifi_open", false);
-        com.qwe7002.root_kit.activity_manage.force_stop_package(public_func.VPN_HOTSPOT_PACKAGE_NAME);
+        com.qwe7002.root_kit.activity_manage.force_stop_package(public_value.VPN_HOTSPOT_PACKAGE_NAME);
         com.qwe7002.root_kit.network.wifi_set_enable(false);
         try {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
@@ -59,7 +60,7 @@ public class remote_control_public {
             e.printStackTrace();
         }
 
-        com.qwe7002.root_kit.activity_manage.start_foreground_service(public_func.VPN_HOTSPOT_PACKAGE_NAME, public_func.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+        com.qwe7002.root_kit.activity_manage.start_foreground_service(public_value.VPN_HOTSPOT_PACKAGE_NAME, public_value.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
     }
 
     public static void enable_tether(Context context) {
@@ -83,7 +84,7 @@ public class remote_control_public {
     static boolean is_vpn_hotsport_exist(@NotNull Context context) {
         ApplicationInfo info;
         try {
-            info = context.getPackageManager().getApplicationInfo(public_func.VPN_HOTSPOT_PACKAGE_NAME, 0);
+            info = context.getPackageManager().getApplicationInfo(public_value.VPN_HOTSPOT_PACKAGE_NAME, 0);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             info = null;

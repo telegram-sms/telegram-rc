@@ -11,6 +11,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.qwe7002.telegram_rc.static_class.public_func;
+
 import org.jetbrains.annotations.NotNull;
 
 public class logcat_activity extends AppCompatActivity {

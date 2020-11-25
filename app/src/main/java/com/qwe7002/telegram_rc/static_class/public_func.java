@@ -1,4 +1,4 @@
-package com.qwe7002.telegram_rc;
+package com.qwe7002.telegram_rc.static_class;
 
 import android.Manifest;
 import android.annotation.TargetApi;
@@ -31,9 +31,16 @@ import androidx.core.content.PermissionChecker;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.qwe7002.telegram_rc.R;
+import com.qwe7002.telegram_rc.beacon_receiver_service;
+import com.qwe7002.telegram_rc.chat_command_service;
 import com.qwe7002.telegram_rc.data_structure.message_item;
 import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
+import com.qwe7002.telegram_rc.notification_listener_service;
+import com.qwe7002.telegram_rc.resend_service;
+import com.qwe7002.telegram_rc.sms_send_receiver;
+import com.qwe7002.telegram_rc.wifi_connect_status_service;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +69,6 @@ import java.util.concurrent.TimeUnit;
 import io.paperdb.Paper;
 import okhttp3.Call;
 import okhttp3.HttpUrl;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -70,22 +76,11 @@ import okhttp3.Response;
 import okhttp3.dnsoverhttps.DnsOverHttps;
 
 
-class public_func {
-    static final String BROADCAST_STOP_SERVICE = "com.qwe7002.telegram_rc.stop_all";
-    static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
-    static final int BATTERY_NOTIFY_ID = 1;
-    static final int CHAT_COMMAND_NOTIFY_ID = 2;
-    static final int NOTIFICATION_LISTENER_SERVICE_NOTIFY_ID = 3;
-    static final int SEND_USSD_SERVCE_NOTIFY_ID = 4;
-    static final int RESEND_SERVICE_NOTIFY_ID = 5;
-    static final int BEACON_SERVICE_NOTIFY_ID = 6;
-    static final int WIFI_CONNECT_STATUS_NOTIFY_ID = 7;
-    static final int RESULT_CONFIG_JSON = 1;
+public class public_func {
     private static final String TELEGRAM_API_DOMAIN = "api.telegram.org";
     private static final String DNS_OVER_HTTP_ADDRSS = "https://cloudflare-dns.com/dns-query";
 
-    static String get_nine_key_map_convert(String input) {
+    public static String get_nine_key_map_convert(String input) {
         final Map<Character, Integer> nine_key_map = new HashMap<Character, Integer>() {
             {
                 put('A', 2);
@@ -128,7 +123,7 @@ class public_func {
         return result_stringbuilder.toString();
     }
 
-    static boolean get_data_enable(@NotNull Context context) {
+    public static boolean get_data_enable(@NotNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         assert connectivityManager != null;
@@ -147,7 +142,7 @@ class public_func {
         return network_status;
     }
 
-    static boolean check_network_status(@NotNull Context context) {
+    public static boolean check_network_status(@NotNull Context context) {
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         boolean network_status = false;
@@ -166,7 +161,7 @@ class public_func {
         return network_status;
     }
 
-    static long parse_string_to_long(String int_str) {
+    public static long parse_string_to_long(String int_str) {
         long result = 0;
         try {
             result = Long.parseLong(int_str);
@@ -177,7 +172,7 @@ class public_func {
     }
 
     @NotNull
-    static String get_send_phone_number(@NotNull String phone_number) {
+    public static String get_send_phone_number(@NotNull String phone_number) {
         phone_number = get_nine_key_map_convert(phone_number);
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < phone_number.length(); ++i) {
@@ -189,7 +184,7 @@ class public_func {
         return result.toString();
     }
 
-    static String get_dual_sim_card_display(Context context, int slot, boolean show_name) {
+    public static String get_dual_sim_card_display(Context context, int slot, boolean show_name) {
         String dual_sim = "";
         if (slot == -1) {
             return dual_sim;
@@ -206,12 +201,12 @@ class public_func {
 
     @NotNull
     @Contract(pure = true)
-    static String get_url(String token, String func) {
+    public static String get_url(String token, String func) {
         return "https://" + TELEGRAM_API_DOMAIN + "/bot" + token + "/" + func;
     }
 
     @NotNull
-    static OkHttpClient get_okhttp_obj(boolean doh_switch, proxy_config proxy_item) {
+    public static OkHttpClient get_okhttp_obj(boolean doh_switch, proxy_config proxy_item) {
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
@@ -260,7 +255,7 @@ class public_func {
         }
     }
 
-    static boolean is_phone_number(@NotNull String str) {
+    public static boolean is_phone_number(@NotNull String str) {
         for (int i = str.length(); --i >= 0; ) {
             char c = str.charAt(i);
             if (c == '+') {
@@ -275,7 +270,7 @@ class public_func {
 
     @NotNull
     @TargetApi(Build.VERSION_CODES.N)
-    static String get_data_sim_id(Context context) {
+    public static String get_data_sim_id(Context context) {
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             Log.d("get_data_sim_id", "No permission.");
@@ -293,14 +288,14 @@ class public_func {
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    static void send_ussd(Context context, String ussd, int sub_id) {
+    public static void send_ussd(Context context, String ussd, int sub_id) {
         Intent send_ussd_service = new Intent(context, com.qwe7002.telegram_rc.send_ussd_service.class);
         send_ussd_service.putExtra("ussd", ussd);
         send_ussd_service.putExtra("sub_id", sub_id);
         context.startForegroundService(send_ussd_service);
     }
 
-    static void add_resend_loop(Context context, String message) {
+    public static void add_resend_loop(Context context, String message) {
         ArrayList<String> resend_list;
         resend_list = Paper.book().read("resend_list", new ArrayList<>());
         resend_list.add(message);
@@ -308,7 +303,7 @@ class public_func {
         start_resend_service(context);
     }
 
-    static void start_resend_service(Context context) {
+    public static void start_resend_service(Context context) {
         Intent intent = new Intent(context, resend_service.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
@@ -317,11 +312,11 @@ class public_func {
         }
     }
 
-    static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
+    public static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
         send_sms(context, send_to, content, slot, sub_id, -1);
     }
 
-    static void send_sms(Context context, String send_to, String content, int slot, int sub_id, long message_id) {
+    public static void send_sms(Context context, String send_to, String content, int slot, int sub_id, long message_id) {
         if (PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             Log.d("send_sms", "No permission.");
             return;
@@ -352,7 +347,7 @@ class public_func {
         request_body.message_id = message_id;
         Gson gson = new Gson();
         String request_body_raw = gson.toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
+        RequestBody body = RequestBody.create(request_body_raw, public_value.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
@@ -382,7 +377,7 @@ class public_func {
         sms_manager.sendMultipartTextMessage(send_to, null, divideContents, send_receiver_list, null);
     }
 
-    static void send_fallback_sms(Context context, String content, int sub_id) {
+    public static void send_fallback_sms(Context context, String content, int sub_id) {
         final String TAG = "send_fallback_sms";
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             Log.d(TAG, ": No permission.");
@@ -408,13 +403,13 @@ class public_func {
         sms_manager.sendMultipartTextMessage(trust_number, null, divideContents, null, null);
     }
 
-    static Long get_message_id(String result) {
+    public static Long get_message_id(String result) {
         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject().get("result").getAsJsonObject();
         return result_obj.get("message_id").getAsLong();
     }
 
     @NotNull
-    static Notification get_notification_obj(Context context, String notification_name) {
+    public static Notification get_notification_obj(Context context, String notification_name) {
         NotificationChannel channel = new NotificationChannel(notification_name, notification_name,
                 NotificationManager.IMPORTANCE_MIN);
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -429,8 +424,8 @@ class public_func {
         return notification.build();
     }
 
-    static void stop_all_service(Context context) {
-        Intent intent = new Intent(BROADCAST_STOP_SERVICE);
+    public static void stop_all_service(Context context) {
+        Intent intent = new Intent(public_value.BROADCAST_STOP_SERVICE);
         context.sendBroadcast(intent);
         try {
             Thread.sleep(1000);
@@ -439,8 +434,8 @@ class public_func {
         }
     }
 
-    static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch, Boolean wifi_status_monitor_switch) {
-        Intent battery_service = new Intent(context, battery_service.class);
+    public static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch, Boolean wifi_status_monitor_switch) {
+        Intent battery_service = new Intent(context, com.qwe7002.telegram_rc.battery_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
         Intent wifi_connect_ststus_service = new Intent(context, wifi_connect_status_service.class);
         start_beacon_service(context);
@@ -462,13 +457,13 @@ class public_func {
 
     }
 
-    static void start_beacon_service(Context context) {
+    public static void start_beacon_service(Context context) {
         Intent beacon_service = new Intent(context, beacon_receiver_service.class);
-            context.startForegroundService(beacon_service);
+        context.startForegroundService(beacon_service);
 
     }
 
-    static int get_sub_id(Context context, int slot) {
+    public static int get_sub_id(Context context, int slot) {
         int active_card = public_func.get_active_card(context);
         if (active_card >= 2) {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -481,7 +476,7 @@ class public_func {
         return -1;
     }
 
-    static int get_active_card(Context context) {
+    public static int get_active_card(Context context) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             return -1;
         }
@@ -490,7 +485,7 @@ class public_func {
         return subscriptionManager.getActiveSubscriptionInfoCount();
     }
 
-    static String get_sim_display_name(Context context, int slot) {
+    public static String get_sim_display_name(Context context, int slot) {
         final String TAG = "get_sim_display_name";
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
@@ -518,7 +513,7 @@ class public_func {
     }
 
 
-    static void write_log(@NotNull Context context, String log) {
+    public static void write_log(@NotNull Context context, String log) {
         Log.i("write_log", log);
         int new_file_mode = Context.MODE_APPEND;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(context.getString(R.string.time_format), Locale.UK);
@@ -526,7 +521,7 @@ class public_func {
         write_log_file(context, write_string, new_file_mode);
     }
 
-    static String read_log(@NotNull Context context, int line) {
+    public static String read_log(@NotNull Context context, int line) {
         String result = context.getString(R.string.no_logs);
         String TAG = "read_file_last_line";
         StringBuilder builder = new StringBuilder();
@@ -571,7 +566,7 @@ class public_func {
         }
     }
 
-    static void reset_log_file(Context context) {
+    public static void reset_log_file(Context context) {
         write_log_file(context, "", Context.MODE_PRIVATE);
     }
 
@@ -594,16 +589,15 @@ class public_func {
         }
     }
 
-    static void add_message_list(long message_id, String phone, int slot) {
+    public static void add_message_list(long message_id, String phone, int slot) {
         message_item item = new message_item();
         item.phone = phone;
         item.card = slot;
-        //item.sub_id = sub_id;
         Paper.book().write(String.valueOf(message_id), item);
         Log.d("add_message_list", "add_message_list: " + message_id);
     }
 
-    static boolean is_notify_listener(Context context) {
+    public static boolean is_notify_listener(Context context) {
         Set<String> packageNames = NotificationManagerCompat.getEnabledListenerPackages(context);
         return packageNames.contains(context.getPackageName());
     }

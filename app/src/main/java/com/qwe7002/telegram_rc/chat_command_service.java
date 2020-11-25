@@ -49,6 +49,8 @@ import com.qwe7002.telegram_rc.data_structure.message_json;
 import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.proxy_config;
 import com.qwe7002.telegram_rc.data_structure.reply_markup_keyboard;
+import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.public_value;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -172,7 +174,7 @@ public class chat_command_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.chat_command_service_name));
-        startForeground(public_func.CHAT_COMMAND_NOTIFY_ID, notification);
+        startForeground(public_value.CHAT_COMMAND_NOTIFY_ID, notification);
         return START_STICKY;
     }
 
@@ -495,7 +497,7 @@ public class chat_command_service extends Service {
                 request_body.message_id = message_id;
                 Gson gson = new Gson();
                 String request_body_raw = gson.toJson(request_body);
-                RequestBody body = RequestBody.create(request_body_raw, public_func.JSON);
+                RequestBody body = RequestBody.create(request_body_raw, public_value.JSON);
                 OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
                 Request request = new Request.Builder().url(request_uri).method("POST", body).build();
                 Call call = okhttp_client.newCall(request);
@@ -668,7 +670,7 @@ public class chat_command_service extends Service {
                     }
                 }
                 if (sharedPreferences.getBoolean("root", false)) {
-                    if (com.qwe7002.root_kit.activity_manage.check_service_is_running(public_func.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
+                    if (com.qwe7002.root_kit.activity_manage.check_service_is_running(public_value.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
                         is_hotspot_running += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.enable);
                     } else {
                         is_hotspot_running += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.disable);
@@ -830,7 +832,7 @@ public class chat_command_service extends Service {
                             send_sms_request_body.text = item;
                             String request_uri = public_func.get_url(bot_token, "sendMessage");
                             String request_body_json = new Gson().toJson(send_sms_request_body);
-                            RequestBody body = RequestBody.create(request_body_json, public_func.JSON);
+                            RequestBody body = RequestBody.create(request_body_json, public_value.JSON);
                             Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
                             Call call = okhttp_client.newCall(request_obj);
                             call.enqueue(new Callback() {
@@ -997,7 +999,7 @@ public class chat_command_service extends Service {
         }
 
         String request_uri = public_func.get_url(bot_token, "sendMessage");
-        RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+        RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_value.JSON);
         Log.d(TAG, "receive_handle: " + new Gson().toJson(request_body));
         Request send_request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(send_request);
@@ -1086,7 +1088,7 @@ public class chat_command_service extends Service {
         thread_main = new Thread(new thread_main_runnable());
         thread_main.start();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(public_func.BROADCAST_STOP_SERVICE);
+        intentFilter.addAction(public_value.BROADCAST_STOP_SERVICE);
         NetworkRequest network_request = new NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
@@ -1120,7 +1122,7 @@ public class chat_command_service extends Service {
         public void onReceive(Context context, @NotNull Intent intent) {
             Log.d(TAG, "onReceive: " + intent.getAction());
             assert intent.getAction() != null;
-            if (public_func.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
+            if (public_value.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
                 Log.i(TAG, "Received stop signal, quitting now...");
                 stopSelf();
                 Process.killProcess(Process.myPid());
@@ -1166,7 +1168,7 @@ public class chat_command_service extends Service {
                 polling_json request_body = new polling_json();
                 request_body.offset = offset;
                 request_body.timeout = timeout;
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_func.JSON);
+                RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_value.JSON);
                 Request request = new Request.Builder().url(request_uri).method("POST", body).build();
                 Call call = okhttp_client_new.newCall(request);
                 Response response;
