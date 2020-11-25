@@ -106,8 +106,6 @@ public class call_receiver extends BroadcastReceiver {
                             public_func.add_resend_loop(context, request_body.text);
                         } else {
                             String result = Objects.requireNonNull(response.body()).string();
-                            //JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject().get("result").getAsJsonObject();
-                            //String message_id = result_obj.get("message_id").getAsString();
                             if (!public_func.is_phone_number(incoming_number)) {
                                 public_func.write_log(context, "[" + incoming_number + "] Not a regular phone number.");
                                 return;
