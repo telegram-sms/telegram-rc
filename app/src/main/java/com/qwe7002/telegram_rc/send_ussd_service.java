@@ -108,8 +108,6 @@ public class send_ussd_service extends Service {
             }
             stopSelf();
         }).start();
-
-
         return START_NOT_STICKY;
     }
 }
