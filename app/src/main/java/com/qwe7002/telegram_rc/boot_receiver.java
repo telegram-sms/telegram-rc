@@ -42,6 +42,7 @@ public class boot_receiver extends BroadcastReceiver {
                     Paper.book().delete("black_keyword_list");
                     Paper.book().delete("proxy_config");
                 }
+                public_func.reset_log_file(context);
             } else {
                 if (sharedPreferences.getBoolean("root", false)) {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr", null);
