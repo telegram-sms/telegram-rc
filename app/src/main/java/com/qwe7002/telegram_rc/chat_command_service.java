@@ -90,6 +90,7 @@ public class chat_command_service extends Service {
     private SharedPreferences sharedPreferences;
     private ConnectivityManager connectivity_manager;
     private network_callback callback;
+    private static boolean first_request = true;
 
     @SuppressLint({"HardwareIds", "MissingPermission"})
     private static String get_data_stats(Context context) {
@@ -328,7 +329,8 @@ public class chat_command_service extends Service {
                         return;
                     }
                     CellInfo info = cell_info_result.get(0);
-                    if (info instanceof CellInfoNr) {
+                    if (info instanceof CellInfoNr) //noinspection RedundantSuppression
+                    {
                         //noinspection RedundantCast
                         signal_strength[0] = ((CellInfoNr) info).getCellSignalStrength().getDbm();
                         //noinspection RedundantCast
@@ -459,9 +461,14 @@ public class chat_command_service extends Service {
         return resultSize;
     }
 
-    private void receive_handle(@NotNull JsonObject result_obj) {
-        String message_type = "";
+    private void receive_handle(@NotNull JsonObject result_obj, boolean get_id_only) {
+
         long update_id = result_obj.get("update_id").getAsLong();
+        if (get_id_only) {
+            Log.d(TAG, "receive_handle: get_id_only");
+            return;
+        }
+        String message_type = "";
         offset = update_id + 1;
         final request_message request_body = new request_message();
         request_body.chat_id = chat_id;
@@ -1165,6 +1172,9 @@ public class chat_command_service extends Service {
                 polling_json request_body = new polling_json();
                 request_body.offset = offset;
                 request_body.timeout = timeout;
+                if (first_request) {
+                    request_body.timeout = 0;
+                }
                 RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_value.JSON);
                 Request request = new Request.Builder().url(request_uri).method("POST", body).build();
                 Call call = okhttp_client_new.newCall(request);
@@ -1212,8 +1222,9 @@ public class chat_command_service extends Service {
                     if (result_obj.get("ok").getAsBoolean()) {
                         JsonArray result_array = result_obj.get("result").getAsJsonArray();
                         for (JsonElement item : result_array) {
-                            receive_handle(item.getAsJsonObject());
+                            receive_handle(item.getAsJsonObject(), first_request);
                         }
+                        first_request = false;
                     }
                     if (magnification <= 11) {
                         ++magnification;
