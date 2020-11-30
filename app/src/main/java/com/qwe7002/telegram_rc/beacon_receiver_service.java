@@ -288,7 +288,7 @@ public class beacon_receiver_service extends Service {
                     beacon_status = "\nBeacon Rssi: " + detect_beacon.getRssi() + "dBm";
                     not_found_count = 0;
                     if (detect_beacon.getRssi() < config.RSSI_strenght) {
-                        Log.d(TAG, "onBeaconServiceConnect: Signal is too weak, no operation");
+                        Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation");
                     } else {
                         ++detect_singal_count;
                     }
