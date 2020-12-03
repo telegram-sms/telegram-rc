@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.qwe7002.telegram_rc.data_structure.proxy_config;
 import com.qwe7002.telegram_rc.static_class.public_func;
 
 import org.jetbrains.annotations.NotNull;
@@ -49,8 +48,8 @@ public class boot_receiver extends BroadcastReceiver {
                     if (dummy_ip_addr != null) {
                         com.qwe7002.root_kit.network.add_dummy_device(dummy_ip_addr);
                     }
-                    String adb_port = Paper.book().read("adb_port", "-1");
-                    if (!adb_port.equals("-1")) {
+                    int adb_port = Paper.book().read("adb_port", -1);
+                    if (adb_port != -1) {
                         com.qwe7002.root_kit.nadb.set_nadb(adb_port);
                     }
                 }
