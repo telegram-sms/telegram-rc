@@ -14,7 +14,6 @@ public class update_to_version1 {
     String TAG = "update_to_version1";
 
     public void check_error() {
-
         try {
             Paper.book("beacon_config").read("config", new beacon());
         } catch (Exception e) {
