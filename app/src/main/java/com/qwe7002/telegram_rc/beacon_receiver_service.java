@@ -21,6 +21,8 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.gson.Gson;
+import com.qwe7002.telegram_rc.config.beacon;
+import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.beacon_list;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.public_func;
@@ -58,7 +60,7 @@ public class beacon_receiver_service extends Service {
     private long startup_time = 0;
     private long last_receive_time = 0;
     private long last_action_time = 0;
-    private beacon_config config;
+    private beacon config;
     private beacon_service_consumer beacon_consumer;
     private PowerManager.WakeLock wakelock;
 
@@ -112,7 +114,7 @@ public class beacon_receiver_service extends Service {
     private final BroadcastReceiver reload_config_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            config = Paper.book().read("beacon_config", new beacon_config());
+            config = Paper.book("beacon_config").read("config", new beacon());
             beacon_manager.setBackgroundScanPeriod(config.delay);
             beacon_manager.setForegroundScanPeriod(config.delay);
             beacon_manager.setForegroundBetweenScanPeriod(1000);
@@ -139,14 +141,14 @@ public class beacon_receiver_service extends Service {
             wakelock.acquire();
         }
 
-        config = Paper.book().read("beacon_config", new beacon_config());
+        config = Paper.book("beacon_config").read("config", new beacon());
         LocalBroadcastManager.getInstance(this).registerReceiver(reload_config_receiver,
                 new IntentFilter("reload_beacon_config"));
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         request_url = public_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
         chat_id = sharedPreferences.getString("chat_id", "");
         wifi_manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
+        okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
         BeaconManager.setAndroidLScanningDisabled(false);
@@ -259,7 +261,7 @@ public class beacon_receiver_service extends Service {
 
                     return;
                 }
-                ArrayList<String> listen_beacon_list = Paper.book().read("beacon_address", new ArrayList<>());
+                ArrayList<String> listen_beacon_list = Paper.book("beacon_config").read("address", new ArrayList<>());
                 if (listen_beacon_list.size() == 0) {
                     not_found_count = 0;
                     detect_singal_count = 0;

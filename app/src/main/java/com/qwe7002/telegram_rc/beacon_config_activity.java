@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.data_structure.beacon_list;
 
 import org.altbeacon.beacon.Beacon;
@@ -93,7 +94,7 @@ public class beacon_config_activity extends AppCompatActivity {
         EditText delay = dialog_view.findViewById(R.id.beacon_delay_editview);
         EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count_editview);
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);
-        beacon_config config = Paper.book().read("beacon_config", new beacon_config());
+        beacon config = Paper.book("beacon_config").read("config", new beacon());
         use_vpn_switch.setClickable(config.use_vpn_hotspot);
         if (!remote_control_public.is_vpn_hotsport_exist(context)) {
             use_vpn_switch.setClickable(false);
@@ -116,7 +117,7 @@ public class beacon_config_activity extends AppCompatActivity {
                     config.delay = Long.parseLong(delay.getText().toString());
                     config.disable_count = Integer.parseInt(disable_count.getText().toString());
                     config.enable_count = Integer.parseInt(enable_count.getText().toString());
-                    Paper.book().write("beacon_config", config);
+                    Paper.book("beacon_config").write("config", config);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("reload_beacon_config"));
                 }).show();
         return true;
@@ -136,7 +137,7 @@ public class beacon_config_activity extends AppCompatActivity {
         public CustomBeaconAdapter(ArrayList<BeaconModel> list, Context context) {
             this.list = list;
             this.context = context;
-            listen_list = Paper.book().read("beacon_address", new ArrayList<>());
+            listen_list = Paper.book("beacon_config").read("address", new ArrayList<>());
         }
 
         @Override
@@ -173,7 +174,7 @@ public class beacon_config_activity extends AppCompatActivity {
             }
             check_box_view.setOnClickListener(v -> {
                 String address = list.get(position).address;
-                ArrayList<String> listen_list_temp = Paper.book().read("beacon_address", new ArrayList<>());
+                ArrayList<String> listen_list_temp = Paper.book("beacon_config").read("address", new ArrayList<>());
                 if (check_box_view.isChecked()) {
                     if (!listen_list_temp.contains(address)) {
                         listen_list_temp.add(address);
@@ -182,7 +183,7 @@ public class beacon_config_activity extends AppCompatActivity {
                     listen_list_temp.remove(address);
                 }
                 Log.d(TAG, "beacon_address: " + listen_list_temp);
-                Paper.book().write("beacon_address", listen_list_temp);
+                Paper.book("beacon_config").write("address", listen_list_temp);
                 listen_list = listen_list_temp;
             });
 

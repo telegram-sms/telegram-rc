@@ -34,10 +34,10 @@ import com.google.gson.JsonParser;
 import com.qwe7002.telegram_rc.R;
 import com.qwe7002.telegram_rc.beacon_receiver_service;
 import com.qwe7002.telegram_rc.chat_command_service;
+import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.data_structure.sms_request_info;
 import com.qwe7002.telegram_rc.notification_listener_service;
-import com.qwe7002.telegram_rc.proxy_config;
 import com.qwe7002.telegram_rc.resend_service;
 import com.qwe7002.telegram_rc.sms_send_receiver;
 import com.qwe7002.telegram_rc.wifi_connect_status_service;
@@ -206,7 +206,7 @@ public class public_func {
     }
 
     @NotNull
-    public static OkHttpClient get_okhttp_obj(boolean doh_switch, proxy_config proxy_item) {
+    public static OkHttpClient get_okhttp_obj(boolean doh_switch, proxy proxy_item) {
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
@@ -216,13 +216,13 @@ public class public_func {
         if (proxy_item.enable) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
-            InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.proxy_host, proxy_item.proxy_port);
+            InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.host, proxy_item.port);
             proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
             Authenticator.setDefault(new Authenticator() {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
-                    if (getRequestingHost().equalsIgnoreCase(proxy_item.proxy_host)) {
-                        if (proxy_item.proxy_port == getRequestingPort()) {
+                    if (getRequestingHost().equalsIgnoreCase(proxy_item.host)) {
+                        if (proxy_item.port == getRequestingPort()) {
                             return new PasswordAuthentication(proxy_item.username, proxy_item.password.toCharArray());
                         }
                     }
@@ -348,7 +348,7 @@ public class public_func {
         Gson gson = new Gson();
         String request_body_raw = gson.toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, public_value.JSON);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy_config()));
+        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         try {

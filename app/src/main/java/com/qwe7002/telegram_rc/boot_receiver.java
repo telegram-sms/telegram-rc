@@ -11,7 +11,6 @@ import com.qwe7002.telegram_rc.static_class.public_func;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import io.paperdb.Paper;
 
@@ -30,19 +29,6 @@ public class boot_receiver extends BroadcastReceiver {
                 Log.d(TAG, "An unsent message was detected, and the automatic resend process was initiated.");
                 public_func.start_resend_service(context);
             }
-            if (intent.getAction().equals("android.intent.action.MY_PACKAGE_REPLACED")) {
-                if (!Paper.book("system_config").read("convert", false)) {
-                    List<String> notify_listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
-                    ArrayList<String> black_keyword_list = Paper.book().read("black_keyword_list", new ArrayList<>());
-                    proxy_config proxy_item = Paper.book().read("proxy_config", new proxy_config());
-                    Paper.book("system_config").write("notify_listen_list", notify_listen_list).write("block_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
-                    Paper.book("system_config").write("convert", true);
-                    Paper.book().delete("notify_listen_list");
-                    Paper.book().delete("black_keyword_list");
-                    Paper.book().delete("proxy_config");
-                }
-                public_func.reset_log_file(context);
-            } else {
                 if (sharedPreferences.getBoolean("root", false)) {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr", null);
                     if (dummy_ip_addr != null) {
@@ -56,4 +42,4 @@ public class boot_receiver extends BroadcastReceiver {
             }
         }
     }
-}
+

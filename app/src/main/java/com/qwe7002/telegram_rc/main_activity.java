@@ -43,6 +43,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.qwe7002.root_kit.shell;
+import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.public_func;
@@ -72,6 +73,49 @@ public class main_activity extends AppCompatActivity {
     private static String privacy_police;
     private Button usage_button;
     private Button write_settings_button;
+
+    private void check_version_upgrade(boolean reset_log) {
+        int version_code = Paper.book("system_config").read("version_code", 0);
+        PackageManager packageManager = context.getPackageManager();
+        PackageInfo packageInfo;
+        int current_version_code;
+        try {
+            packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            current_version_code = packageInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+        if (version_code != current_version_code) {
+            if (reset_log) {
+                public_func.reset_log_file(context);
+            }
+            Paper.book("system_config").write("version_code", current_version_code);
+        }
+    }
+
+    private void update_config() {
+        int store_version = Paper.book("system_config").read("version", 0);
+        if (store_version == public_value.SYSTEM_CONFIG_VERSION) {
+            try {
+                Paper.book("system_config").read("proxy_config", new proxy());
+            } catch (Exception e) {
+                e.printStackTrace();
+                Paper.book("system_config").delete("proxy_config");
+                Paper.book("beacon_config").delete("config");
+                Log.i(TAG, "update_config: Unsupported type");
+            }
+            return;
+        }
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (store_version) {
+            case 0:
+                new com.qwe7002.telegram_rc.update_to_version1().update();
+                break;
+            default:
+                Log.i(TAG, "update_config: Can't find a version that can be updated");
+        }
+    }
 
     @SuppressLint({"BatteryLife", "QueryPermissionsNeeded"})
     @Override
@@ -122,9 +166,10 @@ public class main_activity extends AppCompatActivity {
         }
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
+            update_config();
+            check_version_upgrade(true);
             public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
-        } else {
-            Paper.book("system_config").write("convert", true);
+
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -188,7 +233,7 @@ public class main_activity extends AppCompatActivity {
         verification_code_switch.setChecked(sharedPreferences.getBoolean("verification_code", false));
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
-        doh_switch.setEnabled(!Paper.book("system_config").read("proxy_config", new proxy_config()).enable);
+        doh_switch.setEnabled(!Paper.book("system_config").read("proxy_config", new proxy()).enable);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                 assert tm != null;
@@ -246,7 +291,7 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setCancelable(false);
             progress_dialog.show();
             String request_uri = public_func.get_url(bot_token_editview.getText().toString().trim(), "getUpdates");
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy_config()));
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
             okhttp_client = okhttp_client.newBuilder()
                     .readTimeout(60, TimeUnit.SECONDS)
                     .build();
@@ -390,7 +435,7 @@ public class main_activity extends AppCompatActivity {
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);
             RequestBody body = RequestBody.create(request_body_raw, public_value.JSON);
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy_config()));
+            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send message failed:";
@@ -424,11 +469,10 @@ public class main_activity extends AppCompatActivity {
                     }
                     if (!new_bot_token.equals(bot_token_save)) {
                         Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
-                        beacon_config beacon_config_item = Paper.book().read("beacon_config", new beacon_config());
-                        ArrayList<String> beacon_listen_list = Paper.book().read("beacon_address", new ArrayList<>());
                         Paper.book().destroy();
-                        Paper.book().write("beacon_address", beacon_config_item).write("beacon_address", beacon_listen_list);
                     }
+                    Paper.book("system_config").write("version", public_value.SYSTEM_CONFIG_VERSION);
+                    check_version_upgrade(false);
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);
                     editor.putString("chat_id", chat_id_editview.getText().toString().trim());
@@ -680,11 +724,11 @@ public class main_activity extends AppCompatActivity {
                 final EditText proxy_port = proxy_dialog_view.findViewById(R.id.proxy_port_editview);
                 final EditText proxy_username = proxy_dialog_view.findViewById(R.id.proxy_username_editview);
                 final EditText proxy_password = proxy_dialog_view.findViewById(R.id.proxy_password_editview);
-                proxy_config proxy_item = Paper.book("system_config").read("proxy_config", new proxy_config());
+                proxy proxy_item = Paper.book("system_config").read("proxy_config", new proxy());
                 proxy_enable.setChecked(proxy_item.enable);
                 proxy_doh_socks5.setChecked(proxy_item.dns_over_socks5);
-                proxy_host.setText(proxy_item.proxy_host);
-                proxy_port.setText(String.valueOf(proxy_item.proxy_port));
+                proxy_host.setText(proxy_item.host);
+                proxy_port.setText(String.valueOf(proxy_item.port));
                 proxy_username.setText(proxy_item.username);
                 proxy_password.setText(proxy_item.password);
                 new AlertDialog.Builder(this).setTitle(R.string.proxy_dialog_title)
@@ -696,8 +740,8 @@ public class main_activity extends AppCompatActivity {
                             doh_switch.setEnabled(!proxy_enable.isChecked());
                             proxy_item.enable = proxy_enable.isChecked();
                             proxy_item.dns_over_socks5 = proxy_doh_socks5.isChecked();
-                            proxy_item.proxy_host = proxy_host.getText().toString();
-                            proxy_item.proxy_port = Integer.parseInt(proxy_port.getText().toString());
+                            proxy_item.host = proxy_host.getText().toString();
+                            proxy_item.port = Integer.parseInt(proxy_port.getText().toString());
                             proxy_item.username = proxy_username.getText().toString();
                             proxy_item.password = proxy_password.getText().toString();
                             Paper.book("system_config").write("proxy_config", proxy_item);
