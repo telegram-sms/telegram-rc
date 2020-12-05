@@ -11,8 +11,28 @@ import java.util.List;
 import io.paperdb.Paper;
 
 public class update_to_version1 {
+    String TAG = "update_to_version1";
+
+    public void check_error() {
+
+        try {
+            Paper.book("beacon_config").read("config", new beacon());
+        } catch (Exception e) {
+            e.printStackTrace();
+            Paper.book("beacon_config").delete("config");
+            Log.i(TAG, "update_config: Unsupported type");
+        }
+        try {
+            Paper.book("system_config").read("proxy_config", new proxy());
+        } catch (Exception e) {
+            e.printStackTrace();
+            Paper.book("system_config").delete("proxy_config");
+            Log.i(TAG, "update_config: Unsupported type");
+        }
+    }
+
     public void update() {
-        Log.i("from v1", "onReceive: Start the configuration file conversion");
+        Log.i(TAG, "onReceive: Start the configuration file conversion");
         List<String> notify_listen_list = Paper.book().read("notify_listen_list", new ArrayList<>());
         ArrayList<String> black_keyword_list = Paper.book().read("black_keyword_list", new ArrayList<>());
         com.qwe7002.telegram_rc.beacon_config beacon_config_item = Paper.book().read("beacon_config", new com.qwe7002.telegram_rc.beacon_config());
@@ -42,7 +62,7 @@ public class update_to_version1 {
         if (is_convert) {
             Paper.book("system_config").delete("convert");
             Paper.book("system_config").write("proxy_config", proxy_item);
-            Paper.book("beacon_config").write("config", beacon_config_item).write("address", beacon_listen_list);
+            Paper.book("beacon_config").write("config", beacon_item).write("address", beacon_listen_list);
         } else {
             Paper.book("system_config").write("notify_listen_list", notify_listen_list).write("block_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
             Paper.book("beacon_config").write("config", beacon_item).write("address", beacon_listen_list);

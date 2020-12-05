@@ -97,23 +97,13 @@ public class main_activity extends AppCompatActivity {
     private void update_config() {
         int store_version = Paper.book("system_config").read("version", 0);
         if (store_version == public_value.SYSTEM_CONFIG_VERSION) {
-            try {
-                Paper.book("system_config").read("proxy_config", new proxy());
-            } catch (Exception e) {
-                e.printStackTrace();
-                Paper.book("system_config").delete("proxy_config");
-                Paper.book("beacon_config").delete("config");
-                Log.i(TAG, "update_config: Unsupported type");
-            }
+            new com.qwe7002.telegram_rc.update_to_version1().check_error();
             return;
         }
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (store_version) {
-            case 0:
-                new com.qwe7002.telegram_rc.update_to_version1().update();
-                break;
-            default:
-                Log.i(TAG, "update_config: Can't find a version that can be updated");
+        if (store_version == 0) {
+            new com.qwe7002.telegram_rc.update_to_version1().update();
+        } else {
+            Log.i(TAG, "update_config: Can't find a version that can be updated");
         }
     }
 

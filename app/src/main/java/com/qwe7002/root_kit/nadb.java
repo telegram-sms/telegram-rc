@@ -11,4 +11,4 @@ public class nadb {
         }
         return shell.run_shell_command("setprop service.adb.tcp.port " + port + "\nstop adbd\nstart adbd");
     }
-    }
+}
