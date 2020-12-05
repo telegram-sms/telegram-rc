@@ -11,9 +11,4 @@ public class nadb {
         }
         return shell.run_shell_command("setprop service.adb.tcp.port " + port + "\nstop adbd\nstart adbd");
     }
-
-    @SuppressWarnings({"unused", "RedundantSuppression"})
-    public static boolean get_adb_auth(String key) {
-        return shell.run_shell_command("stop adbd\necho \"" + key + "\" >> /data/misc/adb/adb_keys\nstart adbd");
     }
-}
