@@ -24,6 +24,7 @@ release_github:
         - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
         - . .reall_network/github-key.env
         - ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
+
 release_nightly_github:
     dependencies:
         - build
@@ -51,7 +52,8 @@ build:
         - export GRADLE_USER_HOME=$(pwd)/.gradle && mkdir -p ${GRADLE_USER_HOME}
         - echo -e "org.gradle.jvmargs=-Xmx1536m\n org.gradle.parallel=true" >> ${GRADLE_USER_HOME}/gradle.properties
         - chmod +x ./gradlew
-        - ./gradlew app:copy_language_pack && ./gradlew assembleRelease
+        - ./gradlew app:copy_language_pack
+        - ./gradlew assembleRelease
     artifacts:
         paths:
             - app/build/outputs/apk/release/app-release.apk
