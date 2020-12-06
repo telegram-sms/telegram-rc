@@ -51,6 +51,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.data_structure.sms_request_info;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
+import com.qwe7002.telegram_rc.static_class.remote_control_public;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -337,7 +338,7 @@ public class chat_command_service extends Service {
                         port = Integer.parseInt(msg_list[1]);
                     }
                 }
-                Paper.book().write("adb_port", port);
+                Paper.book("system_config").write("adb_port", port);
                 StringBuilder result = new StringBuilder();
                 result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
                 if (com.qwe7002.root_kit.nadb.set_nadb(port)) {
@@ -368,7 +369,7 @@ public class chat_command_service extends Service {
                         result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
                         remote_control_public.enable_tether(context);
                     } else {
-                        Paper.book().write("tether_open", false);
+                        Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                     }
                     result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
@@ -384,13 +385,13 @@ public class chat_command_service extends Service {
                 }
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 assert wifiManager != null;
-                boolean wifi_open = Paper.book().read("wifi_open", wifiManager.isWifiEnabled());
+                boolean wifi_open = Paper.book("temp").read("wifi_open", wifiManager.isWifiEnabled());
                 String result_vpn_ap;
                 if (!wifi_open) {
                     result_vpn_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
                     new Thread(() -> remote_control_public.enable_vpn_ap(wifiManager)).start();
                 } else {
-                    Paper.book().write("wifi_open", false);
+                    Paper.book("temp").write("wifi_open", false);
                     result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                 }
                 result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
@@ -509,8 +510,8 @@ public class chat_command_service extends Service {
                         Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
                     }
                 } else {
-                    String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr", null);
-                    if (dummy_ip_addr != null) {
+                    if (Paper.book("system_config").contains("dummy_ip_addr")) {
+                        String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
                         com.qwe7002.root_kit.network.add_dummy_device(dummy_ip_addr);
                     }
                 }
@@ -658,14 +659,14 @@ public class chat_command_service extends Service {
                     Paper.book("send_temp").write("message_id", public_func.get_message_id(response_string));
                 }
                 if (final_command.replace("_", "").equals("/switchap")) {
-                    if (!Paper.book().read("tether_open", false)) {
+                    if (!Paper.book("temp").read("tether_open", false)) {
                         remote_control_public.disable_tether(context);
                     }
                 }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
                     switch (final_command.replace("_", "")) {
                         case "/switchvpnap":
-                            if (!Paper.book().read("wifi_open", false)) {
+                            if (!Paper.book("temp").read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                                 assert wifiManager != null;
                                 remote_control_public.disable_vpn_ap(wifiManager);

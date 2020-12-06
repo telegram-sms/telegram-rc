@@ -48,6 +48,7 @@ import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
+import com.qwe7002.telegram_rc.static_class.remote_control_public;
 
 import java.io.IOException;
 import java.util.ArrayList;

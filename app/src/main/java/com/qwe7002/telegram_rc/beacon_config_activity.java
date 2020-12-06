@@ -27,6 +27,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.data_structure.beacon_list;
+import com.qwe7002.telegram_rc.static_class.remote_control_public;
 
 import org.altbeacon.beacon.Beacon;
 

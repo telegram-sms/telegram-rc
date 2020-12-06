@@ -30,12 +30,12 @@ public class boot_receiver extends BroadcastReceiver {
                 public_func.start_resend_service(context);
             }
             if (sharedPreferences.getBoolean("root", false)) {
-                String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr", null);
-                if (dummy_ip_addr != null) {
+                if (Paper.book("system_config").contains("dummy_ip_addr")) {
+                    String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
                     com.qwe7002.root_kit.network.add_dummy_device(dummy_ip_addr);
                 }
-                int adb_port = Paper.book().read("adb_port", -1);
-                if (adb_port != -1) {
+                if (Paper.book("system_config").contains("adb_port")) {
+                    int adb_port = Paper.book().read("adb_port");
                     com.qwe7002.root_kit.nadb.set_nadb(adb_port);
                 }
             }

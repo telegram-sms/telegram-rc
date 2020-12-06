@@ -27,6 +27,7 @@ import com.qwe7002.telegram_rc.data_structure.beacon_list;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
+import com.qwe7002.telegram_rc.static_class.remote_control_public;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -226,7 +227,7 @@ public class beacon_receiver_service extends Service {
                     }
                 }
                 if (config.use_vpn_hotspot) {
-                    wifi_is_enable_status = Paper.book().read("wifi_open", false);
+                    wifi_is_enable_status = Paper.book("temp").read("wifi_open", false);
                 } else {
                     wifi_is_enable_status = remote_control_public.is_tether_active(context);
                 }

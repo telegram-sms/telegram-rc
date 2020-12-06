@@ -1,4 +1,4 @@
-package com.qwe7002.telegram_rc;
+package com.qwe7002.telegram_rc.static_class;
 
 import android.app.AppOpsManager;
 import android.content.Context;
@@ -6,7 +6,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import com.fitc.wifihotspot.TetherManager;
-import com.qwe7002.telegram_rc.static_class.public_value;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +15,7 @@ public class remote_control_public {
 
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
-        Paper.book().write("wifi_open", false);
+        Paper.book("temp").write("wifi_open", false);
         com.qwe7002.root_kit.activity_manage.force_stop_package(public_value.VPN_HOTSPOT_PACKAGE_NAME);
         com.qwe7002.root_kit.network.wifi_set_enable(false);
         try {
@@ -64,24 +63,24 @@ public class remote_control_public {
     }
 
     public static void enable_tether(Context context) {
-        Paper.book().write("tether_open", true);
+        Paper.book("temp").write("tether_open", true);
         TetherManager manager = new TetherManager(context);
         manager.startTethering(null);
     }
 
     public static void disable_tether(Context context) {
-        Paper.book().write("tether_open", false);
+        Paper.book("temp").write("tether_open", false);
         TetherManager manager = new TetherManager(context);
         manager.stopTethering();
     }
 
     public static boolean is_tether_active(Context context) {
         TetherManager manager = new TetherManager(context);
-        Paper.book().write("tether_open", manager.isTetherActive());
+        Paper.book("temp").write("tether_open", manager.isTetherActive());
         return manager.isTetherActive();
     }
 
-    static boolean is_vpn_hotsport_exist(@NotNull Context context) {
+    public static boolean is_vpn_hotsport_exist(@NotNull Context context) {
         ApplicationInfo info;
         try {
             info = context.getPackageManager().getApplicationInfo(public_value.VPN_HOTSPOT_PACKAGE_NAME, 0);
@@ -93,7 +92,7 @@ public class remote_control_public {
         return info != null;
     }
 
-    static boolean is_data_usage_access(@NotNull Context context) {
+    public static boolean is_data_usage_access(@NotNull Context context) {
         AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
         int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
                 android.os.Process.myUid(), context.getPackageName());
