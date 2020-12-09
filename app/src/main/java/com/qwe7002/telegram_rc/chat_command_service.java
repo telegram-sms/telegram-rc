@@ -547,15 +547,6 @@ public class chat_command_service extends Service {
                         if (command.equals("/sendsms2")) {
                             slot = 1;
                         }
-                        /*switch (command) {
-                            case "/sendsms":
-                            case "/sendsms1":
-                                slot = 0;
-                                break;
-                            case "/sendsms2":
-                                slot = 1;
-                                break;
-                        }*/
                         int sub_id = public_func.get_sub_id(context, slot);
                         if (sub_id != -1) {
                             public_func.send_sms(context, msg_send_to, msg_send_content.toString(), slot, sub_id);
