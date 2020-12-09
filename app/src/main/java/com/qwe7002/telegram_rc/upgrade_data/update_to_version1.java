@@ -39,7 +39,8 @@ public class update_to_version1 {
         com.qwe7002.telegram_rc.proxy_config outdated_proxy_item;
         boolean is_convert = Paper.book("system_config").contains("convert");
         if (is_convert) {
-            outdated_proxy_item = Paper.book("system_config").read("proxy_config", new com.qwe7002.telegram_rc.proxy_config());
+
+            outdated_proxy_item = new com.qwe7002.telegram_rc.proxy_config();
         } else {
             outdated_proxy_item = Paper.book().read("proxy_config", new com.qwe7002.telegram_rc.proxy_config());
         }
