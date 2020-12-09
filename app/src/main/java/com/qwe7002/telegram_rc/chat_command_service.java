@@ -97,7 +97,7 @@ public class chat_command_service extends Service {
         long update_id = result_obj.get("update_id").getAsLong();
         offset = update_id + 1;
         if (get_id_only) {
-            Log.d(TAG, "receive_handle: get_id_only");
+            Log.i(TAG, "receive_handle: get_id_only");
             return;
         }
 
