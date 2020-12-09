@@ -39,7 +39,6 @@ public class update_to_version1 {
         com.qwe7002.telegram_rc.proxy_config outdated_proxy_item;
         boolean is_convert = Paper.book("system_config").contains("convert");
         if (is_convert) {
-
             outdated_proxy_item = new com.qwe7002.telegram_rc.proxy_config();
         } else {
             outdated_proxy_item = Paper.book().read("proxy_config", new com.qwe7002.telegram_rc.proxy_config());
@@ -62,11 +61,10 @@ public class update_to_version1 {
         if (is_convert) {
             Paper.book("system_config").delete("convert");
             Paper.book("system_config").write("proxy_config", proxy_item);
-            Paper.book("beacon_config").write("config", beacon_item).write("address", beacon_listen_list);
         } else {
             Paper.book("system_config").write("notify_listen_list", notify_listen_list).write("block_keyword_list", black_keyword_list).write("proxy_config", proxy_item);
-            Paper.book("beacon_config").write("config", beacon_item).write("address", beacon_listen_list);
         }
+        Paper.book("beacon_config").write("config", beacon_item).write("address", beacon_listen_list);
         Paper.book("system_config").write("version", 1);
         Paper.book().destroy();
     }
