@@ -48,7 +48,7 @@ public class remote_control_public {
                 e.printStackTrace();
             }
         }
-        Paper.book().write("wifi_open", true);
+        Paper.book("temp").write("wifi_open", true);
         com.qwe7002.root_kit.network.wifi_set_enable(true);
         try {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
