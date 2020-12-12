@@ -15,7 +15,9 @@ import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
+import com.qwe7002.telegram_rc.static_class.network_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.resend_func;
 import com.qwe7002.telegram_rc.static_class.sms_func;
 
 import org.jetbrains.annotations.NotNull;
@@ -81,7 +83,7 @@ public class call_receiver extends BroadcastReceiver {
                 }
                 String bot_token = sharedPreferences.getString("bot_token", "");
                 String chat_id = sharedPreferences.getString("chat_id", "");
-                String request_uri = public_func.get_url(bot_token, "sendMessage");
+                String request_uri = network_func.get_url(bot_token, "sendMessage");
                 final request_message request_body = new request_message();
                 request_body.chat_id = chat_id;
                 String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
@@ -89,7 +91,7 @@ public class call_receiver extends BroadcastReceiver {
 
                 String request_body_raw = new Gson().toJson(request_body);
                 RequestBody body = RequestBody.create(request_body_raw, const_value.JSON);
-                OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
+                OkHttpClient okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
                 Request request = new Request.Builder().url(request_uri).method("POST", body).build();
                 Call call = okhttp_client.newCall(request);
                 final String error_head = "Send missed call error:";
@@ -99,7 +101,7 @@ public class call_receiver extends BroadcastReceiver {
                         e.printStackTrace();
                         log_func.write_log(context, error_head + e.getMessage());
                         sms_func.send_fallback_sms(context, request_body.text, public_func.get_sub_id(context, slot));
-                        public_func.add_resend_loop(context, request_body.text);
+                        resend_func.add_resend_loop(context, request_body.text);
                     }
 
                     @Override
@@ -107,7 +109,7 @@ public class call_receiver extends BroadcastReceiver {
                         assert response.body() != null;
                         if (response.code() != 200) {
                             log_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
-                            public_func.add_resend_loop(context, request_body.text);
+                            resend_func.add_resend_loop(context, request_body.text);
                         } else {
                             String result = Objects.requireNonNull(response.body()).string();
                             if (!public_func.is_phone_number(incoming_number)) {

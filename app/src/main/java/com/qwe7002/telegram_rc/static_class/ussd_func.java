@@ -50,13 +50,13 @@ public class ussd_func {
 
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
-        String request_uri = public_func.get_url(bot_token, "sendMessage");
+        String request_uri = network_func.get_url(bot_token, "sendMessage");
         request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         request_body.text = context.getString(R.string.send_ussd_head) + "\n" + context.getString(R.string.ussd_code_running);
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, const_value.JSON);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
+        OkHttpClient okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         TelephonyManager final_tm = tm;

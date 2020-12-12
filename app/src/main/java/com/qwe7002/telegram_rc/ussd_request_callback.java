@@ -13,7 +13,8 @@ import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.network_func;
+import com.qwe7002.telegram_rc.static_class.resend_func;
 import com.qwe7002.telegram_rc.static_class.sms_func;
 
 import org.jetbrains.annotations.NotNull;
@@ -46,9 +47,9 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
         this.request_body = new request_message();
         this.request_body.chat_id = chat_id;
         String bot_token = sharedPreferences.getString("bot_token", "");
-        this.request_uri = public_func.get_url(bot_token, "SendMessage");
+        this.request_uri = network_func.get_url(bot_token, "SendMessage");
         if (message_id != -1) {
-            this.request_uri = public_func.get_url(bot_token, "editMessageText");
+            this.request_uri = network_func.get_url(bot_token, "editMessageText");
             this.request_body.message_id = message_id;
         }
         this.message_header = context.getString(R.string.send_ussd_head);
@@ -72,7 +73,7 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
         request_body.text = message;
         String request_body_json = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_json, const_value.JSON);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch, Paper.book("system_config").read("proxy_config", new proxy()));
+        OkHttpClient okhttp_client = network_func.get_okhttp_obj(doh_switch, Paper.book("system_config").read("proxy_config", new proxy()));
         Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request_obj);
         final String error_head = "Send USSD failed:";
@@ -82,7 +83,7 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
                 e.printStackTrace();
                 log_func.write_log(context, error_head + e.getMessage());
                 sms_func.send_fallback_sms(context, request_body.text, -1);
-                public_func.add_resend_loop(context, request_body.text);
+                resend_func.add_resend_loop(context, request_body.text);
             }
 
             @Override
@@ -91,7 +92,7 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
                     assert response.body() != null;
                     log_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
                     sms_func.send_fallback_sms(context, request_body.text, -1);
-                    public_func.add_resend_loop(context, request_body.text);
+                    resend_func.add_resend_loop(context, request_body.text);
                 }
             }
         });

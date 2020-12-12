@@ -9,11 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 import android.os.Build;
-import android.os.StrictMode;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
@@ -26,36 +22,20 @@ import com.google.gson.JsonParser;
 import com.qwe7002.telegram_rc.R;
 import com.qwe7002.telegram_rc.beacon_receiver_service;
 import com.qwe7002.telegram_rc.chat_command_service;
-import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.sms_request_info;
 import com.qwe7002.telegram_rc.notification_listener_service;
-import com.qwe7002.telegram_rc.resend_service;
 import com.qwe7002.telegram_rc.wifi_connect_status_service;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.Authenticator;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.PasswordAuthentication;
-import java.net.Proxy;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import io.paperdb.Paper;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.dnsoverhttps.DnsOverHttps;
 
 
 public class public_func {
-    private static final String TELEGRAM_API_DOMAIN = "api.telegram.org";
-    private static final String DNS_OVER_HTTP_ADDRSS = "https://cloudflare-dns.com/dns-query";
 
     public static String get_nine_key_map_convert(String input) {
         final Map<Character, Integer> nine_key_map = new HashMap<Character, Integer>() {
@@ -100,44 +80,6 @@ public class public_func {
         return result_stringbuilder.toString();
     }
 
-    public static boolean get_data_enable(@NotNull Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        assert connectivityManager != null;
-        boolean network_status = false;
-        Network[] networks = connectivityManager.getAllNetworks();
-        if (networks.length != 0) {
-            for (Network network : networks) {
-                NetworkCapabilities network_capabilities = connectivityManager.getNetworkCapabilities(network);
-                Log.d("check_network_status", "check_network_status: " + network_capabilities);
-                assert network_capabilities != null;
-                if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    network_status = true;
-                }
-            }
-        }
-        return network_status;
-    }
-
-    public static boolean check_network_status(@NotNull Context context) {
-        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        boolean network_status = false;
-        assert manager != null;
-        Network[] networks = manager.getAllNetworks();
-        if (networks.length != 0) {
-            for (Network network : networks) {
-                NetworkCapabilities network_capabilities = manager.getNetworkCapabilities(network);
-                Log.d("check_network_status", "check_network_status: " + network_capabilities);
-                assert network_capabilities != null;
-                if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
-                    network_status = true;
-                }
-            }
-        }
-        return network_status;
-    }
-
     public static long parse_string_to_long(String int_str) {
         long result = 0;
         try {
@@ -176,62 +118,6 @@ public class public_func {
         return dual_sim;
     }
 
-    @NotNull
-    @Contract(pure = true)
-    public static String get_url(String token, String func) {
-        return "https://" + TELEGRAM_API_DOMAIN + "/bot" + token + "/" + func;
-    }
-
-    @NotNull
-    public static OkHttpClient get_okhttp_obj(boolean doh_switch, proxy proxy_item) {
-        OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(15, TimeUnit.SECONDS)
-                .writeTimeout(15, TimeUnit.SECONDS)
-                .retryOnConnectionFailure(true);
-        Proxy proxy = null;
-        if (proxy_item.enable) {
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-            InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.host, proxy_item.port);
-            proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
-            Authenticator.setDefault(new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    if (getRequestingHost().equalsIgnoreCase(proxy_item.host)) {
-                        if (proxy_item.port == getRequestingPort()) {
-                            return new PasswordAuthentication(proxy_item.username, proxy_item.password.toCharArray());
-                        }
-                    }
-                    return null;
-                }
-            });
-            okhttp.proxy(proxy);
-            doh_switch = true;
-        }
-        if (doh_switch) {
-            OkHttpClient.Builder doh_http_client = new OkHttpClient.Builder().retryOnConnectionFailure(true);
-            if (proxy_item.enable && proxy_item.dns_over_socks5) {
-                doh_http_client.proxy(proxy);
-            }
-            okhttp.dns(new DnsOverHttps.Builder().client(doh_http_client.build())
-                    .url(HttpUrl.get(DNS_OVER_HTTP_ADDRSS))
-                    .bootstrapDnsHosts(get_by_ip("2606:4700:4700::1001"), get_by_ip("2606:4700:4700::1111"), get_by_ip("1.0.0.1"), get_by_ip("1.1.1.1"))
-                    .includeIPv6(true)
-                    .build());
-        }
-        return okhttp.build();
-    }
-
-    private static InetAddress get_by_ip(String host) {
-        try {
-            return InetAddress.getByName(host);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
     public static boolean is_phone_number(@NotNull String str) {
         for (int i = str.length(); --i >= 0; ) {
             char c = str.charAt(i);
@@ -263,23 +149,6 @@ public class public_func {
         return result;
     }
 
-
-    public static void add_resend_loop(Context context, String message) {
-        ArrayList<String> resend_list;
-        resend_list = Paper.book().read("resend_list", new ArrayList<>());
-        resend_list.add(message);
-        Paper.book().write("resend_list", resend_list);
-        start_resend_service(context);
-    }
-
-    public static void start_resend_service(Context context) {
-        Intent intent = new Intent(context, resend_service.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
-        }
-    }
 
     public static Long get_message_id(String result) {
         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject().get("result").getAsJsonObject();

@@ -21,7 +21,9 @@ import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
+import com.qwe7002.telegram_rc.static_class.network_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.resend_func;
 import com.qwe7002.telegram_rc.static_class.sms_func;
 import com.qwe7002.telegram_rc.static_class.ussd_func;
 
@@ -60,7 +62,7 @@ public class sms_receiver extends BroadcastReceiver {
         assert intent.getAction() != null;
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
-        String request_uri = public_func.get_url(bot_token, "sendMessage");
+        String request_uri = network_func.get_url(bot_token, "sendMessage");
 
         int slot = extras.getInt("slot", -1);
         final int sub_id = extras.getInt("subscription", -1);
@@ -133,7 +135,7 @@ public class sms_receiver extends BroadcastReceiver {
 
         }
         request_body.text = message_head + message_body_html;
-        final boolean data_enable = public_func.get_data_enable(context);
+        final boolean data_enable = network_func.get_data_enable(context);
         if (is_trusted_phone) {
             String message_command = message_body.toLowerCase().replace("_", "");
             String[] message_command_list = message_command.split("\n");
@@ -229,7 +231,7 @@ public class sms_receiver extends BroadcastReceiver {
 
 
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), const_value.JSON);
-        OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
+        OkHttpClient okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS forward failed:";
@@ -241,7 +243,7 @@ public class sms_receiver extends BroadcastReceiver {
                 e.printStackTrace();
                 log_func.write_log(context, error_head + e.getMessage());
                 sms_func.send_fallback_sms(context, final_raw_request_body_text, sub_id);
-                public_func.add_resend_loop(context, request_body.text);
+                resend_func.add_resend_loop(context, request_body.text);
                 command_handle(sharedPreferences, message_body, data_enable);
             }
 
@@ -254,7 +256,7 @@ public class sms_receiver extends BroadcastReceiver {
                     if (!final_is_flash) {
                         sms_func.send_fallback_sms(context, final_raw_request_body_text, sub_id);
                     }
-                    public_func.add_resend_loop(context, request_body.text);
+                    resend_func.add_resend_loop(context, request_body.text);
                 } else {
                     if (!public_func.is_phone_number(message_address)) {
                         log_func.write_log(context, "[" + message_address + "] Not a regular phone number.");
@@ -291,7 +293,7 @@ public class sms_receiver extends BroadcastReceiver {
     void open_data(Context context) {
         com.qwe7002.root_kit.network.data_set_enable(true);
         int loop_count = 0;
-        while (!public_func.check_network_status(context)) {
+        while (!network_func.check_network_status(context)) {
             if (loop_count >= 100) {
                 break;
             }

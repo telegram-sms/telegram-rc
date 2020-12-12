@@ -17,6 +17,7 @@ import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
+import com.qwe7002.telegram_rc.static_class.network_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 
 import org.jetbrains.annotations.NotNull;
@@ -81,13 +82,13 @@ public class resend_service extends Service {
         receiver = new stop_notify_receiver();
         registerReceiver(receiver, filter);
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-        request_uri = public_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
+        request_uri = network_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
         new Thread(() -> {
             resend_list = Paper.book().read(table_name, new ArrayList<>());
             while (true) {
-                if (public_func.check_network_status(context)) {
+                if (network_func.check_network_status(context)) {
                     ArrayList<String> send_list = resend_list;
-                    OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
+                    OkHttpClient okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
                     for (String item : send_list) {
                         network_progress_handle(item, sharedPreferences.getString("chat_id", ""), okhttp_client);
                     }

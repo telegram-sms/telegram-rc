@@ -48,6 +48,7 @@ import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
+import com.qwe7002.telegram_rc.static_class.network_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
 
@@ -282,8 +283,8 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setIndeterminate(false);
             progress_dialog.setCancelable(false);
             progress_dialog.show();
-            String request_uri = public_func.get_url(bot_token_editview.getText().toString().trim(), "getUpdates");
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
+            String request_uri = network_func.get_url(bot_token_editview.getText().toString().trim(), "getUpdates");
+            OkHttpClient okhttp_client = network_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
             okhttp_client = okhttp_client.newBuilder()
                     .readTimeout(60, TimeUnit.SECONDS)
                     .build();
@@ -420,14 +421,14 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setCancelable(false);
             progress_dialog.show();
 
-            String request_uri = public_func.get_url(bot_token_editview.getText().toString().trim(), "sendMessage");
+            String request_uri = network_func.get_url(bot_token_editview.getText().toString().trim(), "sendMessage");
             request_message request_body = new request_message();
             request_body.chat_id = chat_id_editview.getText().toString().trim();
             request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.success_connect);
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);
             RequestBody body = RequestBody.create(request_body_raw, const_value.JSON);
-            OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
+            OkHttpClient okhttp_client = network_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send message failed:";
