@@ -447,6 +447,8 @@ public class chat_command_service extends Service {
                         if (command_list.length == 2) {
                             public_func.send_ussd(context, command_list[1], sub_id);
                             return;
+                        } else {
+                            request_body.text = "Error";
                         }
                     } else {
                         Log.i(TAG, "send_ussd: No permission.");

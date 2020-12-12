@@ -49,6 +49,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
+        <service android:name=".send_ussd_service" />
         <service
             android:name=".wifi_connect_status_service"
             android:enabled="true"
