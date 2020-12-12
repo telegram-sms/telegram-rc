@@ -33,7 +33,7 @@ public class ussd_func {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static void send_ussd(Context context, String ussd_raw, int sub_id) {
         final String TAG = "send_ussd";
-        final String ussd = public_func.get_nine_key_map_convert(ussd_raw);
+        final String ussd = other_func.get_nine_key_map_convert(ussd_raw);
 
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         assert tm != null;
@@ -64,7 +64,7 @@ public class ussd_func {
             long message_id = -1L;
             try {
                 Response response = call.execute();
-                message_id = public_func.get_message_id(Objects.requireNonNull(response.body()).string());
+                message_id = other_func.get_message_id(Objects.requireNonNull(response.body()).string());
             } catch (IOException e) {
                 e.printStackTrace();
             }

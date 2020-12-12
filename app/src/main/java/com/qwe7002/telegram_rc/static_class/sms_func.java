@@ -65,7 +65,7 @@ public class sms_func {
             Log.d("send_sms", "No permission.");
             return;
         }
-        if (!public_func.is_phone_number(send_to)) {
+        if (!other_func.is_phone_number(send_to)) {
             log_func.write_log(context, "[" + send_to + "] is an illegal phone number");
             return;
         }
@@ -85,7 +85,7 @@ public class sms_func {
         } else {
             sms_manager = SmsManager.getSmsManagerForSubscriptionId(sub_id);
         }
-        String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
+        String dual_sim = other_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
         String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + send_to + "\n" + context.getString(R.string.content) + content;
         request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.sending);
         request_body.message_id = message_id;
@@ -101,7 +101,7 @@ public class sms_func {
                 throw new IOException(String.valueOf(response.code()));
             }
             if (message_id == -1) {
-                message_id = public_func.get_message_id(Objects.requireNonNull(response.body()).string());
+                message_id = other_func.get_message_id(Objects.requireNonNull(response.body()).string());
             }
         } catch (IOException e) {
             e.printStackTrace();

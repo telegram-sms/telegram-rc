@@ -49,7 +49,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.other_func;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
 
 import java.io.IOException;
@@ -152,7 +152,7 @@ public class main_activity extends AppCompatActivity {
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
 
-        if (public_func.parse_string_to_long(chat_id_save) < 0) {
+        if (other_func.parse_string_to_long(chat_id_save) < 0) {
             privacy_mode_switch.setVisibility(View.VISIBLE);
         } else {
             privacy_mode_switch.setVisibility(View.GONE);
@@ -161,12 +161,12 @@ public class main_activity extends AppCompatActivity {
         if (sharedPreferences.getBoolean("initialized", false)) {
             update_config();
             check_version_upgrade(true);
-            public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
+            other_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
 
         }
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            if (public_func.get_active_card(context) < 2) {
+            if (other_func.get_active_card(context) < 2) {
                 display_dual_sim_display_name_switch.setEnabled(false);
                 display_dual_sim_display_name_config = false;
             }
@@ -239,7 +239,7 @@ public class main_activity extends AppCompatActivity {
                 display_dual_sim_display_name_switch.setChecked(false);
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
             } else {
-                if (public_func.get_active_card(context) < 2) {
+                if (other_func.get_active_card(context) < 2) {
                     display_dual_sim_display_name_switch.setEnabled(false);
                     display_dual_sim_display_name_switch.setChecked(false);
                 }
@@ -271,7 +271,7 @@ public class main_activity extends AppCompatActivity {
                 Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show();
                 return;
             }
-            new Thread(() -> public_func.stop_all_service(context)).start();
+            new Thread(() -> other_func.stop_all_service(context)).start();
             //noinspection deprecation
             final ProgressDialog progress_dialog = new ProgressDialog(main_activity.this);
             //noinspection deprecation
@@ -486,8 +486,8 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("wifi_monitor_switch", wifi_status_switch.isChecked());
                     editor.apply();
                     new Thread(() -> {
-                        public_func.stop_all_service(context);
-                        public_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked(), wifi_status_switch.isChecked());
+                        other_func.stop_all_service(context);
+                        other_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked(), wifi_status_switch.isChecked());
                     }).start();
                     Looper.prepare();
                     Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)
@@ -506,7 +506,7 @@ public class main_activity extends AppCompatActivity {
             privacy_mode_switch.setChecked(false);
             return;
         }
-        if (public_func.parse_string_to_long(chat_id) < 0) {
+        if (other_func.parse_string_to_long(chat_id) < 0) {
             privacy_mode_switch.setVisibility(View.VISIBLE);
         } else {
             privacy_mode_switch.setVisibility(View.GONE);
@@ -521,7 +521,7 @@ public class main_activity extends AppCompatActivity {
         boolean back_status = set_permission_back;
         set_permission_back = false;
         if (back_status) {
-            if (public_func.is_notify_listener(context)) {
+            if (other_func.is_notify_listener(context)) {
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
             }
         }
@@ -577,7 +577,7 @@ public class main_activity extends AppCompatActivity {
                     if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                         TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                         assert telephony_manager != null;
-                        if (telephony_manager.getPhoneCount() <= 1 || public_func.get_active_card(context) < 2) {
+                        if (telephony_manager.getPhoneCount() <= 1 || other_func.get_active_card(context) < 2) {
                             display_dual_sim_display_name.setEnabled(false);
                             display_dual_sim_display_name.setChecked(false);
                         }
@@ -632,7 +632,7 @@ public class main_activity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (public_func.get_active_card(context) == 2 && remote_control_func.is_data_usage_access(context)) {
+            if (other_func.get_active_card(context) == 2 && remote_control_func.is_data_usage_access(context)) {
                 MenuItem set_sim_imsi = menu.findItem(R.id.set_sim_imsi);
                 set_sim_imsi.setVisible(true);
             }
@@ -681,7 +681,7 @@ public class main_activity extends AppCompatActivity {
                 startActivity(new Intent(this, beacon_config_activity.class));
                 return true;
             case R.id.set_notify_menu_item:
-                if (!public_func.is_notify_listener(context)) {
+                if (!other_func.is_notify_listener(context)) {
                     Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -739,9 +739,9 @@ public class main_activity extends AppCompatActivity {
                             proxy_item.password = proxy_password.getText().toString();
                             Paper.book("system_config").write("proxy_config", proxy_item);
                             new Thread(() -> {
-                                public_func.stop_all_service(context);
+                                other_func.stop_all_service(context);
                                 if (sharedPreferences.getBoolean("initialized", false)) {
-                                    public_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
+                                    other_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
                                 }
                             }).start();
                         })

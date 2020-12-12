@@ -20,7 +20,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.other_func;
 import com.qwe7002.telegram_rc.static_class.resend_func;
 
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +51,7 @@ public class notification_listener_service extends NotificationListenerService {
         context = getApplicationContext();
         Paper.init(context);
         sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
-        Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.Notification_Listener_title));
+        Notification notification = other_func.get_notification_obj(getApplicationContext(), getString(R.string.Notification_Listener_title));
         startForeground(const_value.NOTIFICATION_LISTENER_SERVICE_NOTIFY_ID, notification);
 
     }

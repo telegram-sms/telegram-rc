@@ -52,7 +52,7 @@ import com.qwe7002.telegram_rc.data_structure.sms_request_info;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.other_func;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
 import com.qwe7002.telegram_rc.static_class.sms_func;
 import com.qwe7002.telegram_rc.static_class.ussd_func;
@@ -116,7 +116,7 @@ public class chat_command_service extends Service {
             cal.set(Calendar.SECOND, 0);
             long from = cal.getTimeInMillis();
             try {
-                switch (public_func.get_active_card(context)) {
+                switch (other_func.get_active_card(context)) {
                     case 1:
                         String sub_id = null;
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -151,7 +151,7 @@ public class chat_command_service extends Service {
                             TelephonyManager telephonyManager = (TelephonyManager) context
                                     .getSystemService(Context.TELEPHONY_SERVICE);
                             assert telephonyManager != null;
-                            telephonyManager = telephonyManager.createForSubscriptionId(public_func.get_sub_id(context, 1));
+                            telephonyManager = telephonyManager.createForSubscriptionId(other_func.get_sub_id(context, 1));
                             String sim2_imsi = telephonyManager.getSubscriberId();
                             sim2_result_usage = get_data_usage(context, sim2_imsi, from);
                         }
@@ -201,7 +201,7 @@ public class chat_command_service extends Service {
             if (!callback_data.equals(CALLBACK_DATA_VALUE.SEND)) {
                 set_sms_send_status_standby();
                 String request_uri = network_func.get_url(bot_token, "editMessageText");
-                String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
+                String dual_sim = other_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
                 String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + to + "\n" + context.getString(R.string.content) + content;
                 request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.cancel_button);
                 request_body.message_id = message_id;
@@ -223,10 +223,10 @@ public class chat_command_service extends Service {
                 return;
             }
             int sub_id = -1;
-            if (public_func.get_active_card(context) == 1) {
+            if (other_func.get_active_card(context) == 1) {
                 slot = -1;
             } else {
-                sub_id = public_func.get_sub_id(context, slot);
+                sub_id = other_func.get_sub_id(context, slot);
             }
             sms_func.send_sms(context, to, content, slot, sub_id, message_id);
             set_sms_send_status_standby();
@@ -312,7 +312,7 @@ public class chat_command_service extends Service {
             case "/commandlist":
                 String sms_command = "\n" + getString(R.string.sendsms);
                 String data_switch_command = "";
-                if (public_func.get_active_card(context) == 2) {
+                if (other_func.get_active_card(context) == 2) {
                     sms_command = "\n" + getString(R.string.sendsms_dual);
                     if (sharedPreferences.getBoolean("root", false)) {
                         data_switch_command = "\n" + getString(R.string.set_data_card);
@@ -324,7 +324,7 @@ public class chat_command_service extends Service {
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         ussd_command = "\n" + getString(R.string.send_ussd_command);
-                        if (public_func.get_active_card(context) == 2) {
+                        if (other_func.get_active_card(context) == 2) {
                             ussd_command = "\n" + getString(R.string.send_ussd_dual_command);
                         }
                     }
@@ -361,9 +361,9 @@ public class chat_command_service extends Service {
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                     network_stats = get_data_stats(context);
-                    card_info = "\nSIM: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0));
-                    if (public_func.get_active_card(context) == 2) {
-                        card_info = "\n" + getString(R.string.current_data_card) + ": SIM" + public_func.get_data_sim_id(context) + "\nSIM1: " + public_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 0)) + "\nSIM2: " + public_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, public_func.get_sub_id(context, 1));
+                    card_info = "\nSIM: " + other_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 0));
+                    if (other_func.get_active_card(context) == 2) {
+                        card_info = "\n" + getString(R.string.current_data_card) + ": SIM" + other_func.get_data_sim_id(context) + "\nSIM1: " + other_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 0)) + "\nSIM2: " + other_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 1));
                     }
                 }
                 String spam_count = "";
@@ -476,19 +476,19 @@ public class chat_command_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
-                if (public_func.get_active_card(context) == 2) {
+                if (other_func.get_active_card(context) == 2) {
                     String[] command_list_data = request_msg.split(" ");
                     int slot;
                     if (command_list_data.length == 2) {
                         slot = Integer.parseInt(command_list_data[1]) - 1;
                     } else {
                         slot = 0;
-                        if (public_func.get_data_sim_id(context).equals("1")) {
+                        if (other_func.get_data_sim_id(context).equals("1")) {
                             slot = 1;
                         }
                     }
-                    Paper.book("temp").write("sub_id", public_func.get_sub_id(context, slot));
-                    request_body.text = getString(R.string.system_message_head) + "\nCurrent data card: SIM" + public_func.get_data_sim_id(context) + "\nSet data card: SIM" + (slot + 1);
+                    Paper.book("temp").write("sub_id", other_func.get_sub_id(context, slot));
+                    request_body.text = getString(R.string.system_message_head) + "\nCurrent data card: SIM" + other_func.get_data_sim_id(context) + "\nSet data card: SIM" + (slot + 1);
                 }
                 break;
             case "/switchdata":
@@ -511,9 +511,9 @@ public class chat_command_service extends Service {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                         int sub_id = -1;
-                        if (public_func.get_active_card(context) == 2) {
+                        if (other_func.get_active_card(context) == 2) {
                             if (command.equals("/sendussd2")) {
-                                sub_id = public_func.get_sub_id(context, 1);
+                                sub_id = other_func.get_sub_id(context, 1);
                             }
                         }
                         String[] command_list = request_msg.split(" ");
@@ -605,8 +605,8 @@ public class chat_command_service extends Service {
             case "/sendsms2":
                 String[] msg_send_list = request_msg.split("\n");
                 if (msg_send_list.length > 2) {
-                    String msg_send_to = public_func.get_send_phone_number(msg_send_list[1]);
-                    if (public_func.is_phone_number(msg_send_to)) {
+                    String msg_send_to = other_func.get_send_phone_number(msg_send_list[1]);
+                    if (other_func.is_phone_number(msg_send_to)) {
                         StringBuilder msg_send_content = new StringBuilder();
                         for (int i = 2; i < msg_send_list.length; ++i) {
                             if (msg_send_list.length != 3 && i != 2) {
@@ -614,18 +614,18 @@ public class chat_command_service extends Service {
                             }
                             msg_send_content.append(msg_send_list[i]);
                         }
-                        if (public_func.get_active_card(context) == 1) {
+                        if (other_func.get_active_card(context) == 1) {
                             sms_func.send_sms(context, msg_send_to, msg_send_content.toString(), -1, -1);
                             return;
                         }
                         int send_slot = -1;
-                        if (public_func.get_active_card(context) > 1) {
+                        if (other_func.get_active_card(context) > 1) {
                             send_slot = 0;
                             if (command.equals("/sendsms2")) {
                                 send_slot = 1;
                             }
                         }
-                        int sub_id = public_func.get_sub_id(context, send_slot);
+                        int sub_id = other_func.get_sub_id(context, send_slot);
                         if (sub_id != -1) {
                             sms_func.send_sms(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
                             return;
@@ -635,7 +635,7 @@ public class chat_command_service extends Service {
                     has_command = false;
                     send_sms_next_status = SEND_SMS_STATUS.PHONE_INPUT_STATUS;
                     int send_slot = -1;
-                    if (public_func.get_active_card(context) > 1) {
+                    if (other_func.get_active_card(context) > 1) {
                         send_slot = 0;
                         if (command.equals("/sendsms2")) {
                             send_slot = 1;
@@ -673,8 +673,8 @@ public class chat_command_service extends Service {
                     result_send = getString(R.string.enter_number);
                     break;
                 case SEND_SMS_STATUS.MESSAGE_INPUT_STATUS:
-                    String temp_to = public_func.get_send_phone_number(request_msg);
-                    if (public_func.is_phone_number(temp_to)) {
+                    String temp_to = other_func.get_send_phone_number(request_msg);
+                    if (other_func.is_phone_number(temp_to)) {
                         //send_to_temp = temp_to;
                         Paper.book("send_temp").write("to", temp_to);
                         result_send = getString(R.string.enter_content);
@@ -723,7 +723,7 @@ public class chat_command_service extends Service {
                     return;
                 }
                 if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
-                    Paper.book("send_temp").write("message_id", public_func.get_message_id(response_string));
+                    Paper.book("send_temp").write("message_id", other_func.get_message_id(response_string));
                 }
                 if (final_command.replace("_", "").equals("/switchap")) {
                     if (!Paper.book("temp").read("tether_open", false)) {
@@ -766,7 +766,7 @@ public class chat_command_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(context, getString(R.string.chat_command_service_name));
+        Notification notification = other_func.get_notification_obj(context, getString(R.string.chat_command_service_name));
         startForeground(const_value.CHAT_COMMAND_NOTIFY_ID, notification);
         return START_STICKY;
     }
@@ -1149,7 +1149,7 @@ public class chat_command_service extends Service {
         @Override
         public void run() {
             Log.d(TAG, "run: thread main start");
-            if (public_func.parse_string_to_long(chat_id) < 0) {
+            if (other_func.parse_string_to_long(chat_id) < 0) {
                 bot_username = Paper.book().read("bot_username", null);
                 if (bot_username == null) {
                     while (!get_me()) {
@@ -1246,7 +1246,7 @@ public class chat_command_service extends Service {
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
                         sms_func.send_fallback_sms(context, result_message, -1);
-                        public_func.stop_all_service(context);
+                        other_func.stop_all_service(context);
                         break;
                     }
                 }

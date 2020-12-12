@@ -18,7 +18,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.other_func;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +43,7 @@ public class resend_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         resend_list = Paper.book().read(table_name, new ArrayList<>());
-        Notification notification = public_func.get_notification_obj(context, getString(R.string.failed_resend));
+        Notification notification = other_func.get_notification_obj(context, getString(R.string.failed_resend));
         startForeground(const_value.RESEND_SERVICE_NOTIFY_ID, notification);
         return START_NOT_STICKY;
     }

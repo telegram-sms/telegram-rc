@@ -27,7 +27,7 @@ import com.qwe7002.telegram_rc.data_structure.beacon_list;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.other_func;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
 import com.qwe7002.telegram_rc.static_class.resend_func;
 
@@ -170,7 +170,7 @@ public class beacon_receiver_service extends Service {
         // Detect the URL frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
-        Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
+        Notification notification = other_func.get_notification_obj(context, getString(R.string.beacon_receiver));
         beacon_manager.enableForegroundServiceScanning(notification, const_value.BEACON_SERVICE_NOTIFY_ID);
         startForeground(const_value.BEACON_SERVICE_NOTIFY_ID, notification);
         beacon_manager.setForegroundScanPeriod(config.delay);

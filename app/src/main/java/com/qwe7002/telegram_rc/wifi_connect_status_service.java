@@ -21,7 +21,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.other_func;
 import com.qwe7002.telegram_rc.static_class.resend_func;
 
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class wifi_connect_status_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(context, getString(R.string.wifi_status));
+        Notification notification = other_func.get_notification_obj(context, getString(R.string.wifi_status));
         startForeground(const_value.WIFI_CONNECT_STATUS_NOTIFY_ID, notification);
         return START_STICKY;
     }

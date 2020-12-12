@@ -16,7 +16,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.other_func;
 import com.qwe7002.telegram_rc.static_class.resend_func;
 import com.qwe7002.telegram_rc.static_class.sms_func;
 
@@ -86,7 +86,7 @@ public class call_receiver extends BroadcastReceiver {
                 String request_uri = network_func.get_url(bot_token, "sendMessage");
                 final request_message request_body = new request_message();
                 request_body.chat_id = chat_id;
-                String dual_sim = public_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
+                String dual_sim = other_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
                 request_body.text = "[" + dual_sim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + incoming_number;
 
                 String request_body_raw = new Gson().toJson(request_body);
@@ -100,7 +100,7 @@ public class call_receiver extends BroadcastReceiver {
                     public void onFailure(@NonNull Call call, @NonNull IOException e) {
                         e.printStackTrace();
                         log_func.write_log(context, error_head + e.getMessage());
-                        sms_func.send_fallback_sms(context, request_body.text, public_func.get_sub_id(context, slot));
+                        sms_func.send_fallback_sms(context, request_body.text, other_func.get_sub_id(context, slot));
                         resend_func.add_resend_loop(context, request_body.text);
                     }
 
@@ -112,11 +112,11 @@ public class call_receiver extends BroadcastReceiver {
                             resend_func.add_resend_loop(context, request_body.text);
                         } else {
                             String result = Objects.requireNonNull(response.body()).string();
-                            if (!public_func.is_phone_number(incoming_number)) {
+                            if (!other_func.is_phone_number(incoming_number)) {
                                 log_func.write_log(context, "[" + incoming_number + "] Not a regular phone number.");
                                 return;
                             }
-                            public_func.add_message_list(public_func.get_message_id(result), incoming_number, slot);
+                            other_func.add_message_list(other_func.get_message_id(result), incoming_number, slot);
                         }
                     }
                 });

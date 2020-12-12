@@ -20,7 +20,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.public_func;
+import com.qwe7002.telegram_rc.static_class.other_func;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
 import com.qwe7002.telegram_rc.static_class.resend_func;
 import com.qwe7002.telegram_rc.static_class.sms_func;
@@ -49,7 +49,7 @@ public class battery_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = public_func.get_notification_obj(context, getString(R.string.battery_monitoring_notify));
+        Notification notification = other_func.get_notification_obj(context, getString(R.string.battery_monitoring_notify));
         startForeground(const_value.BATTERY_NOTIFY_ID, notification);
         return START_STICKY;
     }
@@ -178,8 +178,8 @@ public class battery_service extends Service {
                     }
                     if (response.code() == 200) {
                         Log.d(TAG, "onResponse: " + result);
-                        Log.d(TAG, "onResponse: " + public_func.get_message_id(result));
-                        last_receive_message_id = public_func.get_message_id(result);
+                        Log.d(TAG, "onResponse: " + other_func.get_message_id(result));
+                        last_receive_message_id = other_func.get_message_id(result);
                     }
                 }
             });
