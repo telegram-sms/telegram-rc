@@ -37,13 +37,13 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class battery_service extends Service {
-    static String bot_token;
-    static String chat_id;
-    static boolean doh_switch;
+    private static String bot_token;
+    private static String chat_id;
+    private static boolean doh_switch;
     private Context context;
     private battery_receiver battery_receiver = null;
-    static long last_receive_time = 0;
-    static long last_receive_message_id = -1;
+    private static long last_receive_time = 0;
+    private static long last_receive_message_id = -1;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {

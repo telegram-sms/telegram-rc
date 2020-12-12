@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -31,18 +32,14 @@ import okhttp3.Response;
 public class ussd_func {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static void send_ussd(Context context, String ussd_raw, int sub_id) {
-        //Intent send_ussd_service = new Intent(context, com.qwe7002.telegram_rc.send_ussd_service.class);
-        //send_ussd_service.putExtra("ussd", ussd);
-        //send_ussd_service.putExtra("sub_id", sub_id);
-        //context.startForegroundService(send_ussd_service);
         final String TAG = "send_ussd";
         final String ussd = public_func.get_nine_key_map_convert(ussd_raw);
 
-        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        assert telephonyManager != null;
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        assert tm != null;
 
         if (sub_id != -1) {
-            telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
+            tm = tm.createForSubscriptionId(sub_id);
         }
 
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
@@ -62,7 +59,7 @@ public class ussd_func {
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
-        TelephonyManager finalTelephonyManager = telephonyManager;
+        TelephonyManager final_tm = tm;
         new Thread(() -> {
             long message_id = -1L;
             try {
@@ -72,7 +69,9 @@ public class ussd_func {
                 e.printStackTrace();
             }
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                finalTelephonyManager.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, message_id), new Handler());
+                Looper.prepare();
+                final_tm.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, message_id), new Handler());
+                Looper.loop();
             }
         }).start();
     }
