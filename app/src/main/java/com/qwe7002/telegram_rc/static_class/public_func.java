@@ -303,7 +303,7 @@ public class public_func {
     }
 
     public static void stop_all_service(Context context) {
-        Intent intent = new Intent(public_value.BROADCAST_STOP_SERVICE);
+        Intent intent = new Intent(const_value.BROADCAST_STOP_SERVICE);
         context.sendBroadcast(intent);
         try {
             Thread.sleep(1000);

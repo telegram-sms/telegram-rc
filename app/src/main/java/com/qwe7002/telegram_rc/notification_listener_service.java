@@ -17,9 +17,9 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
-import com.qwe7002.telegram_rc.static_class.public_value;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,7 +50,7 @@ public class notification_listener_service extends NotificationListenerService {
         Paper.init(context);
         sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         Notification notification = public_func.get_notification_obj(getApplicationContext(), getString(R.string.Notification_Listener_title));
-        startForeground(public_value.NOTIFICATION_LISTENER_SERVICE_NOTIFY_ID, notification);
+        startForeground(const_value.NOTIFICATION_LISTENER_SERVICE_NOTIFY_ID, notification);
 
     }
 
@@ -100,7 +100,7 @@ public class notification_listener_service extends NotificationListenerService {
         request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         request_body.text = getString(R.string.receive_notification_title) + "\n" + getString(R.string.app_name_title) + app_name + "\n" + getString(R.string.title) + title + "\n" + getString(R.string.content) + content;
-        RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_value.JSON);
+        RequestBody body = RequestBody.create(new Gson().toJson(request_body), const_value.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);

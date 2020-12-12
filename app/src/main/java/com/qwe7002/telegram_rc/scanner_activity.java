@@ -13,7 +13,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.zxing.Result;
-import com.qwe7002.telegram_rc.static_class.public_value;
+import com.qwe7002.telegram_rc.static_class.const_value;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +54,7 @@ public class scanner_activity extends Activity implements ZXingScannerView.Resul
         Log.d(TAG, "format: " + rawResult.getBarcodeFormat().toString() + " content: " + rawResult.getText());
         if (json_validate(rawResult.getText())) {
             Intent intent = new Intent().putExtra("config_json", rawResult.getText());
-            setResult(public_value.RESULT_CONFIG_JSON, intent);
+            setResult(const_value.RESULT_CONFIG_JSON, intent);
         }
         scanner_view.stopCamera();
         finish();

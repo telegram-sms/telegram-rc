@@ -46,9 +46,9 @@ import com.qwe7002.root_kit.shell;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
-import com.qwe7002.telegram_rc.static_class.public_value;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
 
 import java.io.IOException;
@@ -98,7 +98,7 @@ public class main_activity extends AppCompatActivity {
 
     private void update_config() {
         int store_version = Paper.book("system_config").read("version", 0);
-        if (store_version == public_value.SYSTEM_CONFIG_VERSION) {
+        if (store_version == const_value.SYSTEM_CONFIG_VERSION) {
             new com.qwe7002.telegram_rc.update_to_version1().check_error();
             return;
         }
@@ -289,7 +289,7 @@ public class main_activity extends AppCompatActivity {
                     .build();
             polling_json request_body = new polling_json();
             request_body.timeout = 60;
-            RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_value.JSON);
+            RequestBody body = RequestBody.create(new Gson().toJson(request_body), const_value.JSON);
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             progress_dialog.setOnKeyListener((dialogInterface, i, keyEvent) -> {
@@ -426,7 +426,7 @@ public class main_activity extends AppCompatActivity {
             request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.success_connect);
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);
-            RequestBody body = RequestBody.create(request_body_raw, public_value.JSON);
+            RequestBody body = RequestBody.create(request_body_raw, const_value.JSON);
             OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
@@ -463,7 +463,7 @@ public class main_activity extends AppCompatActivity {
                         Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
                         Paper.book().destroy();
                     }
-                    Paper.book("system_config").write("version", public_value.SYSTEM_CONFIG_VERSION);
+                    Paper.book("system_config").write("version", const_value.SYSTEM_CONFIG_VERSION);
                     check_version_upgrade(false);
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);
@@ -589,7 +589,7 @@ public class main_activity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
-            if (resultCode == public_value.RESULT_CONFIG_JSON) {
+            if (resultCode == const_value.RESULT_CONFIG_JSON) {
                 JsonObject json_config = JsonParser.parseString(Objects.requireNonNull(data.getStringExtra("config_json"))).getAsJsonObject();
                 ((EditText) findViewById(R.id.bot_token_editview)).setText(json_config.get("bot_token").getAsString());
                 ((EditText) findViewById(R.id.chat_id_editview)).setText(json_config.get("chat_id").getAsString());

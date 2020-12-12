@@ -18,9 +18,9 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
-import com.qwe7002.telegram_rc.static_class.public_value;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -45,7 +45,7 @@ public class wifi_connect_status_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = public_func.get_notification_obj(context, getString(R.string.wifi_status));
-        startForeground(public_value.WIFI_CONNECT_STATUS_NOTIFY_ID, notification);
+        startForeground(const_value.WIFI_CONNECT_STATUS_NOTIFY_ID, notification);
         return START_STICKY;
     }
 
@@ -57,7 +57,7 @@ public class wifi_connect_status_service extends Service {
         wifi_status_change_receiver = new wifi_status_change_receiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-        filter.addAction(public_value.BROADCAST_STOP_SERVICE);
+        filter.addAction(const_value.BROADCAST_STOP_SERVICE);
         registerReceiver(wifi_status_change_receiver, filter);
         final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         if (!sharedPreferences.getBoolean("initialized", false)) {
@@ -87,7 +87,7 @@ public class wifi_connect_status_service extends Service {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(public_value.BROADCAST_STOP_SERVICE)) {
+            if (intent.getAction().equals(const_value.BROADCAST_STOP_SERVICE)) {
                 Log.i(TAG, "Received stop signal, quitting now...");
                 stopSelf();
                 android.os.Process.killProcess(android.os.Process.myPid());
@@ -107,7 +107,7 @@ public class wifi_connect_status_service extends Service {
                 request_body.chat_id = chat_id;
                 request_body.text = message;
                 String request_body_json = new Gson().toJson(request_body);
-                RequestBody body = RequestBody.create(request_body_json, public_value.JSON);
+                RequestBody body = RequestBody.create(request_body_json, const_value.JSON);
                 OkHttpClient okhttp_client = public_func.get_okhttp_obj(doh_switch, Paper.book("system_config").read("proxy_config", new proxy()));
                 Request request = new Request.Builder().url(request_uri).method("POST", body).build();
                 Call call = okhttp_client.newCall(request);

@@ -19,9 +19,9 @@ import com.github.sumimakito.codeauxlib.CodeauxLibPortable;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
-import com.qwe7002.telegram_rc.static_class.public_value;
 import com.qwe7002.telegram_rc.static_class.sms_func;
 import com.qwe7002.telegram_rc.static_class.ussd_func;
 
@@ -228,7 +228,7 @@ public class sms_receiver extends BroadcastReceiver {
         }
 
 
-        RequestBody body = RequestBody.create(new Gson().toJson(request_body), public_value.JSON);
+        RequestBody body = RequestBody.create(new Gson().toJson(request_body), const_value.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);

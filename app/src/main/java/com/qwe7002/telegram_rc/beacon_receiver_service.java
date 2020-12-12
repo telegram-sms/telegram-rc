@@ -25,8 +25,8 @@ import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.beacon_list;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.public_func;
-import com.qwe7002.telegram_rc.static_class.public_value;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
 
 import org.altbeacon.beacon.Beacon;
@@ -169,8 +169,8 @@ public class beacon_receiver_service extends Service {
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
         Notification notification = public_func.get_notification_obj(context, getString(R.string.beacon_receiver));
-        beacon_manager.enableForegroundServiceScanning(notification, public_value.BEACON_SERVICE_NOTIFY_ID);
-        startForeground(public_value.BEACON_SERVICE_NOTIFY_ID, notification);
+        beacon_manager.enableForegroundServiceScanning(notification, const_value.BEACON_SERVICE_NOTIFY_ID);
+        startForeground(const_value.BEACON_SERVICE_NOTIFY_ID, notification);
         beacon_manager.setForegroundScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(1000);
         beacon_manager.setBackgroundScanPeriod(config.delay);
@@ -193,7 +193,7 @@ public class beacon_receiver_service extends Service {
         request_body.chat_id = chat_id;
         request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context, true);
         String request_body_json = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_json, public_value.JSON);
+        RequestBody body = RequestBody.create(request_body_json, const_value.JSON);
         Request request_obj = new Request.Builder().url(request_url).method("POST", body).build();
         Call call = okhttp_client.newCall(request_obj);
         call.enqueue(new Callback() {

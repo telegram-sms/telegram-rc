@@ -13,9 +13,9 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
-import com.qwe7002.telegram_rc.static_class.public_value;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -81,7 +81,7 @@ public class sim_status_receiver extends BroadcastReceiver {
         request_body.chat_id = chat_id;
         request_body.text = message;
         String request_body_json = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_json, public_value.JSON);
+        RequestBody body = RequestBody.create(request_body_json, const_value.JSON);
         OkHttpClient okhttp_client = public_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);

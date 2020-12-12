@@ -35,7 +35,7 @@ public class log_func {
 
     public static String read_log(@NotNull Context context, int line) {
         String result = context.getString(R.string.no_logs);
-        String TAG = "read_file_last_line";
+        String TAG = "read_log";
         StringBuilder builder = new StringBuilder();
         FileInputStream file_stream = null;
         FileChannel channel = null;

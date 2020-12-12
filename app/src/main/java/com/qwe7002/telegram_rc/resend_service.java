@@ -15,9 +15,9 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.const_value;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
-import com.qwe7002.telegram_rc.static_class.public_value;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +43,7 @@ public class resend_service extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         resend_list = Paper.book().read(table_name, new ArrayList<>());
         Notification notification = public_func.get_notification_obj(context, getString(R.string.failed_resend));
-        startForeground(public_value.RESEND_SERVICE_NOTIFY_ID, notification);
+        startForeground(const_value.RESEND_SERVICE_NOTIFY_ID, notification);
         return START_NOT_STICKY;
     }
 
@@ -55,7 +55,7 @@ public class resend_service extends Service {
             request_body.parse_mode = "html";
         }
         String request_body_json = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_json, public_value.JSON);
+        RequestBody body = RequestBody.create(request_body_json, const_value.JSON);
         Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request_obj);
         try {
@@ -77,7 +77,7 @@ public class resend_service extends Service {
         context = getApplicationContext();
         Paper.init(context);
         IntentFilter filter = new IntentFilter();
-        filter.addAction(public_value.BROADCAST_STOP_SERVICE);
+        filter.addAction(const_value.BROADCAST_STOP_SERVICE);
         receiver = new stop_notify_receiver();
         registerReceiver(receiver, filter);
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
@@ -124,7 +124,7 @@ public class resend_service extends Service {
     class stop_notify_receiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, @NotNull Intent intent) {
-            if (Objects.equals(intent.getAction(), public_value.BROADCAST_STOP_SERVICE)) {
+            if (Objects.equals(intent.getAction(), const_value.BROADCAST_STOP_SERVICE)) {
                 Log.i("resend_loop", "Received stop signal, quitting now...");
                 stopSelf();
             }
