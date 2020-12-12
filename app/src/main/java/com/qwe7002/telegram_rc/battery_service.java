@@ -17,9 +17,11 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.log_function;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 import com.qwe7002.telegram_rc.static_class.remote_control_public;
+import com.qwe7002.telegram_rc.static_class.sms_function;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -152,10 +154,10 @@ public class battery_service extends Service {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     e.printStackTrace();
-                    public_func.write_log(context, error_head + e.getMessage());
+                    log_function.write_log(context, error_head + e.getMessage());
                     last_receive_message_id = -1;
                     if (action.equals(Intent.ACTION_BATTERY_LOW)) {
-                        public_func.send_fallback_sms(context, request_body.text, -1);
+                        sms_function.send_fallback_sms(context, request_body.text, -1);
                         public_func.add_resend_loop(context, request_body.text);
                     }
                 }
@@ -165,10 +167,10 @@ public class battery_service extends Service {
                     String result = Objects.requireNonNull(response.body()).string();
                     if (response.code() != 200) {
                         assert response.body() != null;
-                        public_func.write_log(context, error_head + response.code() + " " + result);
+                        log_function.write_log(context, error_head + response.code() + " " + result);
                         last_receive_message_id = -1;
                         if (action.equals(Intent.ACTION_BATTERY_LOW)) {
-                            public_func.send_fallback_sms(context, request_body.text, -1);
+                            sms_function.send_fallback_sms(context, request_body.text, -1);
                             public_func.add_resend_loop(context, request_body.text);
                         }
                     }

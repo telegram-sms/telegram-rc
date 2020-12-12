@@ -19,8 +19,11 @@ import com.github.sumimakito.codeauxlib.CodeauxLibPortable;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.log_function;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
+import com.qwe7002.telegram_rc.static_class.sms_function;
+import com.qwe7002.telegram_rc.static_class.ussd_function;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -82,7 +85,7 @@ public class sms_receiver extends BroadcastReceiver {
             messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
         }
         if (messages.length == 0) {
-            public_func.write_log(context, "Message length is equal to 0.");
+            log_function.write_log(context, "Message length is equal to 0.");
             return;
         }
 
@@ -125,7 +128,7 @@ public class sms_receiver extends BroadcastReceiver {
                     is_verification_code = true;
                 }
             } else {
-                public_func.write_log(context, "SMS exceeds 140 characters, no verification code is recognized.");
+                log_function.write_log(context, "SMS exceeds 140 characters, no verification code is recognized.");
             }
 
         }
@@ -159,7 +162,7 @@ public class sms_receiver extends BroadcastReceiver {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                                 if (message_command_list.length == 2) {
-                                    public_func.send_ussd(context, message_command_list[1], sub_id);
+                                    ussd_function.send_ussd(context, message_command_list[1], sub_id);
                                     return;
                                 }
                             }
@@ -191,7 +194,7 @@ public class sms_receiver extends BroadcastReceiver {
                                 }
                                 msg_send_content.append(message_command_list[i]);
                             }
-                            new Thread(() -> public_func.send_sms(context, msg_send_to, msg_send_content.toString(), final_slot, sub_id)).start();
+                            new Thread(() -> sms_function.send_sms(context, msg_send_to, msg_send_content.toString(), final_slot, sub_id)).start();
                             return;
                         }
                         break;
@@ -236,8 +239,8 @@ public class sms_receiver extends BroadcastReceiver {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                public_func.write_log(context, error_head + e.getMessage());
-                public_func.send_fallback_sms(context, final_raw_request_body_text, sub_id);
+                log_function.write_log(context, error_head + e.getMessage());
+                sms_function.send_fallback_sms(context, final_raw_request_body_text, sub_id);
                 public_func.add_resend_loop(context, request_body.text);
                 command_handle(sharedPreferences, message_body, data_enable);
             }
@@ -247,14 +250,14 @@ public class sms_receiver extends BroadcastReceiver {
                 assert response.body() != null;
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
-                    public_func.write_log(context, error_head + response.code() + " " + result);
+                    log_function.write_log(context, error_head + response.code() + " " + result);
                     if (!final_is_flash) {
-                        public_func.send_fallback_sms(context, final_raw_request_body_text, sub_id);
+                        sms_function.send_fallback_sms(context, final_raw_request_body_text, sub_id);
                     }
                     public_func.add_resend_loop(context, request_body.text);
                 } else {
                     if (!public_func.is_phone_number(message_address)) {
-                        public_func.write_log(context, "[" + message_address + "] Not a regular phone number.");
+                        log_function.write_log(context, "[" + message_address + "] Not a regular phone number.");
                         return;
                     }
                     public_func.add_message_list(public_func.get_message_id(result), message_address, final_slot);

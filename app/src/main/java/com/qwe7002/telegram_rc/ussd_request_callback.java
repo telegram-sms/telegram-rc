@@ -11,8 +11,10 @@ import androidx.annotation.RequiresApi;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.static_class.log_function;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
+import com.qwe7002.telegram_rc.static_class.sms_function;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +30,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
-class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
+public class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
 
     private final Context context;
     private final boolean doh_switch;
@@ -36,7 +38,7 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
     private final String message_header;
     private final request_message request_body;
 
-    ussd_request_callback(Context context, @NotNull SharedPreferences sharedPreferences, long message_id) {
+    public ussd_request_callback(Context context, @NotNull SharedPreferences sharedPreferences, long message_id) {
         this.context = context;
         Paper.init(context);
         String chat_id = sharedPreferences.getString("chat_id", "");
@@ -78,8 +80,8 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                public_func.write_log(context, error_head + e.getMessage());
-                public_func.send_fallback_sms(context, request_body.text, -1);
+                log_function.write_log(context, error_head + e.getMessage());
+                sms_function.send_fallback_sms(context, request_body.text, -1);
                 public_func.add_resend_loop(context, request_body.text);
             }
 
@@ -87,8 +89,8 @@ class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     assert response.body() != null;
-                    public_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
-                    public_func.send_fallback_sms(context, request_body.text, -1);
+                    log_function.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                    sms_function.send_fallback_sms(context, request_body.text, -1);
                     public_func.add_resend_loop(context, request_body.text);
                 }
             }

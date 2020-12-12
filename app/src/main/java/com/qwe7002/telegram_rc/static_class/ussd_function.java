@@ -1,31 +1,22 @@
-package com.qwe7002.telegram_rc;
+package com.qwe7002.telegram_rc.static_class;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.Service;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
-import android.os.IBinder;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
+import com.qwe7002.telegram_rc.R;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.public_func;
-import com.qwe7002.telegram_rc.static_class.public_value;
-
-import org.jetbrains.annotations.NotNull;
+import com.qwe7002.telegram_rc.ussd_request_callback;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -37,38 +28,15 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-@RequiresApi(api = Build.VERSION_CODES.O)
-public class send_ussd_service extends Service {
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    @Override
-    public int onStartCommand(@NotNull Intent intent, int flags, int startId) {
-        String TAG = "send_ussd_service";
-        Context context = getApplicationContext();
-        Paper.init(context);
-        String notification_name = context.getString(R.string.ussd_code_running);
-        Notification.Builder notification;
-        NotificationChannel channel = new NotificationChannel(notification_name, notification_name,
-                NotificationManager.IMPORTANCE_MIN);
-        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        assert manager != null;
-        manager.createNotificationChannel(channel);
-        notification = new Notification.Builder(context, notification_name).setAutoCancel(false)
-                .setSmallIcon(R.drawable.ic_stat)
-                .setOngoing(true)
-                .setTicker(context.getString(R.string.app_name))
-                .setContentTitle(context.getString(R.string.app_name))
-                .setContentText(notification_name);
-        startForeground(public_value.SEND_USSD_SERVCE_NOTIFY_ID, notification.build());
-
-        Handler handler = new Handler();
-        final String ussd = public_func.get_nine_key_map_convert(intent.getStringExtra("ussd"));
-        int sub_id = intent.getIntExtra("sub_id", -1);
+public class ussd_function {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static void send_ussd(Context context, String ussd_raw, int sub_id) {
+        //Intent send_ussd_service = new Intent(context, com.qwe7002.telegram_rc.send_ussd_service.class);
+        //send_ussd_service.putExtra("ussd", ussd);
+        //send_ussd_service.putExtra("sub_id", sub_id);
+        //context.startForegroundService(send_ussd_service);
+        final String TAG = "send_ussd";
+        final String ussd = public_func.get_nine_key_map_convert(ussd_raw);
 
         TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         assert telephonyManager != null;
@@ -77,7 +45,7 @@ public class send_ussd_service extends Service {
             telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
         }
 
-        SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             Log.i(TAG, "send_ussd: No permission.");
@@ -104,10 +72,8 @@ public class send_ussd_service extends Service {
                 e.printStackTrace();
             }
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                finalTelephonyManager.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, message_id), handler);
+                finalTelephonyManager.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, message_id), new Handler());
             }
-            stopSelf();
         }).start();
-        return START_NOT_STICKY;
     }
 }

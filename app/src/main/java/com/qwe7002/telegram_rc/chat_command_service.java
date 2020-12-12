@@ -49,9 +49,12 @@ import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.reply_markup_keyboard;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.data_structure.sms_request_info;
+import com.qwe7002.telegram_rc.static_class.log_function;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 import com.qwe7002.telegram_rc.static_class.remote_control_public;
+import com.qwe7002.telegram_rc.static_class.sms_function;
+import com.qwe7002.telegram_rc.static_class.ussd_function;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -145,7 +148,7 @@ public class chat_command_service extends Service {
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    public_func.write_log(context, "failed to send message:" + e.getMessage());
+                    log_function.write_log(context, "failed to send message:" + e.getMessage());
                 }
                 return;
             }
@@ -155,12 +158,12 @@ public class chat_command_service extends Service {
             } else {
                 sub_id = public_func.get_sub_id(context, slot);
             }
-            public_func.send_sms(context, to, content, slot, sub_id, message_id);
+            sms_function.send_sms(context, to, content, slot, sub_id, message_id);
             set_sms_send_status_standby();
             return;
         }
         if (message_obj == null) {
-            public_func.write_log(context, "Request type is not allowed by security policy.");
+            log_function.write_log(context, "Request type is not allowed by security policy.");
             return;
         }
 
@@ -180,7 +183,7 @@ public class chat_command_service extends Service {
         assert from_obj != null;
         String from_id = from_obj.get("id").getAsString();
         if (!Objects.equals(chat_id, from_id)) {
-            public_func.write_log(context, "Chat ID[" + from_id + "] not allow");
+            log_function.write_log(context, "Chat ID[" + from_id + "] not allow");
             return;
         }
 
@@ -317,7 +320,7 @@ public class chat_command_service extends Service {
                 Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
-                request_body.text = getString(R.string.system_message_head) + public_func.read_log(context, 10);
+                request_body.text = getString(R.string.system_message_head) + log_function.read_log(context, 10);
                 break;
             case "/setadbport":
                 if (!sharedPreferences.getBoolean("root", false)) {
@@ -445,7 +448,7 @@ public class chat_command_service extends Service {
                         }
                         String[] command_list = request_msg.split(" ");
                         if (command_list.length == 2) {
-                            public_func.send_ussd(context, command_list[1], sub_id);
+                            ussd_function.send_ussd(context, command_list[1], sub_id);
                             return;
                         } else {
                             request_body.text = "Error";
@@ -490,7 +493,7 @@ public class chat_command_service extends Service {
                             Paper.book().write("spam_sms_list", resend_list_local);
                         }
                     }
-                    public_func.write_log(context, "Send spam message is complete.");
+                    log_function.write_log(context, "Send spam message is complete.");
                 }).start();
                 return;
             case "/disablebeacon":
@@ -542,7 +545,7 @@ public class chat_command_service extends Service {
                             msg_send_content.append(msg_send_list[i]);
                         }
                         if (public_func.get_active_card(context) == 1) {
-                            public_func.send_sms(context, msg_send_to, msg_send_content.toString(), -1, -1);
+                            sms_function.send_sms(context, msg_send_to, msg_send_content.toString(), -1, -1);
                             return;
                         }
                         int send_slot = -1;
@@ -554,7 +557,7 @@ public class chat_command_service extends Service {
                         }
                         int sub_id = public_func.get_sub_id(context, send_slot);
                         if (sub_id != -1) {
-                            public_func.send_sms(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
+                            sms_function.send_sms(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
                             return;
                         }
                     }
@@ -638,7 +641,7 @@ public class chat_command_service extends Service {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                public_func.write_log(context, error_head + e.getMessage());
+                log_function.write_log(context, error_head + e.getMessage());
             }
 
             @Override
@@ -646,7 +649,7 @@ public class chat_command_service extends Service {
                 assert response.body() != null;
                 String response_string = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
-                    public_func.write_log(context, error_head + response.code() + " " + response_string);
+                    log_function.write_log(context, error_head + response.code() + " " + response_string);
                     return;
                 }
                 if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
@@ -828,7 +831,7 @@ public class chat_command_service extends Service {
             response = call.execute();
         } catch (IOException e) {
             e.printStackTrace();
-            public_func.write_log(context, "Get username failed:" + e.getMessage());
+            log_function.write_log(context, "Get username failed:" + e.getMessage());
             return false;
         }
         if (response.code() == 200) {
@@ -842,7 +845,7 @@ public class chat_command_service extends Service {
             JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
             if (result_obj.get("ok").getAsBoolean()) {
                 bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                public_func.write_log(context, "Get the bot username: " + bot_username);
+                log_function.write_log(context, "Get the bot username: " + bot_username);
             }
             return true;
         }
@@ -1104,7 +1107,7 @@ public class chat_command_service extends Service {
     private void when_network_change() {
         if (public_func.check_network_status(context)) {
             if (!thread_main.isAlive()) {
-                public_func.write_log(context, "Network connections has been restored.");
+                log_function.write_log(context, "Network connections has been restored.");
                 thread_main = new Thread(new thread_main_runnable());
                 thread_main.start();
             }
@@ -1149,7 +1152,7 @@ public class chat_command_service extends Service {
                 bot_username = Paper.book().read("bot_username", null);
                 if (bot_username == null) {
                     while (!get_me()) {
-                        public_func.write_log(context, "Failed to get bot Username, Wait 5 seconds and try again.");
+                        log_function.write_log(context, "Failed to get bot Username, Wait 5 seconds and try again.");
                         try {
                             Thread.sleep(5000);
                         } catch (InterruptedException e) {
@@ -1184,14 +1187,14 @@ public class chat_command_service extends Service {
                 } catch (IOException e) {
                     e.printStackTrace();
                     if (!public_func.check_network_status(context)) {
-                        public_func.write_log(context, "No network connections available. ");
+                        log_function.write_log(context, "No network connections available. ");
                         error_magnification = 1;
                         magnification = 1;
                         break;
                     }
                     int sleep_time = 5 * error_magnification;
                     if (sleep_time > 5) {
-                        public_func.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
+                        log_function.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
                     } else {
                         Log.i(TAG, "run: Connection to the Telegram API service failed");
                     }
@@ -1229,7 +1232,7 @@ public class chat_command_service extends Service {
                         ++magnification;
                     }
                 } else {
-                    public_func.write_log(context, "response code:" + response.code());
+                    log_function.write_log(context, "response code:" + response.code());
                     if (response.code() == 401) {
                         assert response.body() != null;
                         String result;
@@ -1241,7 +1244,7 @@ public class chat_command_service extends Service {
                         }
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
-                        public_func.send_fallback_sms(context, result_message, -1);
+                        sms_function.send_fallback_sms(context, result_message, -1);
                         public_func.stop_all_service(context);
                         break;
                     }
