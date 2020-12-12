@@ -46,10 +46,10 @@ import com.qwe7002.root_kit.shell;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.log_function;
+import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
-import com.qwe7002.telegram_rc.static_class.remote_control_public;
+import com.qwe7002.telegram_rc.static_class.remote_control_func;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -90,7 +90,7 @@ public class main_activity extends AppCompatActivity {
         }
         if (version_code != current_version_code) {
             if (reset_log) {
-                log_function.reset_log_file(context);
+                log_func.reset_log_file(context);
             }
             Paper.book("system_config").write("version_code", current_version_code);
         }
@@ -305,7 +305,7 @@ public class main_activity extends AppCompatActivity {
                     e.printStackTrace();
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
-                    log_function.write_log(context, error_message);
+                    log_func.write_log(context, error_message);
                     Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                     Looper.loop();
@@ -319,7 +319,7 @@ public class main_activity extends AppCompatActivity {
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description").getAsString();
-                        log_function.write_log(context, error_message);
+                        log_func.write_log(context, error_message);
                         Looper.prepare();
                         Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                         Looper.loop();
@@ -437,7 +437,7 @@ public class main_activity extends AppCompatActivity {
                     e.printStackTrace();
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
-                    log_function.write_log(context, error_message);
+                    log_func.write_log(context, error_message);
                     Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG)
                             .show();
@@ -453,7 +453,7 @@ public class main_activity extends AppCompatActivity {
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description");
-                        log_function.write_log(context, error_message);
+                        log_func.write_log(context, error_message);
                         Looper.prepare();
                         Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                         Looper.loop();
@@ -524,7 +524,7 @@ public class main_activity extends AppCompatActivity {
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
             }
         }
-        if (remote_control_public.is_data_usage_access(context)) {
+        if (remote_control_func.is_data_usage_access(context)) {
             usage_button.setVisibility(View.GONE);
         }
         if (Settings.System.canWrite(context)) {
@@ -631,7 +631,7 @@ public class main_activity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (public_func.get_active_card(context) == 2 && remote_control_public.is_data_usage_access(context)) {
+            if (public_func.get_active_card(context) == 2 && remote_control_func.is_data_usage_access(context)) {
                 MenuItem set_sim_imsi = menu.findItem(R.id.set_sim_imsi);
                 set_sim_imsi.setVisible(true);
             }

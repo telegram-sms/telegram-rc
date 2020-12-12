@@ -11,10 +11,10 @@ import androidx.annotation.RequiresApi;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.log_function;
+import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
-import com.qwe7002.telegram_rc.static_class.sms_function;
+import com.qwe7002.telegram_rc.static_class.sms_func;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -80,8 +80,8 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log_function.write_log(context, error_head + e.getMessage());
-                sms_function.send_fallback_sms(context, request_body.text, -1);
+                log_func.write_log(context, error_head + e.getMessage());
+                sms_func.send_fallback_sms(context, request_body.text, -1);
                 public_func.add_resend_loop(context, request_body.text);
             }
 
@@ -89,8 +89,8 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     assert response.body() != null;
-                    log_function.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
-                    sms_function.send_fallback_sms(context, request_body.text, -1);
+                    log_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                    sms_func.send_fallback_sms(context, request_body.text, -1);
                     public_func.add_resend_loop(context, request_body.text);
                 }
             }

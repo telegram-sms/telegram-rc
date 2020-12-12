@@ -18,7 +18,7 @@ import java.util.Locale;
 
 import io.paperdb.Paper;
 
-public class log_function {
+public class log_func {
     public static void write_log(@NotNull Context context, String log) {
         Log.i("write_log", log);
         int new_file_mode = Context.MODE_APPEND;

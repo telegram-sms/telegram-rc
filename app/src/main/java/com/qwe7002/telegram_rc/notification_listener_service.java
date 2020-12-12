@@ -17,7 +17,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.log_function;
+import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 
@@ -109,7 +109,7 @@ public class notification_listener_service extends NotificationListenerService {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log_function.write_log(context, error_head + e.getMessage());
+                log_func.write_log(context, error_head + e.getMessage());
                 public_func.add_resend_loop(context, request_body.text);
             }
 
@@ -118,7 +118,7 @@ public class notification_listener_service extends NotificationListenerService {
                 assert response.body() != null;
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
-                    log_function.write_log(context, error_head + response.code() + " " + result);
+                    log_func.write_log(context, error_head + response.code() + " " + result);
                     public_func.add_resend_loop(context, request_body.text);
                 }
             }

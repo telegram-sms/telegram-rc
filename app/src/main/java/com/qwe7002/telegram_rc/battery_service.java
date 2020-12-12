@@ -17,11 +17,11 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.log_function;
+import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
-import com.qwe7002.telegram_rc.static_class.remote_control_public;
-import com.qwe7002.telegram_rc.static_class.sms_function;
+import com.qwe7002.telegram_rc.static_class.remote_control_func;
+import com.qwe7002.telegram_rc.static_class.sms_func;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -111,14 +111,14 @@ public class battery_service extends Service {
                     break;
                 case Intent.ACTION_BATTERY_LOW:
                     prebody.append(context.getString(R.string.battery_low));
-                    if (remote_control_public.is_tether_active(context)) {
-                        remote_control_public.disable_tether(context);
+                    if (remote_control_func.is_tether_active(context)) {
+                        remote_control_func.disable_tether(context);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     if (Paper.book().read("wifi_open", false)) {
                         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         assert wifiManager != null;
-                        remote_control_public.disable_vpn_ap(wifiManager);
+                        remote_control_func.disable_vpn_ap(wifiManager);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     break;
@@ -154,10 +154,10 @@ public class battery_service extends Service {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     e.printStackTrace();
-                    log_function.write_log(context, error_head + e.getMessage());
+                    log_func.write_log(context, error_head + e.getMessage());
                     last_receive_message_id = -1;
                     if (action.equals(Intent.ACTION_BATTERY_LOW)) {
-                        sms_function.send_fallback_sms(context, request_body.text, -1);
+                        sms_func.send_fallback_sms(context, request_body.text, -1);
                         public_func.add_resend_loop(context, request_body.text);
                     }
                 }
@@ -167,10 +167,10 @@ public class battery_service extends Service {
                     String result = Objects.requireNonNull(response.body()).string();
                     if (response.code() != 200) {
                         assert response.body() != null;
-                        log_function.write_log(context, error_head + response.code() + " " + result);
+                        log_func.write_log(context, error_head + response.code() + " " + result);
                         last_receive_message_id = -1;
                         if (action.equals(Intent.ACTION_BATTERY_LOW)) {
-                            sms_function.send_fallback_sms(context, request_body.text, -1);
+                            sms_func.send_fallback_sms(context, request_body.text, -1);
                             public_func.add_resend_loop(context, request_body.text);
                         }
                     }

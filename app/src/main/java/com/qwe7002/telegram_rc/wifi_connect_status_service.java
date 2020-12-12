@@ -18,7 +18,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.log_function;
+import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 
@@ -116,7 +116,7 @@ public class wifi_connect_status_service extends Service {
                     @Override
                     public void onFailure(@NonNull Call call, @NonNull IOException e) {
                         e.printStackTrace();
-                        log_function.write_log(context, error_head + e.getMessage());
+                        log_func.write_log(context, error_head + e.getMessage());
                         public_func.add_resend_loop(context, request_body.text);
                     }
 
@@ -124,7 +124,7 @@ public class wifi_connect_status_service extends Service {
                     public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                         if (response.code() != 200) {
                             assert response.body() != null;
-                            log_function.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                            log_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
                             public_func.add_resend_loop(context, request_body.text);
                         }
                     }

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import io.paperdb.Paper;
 
-public class remote_control_public {
+public class remote_control_func {
 
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {

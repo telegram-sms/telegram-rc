@@ -49,12 +49,12 @@ import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.reply_markup_keyboard;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.data_structure.sms_request_info;
-import com.qwe7002.telegram_rc.static_class.log_function;
+import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
-import com.qwe7002.telegram_rc.static_class.remote_control_public;
-import com.qwe7002.telegram_rc.static_class.sms_function;
-import com.qwe7002.telegram_rc.static_class.ussd_function;
+import com.qwe7002.telegram_rc.static_class.remote_control_func;
+import com.qwe7002.telegram_rc.static_class.sms_func;
+import com.qwe7002.telegram_rc.static_class.ussd_func;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -95,6 +95,75 @@ public class chat_command_service extends Service {
     private ConnectivityManager connectivity_manager;
     private network_callback callback;
     private static boolean first_request = true;
+
+    @SuppressLint({"HardwareIds", "MissingPermission"})
+    private static String get_data_stats(Context context) {
+        String result = "";
+        if (remote_control_func.is_data_usage_access(context)) {
+            int data_flush_day = Paper.book("system_config").read("data_flush_day", 1);
+            Calendar cal = Calendar.getInstance();
+            Calendar now_time_cal = Calendar.getInstance();
+            now_time_cal.setTime(new Date());
+            if (now_time_cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {
+                cal.add(Calendar.MONTH, 0);
+            } else {
+                cal.add(Calendar.MONTH, -1);
+            }
+            cal.set(Calendar.DAY_OF_MONTH, data_flush_day);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            long from = cal.getTimeInMillis();
+            try {
+                switch (public_func.get_active_card(context)) {
+                    case 1:
+                        String sub_id = null;
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                            TelephonyManager telephonyManager = (TelephonyManager) context
+                                    .getSystemService(Context.TELEPHONY_SERVICE);
+                            assert telephonyManager != null;
+                            sub_id = telephonyManager.getSubscriberId();
+                        }
+                        result = "\n" + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sub_id, from);
+                        break;
+                    case 2:
+                        String sim1_imsi;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            sim1_imsi = Paper.book("system_config").read("sim1_imsi", "");
+                            if (sim1_imsi.equals("")) {
+                                sim1_imsi = null;
+                            }
+                        } else {
+                            TelephonyManager telephonyManager = (TelephonyManager) context
+                                    .getSystemService(Context.TELEPHONY_SERVICE);
+                            assert telephonyManager != null;
+                            sim1_imsi = telephonyManager.getSubscriberId();
+                        }
+                        result = "\nSIM1 " + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sim1_imsi, from);
+                        String sim2_result_usage = "";
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            String sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
+                            if (!sim2_imsi.equals("")) {
+                                sim2_result_usage = get_data_usage(context, Paper.book("system_config").read("sim2_imsi", null), from);
+                            }
+                        } else {
+                            TelephonyManager telephonyManager = (TelephonyManager) context
+                                    .getSystemService(Context.TELEPHONY_SERVICE);
+                            assert telephonyManager != null;
+                            telephonyManager = telephonyManager.createForSubscriptionId(public_func.get_sub_id(context, 1));
+                            String sim2_imsi = telephonyManager.getSubscriberId();
+                            sim2_result_usage = get_data_usage(context, sim2_imsi, from);
+                        }
+                        if (!sim2_result_usage.equals("")) {
+                            result += "\nSIM2 " + context.getString(R.string.mobile_data_usage) + sim2_result_usage;
+                        }
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
 
     private void receive_handle(@NotNull JsonObject result_obj, boolean get_id_only) {
         long update_id = result_obj.get("update_id").getAsLong();
@@ -148,7 +217,7 @@ public class chat_command_service extends Service {
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    log_function.write_log(context, "failed to send message:" + e.getMessage());
+                    log_func.write_log(context, "failed to send message:" + e.getMessage());
                 }
                 return;
             }
@@ -158,12 +227,12 @@ public class chat_command_service extends Service {
             } else {
                 sub_id = public_func.get_sub_id(context, slot);
             }
-            sms_function.send_sms(context, to, content, slot, sub_id, message_id);
+            sms_func.send_sms(context, to, content, slot, sub_id, message_id);
             set_sms_send_status_standby();
             return;
         }
         if (message_obj == null) {
-            log_function.write_log(context, "Request type is not allowed by security policy.");
+            log_func.write_log(context, "Request type is not allowed by security policy.");
             return;
         }
 
@@ -183,7 +252,7 @@ public class chat_command_service extends Service {
         assert from_obj != null;
         String from_id = from_obj.get("id").getAsString();
         if (!Objects.equals(chat_id, from_id)) {
-            log_function.write_log(context, "Chat ID[" + from_id + "] not allow");
+            log_func.write_log(context, "Chat ID[" + from_id + "] not allow");
             return;
         }
 
@@ -265,7 +334,7 @@ public class chat_command_service extends Service {
                     if (Settings.System.canWrite(context)) {
                         switch_ap += "\n" + getString(R.string.switch_ap_message);
                     }
-                    if (remote_control_public.is_vpn_hotsport_exist(context)) {
+                    if (remote_control_func.is_vpn_hotsport_exist(context)) {
                         switch_ap += "\n" + getString(R.string.switch_ap_message).replace("/switchap", "/switchvpnap");
                     }
                     switch_ap += "\n" + getString(R.string.switch_data_message);
@@ -303,7 +372,7 @@ public class chat_command_service extends Service {
                 }
                 String is_hotspot_running = "";
                 if (Settings.System.canWrite(context)) {
-                    if (remote_control_public.is_tether_active(context)) {
+                    if (remote_control_func.is_tether_active(context)) {
                         is_hotspot_running += "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
                     } else {
                         is_hotspot_running += "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
@@ -320,7 +389,7 @@ public class chat_command_service extends Service {
                 Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
-                request_body.text = getString(R.string.system_message_head) + log_function.read_log(context, 10);
+                request_body.text = getString(R.string.system_message_head) + log_func.read_log(context, 10);
                 break;
             case "/setadbport":
                 if (!sharedPreferences.getBoolean("root", false)) {
@@ -355,7 +424,7 @@ public class chat_command_service extends Service {
                 request_body.text = result.toString();
                 break;
             case "/switchwifi":
-                if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
+                if (!sharedPreferences.getBoolean("root", false) || !remote_control_func.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
@@ -366,11 +435,11 @@ public class chat_command_service extends Service {
                 break;
             case "/switchap":
                 if (Settings.System.canWrite(context)) {
-                    boolean ap_status = remote_control_public.is_tether_active(context);
+                    boolean ap_status = remote_control_func.is_tether_active(context);
                     String result_ap;
                     if (!ap_status) {
                         result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                        remote_control_public.enable_tether(context);
+                        remote_control_func.enable_tether(context);
                     } else {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
@@ -382,7 +451,7 @@ public class chat_command_service extends Service {
                     command = "/switchvpnap";
                 }
             case "/switchvpnap":
-                if (!sharedPreferences.getBoolean("root", false) || !remote_control_public.is_vpn_hotsport_exist(context)) {
+                if (!sharedPreferences.getBoolean("root", false) || !remote_control_func.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
@@ -392,7 +461,7 @@ public class chat_command_service extends Service {
                 String result_vpn_ap;
                 if (!wifi_open) {
                     result_vpn_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                    new Thread(() -> remote_control_public.enable_vpn_ap(wifiManager)).start();
+                    new Thread(() -> remote_control_func.enable_vpn_ap(wifiManager)).start();
                 } else {
                     Paper.book("temp").write("wifi_open", false);
                     result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
@@ -448,7 +517,7 @@ public class chat_command_service extends Service {
                         }
                         String[] command_list = request_msg.split(" ");
                         if (command_list.length == 2) {
-                            ussd_function.send_ussd(context, command_list[1], sub_id);
+                            ussd_func.send_ussd(context, command_list[1], sub_id);
                             return;
                         } else {
                             request_body.text = "Error";
@@ -493,7 +562,7 @@ public class chat_command_service extends Service {
                             Paper.book().write("spam_sms_list", resend_list_local);
                         }
                     }
-                    log_function.write_log(context, "Send spam message is complete.");
+                    log_func.write_log(context, "Send spam message is complete.");
                 }).start();
                 return;
             case "/disablebeacon":
@@ -545,7 +614,7 @@ public class chat_command_service extends Service {
                             msg_send_content.append(msg_send_list[i]);
                         }
                         if (public_func.get_active_card(context) == 1) {
-                            sms_function.send_sms(context, msg_send_to, msg_send_content.toString(), -1, -1);
+                            sms_func.send_sms(context, msg_send_to, msg_send_content.toString(), -1, -1);
                             return;
                         }
                         int send_slot = -1;
@@ -557,7 +626,7 @@ public class chat_command_service extends Service {
                         }
                         int sub_id = public_func.get_sub_id(context, send_slot);
                         if (sub_id != -1) {
-                            sms_function.send_sms(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
+                            sms_func.send_sms(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
                             return;
                         }
                     }
@@ -641,7 +710,7 @@ public class chat_command_service extends Service {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log_function.write_log(context, error_head + e.getMessage());
+                log_func.write_log(context, error_head + e.getMessage());
             }
 
             @Override
@@ -649,7 +718,7 @@ public class chat_command_service extends Service {
                 assert response.body() != null;
                 String response_string = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
-                    log_function.write_log(context, error_head + response.code() + " " + response_string);
+                    log_func.write_log(context, error_head + response.code() + " " + response_string);
                     return;
                 }
                 if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
@@ -657,7 +726,7 @@ public class chat_command_service extends Service {
                 }
                 if (final_command.replace("_", "").equals("/switchap")) {
                     if (!Paper.book("temp").read("tether_open", false)) {
-                        remote_control_public.disable_tether(context);
+                        remote_control_func.disable_tether(context);
                     }
                 }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
@@ -666,7 +735,7 @@ public class chat_command_service extends Service {
                             if (!Paper.book("temp").read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                                 assert wifiManager != null;
-                                remote_control_public.disable_vpn_ap(wifiManager);
+                                remote_control_func.disable_vpn_ap(wifiManager);
                             }
                             break;
                         case "/switchdata":
@@ -685,75 +754,6 @@ public class chat_command_service extends Service {
                 }
             }
         });
-    }
-
-    @SuppressLint({"HardwareIds", "MissingPermission"})
-    private static String get_data_stats(Context context) {
-        String result = "";
-        if (remote_control_public.is_data_usage_access(context)) {
-            int data_flush_day = Paper.book("system_config").read("data_flush_day", 1);
-            Calendar cal = Calendar.getInstance();
-            Calendar now_time_cal = Calendar.getInstance();
-            now_time_cal.setTime(new Date());
-            if (now_time_cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {
-                cal.add(Calendar.MONTH, 0);
-            } else {
-                cal.add(Calendar.MONTH, -1);
-            }
-            cal.set(Calendar.DAY_OF_MONTH, data_flush_day);
-            cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            long from = cal.getTimeInMillis();
-            try {
-                switch (public_func.get_active_card(context)) {
-                    case 1:
-                        String sub_id = null;
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                            TelephonyManager telephonyManager = (TelephonyManager) context
-                                    .getSystemService(Context.TELEPHONY_SERVICE);
-                            assert telephonyManager != null;
-                            sub_id = telephonyManager.getSubscriberId();
-                        }
-                        result = "\n" + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sub_id, from);
-                        break;
-                    case 2:
-                        String sim1_imsi;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            sim1_imsi = Paper.book("system_config").read("sim1_imsi", "");
-                            if (sim1_imsi.equals("")) {
-                                sim1_imsi = null;
-                            }
-                        } else {
-                            TelephonyManager telephonyManager = (TelephonyManager) context
-                                    .getSystemService(Context.TELEPHONY_SERVICE);
-                            assert telephonyManager != null;
-                            sim1_imsi = telephonyManager.getSubscriberId();
-                        }
-                        result = "\nSIM1 " + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sim1_imsi, from);
-                        String sim2_result_usage = "";
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            String sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
-                            if (!sim2_imsi.equals("")) {
-                                sim2_result_usage = get_data_usage(context, Paper.book("system_config").read("sim2_imsi", null), from);
-                            }
-                        } else {
-                            TelephonyManager telephonyManager = (TelephonyManager) context
-                                    .getSystemService(Context.TELEPHONY_SERVICE);
-                            assert telephonyManager != null;
-                            telephonyManager = telephonyManager.createForSubscriptionId(public_func.get_sub_id(context, 1));
-                            String sim2_imsi = telephonyManager.getSubscriberId();
-                            sim2_result_usage = get_data_usage(context, sim2_imsi, from);
-                        }
-                        if (!sim2_result_usage.equals("")) {
-                            result += "\nSIM2 " + context.getString(R.string.mobile_data_usage) + sim2_result_usage;
-                        }
-                }
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
     }
 
     private String bot_username = "";
@@ -831,7 +831,7 @@ public class chat_command_service extends Service {
             response = call.execute();
         } catch (IOException e) {
             e.printStackTrace();
-            log_function.write_log(context, "Get username failed:" + e.getMessage());
+            log_func.write_log(context, "Get username failed:" + e.getMessage());
             return false;
         }
         if (response.code() == 200) {
@@ -845,7 +845,7 @@ public class chat_command_service extends Service {
             JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
             if (result_obj.get("ok").getAsBoolean()) {
                 bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                log_function.write_log(context, "Get the bot username: " + bot_username);
+                log_func.write_log(context, "Get the bot username: " + bot_username);
             }
             return true;
         }
@@ -1107,7 +1107,7 @@ public class chat_command_service extends Service {
     private void when_network_change() {
         if (public_func.check_network_status(context)) {
             if (!thread_main.isAlive()) {
-                log_function.write_log(context, "Network connections has been restored.");
+                log_func.write_log(context, "Network connections has been restored.");
                 thread_main = new Thread(new thread_main_runnable());
                 thread_main.start();
             }
@@ -1152,7 +1152,7 @@ public class chat_command_service extends Service {
                 bot_username = Paper.book().read("bot_username", null);
                 if (bot_username == null) {
                     while (!get_me()) {
-                        log_function.write_log(context, "Failed to get bot Username, Wait 5 seconds and try again.");
+                        log_func.write_log(context, "Failed to get bot Username, Wait 5 seconds and try again.");
                         try {
                             Thread.sleep(5000);
                         } catch (InterruptedException e) {
@@ -1187,14 +1187,14 @@ public class chat_command_service extends Service {
                 } catch (IOException e) {
                     e.printStackTrace();
                     if (!public_func.check_network_status(context)) {
-                        log_function.write_log(context, "No network connections available. ");
+                        log_func.write_log(context, "No network connections available. ");
                         error_magnification = 1;
                         magnification = 1;
                         break;
                     }
                     int sleep_time = 5 * error_magnification;
                     if (sleep_time > 5) {
-                        log_function.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
+                        log_func.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
                     } else {
                         Log.i(TAG, "run: Connection to the Telegram API service failed");
                     }
@@ -1232,7 +1232,7 @@ public class chat_command_service extends Service {
                         ++magnification;
                     }
                 } else {
-                    log_function.write_log(context, "response code:" + response.code());
+                    log_func.write_log(context, "response code:" + response.code());
                     if (response.code() == 401) {
                         assert response.body() != null;
                         String result;
@@ -1244,7 +1244,7 @@ public class chat_command_service extends Service {
                         }
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
-                        sms_function.send_fallback_sms(context, result_message, -1);
+                        sms_func.send_fallback_sms(context, result_message, -1);
                         public_func.stop_all_service(context);
                         break;
                     }

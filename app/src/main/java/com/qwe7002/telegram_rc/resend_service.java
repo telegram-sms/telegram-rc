@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.log_function;
+import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.public_func;
 import com.qwe7002.telegram_rc.static_class.public_value;
 
@@ -66,7 +66,7 @@ public class resend_service extends Service {
                 Paper.book().write(table_name, resend_list_local);
             }
         } catch (IOException e) {
-            log_function.write_log(context, "An error occurred while resending: " + e.getMessage());
+            log_func.write_log(context, "An error occurred while resending: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -103,7 +103,7 @@ public class resend_service extends Service {
                     e.printStackTrace();
                 }
             }
-            log_function.write_log(context, "The resend failure message is complete.");
+            log_func.write_log(context, "The resend failure message is complete.");
             stopSelf();
         }).start();
     }

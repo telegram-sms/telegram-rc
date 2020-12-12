@@ -28,7 +28,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class ussd_function {
+public class ussd_func {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static void send_ussd(Context context, String ussd_raw, int sub_id) {
         //Intent send_ussd_service = new Intent(context, com.qwe7002.telegram_rc.send_ussd_service.class);

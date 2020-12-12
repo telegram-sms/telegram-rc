@@ -27,7 +27,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.data_structure.beacon_list;
-import com.qwe7002.telegram_rc.static_class.remote_control_public;
+import com.qwe7002.telegram_rc.static_class.remote_control_func;
 
 import org.altbeacon.beacon.Beacon;
 
@@ -97,13 +97,13 @@ public class beacon_config_activity extends AppCompatActivity {
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);
         beacon config = Paper.book("beacon_config").read("config", new beacon());
         use_vpn_switch.setClickable(config.use_vpn_hotspot);
-        if (!remote_control_public.is_vpn_hotsport_exist(context)) {
+        if (!remote_control_func.is_vpn_hotsport_exist(context)) {
             use_vpn_switch.setClickable(false);
         }
-        if (!Settings.System.canWrite(context) && remote_control_public.is_vpn_hotsport_exist(context)) {
+        if (!Settings.System.canWrite(context) && remote_control_func.is_vpn_hotsport_exist(context)) {
             use_vpn_switch.setClickable(true);
         }
-        if (Settings.System.canWrite(context) && remote_control_public.is_vpn_hotsport_exist(context)) {
+        if (Settings.System.canWrite(context) && remote_control_func.is_vpn_hotsport_exist(context)) {
             use_vpn_switch.setEnabled(true);
         }
 

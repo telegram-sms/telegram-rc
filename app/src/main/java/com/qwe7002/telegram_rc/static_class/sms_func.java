@@ -29,7 +29,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class sms_function {
+public class sms_func {
     public static void send_fallback_sms(Context context, String content, int sub_id) {
         final String TAG = "send_fallback_sms";
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
@@ -66,7 +66,7 @@ public class sms_function {
             return;
         }
         if (!public_func.is_phone_number(send_to)) {
-            log_function.write_log(context, "[" + send_to + "] is an illegal phone number");
+            log_func.write_log(context, "[" + send_to + "] is an illegal phone number");
             return;
         }
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
@@ -105,7 +105,7 @@ public class sms_function {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            log_function.write_log(context, "failed to send message:" + e.getMessage());
+            log_func.write_log(context, "failed to send message:" + e.getMessage());
         }
         ArrayList<String> divideContents = sms_manager.divideMessage(content);
         ArrayList<PendingIntent> send_receiver_list = new ArrayList<>();
