@@ -37,7 +37,7 @@ public class boot_receiver extends BroadcastReceiver {
                     com.qwe7002.root_kit.network.add_dummy_device(dummy_ip_addr);
                 }
                 if (Paper.book("system_config").contains("adb_port")) {
-                    int adb_port = Paper.book().read("adb_port");
+                    int adb_port = Paper.book("system_config").read("adb_port");
                     com.qwe7002.root_kit.nadb.set_nadb(adb_port);
                 }
             }
