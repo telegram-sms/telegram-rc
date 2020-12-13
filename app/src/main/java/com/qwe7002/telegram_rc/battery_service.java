@@ -20,7 +20,6 @@ import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.network_func;
 import com.qwe7002.telegram_rc.static_class.other_func;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
-import com.qwe7002.telegram_rc.static_class.resend_func;
 import com.qwe7002.telegram_rc.static_class.sms_func;
 
 import org.jetbrains.annotations.NotNull;
@@ -80,7 +79,7 @@ public class battery_service extends Service {
                     send_loop_list.remove(item);
                 }
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -122,7 +121,6 @@ public class battery_service extends Service {
             log_func.write_log(context, error_head + e.getMessage());
             if (obj.action.equals(Intent.ACTION_BATTERY_LOW)) {
                 sms_func.send_fallback_sms(context, request_body.text, -1);
-                resend_func.add_resend_loop(context, request_body.text);
             }
         }
     }
