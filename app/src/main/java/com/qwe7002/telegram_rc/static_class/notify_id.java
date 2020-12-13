@@ -8,5 +8,4 @@ public class notify_id {
     public static final int RESEND_SERVICE = 5;
     public static final int BEACON_SERVICE = 6;
     public static final int WIFI_CONNECT_STATUS = 7;
-
 }
