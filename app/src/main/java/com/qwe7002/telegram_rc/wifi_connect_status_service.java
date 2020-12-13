@@ -47,7 +47,7 @@ public class wifi_connect_status_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = other_func.get_notification_obj(context, getString(R.string.wifi_status));
-        startForeground(notify_id.WIFI_CONNECT_STATUS, notification);
+        startForeground(com.qwe7002.telegram_rc.notify_id.WIFI_CONNECT_STATUS, notification);
         return START_STICKY;
     }
 

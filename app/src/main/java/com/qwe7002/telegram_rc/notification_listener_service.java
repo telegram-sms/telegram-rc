@@ -52,7 +52,7 @@ public class notification_listener_service extends NotificationListenerService {
         Paper.init(context);
         sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         Notification notification = other_func.get_notification_obj(getApplicationContext(), getString(R.string.Notification_Listener_title));
-        startForeground(notify_id.NOTIFICATION_LISTENER_SERVICE, notification);
+        startForeground(com.qwe7002.telegram_rc.notify_id.NOTIFICATION_LISTENER_SERVICE, notification);
 
     }
 
