@@ -131,6 +131,7 @@ public class main_activity extends AppCompatActivity {
         final SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
         final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
         final SwitchMaterial wifi_status_switch = findViewById(R.id.wifi_status_switch);
+        final SwitchMaterial tag_phone_number = findViewById(R.id.tag_phone_number_switch);
         final Button save_button = findViewById(R.id.save_button);
         final Button get_id_button = findViewById(R.id.get_id_button);
         usage_button = findViewById(R.id.usage_button);
@@ -485,6 +486,7 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("initialized", true);
                     editor.putBoolean("privacy_dialog_agree", true);
                     editor.putBoolean("wifi_monitor_switch", wifi_status_switch.isChecked());
+                    editor.putBoolean("tag_phone_number", tag_phone_number.isChecked());
                     editor.apply();
                     new Thread(() -> {
                         service_func.stop_all_service(context);

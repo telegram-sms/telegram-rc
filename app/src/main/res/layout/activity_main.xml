@@ -142,6 +142,14 @@
                 tools:ignore="RtlSymmetry" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/tag_phone_number_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="3dp"
+                android:text="Phone_number_tag"
+                tools:ignore="HardcodedText,RtlSymmetry" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/doh_switch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
