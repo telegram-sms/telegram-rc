@@ -166,6 +166,8 @@ public class main_activity extends AppCompatActivity {
             service_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
 
         }
+        tag_phone_number.setClickable(sharedPreferences.getBoolean("tag_phone_number", false));
+
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             if (other_func.get_active_card(context) < 2) {
