@@ -72,12 +72,14 @@ public class other_func {
         return result_stringbuilder.toString();
     }
 
-    public static long parse_string_to_long(String int_str) {
+    public static long parse_string_to_long(@NotNull String int_str) {
         long result = 0;
-        try {
-            result = Long.parseLong(int_str);
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
+        if (!int_str.isEmpty()) {
+            try {
+                result = Long.parseLong(int_str);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
         }
         return result;
     }
@@ -142,13 +144,14 @@ public class other_func {
     }
 
 
+    @NotNull
     public static Long get_message_id(String result) {
         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject().get("result").getAsJsonObject();
         return result_obj.get("message_id").getAsLong();
     }
 
     @NotNull
-    public static Notification get_notification_obj(Context context, String notification_name) {
+    public static Notification get_notification_obj(@NotNull Context context, String notification_name) {
         NotificationChannel channel = new NotificationChannel(notification_name, notification_name,
                 NotificationManager.IMPORTANCE_MIN);
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -167,6 +170,7 @@ public class other_func {
         int active_card = other_func.get_active_card(context);
         if (active_card >= 2) {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                Log.i("get_sub_id", "get_sub_id: No permission");
                 return -1;
             }
             SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
@@ -189,7 +193,7 @@ public class other_func {
         final String TAG = "get_sim_display_name";
         String result = "Unknown";
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "No permission.");
+            Log.i(TAG, "No permission.");
             return result;
         }
         SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
@@ -201,6 +205,7 @@ public class other_func {
                 info = subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(1);
             }
             if (info == null) {
+                Log.d(TAG, "get_sim_display_name: Unable to obtain information");
                 return result;
             }
             return result;
