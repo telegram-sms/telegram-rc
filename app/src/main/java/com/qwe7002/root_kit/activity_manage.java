@@ -1,5 +1,7 @@
 package com.qwe7002.root_kit;
 
+import androidx.annotation.RequiresApi;
+
 public class activity_manage {
     @SuppressWarnings({"unused", "RedundantSuppression"})
     public static void start_service(String package_name, String service_name) {
@@ -7,6 +9,7 @@ public class activity_manage {
     }
 
     @SuppressWarnings({"unused", "RedundantSuppression"})
+    @RequiresApi(26)
     public static void start_foreground_service(String package_name, String service_name) {
         shell.run_shell_command("am start-foreground-service -n " + package_name + "/" + service_name);
     }
