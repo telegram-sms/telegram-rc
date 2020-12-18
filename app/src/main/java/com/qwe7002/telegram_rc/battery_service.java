@@ -96,7 +96,7 @@ public class battery_service extends Service {
         request_body.chat_id = battery_service.chat_id;
         request_body.text = obj.content;
         String request_uri = network_func.get_url(battery_service.bot_token, "sendMessage");
-        if ((System.currentTimeMillis() - last_receive_time) <= 5000L && last_receive_message_id != -1) {
+        if ((System.currentTimeMillis() - last_receive_time) <= 10000L && last_receive_message_id != -1) {
             request_uri = network_func.get_url(bot_token, "editMessageText");
             request_body.message_id = last_receive_message_id;
             Log.d(TAG, "onReceive: edit_mode");
