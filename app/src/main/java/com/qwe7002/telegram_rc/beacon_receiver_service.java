@@ -171,6 +171,7 @@ public class beacon_receiver_service extends Service {
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
         Notification notification = other_func.get_notification_obj(context, getString(R.string.beacon_receiver));
+        beacon_manager.setEnableScheduledScanJobs(false);
         beacon_manager.enableForegroundServiceScanning(notification, com.qwe7002.telegram_rc.notify_id.BEACON_SERVICE);
         startForeground(com.qwe7002.telegram_rc.notify_id.BEACON_SERVICE, notification);
         beacon_manager.setForegroundScanPeriod(config.delay);
@@ -178,13 +179,13 @@ public class beacon_receiver_service extends Service {
         beacon_manager.setForegroundBetweenScanPeriod(2000);
         beacon_manager.setBackgroundBetweenScanPeriod(2000);
         startup_time = System.currentTimeMillis();
-        beacon_manager.setEnableScheduledScanJobs(false);
         beacon_manager.bind(beacon_consumer);
     }
 
     @Override
     public void onDestroy() {
         beacon_manager.unbind(beacon_consumer);
+        beacon_manager.disableForegroundServiceScanning();
         wakelock.release();
         stopForeground(true);
         super.onDestroy();
