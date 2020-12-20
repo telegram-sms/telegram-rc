@@ -166,7 +166,7 @@ public class main_activity extends AppCompatActivity {
             service_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
 
         }
-        tag_phone_number.setClickable(sharedPreferences.getBoolean("tag_phone_number", false));
+        tag_phone_number.setChecked(sharedPreferences.getBoolean("tag_phone_number", false));
 
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -548,7 +548,7 @@ public class main_activity extends AppCompatActivity {
         builder.setNeutralButton(R.string.visit_page, (dialog, which) -> {
             Uri uri = Uri.parse("https://get.telegram-sms.com" + privacy_police);
             CustomTabsIntent.Builder privacy_builder = new CustomTabsIntent.Builder();
-            privacy_builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
+            //privacy_builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
             CustomTabsIntent customTabsIntent = privacy_builder.build();
             customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             try {
@@ -776,7 +776,7 @@ public class main_activity extends AppCompatActivity {
         assert file_name != null;
         Uri uri = Uri.parse("https://get.telegram-sms.com" + file_name);
         CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-        builder.setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        //builder.setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         CustomTabsIntent customTabsIntent = builder.build();
         try {
             customTabsIntent.launchUrl(this, uri);

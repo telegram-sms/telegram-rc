@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 
@@ -52,12 +53,16 @@ public class scanner_activity extends Activity implements ZXingScannerView.Resul
     public void handleResult(@NotNull Result rawResult) {
         String TAG = "activity_scanner";
         Log.d(TAG, "format: " + rawResult.getBarcodeFormat().toString() + " content: " + rawResult.getText());
-        if (json_validate(rawResult.getText())) {
-            Intent intent = new Intent().putExtra("config_json", rawResult.getText());
-            setResult(const_value.RESULT_CONFIG_JSON, intent);
+        if (!json_validate(rawResult.getText())) {
+            Toast.makeText(this, "The QR code is not legal", Toast.LENGTH_SHORT).show();
+            return;
         }
+        Intent intent = new Intent().putExtra("config_json", rawResult.getText());
+        setResult(const_value.RESULT_CONFIG_JSON, intent);
         scanner_view.stopCamera();
         finish();
+
+
     }
 
     boolean json_validate(String jsonStr) {

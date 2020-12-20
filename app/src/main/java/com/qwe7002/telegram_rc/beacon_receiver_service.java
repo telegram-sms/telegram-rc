@@ -121,7 +121,7 @@ public class beacon_receiver_service extends Service {
             beacon_manager.setBackgroundScanPeriod(config.delay);
             beacon_manager.setForegroundScanPeriod(config.delay);
             beacon_manager.setForegroundBetweenScanPeriod(2000);
-            beacon_manager.setForegroundBetweenScanPeriod(2000);
+            beacon_manager.setBackgroundBetweenScanPeriod(2000);
             try {
                 beacon_manager.updateScanPeriods();
             } catch (RemoteException e) {
