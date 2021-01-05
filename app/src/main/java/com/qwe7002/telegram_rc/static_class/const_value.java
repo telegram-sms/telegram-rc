@@ -8,4 +8,5 @@ public class const_value {
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
     public static final int RESULT_CONFIG_JSON = 1;
+    public static final String TERMUX_PACKAGE_NAME = "com.termux";
 }

@@ -1,4 +1,4 @@
-package com.qwe7002.root_kit;
+package com.qwe7002.telegram_rc.root_kit;
 
 import androidx.annotation.RequiresApi;
 

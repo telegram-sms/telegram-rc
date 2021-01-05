@@ -279,15 +279,15 @@ public class sms_receiver extends BroadcastReceiver {
             switch (message_body.toLowerCase().replace("_", "")) {
                 case "/switchdata":
                     if (data_enable) {
-                        com.qwe7002.root_kit.network.data_set_enable(false);
+                        com.qwe7002.telegram_rc.root_kit.network.data_set_enable(false);
                     }
                     break;
                 case "/restartnetwork":
-                    com.qwe7002.root_kit.network.restart_network();
+                    com.qwe7002.telegram_rc.root_kit.network.restart_network();
                     break;
                 case "/setdatacard":
                     if (Paper.book("temp").contains("sub_id")) {
-                        com.qwe7002.root_kit.network.set_data_sim(Paper.book("temp").read("sub_id"));
+                        com.qwe7002.telegram_rc.root_kit.network.set_data_sim(Paper.book("temp").read("sub_id"));
                         Paper.book("temp").destroy();
                     }
                     break;
@@ -296,7 +296,7 @@ public class sms_receiver extends BroadcastReceiver {
     }
 
     void open_data(Context context) {
-        com.qwe7002.root_kit.network.data_set_enable(true);
+        com.qwe7002.telegram_rc.root_kit.network.data_set_enable(true);
         int loop_count = 0;
         while (!network_func.check_network_status(context)) {
             if (loop_count >= 100) {

@@ -1,4 +1,4 @@
-package com.qwe7002.root_kit;
+package com.qwe7002.telegram_rc.root_kit;
 
 public class network {
     private static void set_airplane_mode(boolean enable) {

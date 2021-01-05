@@ -16,8 +16,8 @@ public class remote_control_func {
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         Paper.book("temp").write("wifi_open", false);
-        com.qwe7002.root_kit.activity_manage.force_stop_package(const_value.VPN_HOTSPOT_PACKAGE_NAME);
-        com.qwe7002.root_kit.network.wifi_set_enable(false);
+        com.qwe7002.telegram_rc.root_kit.activity_manage.force_stop_package(const_value.VPN_HOTSPOT_PACKAGE_NAME);
+        com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(false);
         try {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
                 Thread.sleep(100);
@@ -26,7 +26,7 @@ public class remote_control_func {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        com.qwe7002.root_kit.network.wifi_set_enable(true);
+        com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(true);
         try {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100);
@@ -38,7 +38,7 @@ public class remote_control_func {
 
     public static void enable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         if (wifi_manager.isWifiEnabled()) {
-            com.qwe7002.root_kit.network.wifi_set_enable(false);
+            com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(false);
             try {
                 while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
                     Thread.sleep(100);
@@ -49,7 +49,7 @@ public class remote_control_func {
             }
         }
         Paper.book("temp").write("wifi_open", true);
-        com.qwe7002.root_kit.network.wifi_set_enable(true);
+        com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(true);
         try {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100);
@@ -59,7 +59,7 @@ public class remote_control_func {
             e.printStackTrace();
         }
 
-        com.qwe7002.root_kit.activity_manage.start_foreground_service(const_value.VPN_HOTSPOT_PACKAGE_NAME, const_value.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+        com.qwe7002.telegram_rc.root_kit.activity_manage.start_foreground_service(const_value.VPN_HOTSPOT_PACKAGE_NAME, const_value.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
     }
 
     public static void enable_tether(Context context) {
@@ -92,10 +92,23 @@ public class remote_control_func {
         return info != null;
     }
 
+    public static boolean is_termux_exist(@NotNull Context context) {
+        ApplicationInfo info;
+        try {
+            info = context.getPackageManager().getApplicationInfo(const_value.TERMUX_PACKAGE_NAME, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            info = null;
+        }
+
+        return info != null;
+    }
+
     public static boolean is_data_usage_access(@NotNull Context context) {
         AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
         int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
                 android.os.Process.myUid(), context.getPackageName());
         return mode == AppOpsManager.MODE_ALLOWED;
     }
+
 }

@@ -1,4 +1,4 @@
-package com.qwe7002.root_kit;
+package com.qwe7002.telegram_rc.root_kit;
 
 import android.util.Log;
 
@@ -31,4 +31,5 @@ public class shell {
     public static boolean check_root() {
         return shell.run_shell_command("");
     }
+
 }
