@@ -31,6 +31,7 @@ public class remote_control_func {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100);
             }
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -38,15 +39,7 @@ public class remote_control_func {
 
     public static void enable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         if (wifi_manager.isWifiEnabled()) {
-            com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(false);
-            try {
-                while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
-                    Thread.sleep(100);
-                }
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            disable_vpn_ap(wifi_manager);
         }
         Paper.book("temp").write("wifi_open", true);
         com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(true);
