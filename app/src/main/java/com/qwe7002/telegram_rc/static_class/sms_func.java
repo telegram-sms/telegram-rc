@@ -86,11 +86,7 @@ public class sms_func {
             sms_manager = SmsManager.getSmsManagerForSubscriptionId(sub_id);
         }
         String dual_sim = other_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
-        String phone_number_tag = "";
-        if (sharedPreferences.getBoolean("tag_phone_number", false)) {
-            phone_number_tag = "#";
-        }
-        String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + phone_number_tag + send_to + "\n" + context.getString(R.string.content) + content;
+        String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + send_to + "\n" + context.getString(R.string.content) + content;
         request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.sending);
         request_body.message_id = message_id;
         Gson gson = new Gson();

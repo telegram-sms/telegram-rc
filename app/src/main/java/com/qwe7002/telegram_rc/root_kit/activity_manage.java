@@ -29,3 +29,4 @@ public class activity_manage {
         return shell.run_shell_command("dumpsys activity services | grep " + package_name + "/" + service_name);
     }
 }
+

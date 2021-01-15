@@ -87,11 +87,7 @@ public class call_receiver extends BroadcastReceiver {
                 final request_message request_body = new request_message();
                 request_body.chat_id = chat_id;
                 String dual_sim = other_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
-                String phone_number_tag = "";
-                if (sharedPreferences.getBoolean("tag_phone_number", false)) {
-                    phone_number_tag = "#";
-                }
-                request_body.text = "[" + dual_sim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + phone_number_tag + incoming_number;
+                request_body.text = "[" + dual_sim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + incoming_number;
 
                 String request_body_raw = new Gson().toJson(request_body);
                 RequestBody body = RequestBody.create(request_body_raw, const_value.JSON);
