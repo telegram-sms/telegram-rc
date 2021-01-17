@@ -65,18 +65,17 @@ public class sms_receiver extends BroadcastReceiver {
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = network_func.get_url(bot_token, "sendMessage");
 
-        int slot = extras.getInt("slot", -1);
+        int intent_slot = extras.getInt("slot", -1);
         final int sub_id = extras.getInt("subscription", -1);
-        if (other_func.get_active_card(context) >= 2 && slot == -1) {
+        if (other_func.get_active_card(context) >= 2 && intent_slot == -1) {
             SubscriptionManager manager = SubscriptionManager.from(context);
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 SubscriptionInfo info = manager.getActiveSubscriptionInfo(sub_id);
-                slot = info.getSimSlotIndex();
+                intent_slot = info.getSimSlotIndex();
             }
         }
-        Log.d(TAG, "onReceive: " + slot);
-        final int final_slot = slot;
-        String dual_sim = other_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
+        final int slot = intent_slot;
+        String dual_sim = other_func.get_dual_sim_card_display(context, intent_slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
 
         Object[] pdus = (Object[]) extras.get("pdus");
         assert pdus != null;
@@ -139,9 +138,10 @@ public class sms_receiver extends BroadcastReceiver {
         final boolean data_enable = network_func.get_data_enable(context);
         if (is_trusted_phone) {
             String message_command = message_body.toLowerCase().replace("_", "");
-            String[] message_command_list = message_command.split("\n");
-            if (message_command_list.length > 0) {
-                switch (message_command_list[0]) {
+            String[] command_list = message_command.split("\n");
+            if (command_list.length > 0) {
+                String[] message_list = message_body.split("\n");
+                switch (command_list[0]) {
                     case "/restartservice":
                         new Thread(() -> {
                             service_func.stop_all_service(context);
@@ -164,8 +164,8 @@ public class sms_receiver extends BroadcastReceiver {
                     case "/sendussd":
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                                if (message_command_list.length == 2) {
-                                    ussd_func.send_ussd(context, message_command_list[1], sub_id);
+                                if (command_list.length == 2) {
+                                    ussd_func.send_ussd(context, message_list[1], sub_id);
                                     return;
                                 }
                             }
@@ -184,20 +184,35 @@ public class sms_receiver extends BroadcastReceiver {
                         }
                         break;
                     case "/sendsms":
+                    case "/sendsms1":
+                    case "/sendsms2":
                         if (androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
                             Log.i(TAG, "No SMS permission.");
                             break;
                         }
-                        String msg_send_to = other_func.get_send_phone_number(message_command_list[1]);
-                        if (other_func.is_phone_number(msg_send_to) && message_command_list.length > 2) {
+                        String msg_send_to = other_func.get_send_phone_number(command_list[1]);
+                        if (other_func.is_phone_number(msg_send_to) && message_list.length > 2) {
                             StringBuilder msg_send_content = new StringBuilder();
-                            for (int i = 2; i < message_command_list.length; ++i) {
+                            for (int i = 2; i < message_list.length; ++i) {
                                 if (i != 2) {
                                     msg_send_content.append("\n");
                                 }
-                                msg_send_content.append(message_command_list[i]);
+                                msg_send_content.append(message_list[i]);
                             }
-                            new Thread(() -> sms_func.send_sms(context, msg_send_to, msg_send_content.toString(), final_slot, sub_id)).start();
+                            int send_slot = intent_slot;
+                            if (other_func.get_active_card(context) > 1) {
+                                switch (command_list[0].trim()) {
+                                    case "/sendsms1":
+                                        send_slot = 0;
+                                        break;
+                                    case "/sendsms2":
+                                        send_slot = 1;
+                                        break;
+                                }
+                            }
+                            final int final_send_slot = send_slot;
+                            final int final_send_sub_id = other_func.get_sub_id(context, final_send_slot);
+                            new Thread(() -> sms_func.send_sms(context, msg_send_to, msg_send_content.toString(), final_send_slot, final_send_sub_id)).start();
                             return;
                         }
                         break;
@@ -263,7 +278,7 @@ public class sms_receiver extends BroadcastReceiver {
                         log_func.write_log(context, "[" + message_address + "] Not a regular phone number.");
                         return;
                     }
-                    other_func.add_message_list(other_func.get_message_id(result), message_address, final_slot);
+                    other_func.add_message_list(other_func.get_message_id(result), message_address, slot);
                 }
                 command_handle(sharedPreferences, message_body, data_enable);
             }
