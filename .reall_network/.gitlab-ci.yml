@@ -43,7 +43,6 @@ build:
     image: alvrme/alpine-android:android-30
     stage: build
     script:
-        - sdkmanager --install "ndk;21.3.6528147" "cmake;3.10.2.4988404"
         - git submodule update --init --recursive
         - export VERSION_CODE=${CI_PIPELINE_ID}
         - export VERSION_NAME=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}

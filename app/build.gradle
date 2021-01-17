@@ -3,7 +3,6 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 30
-    ndkVersion "21.3.6528147"
     defaultConfig {
         applicationId "com.qwe7002.telegram_rc"
         minSdkVersion 26
