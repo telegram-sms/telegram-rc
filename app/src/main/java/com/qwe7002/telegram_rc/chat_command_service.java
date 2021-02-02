@@ -954,7 +954,6 @@ public class chat_command_service extends Service {
                 case SEND_SMS_STATUS.MESSAGE_INPUT_STATUS:
                     String temp_to = other_func.get_send_phone_number(request_msg);
                     if (other_func.is_phone_number(temp_to)) {
-                        //send_to_temp = temp_to;
                         Paper.book("send_temp").write("to", temp_to);
                         result_send = getString(R.string.enter_content);
                         send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;

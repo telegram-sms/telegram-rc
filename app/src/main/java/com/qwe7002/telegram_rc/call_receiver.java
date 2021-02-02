@@ -35,9 +35,6 @@ import okhttp3.Response;
 
 
 public class call_receiver extends BroadcastReceiver {
-    private static int slot;
-    private static String incoming_number;
-
     @Override
     public void onReceive(Context context, @NotNull Intent intent) {
         Paper.init(context);
@@ -45,16 +42,19 @@ public class call_receiver extends BroadcastReceiver {
         switch (Objects.requireNonNull(intent.getAction())) {
             case "android.intent.action.PHONE_STATE":
                 if (intent.getStringExtra("incoming_number") != null) {
-                    incoming_number = intent.getStringExtra("incoming_number");
+                    Paper.book("temp").write("incoming_number", intent.getStringExtra("incoming_number"));
                 }
                 TelephonyManager telephony = (TelephonyManager) context
                         .getSystemService(Context.TELEPHONY_SERVICE);
-                call_status_listener custom_phone_listener = new call_status_listener(context, slot, incoming_number);
+                call_status_listener custom_phone_listener = new call_status_listener(context);
                 assert telephony != null;
                 telephony.listen(custom_phone_listener, PhoneStateListener.LISTEN_CALL_STATE);
                 break;
             case "android.intent.action.SUBSCRIPTION_PHONE_STATE":
-                slot = intent.getIntExtra("slot", -1);
+                int slot = intent.getIntExtra("slot", -1);
+                if (slot != -1) {
+                    Paper.book("temp").write("incoming_slot", slot);
+                }
                 break;
 
         }
@@ -66,11 +66,11 @@ public class call_receiver extends BroadcastReceiver {
         private final Context context;
         private final int slot;
 
-        call_status_listener(Context context, int slot, String incoming_number) {
+        call_status_listener(Context context) {
             super();
             this.context = context;
-            this.slot = slot;
-            call_status_listener.incoming_number = incoming_number;
+            this.slot = Paper.book("temp").read("incoming_slot");
+            incoming_number = Paper.book("temp").read("incoming_number");
         }
 
         public void onCallStateChanged(int now_state, String now_incoming_number) {
