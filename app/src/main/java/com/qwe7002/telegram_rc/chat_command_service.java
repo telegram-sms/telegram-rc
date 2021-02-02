@@ -878,6 +878,7 @@ public class chat_command_service extends Service {
             case "/startup":
                 com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
+                break;
             case "/sendsms":
             case "/sendsms1":
             case "/sendsms2":
