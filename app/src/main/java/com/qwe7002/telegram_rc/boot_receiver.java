@@ -25,10 +25,10 @@ public class boot_receiver extends BroadcastReceiver {
         Log.d(TAG, "Receive action: " + intent.getAction());
         Paper.init(context);
         final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
-        if (remote_control_func.is_termux_exist(context)) {
-            com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
-        }
         if (sharedPreferences.getBoolean("initialized", false)) {
+            if (remote_control_func.is_termux_exist(context)) {
+                com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
+            }
             log_func.write_log(context, "Received [" + intent.getAction() + "] broadcast, starting background service.");
             service_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
             if (Paper.book().read("resend_list", new ArrayList<>()).size() != 0) {
