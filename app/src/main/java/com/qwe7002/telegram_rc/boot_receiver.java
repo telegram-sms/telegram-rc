@@ -27,6 +27,7 @@ public class boot_receiver extends BroadcastReceiver {
         final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean("initialized", false)) {
             if (remote_control_func.is_termux_exist(context)) {
+                Log.d(TAG, "Termux detected, try to start init.rc");
                 com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
             }
             log_func.write_log(context, "Received [" + intent.getAction() + "] broadcast, starting background service.");
