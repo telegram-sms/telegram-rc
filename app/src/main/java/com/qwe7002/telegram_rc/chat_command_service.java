@@ -405,7 +405,12 @@ public class chat_command_service extends Service {
             }
 
         } else {
-            for (CellInfo cell : telephonyManager.getAllCellInfo()) {
+            List<CellInfo> cellInfos = telephonyManager.getAllCellInfo();
+            if (cellInfos == null) {
+                log_func.write_log(context, "Unable to get cellinfo. Please check the location information Settings.");
+                return "";
+            }
+            for (CellInfo cell : cellInfos) {
                 if (!cell.isRegistered()) {
                     continue;
                 }
