@@ -192,7 +192,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
                     listen_list_temp.remove(package_name);
                 }
                 Log.d(TAG, "notify_listen_list: " + listen_list_temp);
-                Paper.book().write("notify_listen_list", listen_list_temp);
+                Paper.book("system_config").write("notify_listen_list", listen_list_temp);
                 listen_list = listen_list_temp;
             });
             return convert_view;
