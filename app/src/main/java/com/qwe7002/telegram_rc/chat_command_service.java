@@ -930,7 +930,7 @@ public class chat_command_service extends Service {
                 request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
                 break;
             default:
-                if (!message_type_is_private) {
+                if (!message_type_is_private && send_sms_next_status == -1) {
                     Log.i(TAG, "receive_handle: The conversation is not Private and does not prompt an error.");
                     return;
                 }
