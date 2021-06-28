@@ -325,9 +325,6 @@ public class chat_command_service extends Service {
                         break;
                     }
                     if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_IMS)) {
-                            continue;
-                        }
                         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                             Log.i("get_network_type", "No permission.");
                             return net_type;
