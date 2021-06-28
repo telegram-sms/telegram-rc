@@ -40,7 +40,7 @@ release_nightly_github:
         - ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
 build:
-    image: alvrme/alpine-android:android-30
+    image: alvrme/alpine-android:android-30-jdk11
     stage: build
     script:
         - git submodule update --init --recursive

@@ -393,9 +393,9 @@ public class chat_command_service extends Service {
                             return net_type;
                         }
                         net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
-/*                        if (net_type.equals("Unknown")) {
+                        if (net_type.equals("Unknown")) {
                             net_type = check_cellular_network_type_with_cell(context, telephonyManager);
-                        }*/
+                        }
                         if (cell_info) {
                             net_type += get_cell_info(context, telephonyManager, -1);
                         }
@@ -409,7 +409,7 @@ public class chat_command_service extends Service {
                 }
             }
         }
-        if (net_type.equals("Unknown")) {
+/*        if(net_type.equals("Unknown")){
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 Log.i("get_network_type", "No permission.");
                 return net_type;
@@ -421,7 +421,7 @@ public class chat_command_service extends Service {
             if (cell_info) {
                 net_type += get_cell_info(context, telephonyManager, -1);
             }
-        }
+        }*/
 
         return net_type;
     }
