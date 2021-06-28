@@ -385,9 +385,7 @@ public class chat_command_service extends Service {
                         break;
                     }
                     if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_IMS)) {
-                            continue;
-                        }
+                        net_type = "Cellular";
                         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                             Log.i("get_network_type", "No permission.");
                             return net_type;
@@ -408,22 +406,7 @@ public class chat_command_service extends Service {
                     }
                 }
             }
-        } else {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                Log.i("get_network_type", "No permission.");
-                return net_type;
-            }
-            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
-            if (net_type.equals("Unknown")) {
-                net_type = check_cellular_network_type_with_cell(context, telephonyManager);
-            }
-            if (cell_info) {
-                net_type += get_cell_info(context, telephonyManager, -1);
-            }
         }
-/*        if(net_type.equals("Unknown")){
-
-        }*/
 
         return net_type;
     }
