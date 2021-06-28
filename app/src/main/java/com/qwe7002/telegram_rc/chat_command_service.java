@@ -408,8 +408,7 @@ public class chat_command_service extends Service {
                     }
                 }
             }
-        }
-/*        if(net_type.equals("Unknown")){
+        } else {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 Log.i("get_network_type", "No permission.");
                 return net_type;
@@ -421,6 +420,9 @@ public class chat_command_service extends Service {
             if (cell_info) {
                 net_type += get_cell_info(context, telephonyManager, -1);
             }
+        }
+/*        if(net_type.equals("Unknown")){
+
         }*/
 
         return net_type;
