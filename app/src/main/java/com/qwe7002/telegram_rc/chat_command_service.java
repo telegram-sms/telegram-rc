@@ -27,7 +27,6 @@ import android.os.RemoteException;
 import android.provider.Settings;
 import android.telephony.CellIdentityNr;
 import android.telephony.CellInfo;
-import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoNr;
@@ -210,66 +209,7 @@ public class chat_command_service extends Service {
         return net_type;
     }
 
-    private static String check_cellular_network_type_with_cell(Context context, TelephonyManager telephonyManager) {
-        final boolean[] run_lock = {false};
-        String TAG = "get_cell_info";
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "get_cell_info: No permission.");
-            return "";
-        }
-        final String[] net_type = new String[1];
-        net_type[0] = "Unknown";
-        SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
-        assert subscriptionManager != null;
-        int sub_id = SubscriptionManager.getDefaultDataSubscriptionId();
-        telephonyManager = telephonyManager.createForSubscriptionId(sub_id);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                Log.d("get_data_sim_id", "No permission.");
-            }
-            telephonyManager.requestCellInfoUpdate(AsyncTask.SERIAL_EXECUTOR, new TelephonyManager.CellInfoCallback() {
-                @Override
-                public void onCellInfo(@NonNull List<CellInfo> cell_info_result) {
-                    if (cell_info_result.size() == 0) {
-                        run_lock[0] = true;
-                        return;
-                    }
-                    CellInfo info = cell_info_result.get(0);
-                    if (info instanceof CellInfoNr) //noinspection RedundantSuppression
-                    {
-                        net_type[0] = "NR";
-                    }
-                    if (info instanceof CellInfoLte) {
-                        net_type[0] = "LTE";
-                        if (com.qwe7002.telegram_rc.root_kit.radio.is_LTE_CA()) {
-                            net_type[0] += "+";
-                        }
-                        if (com.qwe7002.telegram_rc.root_kit.radio.is_NR_connected()) {
-                            net_type[0] += " & NR";
-                        } else if (com.qwe7002.telegram_rc.root_kit.radio.is_NR_standby()) {
-                            net_type[0] += " (NR Standby)";
-                        }
-                    }
-                    if (info instanceof CellInfoWcdma || info instanceof CellInfoCdma) {
-                        net_type[0] = "3G";
-                    }
-                    if (info instanceof CellInfoGsm) {
-                        net_type[0] = "2G";
-                    }
-                    run_lock[0] = true;
-                }
-            });
-            while (!run_lock[0]) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
 
-        }
-        return net_type[0];
-    }
 
     private String bot_username = "";
     private boolean privacy_mode;
@@ -385,15 +325,14 @@ public class chat_command_service extends Service {
                         break;
                     }
                     if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        net_type = "Cellular";
+                        if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_IMS)) {
+                            continue;
+                        }
                         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                             Log.i("get_network_type", "No permission.");
                             return net_type;
                         }
                         net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
-                        if (net_type.equals("Unknown")) {
-                            net_type = check_cellular_network_type_with_cell(context, telephonyManager);
-                        }
                         if (cell_info) {
                             net_type += get_cell_info(context, telephonyManager, -1);
                         }
