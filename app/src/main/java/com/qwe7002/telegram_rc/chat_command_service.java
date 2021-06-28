@@ -393,9 +393,9 @@ public class chat_command_service extends Service {
                             return net_type;
                         }
                         net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
-                        if (net_type.equals("Unknown")) {
+/*                        if (net_type.equals("Unknown")) {
                             net_type = check_cellular_network_type_with_cell(context, telephonyManager);
-                        }
+                        }*/
                         if (cell_info) {
                             net_type += get_cell_info(context, telephonyManager, -1);
                         }
@@ -407,6 +407,19 @@ public class chat_command_service extends Service {
                         net_type = "Ethernet";
                     }
                 }
+            }
+        }
+        if (net_type.equals("Unknown")) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                Log.i("get_network_type", "No permission.");
+                return net_type;
+            }
+            net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
+            if (net_type.equals("Unknown")) {
+                net_type = check_cellular_network_type_with_cell(context, telephonyManager);
+            }
+            if (cell_info) {
+                net_type += get_cell_info(context, telephonyManager, -1);
             }
         }
 
@@ -722,7 +735,7 @@ public class chat_command_service extends Service {
                         is_hotspot_running += "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
                     }
                 }
-                if (sharedPreferences.getBoolean("root", false)) {
+                if (sharedPreferences.getBoolean("root", false) && remote_control_func.is_vpn_hotsport_exist(context)) {
                     if (com.qwe7002.telegram_rc.root_kit.activity_manage.check_service_is_running(const_value.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
                         is_hotspot_running += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.enable);
                     } else {
