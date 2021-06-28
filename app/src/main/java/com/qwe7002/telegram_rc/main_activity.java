@@ -564,6 +564,7 @@ public class main_activity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 0:
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -572,17 +573,18 @@ public class main_activity extends AppCompatActivity {
                     return;
                 }
                 Intent intent = new Intent(context, scanner_activity.class);
+                //noinspection deprecation
                 startActivityForResult(intent, 1);
                 break;
             case 1:
                 SwitchMaterial display_dual_sim_display_name = findViewById(R.id.display_dual_sim_switch);
-                    if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                        TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-                        assert telephony_manager != null;
-                        if (telephony_manager.getPhoneCount() <= 1 || other_func.get_active_card(context) < 2) {
-                            display_dual_sim_display_name.setEnabled(false);
-                            display_dual_sim_display_name.setChecked(false);
-                        }
+                if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                    TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+                    assert telephony_manager != null;
+                    if (telephony_manager.getPhoneCount() <= 1 || other_func.get_active_card(context) < 2) {
+                        display_dual_sim_display_name.setEnabled(false);
+                        display_dual_sim_display_name.setChecked(false);
+                    }
                 }
                 break;
         }
