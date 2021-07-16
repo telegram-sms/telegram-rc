@@ -118,10 +118,8 @@ public class beacon_receiver_service extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             config = Paper.book("beacon_config").read("config", new beacon());
-            beacon_manager.setBackgroundScanPeriod(config.delay);
             beacon_manager.setForegroundScanPeriod(config.delay);
             beacon_manager.setForegroundBetweenScanPeriod(2000);
-            beacon_manager.setBackgroundBetweenScanPeriod(2000);
             try {
                 beacon_manager.updateScanPeriods();
             } catch (RemoteException e) {
@@ -175,9 +173,7 @@ public class beacon_receiver_service extends Service {
         beacon_manager.enableForegroundServiceScanning(notification, com.qwe7002.telegram_rc.notify_id.BEACON_SERVICE);
         startForeground(com.qwe7002.telegram_rc.notify_id.BEACON_SERVICE, notification);
         beacon_manager.setForegroundScanPeriod(config.delay);
-        beacon_manager.setBackgroundScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(2000);
-        beacon_manager.setBackgroundBetweenScanPeriod(2000);
         startup_time = System.currentTimeMillis();
         beacon_manager.bind(beacon_consumer);
     }

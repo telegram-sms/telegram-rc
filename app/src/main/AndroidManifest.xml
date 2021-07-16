@@ -82,11 +82,14 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <service android:name=".beacon_receiver_service" />
+        <service
+            android:name=".beacon_receiver_service"
+            android:foregroundServiceType="location" />
         <service
             android:name=".chat_command_service"
             android:enabled="true"
             android:exported="false"
+            android:foregroundServiceType="location"
             android:permission="android.permission.INTERNET"
             android:process=":command" />
 
