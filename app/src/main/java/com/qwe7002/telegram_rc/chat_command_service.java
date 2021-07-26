@@ -716,7 +716,7 @@ public class chat_command_service extends Service {
                 break;
             case "/switchnic":
                 if (Settings.System.canWrite(context)) {
-                    boolean ap_status = Paper.book("temp").read("NIC_tether_open");
+                    boolean ap_status = Paper.book("temp").read("NIC_tether_open", false);
                     String result_ap;
                     if (!ap_status) {
                         result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
@@ -729,6 +729,7 @@ public class chat_command_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                     break;
                 }
+                break;
             case "/setdatacard":
                 if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
