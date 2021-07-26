@@ -58,7 +58,7 @@ public class TetherManager {
      * Credit: Vishal Sharma - https://stackoverflow.com/a/52219887
      */
     @SuppressWarnings("UnusedReturnValue")
-    public boolean startTethering(final OnStartTetheringCallback callback) {
+    public boolean startTethering(int mode, final OnStartTetheringCallback callback) {
 
         // On Pie if we try to start tethering while it is already on, it will
         // be disabled. This is needed when startTethering() is called programmatically.
@@ -87,6 +87,7 @@ public class TetherManager {
                             default:
                                 ProxyBuilder.callSuper(proxy1, method, args);
                         }
+                        //noinspection SuspiciousInvocationHandlerImplementation
                         return null;
                     }).build();
         } catch (Exception e) {
@@ -98,7 +99,7 @@ public class TetherManager {
         Method method;
         try {
             method = mConnectivityManager.getClass().getDeclaredMethod("startTethering", int.class, boolean.class, OnStartTetheringCallbackClass(), Handler.class);
-            method.invoke(mConnectivityManager, ConnectivityManager.TYPE_MOBILE, false, proxy, null);
+            method.invoke(mConnectivityManager, mode, false, proxy, null);
             Log.d(TAG, "startTethering invoked");
             return true;
         } catch (Exception e) {
@@ -108,10 +109,10 @@ public class TetherManager {
         return false;
     }
 
-    public void stopTethering() {
+    public void stopTethering(int mode) {
         try {
             Method method = mConnectivityManager.getClass().getDeclaredMethod("stopTethering", int.class);
-            method.invoke(mConnectivityManager, ConnectivityManager.TYPE_MOBILE);
+            method.invoke(mConnectivityManager, mode);
             Log.d(TAG, "stopTethering invoked");
         } catch (Exception e) {
             Log.e(TAG, "stopTethering error: " + e.toString());

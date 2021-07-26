@@ -171,7 +171,7 @@ public class battery_service extends Service {
                 case Intent.ACTION_BATTERY_LOW:
                     prebody.append(context.getString(R.string.battery_low));
                     if (remote_control_func.is_tether_active(context)) {
-                        remote_control_func.disable_tether(context);
+                        remote_control_func.disable_wifi_tether(context);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     if (Paper.book().read("wifi_open", false)) {

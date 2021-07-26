@@ -55,22 +55,34 @@ public class remote_control_func {
         com.qwe7002.telegram_rc.root_kit.activity_manage.start_foreground_service(const_value.VPN_HOTSPOT_PACKAGE_NAME, const_value.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
     }
 
-    public static void enable_tether(Context context) {
+    public static void enable_wifi_tether(Context context) {
         Paper.book("temp").write("tether_open", true);
         TetherManager manager = new TetherManager(context);
-        manager.startTethering(null);
+        manager.startTethering(0, null);
     }
 
-    public static void disable_tether(Context context) {
+    public static void disable_wifi_tether(Context context) {
         Paper.book("temp").write("tether_open", false);
         TetherManager manager = new TetherManager(context);
-        manager.stopTethering();
+        manager.stopTethering(0);
     }
 
     public static boolean is_tether_active(Context context) {
         TetherManager manager = new TetherManager(context);
         Paper.book("temp").write("tether_open", manager.isTetherActive());
         return manager.isTetherActive();
+    }
+
+    public static void enable_NIC_tether(Context context) {
+        Paper.book("temp").write("NIC_tether_open", true);
+        TetherManager manager = new TetherManager(context);
+        manager.startTethering(5, null);
+    }
+
+    public static void disable_NIC_tether(Context context) {
+        Paper.book("temp").write("NIC_tether_open", false);
+        TetherManager manager = new TetherManager(context);
+        manager.stopTethering(5);
     }
 
     public static boolean is_vpn_hotsport_exist(@NotNull Context context) {

@@ -7,7 +7,6 @@
     <string name="restart_network">重新啟動行動網路。</string>
     <string name="switch_ap_message">/switchap - 切換網路共享開關</string>
     <string name="switch_data_message">/switchdata - 切換數據開關\n/restartnetwork - 重置電信業者網路</string>
-    <string name="config_adb_message">"/setadbport - 配置網路 adb 端口"</string>
     <string name="current_data_card">數據卡</string>
     <string name="no_permission">沒有獲得權限。</string>
     <string name="adb_config">網絡 adb 設置</string>

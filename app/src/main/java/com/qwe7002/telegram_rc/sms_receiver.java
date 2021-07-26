@@ -162,15 +162,11 @@ public class sms_receiver extends BroadcastReceiver {
                         request_body.text = raw_request_body_text;
                         break;
                     case "/sendussd":
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                                if (command_list.length == 2) {
-                                    ussd_func.send_ussd(context, message_list[1], sub_id);
-                                    return;
-                                }
+                        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                            if (command_list.length == 2) {
+                                ussd_func.send_ussd(context, message_list[1], sub_id);
+                                return;
                             }
-                        } else {
-                            Log.i(TAG, "send_ussd: No permission.");
                         }
                         break;
                     case "/setdatacard":

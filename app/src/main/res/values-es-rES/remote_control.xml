@@ -7,7 +7,6 @@
     <string name="restart_network">Reiniciando la red móvil.</string>
     <string name="switch_ap_message">/switchap - Alternar el interruptor de anclaje</string>
     <string name="switch_data_message">/switchdata - Alternar interruptor de datos\n/restartnetwork - Restablecer la red del operador</string>
-    <string name="config_adb_message">"/setadbport - Configurar puerto adb de red"</string>
     <string name="current_data_card">Tarjeta de datos</string>
     <string name="no_permission">No se obteniendo privilegios.</string>
     <string name="adb_config">"Configuración de adb de red "</string>

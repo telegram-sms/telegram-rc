@@ -317,7 +317,7 @@ public class beacon_receiver_service extends Service {
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.disable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.disable_tether(context);
+                                remote_control_func.disable_wifi_tether(context);
                             }
                             switch_status = STATUS_DISABLE_AP;
                         }
@@ -329,7 +329,7 @@ public class beacon_receiver_service extends Service {
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.enable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.enable_tether(context);
+                                remote_control_func.enable_wifi_tether(context);
                             }
                             switch_status = STATUS_ENABLE_AP;
                         }
@@ -344,7 +344,7 @@ public class beacon_receiver_service extends Service {
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.enable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.enable_tether(context);
+                                remote_control_func.enable_wifi_tether(context);
                             }
                             switch_status = STATUS_ENABLE_AP;
                         }
@@ -356,7 +356,7 @@ public class beacon_receiver_service extends Service {
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.disable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.disable_tether(context);
+                                remote_control_func.disable_wifi_tether(context);
                             }
                             switch_status = STATUS_DISABLE_AP;
                         }

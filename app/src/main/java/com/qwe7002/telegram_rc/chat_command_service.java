@@ -606,7 +606,6 @@ public class chat_command_service extends Service {
                         ussd_command = "\n" + getString(R.string.send_ussd_dual_command);
                     }
                 }
-                String config_adb = "";
                 String switch_ap = "";
                 if (sharedPreferences.getBoolean("root", false)) {
                     if (Settings.System.canWrite(context)) {
@@ -616,14 +615,13 @@ public class chat_command_service extends Service {
                         switch_ap += "\n" + getString(R.string.switch_ap_message).replace("/switchap", "/switchvpnap");
                     }
                     switch_ap += "\n" + getString(R.string.switch_data_message);
-                    config_adb = "\n" + context.getString(R.string.config_adb_message);
                 }
                 if (command.equals("/commandlist")) {
-                    request_body.text = (getString(R.string.available_command) + sms_command + ussd_command + switch_ap + config_adb).replace("/", "");
+                    request_body.text = (getString(R.string.available_command) + sms_command + ussd_command + switch_ap).replace("/", "");
                     break;
                 }
 
-                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap + data_switch_command + config_adb;
+                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap + data_switch_command;
                 if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
                     result_string = result_string.replace(" -", "@" + bot_username + " -");
                 }
@@ -669,38 +667,6 @@ public class chat_command_service extends Service {
             case "/log":
                 request_body.text = getString(R.string.system_message_head) + log_func.read_log(context, 10);
                 break;
-            case "/setadbport":
-                if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
-                }
-                int port = -1;
-                String[] msg_list = request_msg.split(" ");
-                if (msg_list.length == 2) {
-                    boolean str_is_not_num = false;
-                    try {
-                        Integer.parseInt(msg_list[1]);
-                    } catch (NumberFormatException e) {
-                        str_is_not_num = true;
-                        e.printStackTrace();
-                    }
-                    if (!str_is_not_num) {
-                        port = Integer.parseInt(msg_list[1]);
-                    }
-                }
-                Paper.book("system_config").write("adb_port", port);
-                StringBuilder result = new StringBuilder();
-                result.append(getString(R.string.system_message_head)).append("\n").append(getString(R.string.adb_config));
-                if (com.qwe7002.telegram_rc.root_kit.nadb.set_nadb(port)) {
-                    result.append(getString(R.string.action_success));
-                } else {
-                    result.append(getString(R.string.action_failed));
-                }
-                result.append("\n");
-                result.append("port: ");
-                result.append(port);
-                request_body.text = result.toString();
-                break;
             case "/switchwifi":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control_func.is_vpn_hotsport_exist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
@@ -717,7 +683,7 @@ public class chat_command_service extends Service {
                     String result_ap;
                     if (!ap_status) {
                         result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                        remote_control_func.enable_tether(context);
+                        remote_control_func.enable_wifi_tether(context);
                     } else {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
@@ -748,6 +714,21 @@ public class chat_command_service extends Service {
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
                 break;
+            case "/switchnic":
+                if (Settings.System.canWrite(context)) {
+                    boolean ap_status = Paper.book("temp").read("NIC_tether_open");
+                    String result_ap;
+                    if (!ap_status) {
+                        result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
+                        remote_control_func.enable_NIC_tether(context);
+                    } else {
+                        remote_control_func.disable_NIC_tether(context);
+                        result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
+                    }
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
+                    request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
+                    break;
+                }
             case "/setdatacard":
                 if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
@@ -1005,7 +986,7 @@ public class chat_command_service extends Service {
                 }
                 if (final_command.replace("_", "").equals("/switchap")) {
                     if (!Paper.book("temp").read("tether_open", false)) {
-                        remote_control_func.disable_tether(context);
+                        remote_control_func.disable_wifi_tether(context);
                     }
                 }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
