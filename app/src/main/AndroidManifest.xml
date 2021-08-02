@@ -59,7 +59,9 @@
             android:name=".spam_list_activity"
             android:label="@string/spam_sms_keyword_title" />
 
-        <receiver android:name=".sim_status_receiver">
+        <receiver
+            android:name=".sim_status_receiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SIM_STATE_CHANGED" />
             </intent-filter>
@@ -77,6 +79,7 @@
         <service
             android:name=".notification_listener_service"
             android:label="@string/app_name"
+            android:exported="false"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
@@ -109,7 +112,9 @@
             android:exported="false"
             android:process=":battery" />
 
-        <receiver android:name=".boot_receiver">
+        <receiver
+            android:name=".boot_receiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
@@ -124,7 +129,9 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".call_receiver">
+        <receiver
+            android:name=".call_receiver"
+            android:exported="true">
             <intent-filter android:priority="2147483647">
                 <action android:name="android.intent.action.PHONE_STATE" />
                 <action android:name="android.intent.action.SUBSCRIPTION_PHONE_STATE" />
@@ -138,6 +145,7 @@
         <activity
             android:name=".main_activity"
             android:label="@string/app_name"
+            android:exported="false"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
