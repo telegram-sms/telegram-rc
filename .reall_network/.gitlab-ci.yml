@@ -18,16 +18,11 @@ release_github:
     only:
         - master
     script:
-        - apk --update --no-cache add git openssl openssh-client bash curl wget go
+        - apk --update --no-cache add git openssl bash curl wget go
         - go get -u -v github.com/tcnksm/ghr
-        - cp /root/go/bin/ghr /bin/
-        - eval $(ssh-agent -s)
-        - mkdir -p ~/.ssh
-        - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-        - ssh-add - <<< $(curl https://${KEYSTORE_SERVER}/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
-        - git push --set-upstream git@github.com:${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
         - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
         - . .reall_network/github-key.env
+        - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
         - ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
 release_nightly_github:
@@ -39,15 +34,10 @@ release_nightly_github:
     script:
         - apk --update --no-cache add git openssl openssh-client bash curl wget go
         - go get -u -v github.com/tcnksm/ghr
-        - cp /root/go/bin/ghr /bin/
-        - eval $(ssh-agent -s)
-        - mkdir -p ~/.ssh
-        - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-        - ssh-add - <<< $(curl https://${KEYSTORE_SERVER}/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
-        - git push --set-upstream git@github.com:${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
         - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
         - . .reall_network/github-key.env
-        - ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
+        - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
+        - /root/go/bin/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
 build:
     image: alvrme/alpine-android:android-30-jdk11
