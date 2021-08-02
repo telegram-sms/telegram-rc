@@ -18,7 +18,7 @@ release_github:
     only:
         - master
     script:
-        - apk --no-cache add git openssl openssh-client bash curl wget go \
+        - apk --update --no-cache add git openssl openssh-client bash curl wget go \
             && go get -u -v github.com/tcnksm/ghr \
             && cp /root/go/bin/ghr /bin/ \
             && eval $(ssh-agent -s) \
@@ -38,7 +38,7 @@ release_nightly_github:
     only:
         - nightly
     script:
-        - apk --no-cache add git openssl openssh-client bash curl wget go \
+        - apk --update --no-cache add git openssl openssh-client bash curl wget go \
             && go get -u -v github.com/tcnksm/ghr \
             && cp /root/go/bin/ghr /bin/ \
             && eval $(ssh-agent -s) \
