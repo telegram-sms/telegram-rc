@@ -32,7 +32,7 @@ release_nightly_github:
     only:
         - nightly
     script:
-        - apk --update --no-cache add git openssl openssh-client bash curl wget go
+        - apk --update --no-cache add git openssl bash curl wget go
         - go get -u -v github.com/tcnksm/ghr
         - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
         - . .reall_network/github-key.env
