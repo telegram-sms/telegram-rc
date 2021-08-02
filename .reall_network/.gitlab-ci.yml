@@ -23,7 +23,7 @@ release_github:
         - cp /root/go/bin/ghr /bin/
         - eval $(ssh-agent -s)
         - mkdir -p ~/.ssh
-        - [ [ -f /.dockerenv ] ] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+        - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
         - ssh-add - <<< $(curl https://${KEYSTORE_SERVER}/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
         - git push --set-upstream git@github.com:${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
         - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
@@ -42,7 +42,7 @@ release_nightly_github:
         - cp /root/go/bin/ghr /bin/
         - eval $(ssh-agent -s)
         - mkdir -p ~/.ssh
-        - [ [ -f /.dockerenv ] ] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+        - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
         - ssh-add - <<< $(curl https://${KEYSTORE_SERVER}/gitlab-sshkey/id_ecdsa -u gitlab:${key_store_passwd})
         - git push --set-upstream git@github.com:${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
         - curl https://${KEYSTORE_SERVER}/gitlab-sshkey/github-key.env -o .reall_network/github-key.env -u gitlab:${key_store_passwd}
