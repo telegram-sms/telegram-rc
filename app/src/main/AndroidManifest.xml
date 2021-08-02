@@ -95,13 +95,14 @@
 
         <activity android:name=".logcat_activity" />
         <!-- uncomment the following to enable scanning for over 30 minutes on Android 7+ -->
-        <service
+<!--        <service
             android:name="org.altbeacon.beacon.service.BeaconService"
+            android:foregroundServiceType="location"
             tools:node="replace">
             <meta-data
                 android:name="longScanForcingEnabled"
                 android:value="true" />
-        </service>
+        </service>-->
         <service
             android:name=".battery_service"
             android:enabled="true"
