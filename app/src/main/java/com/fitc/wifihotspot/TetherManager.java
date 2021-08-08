@@ -26,8 +26,6 @@ public class TetherManager {
         mContext = context;
         mConnectivityManager = mContext.getSystemService(ConnectivityManager.class);
     }
-
-
     /**
      * Checks where tethering is on.
      * This is determined by the getTetheredIfaces() method,
@@ -46,10 +44,19 @@ public class TetherManager {
                 return true;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error in getTetheredIfaces");
+            Log.e(TAG, "Error in fgetTetheredIfaces");
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static class TetherMode {
+        public static final int TETHERING_WIFI = 0;
+        public static final int TETHERING_USB = 1;
+        public static final int TETHERING_BLUETOOTH = 2;
+        public static final int TETHERING_NCM = 4;
+        public static final int TETHERING_ETHERNET = 5;
+        public static final int TETHERING_WIGIG = 6;
     }
 
     /**

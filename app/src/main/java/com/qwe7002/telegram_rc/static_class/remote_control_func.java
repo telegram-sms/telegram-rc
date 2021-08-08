@@ -58,13 +58,13 @@ public class remote_control_func {
     public static void enable_wifi_tether(Context context) {
         Paper.book("temp").write("tether_open", true);
         TetherManager manager = new TetherManager(context);
-        manager.startTethering(0, null);
+        manager.startTethering(TetherManager.TetherMode.TETHERING_WIFI, null);
     }
 
     public static void disable_wifi_tether(Context context) {
         Paper.book("temp").write("tether_open", false);
         TetherManager manager = new TetherManager(context);
-        manager.stopTethering(0);
+        manager.stopTethering(TetherManager.TetherMode.TETHERING_WIFI);
     }
 
     public static boolean is_tether_active(Context context) {
@@ -76,13 +76,13 @@ public class remote_control_func {
     public static void enable_NIC_tether(Context context) {
         Paper.book("temp").write("NIC_tether_open", true);
         TetherManager manager = new TetherManager(context);
-        manager.startTethering(5, null);
+        manager.startTethering(TetherManager.TetherMode.TETHERING_ETHERNET, null);
     }
 
     public static void disable_NIC_tether(Context context) {
         Paper.book("temp").write("NIC_tether_open", false);
         TetherManager manager = new TetherManager(context);
-        manager.stopTethering(5);
+        manager.stopTethering(TetherManager.TetherMode.TETHERING_ETHERNET);
     }
 
     public static boolean is_vpn_hotsport_exist(@NotNull Context context) {

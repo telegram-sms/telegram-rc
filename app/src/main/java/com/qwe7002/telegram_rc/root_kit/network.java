@@ -12,7 +12,8 @@ public class network {
     }
 
     public static void set_data_sim(int sub_id) {
-        shell.run_shell_command("settings put global multi_sim_data_call " + sub_id + " \nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED");
+        shell.run_shell_command("settings put global user_preferred_data_sub 2\nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED");
+        //shell.run_shell_command("settings put global multi_sim_data_call " + sub_id + " \nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED");
     }
 
     public static void wifi_set_enable(boolean enable) {
@@ -42,7 +43,7 @@ public class network {
     }
 
     public static void add_dummy_device(String ip_addr) {
-            shell.run_shell_command("ip link add dummy0 type dummy\nip addr add " + ip_addr + "/32 dev dummy0");
+        shell.run_shell_command("ip link add dummy0 type dummy\nip addr add " + ip_addr + "/32 dev dummy0");
     }
 
     public static void del_dummy_device() {
