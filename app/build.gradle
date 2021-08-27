@@ -60,7 +60,7 @@ dependencies {
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.1'
     implementation "androidx.core:core-ktx:1.6.0"
     //noinspection DifferentStdlibGradleVersion
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.21"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.30"
 }
 repositories {
     mavenCentral()
