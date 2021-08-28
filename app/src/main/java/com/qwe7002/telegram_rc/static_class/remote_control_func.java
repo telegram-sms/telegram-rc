@@ -55,16 +55,16 @@ public class remote_control_func {
         com.qwe7002.telegram_rc.root_kit.activity_manage.start_foreground_service(const_value.VPN_HOTSPOT_PACKAGE_NAME, const_value.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
     }
 
-    public static void enable_wifi_tether(Context context) {
+    public static void enable_tether(Context context, int mode) {
         Paper.book("temp").write("tether_open", true);
         TetherManager manager = new TetherManager(context);
-        manager.startTethering(TetherManager.TetherMode.TETHERING_WIFI, null);
+        manager.startTethering(mode, null);
     }
 
-    public static void disable_wifi_tether(Context context) {
+    public static void disable_tether(Context context, int mode) {
         Paper.book("temp").write("tether_open", false);
         TetherManager manager = new TetherManager(context);
-        manager.stopTethering(TetherManager.TetherMode.TETHERING_WIFI);
+        manager.stopTethering(mode);
     }
 
     public static boolean is_tether_active(Context context) {
@@ -73,17 +73,6 @@ public class remote_control_func {
         return manager.isTetherActive();
     }
 
-    public static void enable_NIC_tether(Context context) {
-        Paper.book("temp").write("NIC_tether_open", true);
-        TetherManager manager = new TetherManager(context);
-        manager.startTethering(TetherManager.TetherMode.TETHERING_ETHERNET, null);
-    }
-
-    public static void disable_NIC_tether(Context context) {
-        Paper.book("temp").write("NIC_tether_open", false);
-        TetherManager manager = new TetherManager(context);
-        manager.stopTethering(TetherManager.TetherMode.TETHERING_ETHERNET);
-    }
 
     public static boolean is_vpn_hotsport_exist(@NotNull Context context) {
         ApplicationInfo info;

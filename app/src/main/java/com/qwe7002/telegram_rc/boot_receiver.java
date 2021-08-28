@@ -4,8 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.util.Log;
 
+import com.fitc.wifihotspot.TetherManager;
 import com.qwe7002.telegram_rc.static_class.log_func;
 import com.qwe7002.telegram_rc.static_class.remote_control_func;
 import com.qwe7002.telegram_rc.static_class.resend_func;
@@ -41,9 +43,15 @@ public class boot_receiver extends BroadcastReceiver {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
                     com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(dummy_ip_addr);
                 }
-                if (Paper.book("system_config").contains("adb_port")) {
-                    int adb_port = Paper.book("system_config").read("adb_port");
-                    com.qwe7002.telegram_rc.root_kit.nadb.set_nadb(adb_port);
+                if (Paper.book("temp").read("wifi_open", false)) {
+                    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                    assert wifiManager != null;
+                    remote_control_func.enable_vpn_ap(wifiManager);
+                }
+                if (Paper.book("temp").read("tether_open", false)) {
+                    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                    assert wifiManager != null;
+                    remote_control_func.enable_tether(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
                 }
             }
         }

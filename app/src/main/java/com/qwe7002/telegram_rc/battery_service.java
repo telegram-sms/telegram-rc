@@ -12,6 +12,7 @@ import android.os.BatteryManager;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.fitc.wifihotspot.TetherManager;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
@@ -171,7 +172,7 @@ public class battery_service extends Service {
                 case Intent.ACTION_BATTERY_LOW:
                     prebody.append(context.getString(R.string.battery_low));
                     if (remote_control_func.is_tether_active(context)) {
-                        remote_control_func.disable_wifi_tether(context);
+                        remote_control_func.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     if (Paper.book().read("wifi_open", false)) {

@@ -20,6 +20,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.fitc.wifihotspot.TetherManager;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.config.proxy;
@@ -317,7 +318,7 @@ public class beacon_receiver_service extends Service {
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.disable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.disable_wifi_tether(context);
+                                remote_control_func.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                             }
                             switch_status = STATUS_DISABLE_AP;
                         }
@@ -329,7 +330,7 @@ public class beacon_receiver_service extends Service {
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.enable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.enable_wifi_tether(context);
+                                remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                             }
                             switch_status = STATUS_ENABLE_AP;
                         }
@@ -344,7 +345,7 @@ public class beacon_receiver_service extends Service {
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.enable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.enable_wifi_tether(context);
+                                remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                             }
                             switch_status = STATUS_ENABLE_AP;
                         }
@@ -356,7 +357,7 @@ public class beacon_receiver_service extends Service {
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.disable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.disable_wifi_tether(context);
+                                remote_control_func.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                             }
                             switch_status = STATUS_DISABLE_AP;
                         }
@@ -376,12 +377,12 @@ public class beacon_receiver_service extends Service {
                 }
             });
 
-
-            try {
+            beacon_manager.startRangingBeacons(new Region("com.qwe7002.telegram_rc", null, null, null));
+/*            try {
                 beacon_manager.startRangingBeaconsInRegion(new Region("com.qwe7002.telegram_rc", null, null, null));
             } catch (RemoteException e) {
                 e.printStackTrace();
-            }
+            }*/
         }
 
 

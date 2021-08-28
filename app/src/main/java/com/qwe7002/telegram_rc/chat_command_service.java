@@ -39,6 +39,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
+import com.fitc.wifihotspot.TetherManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -66,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -677,13 +679,37 @@ public class chat_command_service extends Service {
                 com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(!wifimanager.isWifiEnabled());
                 request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
                 break;
+            case "/switchtether":
             case "/switchap":
                 if (Settings.System.canWrite(context)) {
                     boolean ap_status = remote_control_func.is_tether_active(context);
                     String result_ap;
                     if (!ap_status) {
                         result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                        remote_control_func.enable_wifi_tether(context);
+                        String[] command_list_data = request_msg.split(" ");
+                        int tether_mode = TetherManager.TetherMode.TETHERING_WIFI;
+                        if (command_list_data.length == 2) {
+                            switch (command_list_data[1].toLowerCase(Locale.ROOT)) {
+                                case "bluetooth":
+                                    tether_mode = TetherManager.TetherMode.TETHERING_BLUETOOTH;
+                                    break;
+                                case "ncm":
+                                    tether_mode = TetherManager.TetherMode.TETHERING_NCM;
+                                    break;
+                                case "usb":
+                                    tether_mode = TetherManager.TetherMode.TETHERING_USB;
+                                    break;
+                                case "nic":
+                                    tether_mode = TetherManager.TetherMode.TETHERING_ETHERNET;
+                                    break;
+                                case "wigig":
+                                    tether_mode = TetherManager.TetherMode.TETHERING_WIGIG;
+                                    break;
+                            }
+                        }
+                        Paper.book("temp").write("tether_mode", tether_mode);
+                        remote_control_func.enable_tether(context, tether_mode);
+
                     } else {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
@@ -713,23 +739,6 @@ public class chat_command_service extends Service {
                 result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
-                break;
-            case "/switchnic":
-                if (Settings.System.canWrite(context)) {
-                    boolean ap_status = Paper.book("temp").read("NIC_tether_open", false);
-                    String result_ap;
-                    if (!ap_status) {
-                        result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                        remote_control_func.enable_NIC_tether(context);
-                    } else {
-                        remote_control_func.disable_NIC_tether(context);
-                        result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
-                    }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
-                    request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
-                    break;
-                }
-                request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                 break;
             case "/setdatacard":
                 if (!sharedPreferences.getBoolean("root", false)) {
@@ -983,16 +992,18 @@ public class chat_command_service extends Service {
                     log_func.write_log(context, error_head + response.code() + " " + response_string);
                     return;
                 }
+                String splite_command_value = final_command.replace("_", "");
                 if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
                     Paper.book("send_temp").write("message_id", other_func.get_message_id(response_string));
                 }
-                if (final_command.replace("_", "").equals("/switchap")) {
+
+                if (splite_command_value.equals("/switchap") || splite_command_value.equals("/switchtether")) {
                     if (!Paper.book("temp").read("tether_open", false)) {
-                        remote_control_func.disable_wifi_tether(context);
+                        remote_control_func.disable_tether(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
                     }
                 }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
-                    switch (final_command.replace("_", "")) {
+                    switch (splite_command_value) {
                         case "/switchvpnap":
                             if (!Paper.book("temp").read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);

@@ -11,7 +11,7 @@ variables:
     REPO: telegram-rc
     KEYSTORE_SERVER: keystore.git.reallct.uk
 
-release_github:
+release:master:
     dependencies:
         - build
     stage: deploy
@@ -25,7 +25,7 @@ release_github:
         - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
         - ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
-release_nightly_github:
+release:nightly:
     dependencies:
         - build
     stage: deploy
