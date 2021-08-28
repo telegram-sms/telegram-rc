@@ -12,7 +12,13 @@ public class network {
     }
 
     public static void set_data_sim(int sub_id) {
-        shell.run_shell_command("settings put global user_preferred_data_sub 2\nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED");
+        shell.run_shell_command("settings put global user_preferred_data_sub " + sub_id + "\nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        data_set_enable(true);
         //shell.run_shell_command("settings put global multi_sim_data_call " + sub_id + " \nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED");
     }
 
