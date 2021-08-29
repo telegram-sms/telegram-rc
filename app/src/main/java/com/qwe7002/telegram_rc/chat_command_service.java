@@ -751,10 +751,8 @@ public class chat_command_service extends Service {
                     if (command_list_data.length == 2) {
                         slot = Integer.parseInt(command_list_data[1]) - 1;
                     } else {
-                        slot = 0;
-                        if (other_func.get_data_sim_id(context).equals("1")) {
-                            slot = 1;
-                        }
+                        request_body.text = getString(R.string.system_message_head) + "\nCurrent data card: SIM" + other_func.get_data_sim_id(context);
+                        break;
                     }
                     Paper.book("temp").write("sub_id", other_func.get_sub_id(context, slot));
                     request_body.text = getString(R.string.system_message_head) + "\nCurrent data card: SIM" + other_func.get_data_sim_id(context) + "\nSet data card: SIM" + (slot + 1);
@@ -848,8 +846,8 @@ public class chat_command_service extends Service {
                     Pattern reg = Pattern.compile("^(10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})|(172\\.((1[6-9])|(2\\d)|(3[01]))\\.\\d{1,3}\\.\\d{1,3})|(192\\.168\\.\\d{1,3}\\.\\d{1,3})$");
                     Matcher match = reg.matcher(command_list[1]);
                     if (match.find()) {
-                        com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(command_list[1]);
                         Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
+                        com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(command_list[1]);
                     }
                 } else {
                     if (Paper.book("system_config").contains("dummy_ip_addr")) {
@@ -1050,7 +1048,6 @@ public class chat_command_service extends Service {
             resultSize = df.format(size / (float) KB) + "KB";
         } else {
             resultSize = size + "Byte";
-
         }
         return resultSize;
     }

@@ -266,7 +266,7 @@ public class beacon_receiver_service extends Service {
                 if (listen_beacon_list.size() == 0) {
                     not_found_count = 0;
                     detect_singal_count = 0;
-                    Log.d(TAG, "onBeaconServiceConnect: Watchlist is empty");
+                    Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty");
                     return;
                 }
                 boolean found_beacon = false;

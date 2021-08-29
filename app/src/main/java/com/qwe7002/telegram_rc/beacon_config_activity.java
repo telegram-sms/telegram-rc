@@ -40,11 +40,11 @@ public class beacon_config_activity extends AppCompatActivity {
     private final BroadcastReceiver flush_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            flush();
+            flush_list_view();
         }
     };
 
-    void flush() {
+    void flush_list_view() {
         ListView beacon_listview = findViewById(R.id.beacon_listview);
         if (beacon_list.beacons.size() > 0) {
             final ArrayList<BeaconModel> list = new ArrayList<>();
@@ -68,7 +68,7 @@ public class beacon_config_activity extends AppCompatActivity {
         Context context = getApplicationContext();
         Paper.init(context);
         setContentView(R.layout.activity_beacon);
-        flush();
+        flush_list_view();
         LocalBroadcastManager.getInstance(this).registerReceiver(flush_receiver,
                 new IntentFilter("flush_view"));
     }

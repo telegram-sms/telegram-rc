@@ -200,7 +200,6 @@ public class battery_service extends Service {
             obj.action = action;
             obj.content = result;
             send_loop_list.add(obj);
-
         }
     }
 }
