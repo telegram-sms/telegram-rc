@@ -28,10 +28,6 @@ public class boot_receiver extends BroadcastReceiver {
         Paper.init(context);
         final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean("initialized", false)) {
-            if (remote_control_func.is_termux_exist(context)) {
-                Log.d(TAG, "Termux detected, try to start init.rc");
-                com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
-            }
             log_func.write_log(context, "Received [" + intent.getAction() + "] broadcast, starting background service.");
             service_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
             if (Paper.book().read("resend_list", new ArrayList<>()).size() != 0) {
@@ -39,6 +35,12 @@ public class boot_receiver extends BroadcastReceiver {
                 resend_func.start_resend_service(context);
             }
             if (sharedPreferences.getBoolean("root", false)) {
+                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
+                    if (remote_control_func.is_termux_exist(context)) {
+                        Log.i(TAG, "Termux detected, try to start init.rc");
+                        com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
+                    }
+                }
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
                     com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(dummy_ip_addr);
