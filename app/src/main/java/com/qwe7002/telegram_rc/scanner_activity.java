@@ -28,14 +28,13 @@ public class scanner_activity extends Activity {
         Toolbar toolbar = findViewById(R.id.scan_toolbar);
         toolbar.setTitle(R.string.scan_title);
         toolbar.setTitleTextColor(Color.WHITE);
-        setContentView(R.layout.activity_main);
         CodeScannerView scannerView = findViewById(R.id.scanner_view);
         mCodeScanner = new CodeScanner(this, scannerView);
         mCodeScanner.setDecodeCallback(result -> runOnUiThread(() -> {
             String TAG = "activity_scanner";
             Log.d(TAG, "format: " + result.getBarcodeFormat().toString() + " content: " + result.getText());
             if (!json_validate(result.getText())) {
-                Toast.makeText(scanner_activity.this, "The QR code is not legal", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "The QR code is not legal", Toast.LENGTH_SHORT).show();
                 return;
             }
             Intent intent = new Intent().putExtra("config_json", result.getText());
