@@ -67,7 +67,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -689,7 +688,7 @@ public class chat_command_service extends Service {
                         String[] command_list_data = request_msg.split(" ");
                         int tether_mode = TetherManager.TetherMode.TETHERING_WIFI;
                         if (command_list_data.length == 2) {
-                            switch (command_list_data[1].toLowerCase(Locale.ROOT)) {
+                            switch (command_list_data[1].toLowerCase()) {
                                 case "bluetooth":
                                     tether_mode = TetherManager.TetherMode.TETHERING_BLUETOOTH;
                                     break;
@@ -709,7 +708,6 @@ public class chat_command_service extends Service {
                         }
                         Paper.book("temp").write("tether_mode", tether_mode);
                         remote_control_func.enable_tether(context, tether_mode);
-
                     } else {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
