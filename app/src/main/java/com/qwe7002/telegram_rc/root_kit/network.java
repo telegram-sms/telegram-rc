@@ -1,6 +1,7 @@
 package com.qwe7002.telegram_rc.root_kit;
 
 public class network {
+
     private static void set_airplane_mode(boolean enable) {
         int set = 0;
         String state = "true";
@@ -13,7 +14,6 @@ public class network {
 
     public static void set_data_sim(int sub_id) {
         shell.run_shell_command("settings put global multi_sim_data_call " + sub_id + " \nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED\nam broadcast -a android.intent.action.SUB_DEFAULT_CHANGED");
-        //shell.run_shell_command("settings put global user_preferred_data_sub " + sub_id + "\nam broadcast -a android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED\nam broadcast -a android.intent.action.SUB_DEFAULT_CHANGED");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
