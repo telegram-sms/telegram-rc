@@ -11,7 +11,11 @@ import com.budiyev.android.codescanner.CodeScanner;
 import com.budiyev.android.codescanner.CodeScannerView;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.zxing.BarcodeFormat;
 import com.qwe7002.telegram_rc.static_class.const_value;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class scanner_activity extends Activity {
@@ -24,9 +28,12 @@ public class scanner_activity extends Activity {
         setContentView(R.layout.activity_scanner);
         CodeScannerView scannerView = findViewById(R.id.scanner_view);
         mCodeScanner = new CodeScanner(this, scannerView);
+        List<BarcodeFormat> formats = new ArrayList<>();
+        formats.add(BarcodeFormat.QR_CODE);
+        mCodeScanner.setFormats(formats);
         mCodeScanner.setDecodeCallback(result -> runOnUiThread(() -> {
             String TAG = "activity_scanner";
-            Log.d(TAG, "format: " + result.getBarcodeFormat().toString() + " content: " + result.getText());
+            Log.d(TAG, "format: " + result.getBarcodeFormat() + " content: " + result.getText());
             if (!json_validate(result.getText())) {
                 Toast.makeText(this, "The QR code is not legal", Toast.LENGTH_SHORT).show();
                 return;
@@ -58,10 +65,7 @@ public class scanner_activity extends Activity {
         } catch (Exception e) {
             return false;
         }
-        if (jsonElement == null) {
-            return false;
-        }
-        return jsonElement.isJsonObject();
+        return jsonElement != null;
     }
 
 }
