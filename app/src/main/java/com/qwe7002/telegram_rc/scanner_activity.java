@@ -36,6 +36,7 @@ public class scanner_activity extends Activity {
             Log.d(TAG, "format: " + result.getBarcodeFormat() + " content: " + result.getText());
             if (!json_validate(result.getText())) {
                 Toast.makeText(this, "The QR code is not legal", Toast.LENGTH_SHORT).show();
+                mCodeScanner.startPreview();
                 return;
             }
             Intent intent = new Intent().putExtra("config_json", result.getText());
