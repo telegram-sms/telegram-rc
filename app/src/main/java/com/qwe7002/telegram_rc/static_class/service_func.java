@@ -38,6 +38,7 @@ public class service_func {
             package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
         }
         if (wifi_status_monitor_switch && context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            //Determine whether there is permission
             context.startForegroundService(wifi_connect_ststus_service);
         }
         if (battery_switch) {

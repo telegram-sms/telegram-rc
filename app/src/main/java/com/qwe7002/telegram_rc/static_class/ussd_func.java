@@ -4,13 +4,11 @@ import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
@@ -30,7 +28,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class ussd_func {
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public static void send_ussd(Context context, String ussd_raw, int sub_id) {
         final String TAG = "send_ussd";
         final String ussd = other_func.get_nine_key_map_convert(ussd_raw);
