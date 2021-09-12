@@ -1,5 +1,6 @@
 package com.qwe7002.telegram_rc.static_class;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -36,7 +37,7 @@ public class service_func {
             package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
             package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
         }
-        if (wifi_status_monitor_switch) {
+        if (wifi_status_monitor_switch && context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             context.startForegroundService(wifi_connect_ststus_service);
         }
         if (battery_switch) {

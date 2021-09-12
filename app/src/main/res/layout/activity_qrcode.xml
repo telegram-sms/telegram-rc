@@ -12,12 +12,18 @@
         android:layout_gravity="center_vertical"
         android:gravity="center"
         android:orientation="vertical"
-        tools:ignore="UselessParent">
+        tools:ignore="UseCompoundDrawables,UselessParent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/qrcode_notice"
+            android:textAlignment="center" />
 
         <ImageView
             android:id="@+id/qr_imageview"
-            android:layout_width="300dp"
-            android:layout_height="300dp"
+            android:layout_width="350dp"
+            android:layout_height="350dp"
             tools:ignore="ContentDescription" />
     </LinearLayout>
 </FrameLayout>

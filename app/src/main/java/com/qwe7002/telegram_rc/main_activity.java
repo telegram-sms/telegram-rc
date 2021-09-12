@@ -55,9 +55,7 @@ import com.qwe7002.telegram_rc.static_class.service_func;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -138,7 +136,12 @@ public class main_activity extends AppCompatActivity {
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
-        wifi_status_switch.setChecked(sharedPreferences.getBoolean("wifi_monitor_switch", false));
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            wifi_status_switch.setChecked(false);
+            wifi_status_switch.setVisibility(View.GONE);
+        } else {
+            wifi_status_switch.setChecked(sharedPreferences.getBoolean("wifi_monitor_switch", false));
+        }
         usage_button.setOnClickListener(v -> {
             Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
             startActivity(intent);
@@ -393,13 +396,15 @@ public class main_activity extends AppCompatActivity {
             }
 
 
-            List<String> permission_base = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
+            /*List<String> permission_base = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
             List<String> permission = new ArrayList<>(permission_base);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 permission.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
-            }
-            ActivityCompat.requestPermissions(main_activity.this, permission.toArray(new String[0]), 1);
+            }*/
 
+            //ActivityCompat.requestPermissions(main_activity.this, permission.toArray(new String[0]), 1);
+
+            ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.CALL_PHONE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG}, 1);
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
             assert powerManager != null;
             boolean has_ignored = powerManager.isIgnoringBatteryOptimizations(getPackageName());
