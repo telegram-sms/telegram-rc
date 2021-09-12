@@ -780,7 +780,9 @@ public class main_activity extends AppCompatActivity {
         assert file_name != null;
         Uri uri = Uri.parse("https://get.telegram-sms.com" + file_name);
         CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-        //builder.setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        //This method is deprecated, but it still works
+        //noinspection deprecation
+        builder.setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         CustomTabsIntent customTabsIntent = builder.build();
         try {
             customTabsIntent.launchUrl(this, uri);
