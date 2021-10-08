@@ -153,7 +153,7 @@ public class beacon_receiver_service extends Service {
         okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
-        BeaconManager.setAndroidLScanningDisabled(false);
+        //BeaconManager.setAndroidLScanningDisabled(false);
         // Detect iBeacon:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
@@ -176,11 +176,13 @@ public class beacon_receiver_service extends Service {
         beacon_manager.setForegroundScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(2000);
         startup_time = System.currentTimeMillis();
+        //noinspection deprecation
         beacon_manager.bind(beacon_consumer);
     }
 
     @Override
     public void onDestroy() {
+        //noinspection deprecation
         beacon_manager.unbind(beacon_consumer);
         beacon_manager.disableForegroundServiceScanning();
         wakelock.release();
@@ -210,6 +212,7 @@ public class beacon_receiver_service extends Service {
         });
     }
 
+    @SuppressWarnings("deprecation")
     class beacon_service_consumer implements BeaconConsumer {
         @Override
         public void onBeaconServiceConnect() {

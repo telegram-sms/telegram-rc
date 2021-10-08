@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.fitc.wifihotspot.TetherManager;
@@ -45,6 +46,7 @@ public class battery_service extends Service {
     private static long last_receive_time = 0;
     private static long last_receive_message_id = -1;
     private static ArrayList<send_obj> send_loop_list;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = other_func.get_notification_obj(context, getString(R.string.battery_monitoring_notify));
@@ -116,6 +118,14 @@ public class battery_service extends Service {
             Response response = call.execute();
             if (response.code() == 200) {
                 last_receive_message_id = other_func.get_message_id(Objects.requireNonNull(response.body()).string());
+                if (obj.action.equals(Intent.ACTION_BATTERY_CHANGED)) {
+                    if (Settings.System.canWrite(context)) {
+                        if (Paper.book("temp").read("tether_open", false) && Paper.book("temp").read("tether_mode", -1) == TetherManager.TetherMode.TETHERING_ETHERNET) {
+                            Thread.sleep(5000);
+                            remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_ETHERNET);
+                        }
+                    }
+                }
             } else {
                 assert response.body() != null;
                 last_receive_message_id = -1;
@@ -123,7 +133,7 @@ public class battery_service extends Service {
                     sms_func.send_fallback_sms(context, request_body.text, -1);
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             log_func.write_log(context, error_head + e.getMessage());
             if (obj.action.equals(Intent.ACTION_BATTERY_LOW)) {
@@ -175,7 +185,7 @@ public class battery_service extends Service {
                         remote_control_func.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
-                    if (Paper.book().read("wifi_open", false)) {
+                    if (Paper.book("temp").read("wifi_open", false)) {
                         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         assert wifiManager != null;
                         remote_control_func.disable_vpn_ap(wifiManager);
@@ -184,6 +194,7 @@ public class battery_service extends Service {
                     break;
                 case Intent.ACTION_POWER_CONNECTED:
                     prebody.append(context.getString(R.string.charger_connect));
+
                     break;
                 case Intent.ACTION_POWER_DISCONNECTED:
                     prebody.append(context.getString(R.string.charger_disconnect));
