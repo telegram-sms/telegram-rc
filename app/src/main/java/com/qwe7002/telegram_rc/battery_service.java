@@ -122,7 +122,9 @@ public class battery_service extends Service {
                     if (Settings.System.canWrite(context)) {
                         if (Paper.book("temp").read("tether_open", false) && Paper.book("temp").read("tether_mode", -1) == TetherManager.TetherMode.TETHERING_ETHERNET) {
                             Thread.sleep(5000);
-                            remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_ETHERNET);
+                            if (!remote_control_func.is_tether_active(context)) {
+                                remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_ETHERNET);
+                            }
                         }
                     }
                 }
