@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 /**
  * Created by jonro on 19/03/2018.
- */
+ **/
 
 public class TetherManager {
     private static final String TAG = TetherManager.class.getSimpleName();
@@ -69,10 +69,10 @@ public class TetherManager {
 
         // On Pie if we try to start tethering while it is already on, it will
         // be disabled. This is needed when startTethering() is called programmatically.
-        if (isTetherActive()) {
+/*        if (isTetherActive()) {
             Log.d(TAG, "Tether already active, returning");
             return false;
-        }
+        }*/
 
         File outputDir = mContext.getCodeCacheDir();
         Object proxy;
