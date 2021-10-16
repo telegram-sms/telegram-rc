@@ -44,7 +44,7 @@ public class TetherManager {
                 return true;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error in fgetTetheredIfaces");
+            Log.e(TAG, "Error in getTetheredIfaces");
             e.printStackTrace();
         }
         return false;
@@ -122,7 +122,7 @@ public class TetherManager {
             method.invoke(mConnectivityManager, mode);
             Log.d(TAG, "stopTethering invoked");
         } catch (Exception e) {
-            Log.e(TAG, "stopTethering error: " + e.toString());
+            Log.e(TAG, "stopTethering error: " + e);
             e.printStackTrace();
         }
     }
@@ -133,7 +133,7 @@ public class TetherManager {
         try {
             return Class.forName("android.net.ConnectivityManager$OnStartTetheringCallback");
         } catch (ClassNotFoundException e) {
-            Log.e(TAG, "OnStartTetheringCallbackClass error: " + e.toString());
+            Log.e(TAG, "OnStartTetheringCallbackClass error: " + e);
             e.printStackTrace();
         }
         return null;
