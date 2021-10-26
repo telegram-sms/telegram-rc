@@ -996,6 +996,7 @@ public class chat_command_service extends Service {
                 if (splite_command_value.equals("/switchap") || splite_command_value.equals("/switchtether")) {
                     if (!Paper.book("temp").read("tether_open", false)) {
                         remote_control_func.disable_tether(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
+                        Paper.book("temp").delete("tether_mode");
                     }
                 }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {

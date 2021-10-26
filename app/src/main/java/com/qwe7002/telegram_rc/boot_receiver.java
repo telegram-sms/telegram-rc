@@ -51,12 +51,11 @@ public class boot_receiver extends BroadcastReceiver {
                     remote_control_func.enable_vpn_ap(wifiManager);
                 }
                 if (Paper.book("temp").read("tether_open", false)) {
-                    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-                    assert wifiManager != null;
                     remote_control_func.enable_tether(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
                 }
             }
         }
+        Paper.book("temp").destroy();
     }
 }
 

@@ -66,14 +66,6 @@ public class TetherManager {
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean startTethering(int mode, final OnStartTetheringCallback callback) {
-
-        // On Pie if we try to start tethering while it is already on, it will
-        // be disabled. This is needed when startTethering() is called programmatically.
-/*        if (isTetherActive()) {
-            Log.d(TAG, "Tether already active, returning");
-            return false;
-        }*/
-
         File outputDir = mContext.getCodeCacheDir();
         Object proxy;
         try {
