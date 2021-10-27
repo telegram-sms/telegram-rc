@@ -56,8 +56,10 @@ public class remote_control_func {
     }
 
     public static void force_switch_nic_tether() {
-        com.qwe7002.telegram_rc.root_kit.activity_manage.start_activity("com.android.settings", ".TetherSettings");
         try {
+            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
+            Thread.sleep(1000);
+            com.qwe7002.telegram_rc.root_kit.activity_manage.start_activity("com.android.settings", ".TetherSettings");
             Thread.sleep(1000);
             com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 20");
             Thread.sleep(1000);

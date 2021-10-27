@@ -118,7 +118,7 @@ public class battery_service extends Service {
             Response response = call.execute();
             if (response.code() == 200) {
                 last_receive_message_id = other_func.get_message_id(Objects.requireNonNull(response.body()).string());
-                if (obj.action.equals(Intent.ACTION_BATTERY_CHANGED)) {
+                if (obj.action.equals(Intent.ACTION_POWER_CONNECTED)) {
                     if (Settings.System.canWrite(context)) {
                         if (Paper.book("temp").read("tether_open", false) && Paper.book("temp").read("tether_mode", -1) == TetherManager.TetherMode.TETHERING_ETHERNET) {
                             Thread.sleep(5000);

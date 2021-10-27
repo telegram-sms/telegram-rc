@@ -669,7 +669,7 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + log_func.read_log(context, 10);
                 break;
             case "/switchwifi":
-                if (!sharedPreferences.getBoolean("root", false) || !remote_control_func.is_vpn_hotsport_exist(context)) {
+                if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
@@ -679,6 +679,10 @@ public class chat_command_service extends Service {
                 request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
                 break;
             case "/forceswitchnic":
+                if (!sharedPreferences.getBoolean("root", false)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
+                    break;
+                }
                 remote_control_func.force_switch_nic_tether();
                 request_body.text = getString(R.string.system_message_head) + "\n" + "done.";
                 break;
