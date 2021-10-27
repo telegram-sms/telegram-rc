@@ -6,7 +6,7 @@ import java.io.DataOutputStream;
 import java.util.Objects;
 
 public class shell {
-    static boolean run_shell_command(String command) {
+    public static boolean run_shell_command(String command) {
         final String TAG = "root_kit_shell";
         Process process;
         DataOutputStream os;
