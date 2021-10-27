@@ -678,7 +678,7 @@ public class chat_command_service extends Service {
                 com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(!wifimanager.isWifiEnabled());
                 request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
                 break;
-            case "/switchnic":
+            case "/forceswitchnic":
                 remote_control_func.force_switch_nic_tether();
                 request_body.text = getString(R.string.system_message_head) + "\n" + "done.";
                 break;
