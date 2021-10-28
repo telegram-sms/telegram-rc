@@ -4,6 +4,7 @@ import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.PowerManager;
 
 import com.fitc.wifihotspot.TetherManager;
 
@@ -55,12 +56,16 @@ public class remote_control_func {
         com.qwe7002.telegram_rc.root_kit.activity_manage.start_foreground_service(const_value.VPN_HOTSPOT_PACKAGE_NAME, const_value.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
     }
 
-    public static void force_switch_nic_tether() {
+    public static void force_switch_nic_tether(Context context) {
         try {
-            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
-            Thread.sleep(1000);
+            PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            //noinspection deprecation
+            if (!powerManager.isScreenOn()) {
+                com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
+                Thread.sleep(1000);
+            }
             com.qwe7002.telegram_rc.root_kit.activity_manage.start_activity("com.android.settings", ".TetherSettings");
-            Thread.sleep(1000);
+            Thread.sleep(3000);
             com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 20");
             Thread.sleep(1000);
             com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 20");
@@ -73,7 +78,6 @@ public class remote_control_func {
             Thread.sleep(1000);
             com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 4");
             Thread.sleep(1000);
-            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

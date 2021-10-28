@@ -683,7 +683,7 @@ public class chat_command_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
-                remote_control_func.force_switch_nic_tether();
+                remote_control_func.force_switch_nic_tether(context);
                 request_body.text = getString(R.string.system_message_head) + "\n" + "done.";
                 break;
             case "/switchtether":
