@@ -73,6 +73,7 @@ public class remote_control_func {
             Thread.sleep(1000);
             com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 4");
             Thread.sleep(1000);
+            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
