@@ -678,6 +678,14 @@ public class chat_command_service extends Service {
                 com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(!wifimanager.isWifiEnabled());
                 request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
                 break;
+            case "/switchscreen":
+                if (!sharedPreferences.getBoolean("root", false)) {
+                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
+                    break;
+                }
+                com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
+                request_body.text = getString(R.string.system_message_head) + "\n" + "done.";
+                break;
             case "/forceswitchnic":
                 if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
