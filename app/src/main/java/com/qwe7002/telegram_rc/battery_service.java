@@ -119,14 +119,21 @@ public class battery_service extends Service {
             if (response.code() == 200) {
                 last_receive_message_id = other_func.get_message_id(Objects.requireNonNull(response.body()).string());
                 if (obj.action.equals(Intent.ACTION_POWER_CONNECTED)) {
-                    if (Settings.System.canWrite(context)) {
-                        if (Paper.book("temp").read("tether_open", false) && Paper.book("temp").read("tether_mode", -1) == TetherManager.TetherMode.TETHERING_ETHERNET) {
-                            Thread.sleep(5000);
-                            if (!remote_control_func.is_tether_active(context)) {
-                                remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_ETHERNET);
+                    Thread t = new Thread(() -> {
+                        if (Settings.System.canWrite(context)) {
+                            if (Paper.book("temp").read("tether_open", false) && Paper.book("temp").read("tether_mode", -1) == TetherManager.TetherMode.TETHERING_ETHERNET) {
+                                if (!remote_control_func.is_tether_active(context)) {
+                                    try {
+                                        Thread.sleep(10000);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_ETHERNET);
+                                }
                             }
                         }
-                    }
+                    });
+                    t.start();
                 }
             } else {
                 assert response.body() != null;
@@ -135,7 +142,7 @@ public class battery_service extends Service {
                     sms_func.send_fallback_sms(context, request_body.text, -1);
                 }
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             log_func.write_log(context, error_head + e.getMessage());
             if (obj.action.equals(Intent.ACTION_BATTERY_LOW)) {
