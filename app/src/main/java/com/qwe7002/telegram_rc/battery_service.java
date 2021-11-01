@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.util.Log;
 
 import com.fitc.wifihotspot.TetherManager;
@@ -118,7 +117,7 @@ public class battery_service extends Service {
             Response response = call.execute();
             if (response.code() == 200) {
                 last_receive_message_id = other_func.get_message_id(Objects.requireNonNull(response.body()).string());
-                if (obj.action.equals(Intent.ACTION_POWER_CONNECTED)) {
+               /* if (obj.action.equals(Intent.ACTION_POWER_CONNECTED)) {
                     Thread t = new Thread(() -> {
                         if (Settings.System.canWrite(context)) {
                             if (Paper.book("temp").read("tether_open", false) && Paper.book("temp").read("tether_mode", -1) == TetherManager.TetherMode.TETHERING_ETHERNET) {
@@ -134,7 +133,7 @@ public class battery_service extends Service {
                         }
                     });
                     t.start();
-                }
+                }*/
             } else {
                 assert response.body() != null;
                 last_receive_message_id = -1;
