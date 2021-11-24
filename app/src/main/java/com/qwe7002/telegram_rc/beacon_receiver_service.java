@@ -153,7 +153,6 @@ public class beacon_receiver_service extends Service {
         okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
-        //BeaconManager.setAndroidLScanningDisabled(false);
         // Detect iBeacon:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
@@ -381,11 +380,6 @@ public class beacon_receiver_service extends Service {
             });
 
             beacon_manager.startRangingBeacons(new Region("com.qwe7002.telegram_rc", null, null, null));
-/*            try {
-                beacon_manager.startRangingBeaconsInRegion(new Region("com.qwe7002.telegram_rc", null, null, null));
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }*/
         }
 
 

@@ -396,15 +396,6 @@ public class main_activity extends AppCompatActivity {
                 return;
             }
 
-
-            /*List<String> permission_base = Arrays.asList(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CALL_PHONE, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG);
-            List<String> permission = new ArrayList<>(permission_base);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                permission.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
-            }*/
-
-            //ActivityCompat.requestPermissions(main_activity.this, permission.toArray(new String[0]), 1);
-
             ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.CALL_PHONE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG}, 1);
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
             assert powerManager != null;
@@ -688,6 +679,11 @@ public class main_activity extends AppCompatActivity {
                 }
                 return true;
             case R.id.set_beacon_menu_item:
+                if (checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "No permissions.");
+                    Snackbar.make(findViewById(R.id.bot_token_editview), "No permission.", Snackbar.LENGTH_LONG).show();
+                    return false;
+                }
                 startActivity(new Intent(this, beacon_config_activity.class));
                 return true;
             case R.id.set_notify_menu_item:
