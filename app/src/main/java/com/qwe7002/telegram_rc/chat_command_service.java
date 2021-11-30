@@ -211,7 +211,6 @@ public class chat_command_service extends Service {
     }
 
 
-
     private String bot_username = "";
     private boolean privacy_mode;
     private static Thread thread_main;

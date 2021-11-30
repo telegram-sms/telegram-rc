@@ -223,14 +223,11 @@ public class beacon_receiver_service extends Service {
                     if (!remote_control_func.is_vpn_hotsport_exist(context) && Settings.System.canWrite(context)) {
                         config.use_vpn_hotspot = false;
                     }
+                    wifi_is_enable_status = Paper.book("temp").read("wifi_open", false);
                 } else {
                     if (!Settings.System.canWrite(context) && remote_control_func.is_vpn_hotsport_exist(context)) {
                         config.use_vpn_hotspot = true;
                     }
-                }
-                if (config.use_vpn_hotspot) {
-                    wifi_is_enable_status = Paper.book("temp").read("wifi_open", false);
-                } else {
                     wifi_is_enable_status = remote_control_func.is_tether_active(context);
                 }
                 long current_time = System.currentTimeMillis();
