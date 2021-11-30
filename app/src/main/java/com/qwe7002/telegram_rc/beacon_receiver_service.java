@@ -172,6 +172,7 @@ public class beacon_receiver_service extends Service {
         beacon_manager.setEnableScheduledScanJobs(false);
         beacon_manager.enableForegroundServiceScanning(notification, com.qwe7002.telegram_rc.notify_id.BEACON_SERVICE);
         startForeground(com.qwe7002.telegram_rc.notify_id.BEACON_SERVICE, notification);
+        BeaconManager.setAndroidLScanningDisabled(false);
         beacon_manager.setForegroundScanPeriod(config.delay);
         beacon_manager.setForegroundBetweenScanPeriod(2000);
         startup_time = System.currentTimeMillis();
