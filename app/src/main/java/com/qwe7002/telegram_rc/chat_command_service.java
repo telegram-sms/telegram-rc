@@ -1212,6 +1212,15 @@ public class chat_command_service extends Service {
                     if (error_magnification <= 59) {
                         ++error_magnification;
                     }
+                    if (error_magnification ==59 && !get_network_type(context, false).equals("WIFI")){
+                        if (sharedPreferences.getBoolean("root", false)) {
+                            com.qwe7002.telegram_rc.root_kit.network.restart_network();
+                            error_magnification = 1;
+                            sms_func.send_fallback_sms(context, getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network), -1);
+                        }
+
+
+                    }
                     try {
                         Thread.sleep(sleep_time * 1000L);
                     } catch (InterruptedException e1) {
