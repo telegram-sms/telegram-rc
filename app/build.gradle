@@ -60,7 +60,8 @@ dependencies {
     implementation 'org.altbeacon:android-beacon-library:2.19.2'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.1'
     implementation "androidx.core:core-ktx:1.7.0"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.6.20"
+    //noinspection DifferentStdlibGradleVersion
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.6.21"
 }
 repositories {
     mavenCentral()
