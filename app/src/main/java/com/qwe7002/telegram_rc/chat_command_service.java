@@ -1027,7 +1027,13 @@ public class chat_command_service extends Service {
                             com.qwe7002.telegram_rc.root_kit.network.data_set_enable(!network_func.get_data_enable(context));
                             break;
                         case "/restartnetwork":
+                            if (Paper.book("temp").read("wifi_open", false)) {
+                                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                                assert wifiManager != null;
+                                remote_control_func.disable_vpn_ap(wifiManager);
+                            }
                             com.qwe7002.telegram_rc.root_kit.network.restart_network();
+
                             break;
                         case "/setdatacard":
                             if (Paper.book("temp").contains("sub_id")) {
