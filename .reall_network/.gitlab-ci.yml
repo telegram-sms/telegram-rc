@@ -18,7 +18,7 @@ release:master:
         - master
     script:
         - apk --update --no-cache add git openssl bash curl wget go
-        - ggo install github.com/tcnksm/ghr
+        - go install github.com/tcnksm/ghr
         - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
         - /root/go/bin/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
@@ -30,7 +30,7 @@ release:nightly:
         - nightly
     script:
         - apk --update --no-cache add git openssl bash curl wget go
-        - go get -u -v github.com/tcnksm/ghr
+        - go install github.com/tcnksm/ghr
         - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
         - /root/go/bin/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
