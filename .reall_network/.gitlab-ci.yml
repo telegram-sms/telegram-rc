@@ -39,6 +39,7 @@ build:
     image: alvrme/alpine-android:android-30-jdk11
     stage: build
     script:
+        - apk add --update coreutils
         - echo ${KEYSTORE} | base64 -d > app/key.jks
         - git submodule update --init --recursive
         - export VERSION_CODE=${CI_PIPELINE_ID}
