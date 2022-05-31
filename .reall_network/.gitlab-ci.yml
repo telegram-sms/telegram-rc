@@ -9,7 +9,6 @@ cache:
 variables:
     OWNER: telegram-sms
     REPO: telegram-rc
-    KEYSTORE_SERVER: keystore.git.reallct.uk
 
 release:master:
     dependencies:
@@ -39,8 +38,8 @@ build:
     image: alvrme/alpine-android:android-30-jdk11
     stage: build
     script:
-        - apk add --update coreutils
-        - echo ${KEYSTORE} | base64 -d > app/key.jks
+        - echo -n ${ANDROID_KEYSTORE} | base64 -d > key.jks
+        - cp key.jks app/
         - git submodule update --init --recursive
         - export VERSION_CODE=${CI_PIPELINE_ID}
         - export VERSION_NAME=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}
