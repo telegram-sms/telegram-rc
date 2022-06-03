@@ -17,10 +17,10 @@ release:master:
     only:
         - master
     script:
-        - apk --update --no-cache add git openssl bash curl wget go
+        - apk --update --no-cache add git openssl bash curl wget 
         - go install github.com/tcnksm/ghr@latest
         - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
-        - /root/go/bin/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
+        - ghr_v0.14.0_linux_amd64/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
 release:nightly:
     dependencies:
@@ -29,10 +29,11 @@ release:nightly:
     only:
         - nightly
     script:
-        - apk --update --no-cache add git openssl bash curl wget go
-        - go install github.com/tcnksm/ghr@latest
+        - apk --update --no-cache add git openssl bash curl wget
+        - wget https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_linux_amd64.tar.gz
+        - tar -zxvf  ghr_v0.14.0_linux_amd64.tar.gz
         - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
-        - /root/go/bin/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
+        - ghr_v0.14.0_linux_amd64/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
 build:
     image: alvrme/alpine-android:android-31-jdk11
