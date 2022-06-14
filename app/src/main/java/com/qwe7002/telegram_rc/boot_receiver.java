@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.util.Log;
 
 import com.fitc.wifihotspot.TetherManager;
@@ -36,6 +37,10 @@ public class boot_receiver extends BroadcastReceiver {
             }
             if (sharedPreferences.getBoolean("root", false)) {
                 if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        Log.i(TAG, "Android 12 detected, modify background restrictions");
+                        com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("setprop persist.sys.fflag.override.settings_enable_monitor_phantom_procs false");
+                    }
                     if (remote_control_func.is_termux_exist(context)) {
                         Log.i(TAG, "Termux detected, try to start init.rc");
                         com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
