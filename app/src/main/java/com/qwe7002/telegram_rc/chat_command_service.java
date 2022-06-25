@@ -36,7 +36,6 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.fitc.wifihotspot.TetherManager;
@@ -727,7 +726,13 @@ public class chat_command_service extends Service {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                     }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
+                    String beacon = "";
+                    if (!Paper.book().read("disable_beacon", false)) {
+                        Paper.book().write("disable_beacon", true);
+                        beacon = "\n" + "Beacon monitoring status: False";
+
+                    }
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true) + beacon;
                     request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                     break;
                 } else {
@@ -749,7 +754,13 @@ public class chat_command_service extends Service {
                     Paper.book("temp").write("wifi_open", false);
                     result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                 }
-                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
+                String beacon = "";
+                if (!Paper.book().read("disable_beacon", false)) {
+                    Paper.book().write("disable_beacon", true);
+                    beacon = "\n" + "Beacon monitoring status: False";
+
+                }
+                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true) + beacon;
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
                 break;
@@ -1151,7 +1162,6 @@ public class chat_command_service extends Service {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private class network_callback extends ConnectivityManager.NetworkCallback {
         @Override
         public void onAvailable(@NotNull Network network) {
@@ -1218,7 +1228,7 @@ public class chat_command_service extends Service {
                     if (error_magnification <= 59) {
                         ++error_magnification;
                     }
-                    if (error_magnification ==59 && !get_network_type(context, false).equals("WIFI")){
+                    if (error_magnification == 59 && !get_network_type(context, false).equals("WIFI")) {
                         if (sharedPreferences.getBoolean("root", false)) {
                             com.qwe7002.telegram_rc.root_kit.network.restart_network();
                             error_magnification = 1;
