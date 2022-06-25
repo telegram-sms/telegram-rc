@@ -125,13 +125,6 @@
                 android:text="@string/root_switch"
                 tools:ignore="RtlSymmetry" />
 
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/wifi_status_switch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="3dp"
-                android:text="@string/wifi_status_monitoring"
-                tools:ignore="RtlSymmetry" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/privacy_switch"

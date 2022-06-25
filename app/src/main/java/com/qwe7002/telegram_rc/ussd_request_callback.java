@@ -30,7 +30,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-@RequiresApi(api = Build.VERSION_CODES.O)
 public class ussd_request_callback extends TelephonyManager.UssdResponseCallback {
 
     private final Context context;

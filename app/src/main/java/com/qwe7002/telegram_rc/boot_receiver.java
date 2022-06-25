@@ -30,7 +30,7 @@ public class boot_receiver extends BroadcastReceiver {
         final SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean("initialized", false)) {
             log_func.write_log(context, "Received [" + intent.getAction() + "] broadcast, starting background service.");
-            service_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false), sharedPreferences.getBoolean("wifi_monitor_switch", false));
+            service_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
             if (Paper.book().read("resend_list", new ArrayList<>()).size() != 0) {
                 Log.d(TAG, "An unsent message was detected, and the automatic resend process was initiated.");
                 resend_func.start_resend_service(context);
