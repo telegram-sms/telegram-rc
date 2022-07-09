@@ -52,7 +52,7 @@ This APP uses the following open source libraries:
 - [Gson](https://github.com/google/gson)
 - [CodeauxLib](https://gist.github.com/SumiMakito/59992fd15a865c3b9709b8e2c3bc9cf1)
 - [Paper](https://github.com/pilgr/Paper)
-- [barcodescanner](https://github.com/dm77/barcodescanner)
+- [code-scanner](https://github.com/yuriy-budiyev/code-scanner)
 
 The creation of this APP would not be possible without help from the following people:
 
