@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.qwe7002.telegram_rc">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -47,14 +46,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="GoogleAppIndexingWarning"
-        tools:targetApi="n">
-        <service
-            android:name=".wifi_connect_status_service"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.INTERNET"
-            android:process=":network" />
+        tools:ignore="DataExtractionRules,GoogleAppIndexingWarning"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        tools:targetApi="s">
         <activity
             android:name=".spam_list_activity"
             android:label="@string/spam_sms_keyword_title" />
@@ -136,7 +130,6 @@
         <activity android:name=".scanner_activity" />
         <activity
             android:name=".main_activity"
-            android:label="@string/app_name"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>

@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
     defaultConfig {
         applicationId "com.qwe7002.telegram_rc"
         minSdkVersion 26
         //noinspection OldTargetApi
-        targetSdkVersion 30
+        targetSdkVersion 33
         versionCode System.getenv("VERSION_CODE") == null ? 1 : System.getenv("VERSION_CODE").toInteger()
         versionName System.getenv("VERSION_NAME") == null ? "debug-do_not_leak" : System.getenv("VERSION_NAME")
     }
@@ -42,10 +42,11 @@ android {
             }
         }
     }
+    namespace 'com.qwe7002.telegram_rc'
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'com.google.android.material:material:1.6.1'
@@ -59,7 +60,7 @@ dependencies {
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
     implementation 'org.altbeacon:android-beacon-library:2.19.2'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.1'
-    implementation "androidx.core:core-ktx:1.8.0"
+    implementation "androidx.core:core-ktx:1.9.0"
     //noinspection DifferentStdlibGradleVersion
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.10"
 }
