@@ -855,7 +855,7 @@ public class chat_command_service extends Service {
                     log_func.write_log(context, "Send spam message is complete.");
                 }).start();
                 return;
-            case "/disablebeacon":
+            case "/autoswitchap":
                 boolean state = !Paper.book().read("disable_beacon", false);
                 Paper.book().write("disable_beacon", state);
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status: " + !state;
