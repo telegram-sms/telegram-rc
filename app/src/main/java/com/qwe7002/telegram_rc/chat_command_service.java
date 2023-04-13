@@ -867,12 +867,8 @@ public class chat_command_service extends Service {
                 }
                 String[] command_list = request_msg.split(" ");
                 if (command_list.length == 2) {
-                    Pattern reg = Pattern.compile("^(10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})|(172\\.((1[6-9])|(2\\d)|(3[01]))\\.\\d{1,3}\\.\\d{1,3})|(192\\.168\\.\\d{1,3}\\.\\d{1,3})$");
-                    Matcher match = reg.matcher(command_list[1]);
-                    if (match.find()) {
-                        Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
-                        com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(command_list[1]);
-                    }
+                    Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
+                    com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(command_list[1]);
                 } else {
                     if (Paper.book("system_config").contains("dummy_ip_addr")) {
                         String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
