@@ -32,12 +32,14 @@ android {
             minifyEnabled false
             signingConfig signingConfigs.release
             ndk {
+                //noinspection ChromeOsAbiSupport
                 abiFilters "arm64-v8a"
             }
         }
         debug {
             minifyEnabled false
             ndk {
+                //noinspection ChromeOsAbiSupport
                 abiFilters "arm64-v8a"
             }
         }
@@ -60,9 +62,8 @@ dependencies {
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
     implementation 'org.altbeacon:android-beacon-library:2.19.2'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.1'
-    implementation "androidx.core:core-ktx:1.9.0"
-    //noinspection DifferentStdlibGradleVersion
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.21"
+    implementation "androidx.core:core-ktx:1.10.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.10"
 }
 repositories {
     mavenCentral()
