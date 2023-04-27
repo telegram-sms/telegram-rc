@@ -56,32 +56,6 @@ public class remote_control_func {
         com.qwe7002.telegram_rc.root_kit.activity_manage.start_foreground_service(const_value.VPN_HOTSPOT_PACKAGE_NAME, const_value.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
     }
 
-    public static void force_switch_nic_tether(Context context) {
-        try {
-            PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-            //noinspection deprecation
-            if (!powerManager.isScreenOn()) {
-                com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
-                Thread.sleep(1000);
-            }
-            com.qwe7002.telegram_rc.root_kit.activity_manage.start_activity("com.android.settings", ".TetherSettings");
-            Thread.sleep(3000);
-            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 20");
-            Thread.sleep(1000);
-            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 20");
-            Thread.sleep(1000);
-            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 20");
-            Thread.sleep(1000);
-            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 20");
-            Thread.sleep(1000);
-            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 66");
-            Thread.sleep(1000);
-            com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 4");
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static void enable_tether(Context context, int mode) {
         Paper.book("temp").write("tether_open", true);

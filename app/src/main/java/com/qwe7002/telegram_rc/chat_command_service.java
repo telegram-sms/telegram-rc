@@ -684,14 +684,6 @@ public class chat_command_service extends Service {
                 com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
                 request_body.text = getString(R.string.system_message_head) + "\n" + "done.";
                 break;
-            case "/forceswitchnic":
-                if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
-                }
-                remote_control_func.force_switch_nic_tether(context);
-                request_body.text = getString(R.string.system_message_head) + "\n" + "done.";
-                break;
             case "/switchtether":
             case "/switchap":
                 if (Settings.System.canWrite(context)) {
@@ -726,13 +718,7 @@ public class chat_command_service extends Service {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                     }
-                    String beacon = "";
-                    if (!Paper.book().read("disable_beacon", false)) {
-                        Paper.book().write("disable_beacon", true);
-                        beacon = "\n" + "Beacon monitoring status: False";
-
-                    }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true) + beacon;
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
                     request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                     break;
                 } else {
@@ -754,13 +740,7 @@ public class chat_command_service extends Service {
                     Paper.book("temp").write("wifi_open", false);
                     result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                 }
-                String beacon = "";
-                if (!Paper.book().read("disable_beacon", false)) {
-                    Paper.book().write("disable_beacon", true);
-                    beacon = "\n" + "Beacon monitoring status: False";
-
-                }
-                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true) + beacon;
+                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
                 break;
@@ -855,7 +835,7 @@ public class chat_command_service extends Service {
                     log_func.write_log(context, "Send spam message is complete.");
                 }).start();
                 return;
-            case "/autoswitchap":
+            case "/autoswitch":
                 boolean state = !Paper.book().read("disable_beacon", false);
                 Paper.book().write("disable_beacon", state);
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status: " + !state;

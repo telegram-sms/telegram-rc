@@ -1,5 +1,6 @@
 package com.qwe7002.telegram_rc;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.Service;
@@ -9,15 +10,20 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.RemoteException;
 import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.fitc.wifihotspot.TetherManager;
@@ -343,6 +349,17 @@ public class beacon_receiver_service extends Service {
                             last_action_time = current_time;
                             detect_singal_count = 0;
                             not_found_count = 0;
+                            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                                ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                                assert connect_manager != null;
+                                TelephonyManager telephonyManager = (TelephonyManager) context
+                                        .getSystemService(Context.TELEPHONY_SERVICE);
+                                assert telephonyManager != null;
+                                Network[] networks = connect_manager.getAllNetworks();
+                                if (networks.length == 0) {
+                                    com.qwe7002.telegram_rc.root_kit.network.restart_network();
+                                }
+                            }
                             if (config.use_vpn_hotspot) {
                                 remote_control_func.enable_vpn_ap(wifi_manager);
                             } else {
