@@ -68,8 +68,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import io.paperdb.Paper;
 import okhttp3.Call;
@@ -120,40 +118,39 @@ public class chat_command_service extends Service {
                 switch (other_func.get_active_card(context)) {
                     case 1:
                         String sub_id = null;
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                            TelephonyManager telephonyManager = (TelephonyManager) context
-                                    .getSystemService(Context.TELEPHONY_SERVICE);
-                            assert telephonyManager != null;
-                            sub_id = telephonyManager.getSubscriberId();
-                        }
                         result = "\n" + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sub_id, from);
                         break;
                     case 2:
                         String sim1_imsi;
+                        String sim1_result_usage = "";
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             sim1_imsi = Paper.book("system_config").read("sim1_imsi", "");
-                            if (sim1_imsi.equals("")) {
-                                sim1_imsi = null;
+                            if (!sim1_imsi.equals("")) {
+                                sim1_result_usage = get_data_usage(context, sim1_imsi, from);
                             }
                         } else {
                             TelephonyManager telephonyManager = (TelephonyManager) context
                                     .getSystemService(Context.TELEPHONY_SERVICE);
                             assert telephonyManager != null;
                             sim1_imsi = telephonyManager.getSubscriberId();
+                            sim1_result_usage = get_data_usage(context, sim1_imsi, from);
                         }
-                        result = "\nSIM1 " + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sim1_imsi, from);
+                        if (!sim1_result_usage.equals("")) {
+                            result = "\nSIM1 " + context.getString(R.string.mobile_data_usage) + sim1_result_usage;
+                        }
+                        String sim2_imsi;
                         String sim2_result_usage = "";
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            String sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
+                            sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
                             if (!sim2_imsi.equals("")) {
-                                sim2_result_usage = get_data_usage(context, Paper.book("system_config").read("sim2_imsi", null), from);
+                                sim2_result_usage = get_data_usage(context, sim2_imsi, from);
                             }
                         } else {
                             TelephonyManager telephonyManager = (TelephonyManager) context
                                     .getSystemService(Context.TELEPHONY_SERVICE);
                             assert telephonyManager != null;
                             telephonyManager = telephonyManager.createForSubscriptionId(other_func.get_sub_id(context, 1));
-                            String sim2_imsi = telephonyManager.getSubscriberId();
+                            sim2_imsi = telephonyManager.getSubscriberId();
                             sim2_result_usage = get_data_usage(context, sim2_imsi, from);
                         }
                         if (!sim2_result_usage.equals("")) {
@@ -863,10 +860,6 @@ public class chat_command_service extends Service {
                     break;
                 }
                 com.qwe7002.telegram_rc.root_kit.network.del_dummy_device();
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
-                break;
-            case "/startup":
-                com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
                 break;
             case "/sendsms":

@@ -41,21 +41,17 @@ public class boot_receiver extends BroadcastReceiver {
                         Log.i(TAG, "Android 12 detected, modify background restrictions");
                         com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("setprop persist.sys.fflag.override.settings_enable_monitor_phantom_procs false");
                     }
-                    if (remote_control_func.is_termux_exist(context)) {
-                        Log.i(TAG, "Termux detected, try to start init.rc");
-                        com.qwe7002.telegram_rc.root_kit.startup.start_termux_script("init.rc");
-                    }
                 }
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
                     com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(dummy_ip_addr);
                 }
-                if (Paper.book("temp").read("wifi_open", false)) {
+                if (Boolean.TRUE.equals(Paper.book("temp").read("wifi_open", false))) {
                     WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                     assert wifiManager != null;
                     remote_control_func.enable_vpn_ap(wifiManager);
                 }
-                if (Paper.book("temp").read("tether_open", false)) {
+                if (Boolean.TRUE.equals(Paper.book("temp").read("tether_open", false))) {
                     remote_control_func.enable_tether(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
                 }
             }

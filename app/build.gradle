@@ -13,8 +13,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility 11
-        targetCompatibility 11
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
 
     }
     kotlinOptions {
@@ -72,7 +72,7 @@ repositories {
     mavenCentral()
 }
 
-task copy_language_pack(type: Copy) {
+tasks.register('copy_language_pack', Copy) {
     from 'language_pack/'
     into 'src/main/res/'
     exclude '**/README.md'

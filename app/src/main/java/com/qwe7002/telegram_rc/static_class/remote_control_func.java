@@ -4,7 +4,6 @@ import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.PowerManager;
 
 import com.fitc.wifihotspot.TetherManager;
 
@@ -88,17 +87,6 @@ public class remote_control_func {
         return info != null;
     }
 
-    public static boolean is_termux_exist(@NotNull Context context) {
-        ApplicationInfo info;
-        try {
-            info = context.getPackageManager().getApplicationInfo(const_value.TERMUX_PACKAGE_NAME, 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            info = null;
-        }
-
-        return info != null;
-    }
 
     public static boolean is_data_usage_access(@NotNull Context context) {
         AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
