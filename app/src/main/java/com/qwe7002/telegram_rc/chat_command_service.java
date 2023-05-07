@@ -82,8 +82,6 @@ public class chat_command_service extends Service {
     private static final String TAG = "chat_command";
     //Global counter
     private static long offset = 0;
-    private static int magnification = 1;
-    private static int error_magnification = 1;
     private static int send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
     // global object
     private OkHttpClient okhttp_client;
@@ -1158,7 +1156,7 @@ public class chat_command_service extends Service {
                 Log.i(TAG, "run: The Bot Username is loaded. The Bot Username is: " + bot_username);
             }
             while (true) {
-                int timeout = 5 * magnification;
+                int timeout = 5;
                 int http_timeout = timeout + 5;
                 OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
                         .readTimeout(http_timeout, TimeUnit.SECONDS)
@@ -1178,41 +1176,20 @@ public class chat_command_service extends Service {
                 Response response;
                 try {
                     response = call.execute();
-                    error_magnification = 1;
                 } catch (IOException e) {
                     e.printStackTrace();
                     if (!network_func.check_network_status(context)) {
                         log_func.write_log(context, "No network connections available. ");
-                        error_magnification = 1;
-                        magnification = 1;
                         break;
                     }
-                    int sleep_time = 5 * error_magnification;
-                    if (sleep_time > 5) {
-                        log_func.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
-                    } else {
-                        Log.i(TAG, "run: Connection to the Telegram API service failed");
-                    }
-                    magnification = 1;
-                    if (error_magnification <= 59) {
-                        ++error_magnification;
-                    }
-                    if (error_magnification == 59 && !get_network_type(context, false).equals("WIFI")) {
-                        if (sharedPreferences.getBoolean("root", false)) {
-                            com.qwe7002.telegram_rc.root_kit.network.restart_network();
-                            error_magnification = 1;
-                            sms_func.send_fallback_sms(context, getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network), -1);
-                        }
-
-
-                    }
+                    int sleep_time = 5;
+                    log_func.write_log(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
                     try {
                         Thread.sleep(sleep_time * 1000L);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
                     continue;
-
                 }
                 if (response.code() == 200) {
                     assert response.body() != null;
@@ -1231,9 +1208,6 @@ public class chat_command_service extends Service {
                             receive_handle(item.getAsJsonObject(), first_request);
                         }
                         first_request = false;
-                    }
-                    if (magnification <= 11) {
-                        ++magnification;
                     }
                 } else {
                     log_func.write_log(context, "response code:" + response.code());

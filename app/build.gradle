@@ -53,7 +53,6 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.browser:browser:1.5.0'
     implementation 'com.squareup.okio:okio:3.2.0'
@@ -63,7 +62,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10'
     implementation 'io.github.pilgr:paperdb:2.7.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
-    implementation 'org.altbeacon:android-beacon-library:2.19.2'
+    implementation 'org.altbeacon:android-beacon-library:2.19.5'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.1'
     implementation "androidx.core:core-ktx:1.10.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.10"
