@@ -93,7 +93,7 @@ public class resend_service extends Service {
                         network_progress_handle(item, sharedPreferences.getString("chat_id", ""), okhttp_client);
                     }
                     resend_list = Paper.book().read(table_name, new ArrayList<>());
-                    if (resend_list == send_list || resend_list.size() == 0) {
+                    if (resend_list == send_list || Objects.requireNonNull(resend_list).size() == 0) {
                         break;
                     }
                 }

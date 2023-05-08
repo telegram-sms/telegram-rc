@@ -169,16 +169,6 @@ public class sms_receiver extends BroadcastReceiver {
                             }
                         }
                         break;
-                    case "/setdatacard":
-                        if (!sharedPreferences.getBoolean("root", false)) {
-                            request_body.text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.no_permission);
-                            break;
-                        }
-                        if (other_func.get_active_card(context) == 2) {
-                            Paper.book("temp").write("sub_id", sub_id);
-                            request_body.text = context.getString(R.string.system_message_head) + "\n" + "Current data card: SIM" + other_func.get_data_sim_id(context);
-                        }
-                        break;
                     case "/sendsms":
                     case "/sendsms1":
                     case "/sendsms2":
@@ -220,6 +210,7 @@ public class sms_receiver extends BroadcastReceiver {
         if (!is_verification_code && !is_trusted_phone) {
             Log.d(TAG, "onReceive: ");
             ArrayList<String> black_list_array = Paper.book("system_config").read("block_keyword_list", new ArrayList<>());
+            assert black_list_array != null;
             for (String block_list_item : black_list_array) {
                 if (block_list_item.isEmpty()) {
                     continue;
@@ -291,12 +282,6 @@ public class sms_receiver extends BroadcastReceiver {
                     break;
                 case "/restartnetwork":
                     com.qwe7002.telegram_rc.root_kit.network.restart_network();
-                    break;
-                case "/setdatacard":
-                    if (Paper.book("temp").contains("sub_id")) {
-                        com.qwe7002.telegram_rc.root_kit.network.set_data_sim(Paper.book("temp").read("sub_id"));
-                        Paper.book("temp").destroy();
-                    }
                     break;
             }
         }

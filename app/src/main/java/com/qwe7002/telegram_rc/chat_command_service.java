@@ -123,6 +123,7 @@ public class chat_command_service extends Service {
                         String sim1_result_usage = "";
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             sim1_imsi = Paper.book("system_config").read("sim1_imsi", "");
+                            assert sim1_imsi != null;
                             if (!sim1_imsi.equals("")) {
                                 sim1_result_usage = get_data_usage(context, sim1_imsi, from);
                             }
@@ -140,6 +141,7 @@ public class chat_command_service extends Service {
                         String sim2_result_usage = "";
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
+                            assert sim2_imsi != null;
                             if (!sim2_imsi.equals("")) {
                                 sim2_result_usage = get_data_usage(context, sim2_imsi, from);
                             }
@@ -623,39 +625,41 @@ public class chat_command_service extends Service {
                 break;
             case "/ping":
             case "/getinfo":
-                String card_info = "";
-                String network_stats = "";
+                String cardInfo = "";
+                String networkStats = "";
                 TelephonyManager telephonyManager = (TelephonyManager) context
                         .getSystemService(Context.TELEPHONY_SERVICE);
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    network_stats = get_data_stats(context);
-                    card_info = "\nSIM: " + other_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 0));
+                    networkStats = get_data_stats(context);
+                    cardInfo = "\nSIM: " + other_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 0));
                     if (other_func.get_active_card(context) == 2) {
-                        card_info = "\n" + getString(R.string.current_data_card) + ": SIM" + other_func.get_data_sim_id(context) + "\nSIM1: " + other_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 0)) + "\nSIM2: " + other_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 1));
+                        cardInfo = "\n" + getString(R.string.current_data_card) + ": SIM" + other_func.get_data_sim_id(context) + "\nSIM1: " + other_func.get_sim_display_name(context, 0) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 0)) + "\nSIM2: " + other_func.get_sim_display_name(context, 1) + get_cell_info(context, telephonyManager, other_func.get_sub_id(context, 1));
                     }
                 }
-                String spam_count = "";
+                String spamCount = "";
                 ArrayList<String> spam_list = Paper.book().read("spam_sms_list", new ArrayList<>());
+                assert spam_list != null;
                 if (spam_list.size() != 0) {
-                    spam_count = "\n" + getString(R.string.spam_count_title) + spam_list.size();
+                    spamCount = "\n" + getString(R.string.spam_count_title) + spam_list.size();
                 }
-                String is_hotspot_running = "";
+                String isHotspotRunning = "";
                 if (Settings.System.canWrite(context)) {
                     if (remote_control_func.is_tether_active(context)) {
-                        is_hotspot_running += "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
+                        isHotspotRunning += "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
                     } else {
-                        is_hotspot_running += "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
+                        isHotspotRunning += "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
                     }
                 }
                 if (sharedPreferences.getBoolean("root", false) && remote_control_func.is_vpn_hotsport_exist(context)) {
                     if (com.qwe7002.telegram_rc.root_kit.activity_manage.check_service_is_running(const_value.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
-                        is_hotspot_running += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.enable);
+                        isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.enable);
                     } else {
-                        is_hotspot_running += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.disable);
+                        isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.disable);
                     }
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + is_hotspot_running + spam_count + network_stats + card_info;
+                String beaconStatus = "\n" + "Beacon monitoring status: " + Boolean.FALSE.equals(Paper.book().read("disable_beacon", false));
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + isHotspotRunning + beaconStatus+ spamCount + networkStats  + cardInfo;
                 Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
@@ -670,14 +674,6 @@ public class chat_command_service extends Service {
                 assert wifimanager != null;
                 com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(!wifimanager.isWifiEnabled());
                 request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
-                break;
-            case "/switchscreen":
-                if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
-                }
-                com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("input keyevent 26");
-                request_body.text = getString(R.string.system_message_head) + "\n" + "done.";
                 break;
             case "/switchtether":
             case "/switchap":
@@ -738,24 +734,6 @@ public class chat_command_service extends Service {
                 result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, true);
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
-                break;
-            case "/setdatacard":
-                if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
-                }
-                if (other_func.get_active_card(context) == 2) {
-                    String[] command_list_data = request_msg.split(" ");
-                    int slot;
-                    if (command_list_data.length == 2) {
-                        slot = Integer.parseInt(command_list_data[1]) - 1;
-                    } else {
-                        request_body.text = getString(R.string.system_message_head) + "\nCurrent data card: SIM" + other_func.get_data_sim_id(context);
-                        break;
-                    }
-                    Paper.book("temp").write("sub_id", other_func.get_sub_id(context, slot));
-                    request_body.text = getString(R.string.system_message_head) + "\nCurrent data card: SIM" + other_func.get_data_sim_id(context) + "\nSet data card: SIM" + (slot + 1);
-                }
                 break;
             case "/switchdata":
             case "/restartnetwork":
@@ -1013,12 +991,6 @@ public class chat_command_service extends Service {
                             com.qwe7002.telegram_rc.root_kit.network.restart_network();
 
                             break;
-                        case "/setdatacard":
-                            if (Paper.book("temp").contains("sub_id")) {
-                                com.qwe7002.telegram_rc.root_kit.network.set_data_sim(Paper.book("temp").read("sub_id"));
-                                Paper.book("temp").delete("sub_id");
-                            }
-                            break;
                     }
                 }
             }
@@ -1060,7 +1032,7 @@ public class chat_command_service extends Service {
         Paper.book("send_temp").destroy();
     }
 
-    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout"})
+    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout", "UnspecifiedRegisterReceiverFlag"})
     @Override
     public void onCreate() {
         super.onCreate();
@@ -1156,8 +1128,8 @@ public class chat_command_service extends Service {
                 Log.i(TAG, "run: The Bot Username is loaded. The Bot Username is: " + bot_username);
             }
             while (true) {
-                int timeout = 5;
-                int http_timeout = timeout + 5;
+                int timeout = 60;
+                int http_timeout = 65;
                 OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
                         .readTimeout(http_timeout, TimeUnit.SECONDS)
                         .writeTimeout(http_timeout, TimeUnit.SECONDS)
