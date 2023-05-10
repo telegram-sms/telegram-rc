@@ -60,6 +60,7 @@ public class beacon_receiver_service extends Service {
     private OkHttpClient okhttp_client;
     private String chat_id;
     private String request_url;
+    static String message_thread_id;
     private BeaconManager beacon_manager;
     private long startup_time = 0;
     private long last_receive_time = 0;
@@ -149,6 +150,7 @@ public class beacon_receiver_service extends Service {
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         request_url = network_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
         chat_id = sharedPreferences.getString("chat_id", "");
+        message_thread_id = sharedPreferences.getString("message_thread_id", "");
         wifi_manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         beacon_consumer = new beacon_service_consumer();
@@ -194,6 +196,7 @@ public class beacon_receiver_service extends Service {
     private void network_progress_handle(String message, String chat_id, @NotNull OkHttpClient okhttp_client) {
         request_message request_body = new request_message();
         request_body.chat_id = chat_id;
+        request_body.message_thread_id = message_thread_id;
         request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context, true);
         String request_body_json = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_json, const_value.JSON);

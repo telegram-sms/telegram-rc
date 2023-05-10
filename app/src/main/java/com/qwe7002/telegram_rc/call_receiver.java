@@ -86,6 +86,7 @@ public class call_receiver extends BroadcastReceiver {
                 String request_uri = network_func.get_url(bot_token, "sendMessage");
                 final request_message request_body = new request_message();
                 request_body.chat_id = chat_id;
+                request_body.message_thread_id = sharedPreferences.getString("message_thread_id", "");
                 String dual_sim = other_func.get_dual_sim_card_display(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
                 request_body.text = "[" + dual_sim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + incoming_number;
 

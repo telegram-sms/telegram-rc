@@ -1,5 +1,7 @@
 package com.qwe7002.telegram_rc;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -33,8 +35,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static android.content.Context.MODE_PRIVATE;
-
 public class sms_send_receiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, @NotNull Intent intent) {
@@ -54,6 +54,7 @@ public class sms_send_receiver extends BroadcastReceiver {
         String chat_id = sharedPreferences.getString("chat_id", "");
         final request_message request_body = new request_message();
         request_body.chat_id = chat_id;
+        request_body.message_thread_id = sharedPreferences.getString("message_thread_id", "");
         String request_uri = network_func.get_url(bot_token, "sendMessage");
         long message_id = extras.getLong("message_id");
         if (message_id != -1) {

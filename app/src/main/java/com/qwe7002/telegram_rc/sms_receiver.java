@@ -108,7 +108,7 @@ public class sms_receiver extends BroadcastReceiver {
         Log.d(TAG, "onReceive: " + is_trusted_phone);
         final request_message request_body = new request_message();
         request_body.chat_id = chat_id;
-
+        request_body.message_thread_id = sharedPreferences.getString("message_thread_id", "");
         String message_body_html = message_body;
         String flash_sms_string = "";
         if (messages[0].getMessageClass() == SmsMessage.MessageClass.CLASS_0) {

@@ -2,11 +2,9 @@ package com.qwe7002.telegram_rc;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.telephony.TelephonyManager;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
@@ -45,6 +43,7 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
         this.doh_switch = sharedPreferences.getBoolean("doh_switch", true);
         this.request_body = new request_message();
         this.request_body.chat_id = chat_id;
+        this.request_body.message_thread_id = sharedPreferences.getString("message_thread_id", "");
         String bot_token = sharedPreferences.getString("bot_token", "");
         this.request_uri = network_func.get_url(bot_token, "SendMessage");
         if (message_id != -1) {
