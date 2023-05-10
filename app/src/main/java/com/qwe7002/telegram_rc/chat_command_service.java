@@ -645,21 +645,28 @@ public class chat_command_service extends Service {
                 }
                 String isHotspotRunning = "";
                 if (Settings.System.canWrite(context)) {
+                    isHotspotRunning += "\n" + getString(R.string.hotspot_status);
                     if (remote_control_func.is_tether_active(context)) {
-                        isHotspotRunning += "\n" + getString(R.string.hotspot_status) + getString(R.string.enable);
+                        isHotspotRunning += getString(R.string.enable);
                     } else {
-                        isHotspotRunning += "\n" + getString(R.string.hotspot_status) + getString(R.string.disable);
+                        isHotspotRunning += getString(R.string.disable);
                     }
                 }
                 if (sharedPreferences.getBoolean("root", false) && remote_control_func.is_vpn_hotsport_exist(context)) {
+                    isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status);
                     if (com.qwe7002.telegram_rc.root_kit.activity_manage.check_service_is_running(const_value.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
-                        isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.enable);
+                        isHotspotRunning += getString(R.string.enable);
                     } else {
-                        isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status) + getString(R.string.disable);
+                        isHotspotRunning += getString(R.string.disable);
                     }
                 }
-                String beaconStatus = "\n" + "Beacon monitoring status: " + Boolean.FALSE.equals(Paper.book().read("disable_beacon", false));
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + isHotspotRunning + beaconStatus+ spamCount + networkStats  + cardInfo;
+                String beaconStatus = "\n" + getString(R.string.beacon_monitoring_status);
+                if (Boolean.FALSE.equals(Paper.book().read("disable_beacon", false))) {
+                    beaconStatus += getString(R.string.enable);
+                } else {
+                    beaconStatus += getString(R.string.disable);
+                }
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context, false) + isHotspotRunning + beaconStatus + spamCount + networkStats + cardInfo;
                 Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":

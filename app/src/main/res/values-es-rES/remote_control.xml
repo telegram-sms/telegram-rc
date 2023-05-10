@@ -26,5 +26,6 @@
     <string name="get_permission_to_write_system_settings">Obtenga permiso para escribir la configuración del sistema</string>
     <string name="connect_to_the_network">"Conectarse a la red: "</string>
     <string name="wifi_status_monitoring">monitoreo de estado Wi-Fi</string>
+    <string name="beacon_monitoring_status">"Cambio de punto de acceso automático: "</string>
 </resources>
 

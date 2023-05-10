@@ -26,4 +26,5 @@
     <string name="get_permission_to_write_system_settings">システム設定を書き込む権限を取得する</string>
     <string name="connect_to_the_network">"ネットワークに接続する: "</string>
     <string name="wifi_status_monitoring">Wi-Fiステータスの監視</string>
+    <string name="beacon_monitoring_status">"自動ホットスポット スイッチ: "</string>
 </resources>

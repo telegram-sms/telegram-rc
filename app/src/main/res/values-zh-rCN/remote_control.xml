@@ -5,7 +5,7 @@
     <string name="enable_wifi">打开无线热点</string>
     <string name="switch_data">正在切换移动网络状态。</string>
     <string name="restart_network">重新启动移动网络。</string>
-    <string name="switch_ap_message">/switchap - 切换网络共享开关</string>
+    <string name="switch_ap_message">/switchap - 切换热点开关</string>
     <string name="switch_data_message">/switchdata - 切换数据开关\n/restartnetwork - 重置运营商网络</string>
     <string name="current_data_card">数据卡</string>
     <string name="no_permission">没有获得权限</string>
@@ -26,4 +26,5 @@
     <string name="get_permission_to_write_system_settings">获得写系统设置的权限</string>
     <string name="connect_to_the_network">"连接到网络: "</string>
     <string name="wifi_status_monitoring">Wi-Fi状态监控</string>
+    <string name="beacon_monitoring_status">"自动热点开关: "</string>
 </resources>
