@@ -77,7 +77,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-@SuppressWarnings("BusyWait")
+@SuppressWarnings({"BusyWait", "ConstantConditions"})
 public class chat_command_service extends Service {
     //todo chat toipic id
     private static final String TAG = "chat_command";
