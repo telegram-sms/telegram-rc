@@ -527,8 +527,8 @@ public class chat_command_service extends Service {
             }
         }
         if (!Objects.equals(message_thread_id, "")) {
-            if (result_obj.has("is_topic_message")) {
-                from_topic_id = result_obj.get("message_thread_id").getAsString();
+            if (message_obj.has("is_topic_message")) {
+                from_topic_id = message_obj.get("message_thread_id").getAsString();
             }
             if (!Objects.equals(message_thread_id, from_topic_id)) {
                 Log.i(TAG, "Topic ID[" + from_topic_id + "] not allow.");
@@ -561,10 +561,6 @@ public class chat_command_service extends Service {
                 Paper.book("send_temp").write("slot", card_slot);
                 Paper.book("send_temp").write("to", phone_number);
                 Paper.book("send_temp").write("content", request_msg);
-            }
-            if (!message_type_is_private) {
-                Log.i(TAG, "receive_handle: The message id could not be found, ignored.");
-                return;
             }
         }
         boolean has_command = false;
@@ -1068,6 +1064,7 @@ public class chat_command_service extends Service {
 
         chat_id = sharedPreferences.getString("chat_id", "");
         bot_token = sharedPreferences.getString("bot_token", "");
+        message_thread_id = sharedPreferences.getString("message_thread_id", "");
         okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
         wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
