@@ -36,6 +36,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+@SuppressWarnings("ALL")
 public class battery_service extends Service {
     private static String bot_token;
     private static String chat_id;
