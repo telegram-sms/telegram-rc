@@ -79,12 +79,14 @@ import okhttp3.Response;
 
 @SuppressWarnings("BusyWait")
 public class chat_command_service extends Service {
+    //todo chat toipic id
     private static final String TAG = "chat_command";
     //Global counter
     private static long offset = 0;
     private static int send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
     // global object
     private OkHttpClient okhttp_client;
+    private String message_thread_id;
     private broadcast_receiver broadcast_receiver;
     private PowerManager.WakeLock wakelock;
     private WifiManager.WifiLock wifilock;
@@ -452,6 +454,7 @@ public class chat_command_service extends Service {
         String message_type = "";
         final request_message request_body = new request_message();
         request_body.chat_id = chat_id;
+        request_body.message_thread_id = message_thread_id;
         JsonObject message_obj = null;
         String callback_data = null;
         if (result_obj.has("message")) {
@@ -480,6 +483,7 @@ public class chat_command_service extends Service {
                 String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + to + "\n" + context.getString(R.string.content) + content;
                 request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.cancel_button);
                 request_body.message_id = message_id;
+                request_body.message_thread_id = message_thread_id;
                 Gson gson = new Gson();
                 String request_body_raw = gson.toJson(request_body);
                 RequestBody body = RequestBody.create(request_body_raw, const_value.JSON);
@@ -513,11 +517,21 @@ public class chat_command_service extends Service {
         }
 
         JsonObject from_obj = null;
+        String from_topic_id = "";
         final boolean message_type_is_private = message_type.equals("private");
         if (message_obj.has("from")) {
             from_obj = message_obj.get("from").getAsJsonObject();
             if (!message_type_is_private && from_obj.get("is_bot").getAsBoolean()) {
                 Log.i(TAG, "receive_handle: receive from bot.");
+                return;
+            }
+        }
+        if (!Objects.equals(message_thread_id, "")) {
+            if (result_obj.has("is_topic_message")) {
+                from_topic_id = result_obj.get("message_thread_id").getAsString();
+            }
+            if (!Objects.equals(message_thread_id, from_topic_id)) {
+                Log.i(TAG, "Topic ID[" + from_topic_id + "] not allow.");
                 return;
             }
         }
@@ -892,9 +906,12 @@ public class chat_command_service extends Service {
                 break;
             default:
                 if (!message_type_is_private && send_sms_next_status == -1) {
-                    Log.i(TAG, "receive_handle: The conversation is not Private and does not prompt an error.");
-                    return;
+                    if (!message_type.equals("supergroup") || message_thread_id.equals("")) {
+                        Log.i(TAG, "receive_handle: The conversation is not Private and does not prompt an error.");
+                        return;
+                    }
                 }
+
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
                 break;
         }
