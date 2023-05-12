@@ -1,7 +1,6 @@
 package com.qwe7002.telegram_rc.static_class;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.qwe7002.telegram_rc.R;
 
@@ -18,9 +17,9 @@ import java.util.Locale;
 
 import io.paperdb.Paper;
 
-public class log_func {
+public class log {
     public static void write_log(@NotNull Context context, String log) {
-        Log.i("write_log", log);
+        android.util.Log.i("write_log", log);
         int new_file_mode = Context.MODE_APPEND;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(context.getString(R.string.time_format), Locale.UK);
         String write_string = "\n" + simpleDateFormat.format(new Date(System.currentTimeMillis())) + " " + log;
@@ -62,7 +61,7 @@ public class log_func {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            Log.d(TAG, "Unable to read the file.");
+            android.util.Log.d(TAG, "Unable to read the file.");
             return result;
         } finally {
             try {

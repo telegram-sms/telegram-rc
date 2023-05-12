@@ -10,18 +10,18 @@ import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.fitc.wifihotspot.TetherManager;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.const_value;
-import com.qwe7002.telegram_rc.static_class.log_func;
-import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.other_func;
-import com.qwe7002.telegram_rc.static_class.remote_control_func;
-import com.qwe7002.telegram_rc.static_class.sms_func;
+import com.qwe7002.telegram_rc.static_class.CONST;
+import com.qwe7002.telegram_rc.static_class.log;
+import com.qwe7002.telegram_rc.static_class.network;
+import com.qwe7002.telegram_rc.static_class.notify;
+import com.qwe7002.telegram_rc.static_class.other;
+import com.qwe7002.telegram_rc.static_class.remote_control;
+import com.qwe7002.telegram_rc.static_class.sms;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,8 +50,8 @@ public class battery_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = other_func.get_notification_obj(context, getString(R.string.battery_monitoring_notify));
-        startForeground(com.qwe7002.telegram_rc.notify_id.BATTERY, notification);
+        Notification notification = other.get_notification_obj(context, getString(R.string.battery_monitoring_notify));
+        startForeground(notify.BATTERY, notification);
         return START_STICKY;
     }
 
@@ -74,7 +74,7 @@ public class battery_service extends Service {
             filter.addAction(Intent.ACTION_POWER_CONNECTED);
             filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
         }
-        filter.addAction(const_value.BROADCAST_STOP_SERVICE);
+        filter.addAction(CONST.BROADCAST_STOP_SERVICE);
         registerReceiver(battery_receiver, filter);
         send_loop_list = new ArrayList<>();
         new Thread(() -> {
@@ -104,35 +104,35 @@ public class battery_service extends Service {
         request_body.chat_id = battery_service.chat_id;
         request_body.text = obj.content;
         request_body.message_thread_id = message_thread_id;
-        String request_uri = network_func.get_url(battery_service.bot_token, "sendMessage");
+        String request_uri = network.get_url(battery_service.bot_token, "sendMessage");
         if ((System.currentTimeMillis() - last_receive_time) <= 10000L && last_receive_message_id != -1) {
-            request_uri = network_func.get_url(bot_token, "editMessageText");
+            request_uri = network.get_url(bot_token, "editMessageText");
             request_body.message_id = last_receive_message_id;
-            Log.d(TAG, "onReceive: edit_mode");
+            android.util.Log.d(TAG, "onReceive: edit_mode");
         }
         last_receive_time = System.currentTimeMillis();
-        OkHttpClient okhttp_client = network_func.get_okhttp_obj(battery_service.doh_switch, Paper.book("system_config").read("proxy_config", new proxy()));
+        OkHttpClient okhttp_client = network.get_okhttp_obj(battery_service.doh_switch, Paper.book("system_config").read("proxy_config", new proxy()));
         String request_body_raw = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_raw, const_value.JSON);
+        RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send battery info failed:";
         try {
             Response response = call.execute();
             if (response.code() == 200) {
-                last_receive_message_id = other_func.get_message_id(Objects.requireNonNull(response.body()).string());
+                last_receive_message_id = other.get_message_id(Objects.requireNonNull(response.body()).string());
             } else {
                 assert response.body() != null;
                 last_receive_message_id = -1;
                 if (obj.action.equals(Intent.ACTION_BATTERY_LOW)) {
-                    sms_func.send_fallback_sms(context, request_body.text, -1);
+                    sms.send_fallback_sms(context, request_body.text, -1);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
-            log_func.write_log(context, error_head + e.getMessage());
+            log.write_log(context, error_head + e.getMessage());
             if (obj.action.equals(Intent.ACTION_BATTERY_LOW)) {
-                sms_func.send_fallback_sms(context, request_body.text, -1);
+                sms.send_fallback_sms(context, request_body.text, -1);
             }
         }
     }
@@ -160,9 +160,9 @@ public class battery_service extends Service {
 
             String TAG = "battery_receiver";
             assert intent.getAction() != null;
-            Log.d(TAG, "Receive action: " + intent.getAction());
-            if (intent.getAction().equals(const_value.BROADCAST_STOP_SERVICE)) {
-                Log.i(TAG, "Received stop signal, quitting now...");
+            android.util.Log.d(TAG, "Receive action: " + intent.getAction());
+            if (intent.getAction().equals(CONST.BROADCAST_STOP_SERVICE)) {
+                android.util.Log.i(TAG, "Received stop signal, quitting now...");
                 stopSelf();
                 android.os.Process.killProcess(android.os.Process.myPid());
                 return;
@@ -176,14 +176,14 @@ public class battery_service extends Service {
                     break;
                 case Intent.ACTION_BATTERY_LOW:
                     prebody.append(context.getString(R.string.battery_low));
-                    if (remote_control_func.is_tether_active(context)) {
-                        remote_control_func.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
+                    if (remote_control.is_tether_active(context)) {
+                        remote_control.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     if (Paper.book("temp").read("wifi_open", false)) {
                         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         assert wifiManager != null;
-                        remote_control_func.disable_vpn_ap(wifiManager);
+                        remote_control.disable_vpn_ap(wifiManager);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     break;
@@ -198,7 +198,7 @@ public class battery_service extends Service {
             assert batteryManager != null;
             int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
             if (battery_level > 100) {
-                Log.d(TAG, "The previous battery is over 100%, and the correction is 100%.");
+                android.util.Log.d(TAG, "The previous battery is over 100%, and the correction is 100%.");
                 battery_level = 100;
             }
             String result = prebody.append("\n").append(context.getString(R.string.current_battery_level)).append(battery_level).append("%").toString();

@@ -10,18 +10,18 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.const_value;
-import com.qwe7002.telegram_rc.static_class.log_func;
-import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.other_func;
-import com.qwe7002.telegram_rc.static_class.resend_func;
+import com.qwe7002.telegram_rc.static_class.CONST;
+import com.qwe7002.telegram_rc.static_class.log;
+import com.qwe7002.telegram_rc.static_class.network;
+import com.qwe7002.telegram_rc.static_class.notify;
+import com.qwe7002.telegram_rc.static_class.other;
+import com.qwe7002.telegram_rc.static_class.resend;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -51,8 +51,8 @@ public class notification_listener_service extends NotificationListenerService {
         context = getApplicationContext();
         Paper.init(context);
         sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
-        Notification notification = other_func.get_notification_obj(getApplicationContext(), getString(R.string.Notification_Listener_title));
-        startForeground(com.qwe7002.telegram_rc.notify_id.NOTIFICATION_LISTENER_SERVICE, notification);
+        Notification notification = other.get_notification_obj(getApplicationContext(), getString(R.string.Notification_Listener_title));
+        startForeground(notify.NOTIFICATION_LISTENER_SERVICE, notification);
 
     }
 
@@ -65,22 +65,22 @@ public class notification_listener_service extends NotificationListenerService {
     @Override
     public void onNotificationPosted(@NotNull StatusBarNotification sbn) {
         final String package_name = sbn.getPackageName();
-        Log.d(TAG, "onNotificationPosted: " + package_name);
+        android.util.Log.d(TAG, "onNotificationPosted: " + package_name);
 
         if (!sharedPreferences.getBoolean("initialized", false)) {
-            Log.i(TAG, "Uninitialized, Notification receiver is deactivated.");
+            android.util.Log.i(TAG, "Uninitialized, Notification receiver is deactivated.");
             return;
         }
 
         List<String> listen_list = Paper.book("system_config").read("notify_listen_list", new ArrayList<>());
         if (!listen_list.contains(package_name)) {
-            Log.i(TAG, "[" + package_name + "] Not in the list of listening packages.");
+            android.util.Log.i(TAG, "[" + package_name + "] Not in the list of listening packages.");
             return;
         }
         Bundle extras = sbn.getNotification().extras;
         assert extras != null;
         String app_name = "unknown";
-        Log.d(TAG, "onNotificationPosted: " + app_name_list);
+        android.util.Log.d(TAG, "onNotificationPosted: " + app_name_list);
         if (app_name_list.containsKey(package_name)) {
             app_name = app_name_list.get(package_name);
         } else {
@@ -98,13 +98,13 @@ public class notification_listener_service extends NotificationListenerService {
 
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
-        String request_uri = network_func.get_url(bot_token, "sendMessage");
+        String request_uri = network.get_url(bot_token, "sendMessage");
         request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         request_body.message_thread_id = sharedPreferences.getString("message_thread_id", "");
         request_body.text = getString(R.string.receive_notification_title) + "\n" + getString(R.string.app_name_title) + app_name + "\n" + getString(R.string.title) + title + "\n" + getString(R.string.content) + content;
-        RequestBody body = RequestBody.create(new Gson().toJson(request_body), const_value.JSON);
-        OkHttpClient okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
+        RequestBody body = RequestBody.create(new Gson().toJson(request_body), CONST.JSON);
+        OkHttpClient okhttp_client = network.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send notification failed:";
@@ -112,8 +112,8 @@ public class notification_listener_service extends NotificationListenerService {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log_func.write_log(context, error_head + e.getMessage());
-                resend_func.add_resend_loop(context, request_body.text);
+                log.write_log(context, error_head + e.getMessage());
+                resend.add_resend_loop(context, request_body.text);
             }
 
             @Override
@@ -121,8 +121,8 @@ public class notification_listener_service extends NotificationListenerService {
                 assert response.body() != null;
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
-                    log_func.write_log(context, error_head + response.code() + " " + result);
-                    resend_func.add_resend_loop(context, request_body.text);
+                    log.write_log(context, error_head + response.code() + " " + result);
+                    resend.add_resend_loop(context, request_body.text);
                 }
             }
         });

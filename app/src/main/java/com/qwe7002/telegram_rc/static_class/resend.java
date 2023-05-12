@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 import io.paperdb.Paper;
 
-public class resend_func {
+public class resend {
     public static void add_resend_loop(Context context, String message) {
         ArrayList<String> resend_list;
         resend_list = Paper.book().read("resend_list", new ArrayList<>());

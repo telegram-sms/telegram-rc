@@ -27,7 +27,7 @@ import java.util.Map;
 import io.paperdb.Paper;
 
 
-public class other_func {
+public class other {
 
     public static String get_nine_key_map_convert(String input) {
         final Map<Character, Integer> nine_key_map = new HashMap<Character, Integer>() {
@@ -102,7 +102,7 @@ public class other_func {
         if (slot == -1) {
             return dual_sim;
         }
-        if (other_func.get_active_card(context) >= 2) {
+        if (other.get_active_card(context) >= 2) {
             String result = "";
             if (show_name) {
                 result = "(" + get_sim_display_name(context, slot) + ")";
@@ -167,7 +167,7 @@ public class other_func {
     }
 
     public static int get_sub_id(Context context, int slot) {
-        int active_card = other_func.get_active_card(context);
+        int active_card = other.get_active_card(context);
         if (active_card >= 2) {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 Log.i("get_sub_id", "get_sub_id: No permission");

@@ -19,7 +19,6 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -48,12 +47,12 @@ import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.root_kit.shell;
-import com.qwe7002.telegram_rc.static_class.const_value;
-import com.qwe7002.telegram_rc.static_class.log_func;
-import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.other_func;
-import com.qwe7002.telegram_rc.static_class.remote_control_func;
-import com.qwe7002.telegram_rc.static_class.service_func;
+import com.qwe7002.telegram_rc.static_class.CONST;
+import com.qwe7002.telegram_rc.static_class.log;
+import com.qwe7002.telegram_rc.static_class.network;
+import com.qwe7002.telegram_rc.static_class.other;
+import com.qwe7002.telegram_rc.static_class.remote_control;
+import com.qwe7002.telegram_rc.static_class.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -122,20 +121,20 @@ public class main_activity extends AppCompatActivity {
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
         String message_thread_id_save = sharedPreferences.getString("message_thread_id", "");
-        if (other_func.parse_string_to_long(chat_id_save) < 0) {
+        if (other.parse_string_to_long(chat_id_save) < 0) {
             privacy_mode_switch.setVisibility(View.VISIBLE);
         } else {
             privacy_mode_switch.setVisibility(View.GONE);
         }
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
         if (sharedPreferences.getBoolean("initialized", false)) {
-            service_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+            service.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
 
         }
 
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            if (other_func.get_active_card(context) < 2) {
+            if (other.get_active_card(context) < 2) {
                 display_dual_sim_display_name_switch.setEnabled(false);
                 display_dual_sim_display_name_config = false;
             }
@@ -208,7 +207,7 @@ public class main_activity extends AppCompatActivity {
                 display_dual_sim_display_name_switch.setChecked(false);
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
             } else {
-                if (other_func.get_active_card(context) < 2) {
+                if (other.get_active_card(context) < 2) {
                     display_dual_sim_display_name_switch.setEnabled(false);
                     display_dual_sim_display_name_switch.setChecked(false);
                 }
@@ -240,7 +239,7 @@ public class main_activity extends AppCompatActivity {
                 Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show();
                 return;
             }
-            new Thread(() -> service_func.stop_all_service(context)).start();
+            new Thread(() -> service.stop_all_service(context)).start();
             //noinspection deprecation
             final ProgressDialog progress_dialog = new ProgressDialog(main_activity.this);
             //noinspection deprecation
@@ -252,14 +251,14 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setIndeterminate(false);
             progress_dialog.setCancelable(false);
             progress_dialog.show();
-            String request_uri = network_func.get_url(bot_token_editview.getText().toString().trim(), "getUpdates");
-            OkHttpClient okhttp_client = network_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
+            String request_uri = network.get_url(bot_token_editview.getText().toString().trim(), "getUpdates");
+            OkHttpClient okhttp_client = network.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
             okhttp_client = okhttp_client.newBuilder()
                     .readTimeout(60, TimeUnit.SECONDS)
                     .build();
             polling_json request_body = new polling_json();
             request_body.timeout = 60;
-            RequestBody body = RequestBody.create(new Gson().toJson(request_body), const_value.JSON);
+            RequestBody body = RequestBody.create(new Gson().toJson(request_body), CONST.JSON);
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             progress_dialog.setOnKeyListener((dialogInterface, i, keyEvent) -> {
@@ -275,7 +274,7 @@ public class main_activity extends AppCompatActivity {
                     e.printStackTrace();
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
-                    log_func.write_log(context, error_message);
+                    log.write_log(context, error_message);
                     Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                     Looper.loop();
@@ -289,7 +288,7 @@ public class main_activity extends AppCompatActivity {
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description").getAsString();
-                        log_func.write_log(context, error_message);
+                        log.write_log(context, error_message);
                         Looper.prepare();
                         Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                         Looper.loop();
@@ -393,15 +392,15 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setCancelable(false);
             progress_dialog.show();
 
-            String request_uri = network_func.get_url(bot_token_editview.getText().toString().trim(), "sendMessage");
+            String request_uri = network.get_url(bot_token_editview.getText().toString().trim(), "sendMessage");
             request_message request_body = new request_message();
             request_body.chat_id = chat_id_editview.getText().toString().trim();
             request_body.message_thread_id = message_thread_id_editview.getText().toString().trim();
             request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.success_connect);
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);
-            RequestBody body = RequestBody.create(request_body_raw, const_value.JSON);
-            OkHttpClient okhttp_client = network_func.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
+            RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
+            OkHttpClient okhttp_client = network.get_okhttp_obj(doh_switch.isChecked(), Paper.book("system_config").read("proxy_config", new proxy()));
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send message failed:";
@@ -411,7 +410,7 @@ public class main_activity extends AppCompatActivity {
                     e.printStackTrace();
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
-                    log_func.write_log(context, error_message);
+                    log.write_log(context, error_message);
                     Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG)
                             .show();
@@ -427,17 +426,17 @@ public class main_activity extends AppCompatActivity {
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description");
-                        log_func.write_log(context, error_message);
+                        log.write_log(context, error_message);
                         Looper.prepare();
                         Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                         Looper.loop();
                         return;
                     }
                     if (!new_bot_token.equals(bot_token_save)) {
-                        Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
+                        android.util.Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
                         Paper.book().destroy();
                     }
-                    Paper.book("system_config").write("version", const_value.SYSTEM_CONFIG_VERSION);
+                    Paper.book("system_config").write("version", CONST.SYSTEM_CONFIG_VERSION);
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);
                     editor.putString("chat_id", chat_id_editview.getText().toString().trim());
@@ -458,8 +457,8 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("privacy_dialog_agree", true);
                     editor.apply();
                     new Thread(() -> {
-                        service_func.stop_all_service(context);
-                        service_func.start_service(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked());
+                        service.stop_all_service(context);
+                        service.start_service(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked());
                     }).start();
                     Looper.prepare();
                     Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)
@@ -479,7 +478,7 @@ public class main_activity extends AppCompatActivity {
             privacy_mode_switch.setChecked(false);
             return;
         }
-        if (other_func.parse_string_to_long(chat_id) < 0) {
+        if (other.parse_string_to_long(chat_id) < 0) {
             message_thread_id_view.setVisibility(View.VISIBLE);
             privacy_mode_switch.setVisibility(View.VISIBLE);
         } else {
@@ -496,11 +495,11 @@ public class main_activity extends AppCompatActivity {
         boolean back_status = set_permission_back;
         set_permission_back = false;
         if (back_status) {
-            if (service_func.is_notify_listener(context)) {
+            if (service.is_notify_listener(context)) {
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
             }
         }
-        if (remote_control_func.is_data_usage_access(context)) {
+        if (remote_control.is_data_usage_access(context)) {
             usage_button.setVisibility(View.GONE);
         }
         if (Settings.System.canWrite(context)) {
@@ -541,7 +540,7 @@ public class main_activity extends AppCompatActivity {
         switch (requestCode) {
             case 0:
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "No camera permissions.");
+                    android.util.Log.d(TAG, "No camera permissions.");
                     Snackbar.make(findViewById(R.id.bot_token_editview), R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
                     return;
                 }
@@ -554,7 +553,7 @@ public class main_activity extends AppCompatActivity {
                 if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                     TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                     assert telephony_manager != null;
-                    if (telephony_manager.getPhoneCount() <= 1 || other_func.get_active_card(context) < 2) {
+                    if (telephony_manager.getPhoneCount() <= 1 || other.get_active_card(context) < 2) {
                         display_dual_sim_display_name.setEnabled(false);
                         display_dual_sim_display_name.setChecked(false);
                     }
@@ -567,7 +566,7 @@ public class main_activity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
-            if (resultCode == const_value.RESULT_CONFIG_JSON) {
+            if (resultCode == CONST.RESULT_CONFIG_JSON) {
                 JsonObject json_config = JsonParser.parseString(Objects.requireNonNull(data.getStringExtra("config_json"))).getAsJsonObject();
                 ((EditText) findViewById(R.id.bot_token_editview)).setText(json_config.get("bot_token").getAsString());
                 ((EditText) findViewById(R.id.chat_id_editview)).setText(json_config.get("chat_id").getAsString());
@@ -609,7 +608,7 @@ public class main_activity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (other_func.get_active_card(context) == 2 && remote_control_func.is_data_usage_access(context)) {
+            if (other.get_active_card(context) == 2 && remote_control.is_data_usage_access(context)) {
                 MenuItem set_sim_imsi = menu.findItem(R.id.set_sim_imsi);
                 set_sim_imsi.setVisible(true);
             }
@@ -656,14 +655,14 @@ public class main_activity extends AppCompatActivity {
                 return true;
             case R.id.set_beacon_menu_item:
                 if (checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "No permissions.");
+                    android.util.Log.d(TAG, "No permissions.");
                     Snackbar.make(findViewById(R.id.bot_token_editview), "No permission.", Snackbar.LENGTH_LONG).show();
                     return false;
                 }
                 startActivity(new Intent(this, beacon_config_activity.class));
                 return true;
             case R.id.set_notify_menu_item:
-                if (!service_func.is_notify_listener(context)) {
+                if (!service.is_notify_listener(context)) {
                     Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
@@ -721,9 +720,9 @@ public class main_activity extends AppCompatActivity {
                             proxy_item.password = proxy_password.getText().toString();
                             Paper.book("system_config").write("proxy_config", proxy_item);
                             new Thread(() -> {
-                                service_func.stop_all_service(context);
+                                service.stop_all_service(context);
                                 if (sharedPreferences.getBoolean("initialized", false)) {
-                                    service_func.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+                                    service.start_service(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
                                 }
                             }).start();
                         })

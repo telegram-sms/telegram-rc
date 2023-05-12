@@ -26,11 +26,12 @@ import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.beacon_list;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.const_value;
-import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.other_func;
-import com.qwe7002.telegram_rc.static_class.remote_control_func;
-import com.qwe7002.telegram_rc.static_class.resend_func;
+import com.qwe7002.telegram_rc.static_class.CONST;
+import com.qwe7002.telegram_rc.static_class.network;
+import com.qwe7002.telegram_rc.static_class.notify;
+import com.qwe7002.telegram_rc.static_class.other;
+import com.qwe7002.telegram_rc.static_class.remote_control;
+import com.qwe7002.telegram_rc.static_class.resend;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -148,11 +149,11 @@ public class beacon_receiver_service extends Service {
         LocalBroadcastManager.getInstance(this).registerReceiver(reload_config_receiver,
                 new IntentFilter("reload_beacon_config"));
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-        request_url = network_func.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
+        request_url = network.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
         chat_id = sharedPreferences.getString("chat_id", "");
         message_thread_id = sharedPreferences.getString("message_thread_id", "");
         wifi_manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        okhttp_client = network_func.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
+        okhttp_client = network.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
         // Detect iBeacon:
@@ -170,10 +171,10 @@ public class beacon_receiver_service extends Service {
         // Detect the URL frame:
         beacon_manager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
-        Notification notification = other_func.get_notification_obj(context, getString(R.string.beacon_receiver));
+        Notification notification = other.get_notification_obj(context, getString(R.string.beacon_receiver));
         beacon_manager.setEnableScheduledScanJobs(false);
-        beacon_manager.enableForegroundServiceScanning(notification, com.qwe7002.telegram_rc.notify_id.BEACON_SERVICE);
-        startForeground(com.qwe7002.telegram_rc.notify_id.BEACON_SERVICE, notification);
+        beacon_manager.enableForegroundServiceScanning(notification, notify.BEACON_SERVICE);
+        startForeground(notify.BEACON_SERVICE, notification);
         //noinspection deprecation
         BeaconManager.setAndroidLScanningDisabled(false);
         beacon_manager.setForegroundScanPeriod(config.delay);
@@ -199,13 +200,13 @@ public class beacon_receiver_service extends Service {
         request_body.message_thread_id = message_thread_id;
         request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context, true);
         String request_body_json = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_json, const_value.JSON);
+        RequestBody body = RequestBody.create(request_body_json, CONST.JSON);
         Request request_obj = new Request.Builder().url(request_url).method("POST", body).build();
         Call call = okhttp_client.newCall(request_obj);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                resend_func.add_resend_loop(context, request_body.text);
+                resend.add_resend_loop(context, request_body.text);
                 e.printStackTrace();
             }
 
@@ -225,15 +226,15 @@ public class beacon_receiver_service extends Service {
                 boolean wifi_is_enable_status;
                 LocalBroadcastManager.getInstance(context).sendBroadcast(new Intent("flush_view"));
                 if (config.use_vpn_hotspot) {
-                    if (!remote_control_func.is_vpn_hotsport_exist(context) && Settings.System.canWrite(context)) {
+                    if (!remote_control.is_vpn_hotsport_exist(context) && Settings.System.canWrite(context)) {
                         config.use_vpn_hotspot = false;
                     }
                     wifi_is_enable_status = Paper.book("temp").read("wifi_open", false);
                 } else {
-                    if (!Settings.System.canWrite(context) && remote_control_func.is_vpn_hotsport_exist(context)) {
+                    if (!Settings.System.canWrite(context) && remote_control.is_vpn_hotsport_exist(context)) {
                         config.use_vpn_hotspot = true;
                     }
-                    wifi_is_enable_status = remote_control_func.is_tether_active(context);
+                    wifi_is_enable_status = remote_control.is_tether_active(context);
                 }
                 long current_time = System.currentTimeMillis();
                 if ((System.currentTimeMillis() - startup_time) < 10000L) {
@@ -320,9 +321,9 @@ public class beacon_receiver_service extends Service {
                             detect_singal_count = 0;
                             not_found_count = 0;
                             if (config.use_vpn_hotspot) {
-                                remote_control_func.disable_vpn_ap(wifi_manager);
+                                remote_control.disable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
+                                remote_control.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                             }
                             switch_status = STATUS_DISABLE_AP;
                         }
@@ -332,9 +333,9 @@ public class beacon_receiver_service extends Service {
                             detect_singal_count = 0;
                             not_found_count = 0;
                             if (config.use_vpn_hotspot) {
-                                remote_control_func.enable_vpn_ap(wifi_manager);
+                                remote_control.enable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
+                                remote_control.enable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                             }
                             switch_status = STATUS_ENABLE_AP;
                         }
@@ -347,9 +348,9 @@ public class beacon_receiver_service extends Service {
                             detect_singal_count = 0;
                             not_found_count = 0;
                             if (config.use_vpn_hotspot) {
-                                remote_control_func.enable_vpn_ap(wifi_manager);
+                                remote_control.enable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.enable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
+                                remote_control.enable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                             }
                             switch_status = STATUS_ENABLE_AP;
                         }
@@ -359,9 +360,9 @@ public class beacon_receiver_service extends Service {
                             detect_singal_count = 0;
                             not_found_count = 0;
                             if (config.use_vpn_hotspot) {
-                                remote_control_func.disable_vpn_ap(wifi_manager);
+                                remote_control.disable_vpn_ap(wifi_manager);
                             } else {
-                                remote_control_func.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
+                                remote_control.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
                             }
                             switch_status = STATUS_DISABLE_AP;
                         }

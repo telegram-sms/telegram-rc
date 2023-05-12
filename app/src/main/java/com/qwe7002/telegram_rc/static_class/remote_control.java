@@ -11,12 +11,12 @@ import org.jetbrains.annotations.NotNull;
 
 import io.paperdb.Paper;
 
-public class remote_control_func {
+public class remote_control {
 
 
     public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
         Paper.book("temp").write("wifi_open", false);
-        com.qwe7002.telegram_rc.root_kit.activity_manage.force_stop_package(const_value.VPN_HOTSPOT_PACKAGE_NAME);
+        com.qwe7002.telegram_rc.root_kit.activity_manage.force_stop_package(CONST.VPN_HOTSPOT_PACKAGE_NAME);
         com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(false);
         try {
             while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
@@ -52,7 +52,7 @@ public class remote_control_func {
             e.printStackTrace();
         }
 
-        com.qwe7002.telegram_rc.root_kit.activity_manage.start_foreground_service(const_value.VPN_HOTSPOT_PACKAGE_NAME, const_value.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+        com.qwe7002.telegram_rc.root_kit.activity_manage.start_foreground_service(CONST.VPN_HOTSPOT_PACKAGE_NAME, CONST.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
     }
 
 
@@ -78,7 +78,7 @@ public class remote_control_func {
     public static boolean is_vpn_hotsport_exist(@NotNull Context context) {
         ApplicationInfo info;
         try {
-            info = context.getPackageManager().getApplicationInfo(const_value.VPN_HOTSPOT_PACKAGE_NAME, 0);
+            info = context.getPackageManager().getApplicationInfo(CONST.VPN_HOTSPOT_PACKAGE_NAME, 0);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             info = null;

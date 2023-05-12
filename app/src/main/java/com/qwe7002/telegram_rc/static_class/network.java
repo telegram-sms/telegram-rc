@@ -2,7 +2,6 @@ package com.qwe7002.telegram_rc.static_class;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.os.StrictMode;
 import android.util.Log;
@@ -24,7 +23,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.dnsoverhttps.DnsOverHttps;
 
-public class network_func {
+public class network {
     private static final String TELEGRAM_API_DOMAIN = "api.telegram.org";
     private static final String DNS_OVER_HTTP_ADDRSS = "https://cloudflare-dns.com/dns-query";
 
@@ -33,9 +32,9 @@ public class network_func {
                 Context.CONNECTIVITY_SERVICE);
         assert connectivityManager != null;
         boolean network_status = false;
-        Network[] networks = connectivityManager.getAllNetworks();
+        android.net.Network[] networks = connectivityManager.getAllNetworks();
         if (networks.length != 0) {
-            for (Network network : networks) {
+            for (android.net.Network network : networks) {
                 NetworkCapabilities network_capabilities = connectivityManager.getNetworkCapabilities(network);
                 Log.d("check_network_status", "check_network_status: " + network_capabilities);
                 assert network_capabilities != null;
@@ -52,9 +51,9 @@ public class network_func {
                 Context.CONNECTIVITY_SERVICE);
         boolean network_status = false;
         assert manager != null;
-        Network[] networks = manager.getAllNetworks();
+        android.net.Network[] networks = manager.getAllNetworks();
         if (networks.length != 0) {
-            for (Network network : networks) {
+            for (android.net.Network network : networks) {
                 NetworkCapabilities network_capabilities = manager.getNetworkCapabilities(network);
                 Log.d("check_network_status", "check_network_status: " + network_capabilities);
                 assert network_capabilities != null;

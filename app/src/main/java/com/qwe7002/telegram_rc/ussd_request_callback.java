@@ -9,11 +9,11 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.const_value;
-import com.qwe7002.telegram_rc.static_class.log_func;
-import com.qwe7002.telegram_rc.static_class.network_func;
-import com.qwe7002.telegram_rc.static_class.resend_func;
-import com.qwe7002.telegram_rc.static_class.sms_func;
+import com.qwe7002.telegram_rc.static_class.CONST;
+import com.qwe7002.telegram_rc.static_class.log;
+import com.qwe7002.telegram_rc.static_class.network;
+import com.qwe7002.telegram_rc.static_class.resend;
+import com.qwe7002.telegram_rc.static_class.sms;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,9 +45,9 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
         this.request_body.chat_id = chat_id;
         this.request_body.message_thread_id = sharedPreferences.getString("message_thread_id", "");
         String bot_token = sharedPreferences.getString("bot_token", "");
-        this.request_uri = network_func.get_url(bot_token, "SendMessage");
+        this.request_uri = network.get_url(bot_token, "SendMessage");
         if (message_id != -1) {
-            this.request_uri = network_func.get_url(bot_token, "editMessageText");
+            this.request_uri = network.get_url(bot_token, "editMessageText");
             this.request_body.message_id = message_id;
         }
         this.message_header = context.getString(R.string.send_ussd_head);
@@ -70,8 +70,8 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
     private void network_progress_handle(String message) {
         request_body.text = message;
         String request_body_json = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_json, const_value.JSON);
-        OkHttpClient okhttp_client = network_func.get_okhttp_obj(doh_switch, Paper.book("system_config").read("proxy_config", new proxy()));
+        RequestBody body = RequestBody.create(request_body_json, CONST.JSON);
+        OkHttpClient okhttp_client = network.get_okhttp_obj(doh_switch, Paper.book("system_config").read("proxy_config", new proxy()));
         Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request_obj);
         final String error_head = "Send USSD failed:";
@@ -79,18 +79,18 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log_func.write_log(context, error_head + e.getMessage());
-                sms_func.send_fallback_sms(context, request_body.text, -1);
-                resend_func.add_resend_loop(context, request_body.text);
+                log.write_log(context, error_head + e.getMessage());
+                sms.send_fallback_sms(context, request_body.text, -1);
+                resend.add_resend_loop(context, request_body.text);
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     assert response.body() != null;
-                    log_func.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
-                    sms_func.send_fallback_sms(context, request_body.text, -1);
-                    resend_func.add_resend_loop(context, request_body.text);
+                    log.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                    sms.send_fallback_sms(context, request_body.text, -1);
+                    resend.add_resend_loop(context, request_body.text);
                 }
             }
         });
