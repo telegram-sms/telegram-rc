@@ -19,6 +19,7 @@ import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
+import io.paperdb.Paper;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.dnsoverhttps.DnsOverHttps;
@@ -72,7 +73,8 @@ public class network {
     }
 
     @NotNull
-    public static OkHttpClient get_okhttp_obj(boolean doh_switch, proxy proxy_item) {
+    public static OkHttpClient get_okhttp_obj(boolean doh_switch) {
+        proxy proxy_item = Paper.book("system_config").read("proxy_config", new proxy());
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)

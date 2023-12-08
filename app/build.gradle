@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     defaultConfig {
         applicationId "com.qwe7002.telegram_rc"
         minSdkVersion 26
@@ -54,8 +54,8 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.browser:browser:1.5.0'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.browser:browser:1.7.0'
     implementation 'com.squareup.okio:okio:3.3.0'
     implementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.2"
     implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.0.0-alpha.2"
@@ -63,10 +63,10 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'io.github.pilgr:paperdb:2.7.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
-    implementation 'org.altbeacon:android-beacon-library:2.19.5'
+    implementation 'org.altbeacon:android-beacon-library:2.20.3'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.3'
-    implementation "androidx.core:core-ktx:1.10.0"
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.8.21'
+    implementation "androidx.core:core-ktx:1.12.0"
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.0'
 }
 repositories {
     mavenCentral()

@@ -23,7 +23,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.fitc.wifihotspot.TetherManager;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.config.beacon;
-import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.beacon_list;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.CONST;
@@ -76,8 +75,8 @@ public class beacon_receiver_service extends Service {
     }
 
     @NotNull
-    private battery_info get_battery_info() {
-        battery_info info = new battery_info();
+    private batteryInfo getBatteryInfo() {
+        batteryInfo info = new batteryInfo();
         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
         info.battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -105,7 +104,7 @@ public class beacon_receiver_service extends Service {
         return info;
     }
 
-    static class battery_info {
+    static class batteryInfo {
         int battery_level = 0;
         boolean is_charging = false;
     }
@@ -117,7 +116,7 @@ public class beacon_receiver_service extends Service {
         return null;
     }
 
-    private final BroadcastReceiver reload_config_receiver = new BroadcastReceiver() {
+    private final BroadcastReceiver reloadConfigReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             config = Paper.book("beacon_config").read("config", new beacon());
@@ -146,14 +145,14 @@ public class beacon_receiver_service extends Service {
         }
 
         config = Paper.book("beacon_config").read("config", new beacon());
-        LocalBroadcastManager.getInstance(this).registerReceiver(reload_config_receiver,
+        LocalBroadcastManager.getInstance(this).registerReceiver(reloadConfigReceiver,
                 new IntentFilter("reload_beacon_config"));
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
         request_url = network.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
         chat_id = sharedPreferences.getString("chat_id", "");
         message_thread_id = sharedPreferences.getString("message_thread_id", "");
         wifi_manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        okhttp_client = network.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true), Paper.book("system_config").read("proxy_config", new proxy()));
+        okhttp_client = network.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
         beacon_consumer = new beacon_service_consumer();
         beacon_manager = BeaconManager.getInstanceForApplication(this);
         // Detect iBeacon:
@@ -198,7 +197,7 @@ public class beacon_receiver_service extends Service {
         request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         request_body.message_thread_id = message_thread_id;
-        request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context, true);
+        request_body.text = message + "\n" + context.getString(R.string.current_battery_level) + chat_command_service.get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + chat_command_service.get_network_type(context);
         String request_body_json = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_json, CONST.JSON);
         Request request_obj = new Request.Builder().url(request_url).method("POST", body).build();
@@ -259,7 +258,7 @@ public class beacon_receiver_service extends Service {
                     detect_singal_count = 0;
                     return;
                 }
-                battery_info info = get_battery_info();
+                batteryInfo info = getBatteryInfo();
                 if (!info.is_charging && info.battery_level < 25 && !wifi_is_enable_status && !config.opposite) {
                     not_found_count = 0;
                     detect_singal_count = 0;

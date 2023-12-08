@@ -13,7 +13,6 @@ import android.os.IBinder;
 
 import com.fitc.wifihotspot.TetherManager;
 import com.google.gson.Gson;
-import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.log;
@@ -111,7 +110,7 @@ public class battery_service extends Service {
             android.util.Log.d(TAG, "onReceive: edit_mode");
         }
         last_receive_time = System.currentTimeMillis();
-        OkHttpClient okhttp_client = network.get_okhttp_obj(battery_service.doh_switch, Paper.book("system_config").read("proxy_config", new proxy()));
+        OkHttpClient okhttp_client = network.get_okhttp_obj(battery_service.doh_switch);
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
