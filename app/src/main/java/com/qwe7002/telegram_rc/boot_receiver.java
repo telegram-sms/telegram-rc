@@ -38,12 +38,12 @@ public class boot_receiver extends BroadcastReceiver {
                 if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         android.util.Log.i(TAG, "Android 12 detected, modify background restrictions");
-                        com.qwe7002.telegram_rc.root_kit.shell.run_shell_command("setprop persist.sys.fflag.override.settings_enable_monitor_phantom_procs false");
+                        com.qwe7002.telegram_rc.root_kit.shell.runShellCommand("setprop persist.sys.fflag.override.settings_enable_monitor_phantom_procs false");
                     }
                 }
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
-                    com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(dummy_ip_addr);
+                    com.qwe7002.telegram_rc.root_kit.network.addDummyDevice(dummy_ip_addr);
                 }
                 if (Boolean.TRUE.equals(Paper.book("temp").read("wifi_open", false))) {
                     WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);

@@ -30,9 +30,9 @@ public class service {
         startBeaconService(context);
         if (isNotifyListener(context)) {
             ComponentName this_component_name = new ComponentName(context, notification_listener_service.class);
-            PackageManager package_manager = context.getPackageManager();
-            package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-            package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+            PackageManager packageManager = context.getPackageManager();
+            packageManager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+            packageManager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
         }
         if (battery_switch) {
             context.startForegroundService(battery_service);

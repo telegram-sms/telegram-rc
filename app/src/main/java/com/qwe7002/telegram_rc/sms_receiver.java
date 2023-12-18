@@ -155,10 +155,6 @@ public class sms_receiver extends BroadcastReceiver {
                         raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                         request_body.text = raw_request_body_text;
                         break;
-                    case "/restartnetwork":
-                        raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.restart_network);
-                        request_body.text = raw_request_body_text;
-                        break;
                     case "/sendussd":
                         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                             if (command_list.length == 2) {
@@ -272,21 +268,16 @@ public class sms_receiver extends BroadcastReceiver {
 
     private void command_handle(@NotNull SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
         if (sharedPreferences.getBoolean("root", false)) {
-            switch (message_body.toLowerCase().replace("_", "")) {
-                case "/switchdata":
-                    if (data_enable) {
-                        com.qwe7002.telegram_rc.root_kit.network.data_set_enable(false);
-                    }
-                    break;
-                case "/restartnetwork":
-                    com.qwe7002.telegram_rc.root_kit.network.restart_network();
-                    break;
+            if (message_body.toLowerCase().replace("_", "").equals("/data")) {
+                if (data_enable) {
+                    com.qwe7002.telegram_rc.root_kit.network.setData(false);
+                }
             }
         }
     }
 
     void open_data(Context context) {
-        com.qwe7002.telegram_rc.root_kit.network.data_set_enable(true);
+        com.qwe7002.telegram_rc.root_kit.network.setData(true);
         int loop_count = 0;
         while (!network.checkNetworkStatus(context)) {
             if (loop_count >= 100) {

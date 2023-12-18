@@ -83,7 +83,7 @@ public class beacon_config_activity extends AppCompatActivity {
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);
         beacon config = Paper.book("beacon_config").read("config", new beacon());
         assert config != null;
-        use_vpn_switch.setChecked(config.use_vpn_hotspot);
+        use_vpn_switch.setChecked(config.useVpnHotspot);
         if (!remote_control.isVPNHotspotExist(context)) {
             use_vpn_switch.setChecked(false);
         }
@@ -94,15 +94,15 @@ public class beacon_config_activity extends AppCompatActivity {
             use_vpn_switch.setEnabled(true);
         }
 
-        disable_count.setText(String.valueOf(config.disable_count));
-        enable_count.setText(String.valueOf(config.enable_count));
+        disable_count.setText(String.valueOf(config.disableCount));
+        enable_count.setText(String.valueOf(config.enableCount));
         new AlertDialog.Builder(this).setTitle("Beacon configuration")
                 .setView(dialog_view)
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                     config.opposite = enable.isChecked();
-                    config.use_vpn_hotspot = use_vpn_switch.isChecked();
-                    config.disable_count = Integer.parseInt(disable_count.getText().toString());
-                    config.enable_count = Integer.parseInt(enable_count.getText().toString());
+                    config.useVpnHotspot = use_vpn_switch.isChecked();
+                    config.disableCount = Integer.parseInt(disable_count.getText().toString());
+                    config.enableCount = Integer.parseInt(enable_count.getText().toString());
                     Paper.book("beacon_config").write("config", config);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("reload_beacon_config"));
                 }).show();

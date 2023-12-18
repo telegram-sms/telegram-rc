@@ -52,7 +52,7 @@ class beacon_receiver_service : Service() {
     private val TAG = "beacon_receviver"
     private lateinit var wifiManager: WifiManager
     private var notFoundCount = 0
-    private var detectSingalCount = 0
+    private var detectCount = 0
     private lateinit var okhttpClient: OkHttpClient
     private lateinit var chatId: String
     private lateinit var requestUrl: String
@@ -110,11 +110,10 @@ class beacon_receiver_service : Service() {
                     minor = it.getIdentifierAsInt(3),
                     rssi = it.rssi.toInt(),
                     hardwareAddress = it.hardwareAddress,
-                    // todo perfect example of Demeter's Law violation
                     distance = scanner.ranger.calculateDistance(it)
                 )
                 beaconList.beacons.add(item)
-                Log.d(TAG, "onCreate: " + item)
+                Log.d(TAG, "onCreate: $item")
             }
             LocalBroadcastManager.getInstance(applicationContext)
                 .sendBroadcast(Intent("flush_beacons_list"));
@@ -156,12 +155,12 @@ class beacon_receiver_service : Service() {
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val wifiIsEnableStatus: Boolean
-            if (config.use_vpn_hotspot) {
+            if (config.useVpnHotspot) {
                 if (!remote_control.isVPNHotspotExist(context) && Settings.System.canWrite(
                         context
                     )
                 ) {
-                    config.use_vpn_hotspot = false;
+                    config.useVpnHotspot = false;
                 }
                 wifiIsEnableStatus = Paper.book("temp").read("wifi_open", false)!!;
             } else {
@@ -169,19 +168,19 @@ class beacon_receiver_service : Service() {
                         context
                     )
                 ) {
-                    config.use_vpn_hotspot = true;
+                    config.useVpnHotspot = true;
                 }
                 wifiIsEnableStatus = remote_control.isHotspotActive(context);
             }
             if (Paper.book().read("disable_beacon", false)!!) {
                 notFoundCount = 0;
-                detectSingalCount = 0;
+                detectCount = 0;
                 return;
             }
             val info = getBatteryInfo()
             if (!info.isCharging && info.batteryLevel < 25 && !wifiIsEnableStatus && !config.opposite) {
                 notFoundCount = 0
-                detectSingalCount = 0
+                detectCount = 0
                 Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation")
                 return
             }
@@ -189,7 +188,7 @@ class beacon_receiver_service : Service() {
                 Paper.book("beacon_config").read("address", ArrayList<String>())!!
             if (listen_beacon_list.size == 0) {
                 notFoundCount = 0
-                detectSingalCount = 0
+                detectCount = 0
                 Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
                 return
             }
@@ -217,18 +216,18 @@ class beacon_receiver_service : Service() {
             var beacon_status = ""
             if (foundBeacon) {
                 if (detectBeacon != null) {
-                    beacon_status = "\nBeacon Rssi: " + detectBeacon.rssi + "dBm"
+                    beacon_status = "\nBeacon Distance: ${detectBeacon.distance}meter"
                     notFoundCount = 0
-                    if (detectBeacon.rssi < config.RSSI_strenght) {
+                    if (detectBeacon.distance> 3.0) {
                         Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation")
                     } else {
-                        ++detectSingalCount
+                        ++detectCount
                     }
                 };
             } else {
                 beacon_status = "\nBeacon Not Found."
                 if (notFoundCount > 1) {
-                    detectSingalCount = 0
+                    detectCount = 0
                 }
                 ++notFoundCount
             }
@@ -236,14 +235,14 @@ class beacon_receiver_service : Service() {
             val STATUS_ENABLE_AP = 0
             val STATUS_DISABLE_AP = 1
             var switchStatus = STATUS_STANDBY
-            Log.d(TAG, "detect_singal_count: $detectSingalCount")
+            Log.d(TAG, "detect_singal_count: $detectCount")
             Log.d(TAG, "not_found_count: $notFoundCount")
             if (wifiIsEnableStatus && foundBeacon) {
                 if (!config.opposite) {
-                    if (detectSingalCount >= config.disable_count) {
-                        detectSingalCount = 0
+                    if (detectCount >= config.disableCount) {
+                        detectCount = 0
                         notFoundCount = 0
-                        if (config.use_vpn_hotspot) {
+                        if (config.useVpnHotspot) {
                             remote_control.disableVPNHotspot(wifiManager)
                         } else {
                             remote_control.disableHotspot(
@@ -254,10 +253,10 @@ class beacon_receiver_service : Service() {
                         switchStatus = STATUS_DISABLE_AP
                     }
                 } else {
-                    if (detectSingalCount >= config.enable_count) {
-                        detectSingalCount = 0
+                    if (detectCount >= config.enableCount) {
+                        detectCount = 0
                         notFoundCount = 0
-                        if (config.use_vpn_hotspot) {
+                        if (config.useVpnHotspot) {
                             remote_control.enableVPNHotspot(wifiManager)
                         } else {
                             remote_control.enableHotspot(
@@ -271,10 +270,10 @@ class beacon_receiver_service : Service() {
             }
             if (!wifiIsEnableStatus && !foundBeacon) {
                 if (!config.opposite) {
-                    if (notFoundCount >= config.enable_count) {
-                        detectSingalCount = 0
+                    if (notFoundCount >= config.enableCount) {
+                        detectCount = 0
                         notFoundCount = 0
-                        if (config.use_vpn_hotspot) {
+                        if (config.useVpnHotspot) {
                             remote_control.enableVPNHotspot(wifiManager)
                         } else {
                             remote_control.enableHotspot(
@@ -285,10 +284,10 @@ class beacon_receiver_service : Service() {
                         switchStatus = STATUS_ENABLE_AP
                     }
                 } else {
-                    if (notFoundCount >= config.disable_count) {
-                        detectSingalCount = 0
+                    if (notFoundCount >= config.disableCount) {
+                        detectCount = 0
                         notFoundCount = 0
-                        if (config.use_vpn_hotspot) {
+                        if (config.useVpnHotspot) {
                             remote_control.disableVPNHotspot(wifiManager)
                         } else {
                             remote_control.disableHotspot(
@@ -314,7 +313,7 @@ class beacon_receiver_service : Service() {
      ${getString(R.string.disable_wifi)}${getString(R.string.action_success)}$beacon_status
      """.trimIndent()
             }
-            message?.let { networkProgressHandle(it, chatId, okhttpClient) }
+            message?.let { networkHandle(it, chatId, okhttpClient) }
 
         }
     }
@@ -336,7 +335,7 @@ class beacon_receiver_service : Service() {
     }
 
 
-    private fun networkProgressHandle   (
+    private fun networkHandle   (
         message: String,
         chat_id: String,
         okhttp_client: OkHttpClient
@@ -376,15 +375,14 @@ class beacon_receiver_service : Service() {
         })
     }
 
-    private fun getBatteryInfo(): batteryInfo {
-        val info = batteryInfo()
+    private fun getBatteryInfo(): BatteryInfo {
+        val info = BatteryInfo()
         val batteryManager =
             (applicationContext.getSystemService(BATTERY_SERVICE) as BatteryManager)
         info.batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        val intentfilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus: Intent = applicationContext.registerReceiver(null, intentfilter)!!
-        val chargeStatus = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        when (chargeStatus) {
+        val intent = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus: Intent = applicationContext.registerReceiver(null, intent)!!
+        when (batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
             BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> info.isCharging =
                 true
 
@@ -399,7 +397,7 @@ class beacon_receiver_service : Service() {
         return info
     }
 
-    internal class batteryInfo {
+    internal class BatteryInfo {
         var batteryLevel = 0
         var isCharging = false
     }

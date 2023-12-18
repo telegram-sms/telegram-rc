@@ -162,14 +162,14 @@ public class chat_command_service extends Service {
                 break;
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
-                if (com.qwe7002.telegram_rc.root_kit.radio.is_LTE_CA()) {
+                if (com.qwe7002.telegram_rc.root_kit.radio.isLTECA()) {
                     net_type += "+";
                 }
-                if (com.qwe7002.telegram_rc.root_kit.radio.is_NR_connected()) {
+                if (com.qwe7002.telegram_rc.root_kit.radio.isNRConnected()) {
                     net_type += " & NR";
                     break;
                 }
-                if (com.qwe7002.telegram_rc.root_kit.radio.is_NR_standby()) {
+                if (com.qwe7002.telegram_rc.root_kit.radio.isNRStandby()) {
                     net_type += " (NR Standby)";
                 }
                 break;
@@ -481,12 +481,8 @@ public class chat_command_service extends Service {
             case "/start":
             case "/commandlist":
                 String sms_command = "\n" + getString(R.string.sendsms);
-                String data_switch_command = "";
                 if (other.getActiveCard(context) == 2) {
                     sms_command = "\n" + getString(R.string.sendsms_dual);
-                    if (sharedPreferences.getBoolean("root", false)) {
-                        data_switch_command = "\n" + getString(R.string.set_data_card);
-                    }
                 }
                 sms_command += "\n" + getString(R.string.get_spam_sms);
 
@@ -503,7 +499,7 @@ public class chat_command_service extends Service {
                 }
                 if (sharedPreferences.getBoolean("root", false)) {
                     if (remote_control.isVPNHotspotExist(context)) {
-                        switch_ap += "\n" + getString(R.string.switch_ap_message).replace("/switchap", "/switchvpnap");
+                        switch_ap += "\n" + getString(R.string.switch_ap_message).replace("/hotspot", "/vpnhotspot");
                     }
                     switch_ap += "\n" + getString(R.string.switch_data_message);
                 }
@@ -512,7 +508,7 @@ public class chat_command_service extends Service {
                     break;
                 }
 
-                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap + data_switch_command;
+                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap ;
                 if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
                     result_string = result_string.replace(" -", "@" + bot_username + " -");
                 }
@@ -549,7 +545,7 @@ public class chat_command_service extends Service {
                 }
                 if (sharedPreferences.getBoolean("root", false) && remote_control.isVPNHotspotExist(context)) {
                     isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status);
-                    if (com.qwe7002.telegram_rc.root_kit.activity_manage.check_service_is_running(CONST.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
+                    if (com.qwe7002.telegram_rc.root_kit.activity_manage.checkServiceIsRunning(CONST.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
                         isHotspotRunning += getString(R.string.enable);
                     } else {
                         isHotspotRunning += getString(R.string.disable);
@@ -567,18 +563,17 @@ public class chat_command_service extends Service {
             case "/log":
                 request_body.text = getString(R.string.system_message_head) + log.readLog(context, 10);
                 break;
-            case "/switchwifi":
+            case "/wifi":
                 if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
                 WifiManager wifimanager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 assert wifimanager != null;
-                com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(!wifimanager.isWifiEnabled());
+                com.qwe7002.telegram_rc.root_kit.network.setWifi(!wifimanager.isWifiEnabled());
                 request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
                 break;
-            case "/switchtether":
-            case "/switchap":
+            case "/hotspot":
                 if (Settings.System.canWrite(context)) {
                     boolean ap_status = remote_control.isHotspotActive(context);
                     String result_ap;
@@ -615,9 +610,9 @@ public class chat_command_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                     break;
                 } else {
-                    command = "/switchvpnap";
+                    command = "/vpnhotspot";
                 }
-            case "/switchvpnap":
+            case "/vpnhotspot":
                 if (!sharedPreferences.getBoolean("root", false) || !remote_control.isVPNHotspotExist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
@@ -637,18 +632,13 @@ public class chat_command_service extends Service {
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
                 break;
-            case "/switchdata":
-            case "/restartnetwork":
+            case "/mobiledata":
                 if (!sharedPreferences.getBoolean("root", false)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
-                String result_data;
-                if ("/restartnetwork".equals(command)) {
-                    result_data = context.getString(R.string.restart_network);
-                } else {
-                    result_data = context.getString(R.string.switch_data);
-                }
+                String result_data = context.getString(R.string.switch_data);
+
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
                 break;
             case "/sendussd":
@@ -723,11 +713,11 @@ public class chat_command_service extends Service {
                 String[] command_list = request_msg.split(" ");
                 if (command_list.length == 2) {
                     Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
-                    com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(command_list[1]);
+                    com.qwe7002.telegram_rc.root_kit.network.addDummyDevice(command_list[1]);
                 } else {
                     if (Paper.book("system_config").contains("dummy_ip_addr")) {
                         String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
-                        com.qwe7002.telegram_rc.root_kit.network.add_dummy_device(dummy_ip_addr);
+                        com.qwe7002.telegram_rc.root_kit.network.addDummyDevice(dummy_ip_addr);
                     }
                 }
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
@@ -737,7 +727,7 @@ public class chat_command_service extends Service {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
-                com.qwe7002.telegram_rc.root_kit.network.del_dummy_device();
+                com.qwe7002.telegram_rc.root_kit.network.delDummyDevice();
                 request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
                 break;
             case "/sendsms":
@@ -869,7 +859,7 @@ public class chat_command_service extends Service {
                     Paper.book("send_temp").write("message_id", other.getMessageId(response_string));
                 }
 
-                if (splite_command_value.equals("/switchap") || splite_command_value.equals("/switchtether")) {
+                if (splite_command_value.equals("/hotspot") || splite_command_value.equals("/vpnhotspot")) {
                     if (!Paper.book("temp").read("tether_open", false)) {
                         remote_control.disableHotspot(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
                         Paper.book("temp").delete("tether_mode");
@@ -877,24 +867,15 @@ public class chat_command_service extends Service {
                 }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
                     switch (splite_command_value) {
-                        case "/switchvpnap":
+                        case "/vpnhotspot":
                             if (!Paper.book("temp").read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                                 assert wifiManager != null;
                                 remote_control.disableVPNHotspot(wifiManager);
                             }
                             break;
-                        case "/switchdata":
-                            com.qwe7002.telegram_rc.root_kit.network.data_set_enable(!network.getDataEnable(context));
-                            break;
-                        case "/restartnetwork":
-                            if (Paper.book("temp").read("wifi_open", false)) {
-                                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                                assert wifiManager != null;
-                                remote_control.disableVPNHotspot(wifiManager);
-                            }
-                            com.qwe7002.telegram_rc.root_kit.network.restart_network();
-
+                        case "/mobiledata":
+                            com.qwe7002.telegram_rc.root_kit.network.setData(!network.getDataEnable(context));
                             break;
                     }
                 }

@@ -230,7 +230,7 @@ public class main_activity extends AppCompatActivity {
         });
 
         root_switch.setOnClickListener(view -> new Thread(() -> {
-            if (!shell.check_root()) {
+            if (!shell.checkRoot()) {
                 runOnUiThread(() -> root_switch.setChecked(false));
             }
         }).start());

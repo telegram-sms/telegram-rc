@@ -80,7 +80,7 @@ public class battery_service extends Service {
             ArrayList<send_obj> need_remove = new ArrayList<>();
             while (true) {
                 for (send_obj item : send_loop_list) {
-                    network_handle(item);
+                    networkHandle(item);
                     need_remove.add(item);
                 }
                 send_loop_list.removeAll(need_remove);
@@ -97,7 +97,7 @@ public class battery_service extends Service {
         }).start();
     }
 
-    private void network_handle(send_obj obj) {
+    private void networkHandle(send_obj obj) {
         String TAG = "network_handle";
         final request_message request_body = new request_message();
         request_body.chat_id = battery_service.chat_id;
