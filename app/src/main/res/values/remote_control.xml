@@ -1,8 +1,8 @@
 <resources>
     <string name="action_success">successfully.</string>
     <string name="action_failed">failed.</string>
-    <string name="disable_wifi">"Disable tethering "</string>
-    <string name="enable_wifi">"Enable tethering "</string>
+    <string name="disable_wifi">"Disable hotspot "</string>
+    <string name="enable_wifi">"Enable hotspot "</string>
     <string name="switch_data">Switching mobile network status.</string>
     <string name="restart_network">Restarting the mobile network.</string>
     <string name="switch_ap_message">/switchap - Toggle tethering switch</string>
@@ -11,7 +11,7 @@
     <string name="no_permission">Not getting privileges.</string>
     <string name="adb_config">"Network adb setup "</string>
     <string name="root_switch">[Root] Allow advanced features</string>
-    <string name="hotspot_status">"Tethering status: "</string>
+    <string name="hotspot_status">"Hotspot status: "</string>
     <string name="enable">Enable</string>
     <string name="disable">Disable</string>
     <string name="beacon_receiver">"Beacon receiver "</string>

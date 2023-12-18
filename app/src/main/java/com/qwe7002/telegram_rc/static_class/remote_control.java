@@ -14,12 +14,12 @@ import io.paperdb.Paper;
 public class remote_control {
 
 
-    public static void disable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
+    public static void disableVPNHotspot(android.net.wifi.WifiManager wifiManager) {
         Paper.book("temp").write("wifi_open", false);
         com.qwe7002.telegram_rc.root_kit.activity_manage.force_stop_package(CONST.VPN_HOTSPOT_PACKAGE_NAME);
         com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(false);
         try {
-            while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
+            while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
                 Thread.sleep(100);
             }
             Thread.sleep(1000);
@@ -28,7 +28,7 @@ public class remote_control {
         }
         com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(true);
         try {
-            while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
+            while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100);
             }
             Thread.sleep(1000);
@@ -37,14 +37,14 @@ public class remote_control {
         }
     }
 
-    public static void enable_vpn_ap(android.net.wifi.WifiManager wifi_manager) {
-        if (wifi_manager.isWifiEnabled()) {
-            disable_vpn_ap(wifi_manager);
+    public static void enableVPNHotspot(android.net.wifi.WifiManager wifiManager) {
+        if (wifiManager.isWifiEnabled()) {
+            disableVPNHotspot(wifiManager);
         }
         Paper.book("temp").write("wifi_open", true);
         com.qwe7002.telegram_rc.root_kit.network.wifi_set_enable(true);
         try {
-            while (wifi_manager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
+            while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100);
             }
             Thread.sleep(1000);
@@ -56,26 +56,26 @@ public class remote_control {
     }
 
 
-    public static void enable_tether(Context context, int mode) {
+    public static void enableHotspot(Context context, int mode) {
         Paper.book("temp").write("tether_open", true);
         TetherManager manager = new TetherManager(context);
         manager.startTethering(mode, null);
     }
 
-    public static void disable_tether(Context context, int mode) {
+    public static void disableHotspot(Context context, int mode) {
         Paper.book("temp").write("tether_open", false);
         TetherManager manager = new TetherManager(context);
         manager.stopTethering(mode);
     }
 
-    public static boolean is_tether_active(Context context) {
+    public static boolean isHotspotActive(Context context) {
         TetherManager manager = new TetherManager(context);
         Paper.book("temp").write("tether_open", manager.isTetherActive());
         return manager.isTetherActive();
     }
 
 
-    public static boolean is_vpn_hotsport_exist(@NotNull Context context) {
+    public static boolean isVPNHotspotExist(@NotNull Context context) {
         ApplicationInfo info;
         try {
             info = context.getPackageManager().getApplicationInfo(CONST.VPN_HOTSPOT_PACKAGE_NAME, 0);
@@ -88,7 +88,7 @@ public class remote_control {
     }
 
 
-    public static boolean is_data_usage_access(@NotNull Context context) {
+    public static boolean isDataUsageAccess(@NotNull Context context) {
         AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
         int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
                 android.os.Process.myUid(), context.getPackageName());

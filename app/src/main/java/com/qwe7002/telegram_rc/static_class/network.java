@@ -28,7 +28,7 @@ public class network {
     private static final String TELEGRAM_API_DOMAIN = "api.telegram.org";
     private static final String DNS_OVER_HTTP_ADDRSS = "https://cloudflare-dns.com/dns-query";
 
-    public static boolean get_data_enable(@NotNull Context context) {
+    public static boolean getDataEnable(@NotNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         assert connectivityManager != null;
@@ -47,7 +47,7 @@ public class network {
         return network_status;
     }
 
-    public static boolean check_network_status(@NotNull Context context) {
+    public static boolean checkNetworkStatus(@NotNull Context context) {
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         boolean network_status = false;
@@ -68,53 +68,54 @@ public class network {
 
     @NotNull
     @Contract(pure = true)
-    public static String get_url(String token, String func) {
+    public static String getUrl(String token, String func) {
         return "https://" + TELEGRAM_API_DOMAIN + "/bot" + token + "/" + func;
     }
 
     @NotNull
-    public static OkHttpClient get_okhttp_obj(boolean doh_switch) {
-        proxy proxy_item = Paper.book("system_config").read("proxy_config", new proxy());
+    public static OkHttpClient getOkhttpObj(boolean dohSwitch) {
+        proxy proxyConfig = Paper.book("system_config").read("proxy_config", new proxy());
         OkHttpClient.Builder okhttp = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true);
         Proxy proxy = null;
-        if (proxy_item.enable) {
+        assert proxyConfig != null;
+        if (proxyConfig.enable) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
-            InetSocketAddress proxyAddr = new InetSocketAddress(proxy_item.host, proxy_item.port);
+            InetSocketAddress proxyAddr = new InetSocketAddress(proxyConfig.host, proxyConfig.port);
             proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
             Authenticator.setDefault(new Authenticator() {
                 @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
-                    if (getRequestingHost().equalsIgnoreCase(proxy_item.host)) {
-                        if (proxy_item.port == getRequestingPort()) {
-                            return new PasswordAuthentication(proxy_item.username, proxy_item.password.toCharArray());
+                    if (getRequestingHost().equalsIgnoreCase(proxyConfig.host)) {
+                        if (proxyConfig.port == getRequestingPort()) {
+                            return new PasswordAuthentication(proxyConfig.username, proxyConfig.password.toCharArray());
                         }
                     }
                     return null;
                 }
             });
             okhttp.proxy(proxy);
-            doh_switch = true;
+            dohSwitch = true;
         }
-        if (doh_switch) {
-            OkHttpClient.Builder doh_http_client = new OkHttpClient.Builder().retryOnConnectionFailure(true);
-            if (proxy_item.enable && proxy_item.dns_over_socks5) {
-                doh_http_client.proxy(proxy);
+        if (dohSwitch) {
+            OkHttpClient.Builder dohHttpClient = new OkHttpClient.Builder().retryOnConnectionFailure(true);
+            if (proxyConfig.enable && proxyConfig.dns_over_socks5) {
+                dohHttpClient.proxy(proxy);
             }
-            okhttp.dns(new DnsOverHttps.Builder().client(doh_http_client.build())
+            okhttp.dns(new DnsOverHttps.Builder().client(dohHttpClient.build())
                     .url(HttpUrl.get(DNS_OVER_HTTP_ADDRSS))
-                    .bootstrapDnsHosts(get_by_ip("2606:4700:4700::1001"), get_by_ip("2606:4700:4700::1111"), get_by_ip("1.0.0.1"), get_by_ip("1.1.1.1"))
+                    .bootstrapDnsHosts(getByIp("2606:4700:4700::1001"), getByIp("2606:4700:4700::1111"), getByIp("1.0.0.1"), getByIp("1.1.1.1"))
                     .includeIPv6(true)
                     .build());
         }
         return okhttp.build();
     }
 
-    private static InetAddress get_by_ip(String host) {
+    private static InetAddress getByIp(String host) {
         try {
             return InetAddress.getByName(host);
         } catch (UnknownHostException e) {

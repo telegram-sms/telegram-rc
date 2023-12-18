@@ -53,11 +53,11 @@ public class sms_send_receiver extends BroadcastReceiver {
         final request_message request_body = new request_message();
         request_body.chat_id = chat_id;
         request_body.message_thread_id = sharedPreferences.getString("message_thread_id", "");
-        String request_uri = network.get_url(bot_token, "sendMessage");
+        String request_uri = network.getUrl(bot_token, "sendMessage");
         long message_id = extras.getLong("message_id");
         if (message_id != -1) {
             android.util.Log.d(TAG, "Find the message_id and switch to edit mode.");
-            request_uri = network.get_url(bot_token, "editMessageText");
+            request_uri = network.getUrl(bot_token, "editMessageText");
             request_body.message_id = message_id;
         }
         String result_status = "Unknown";
@@ -78,7 +78,7 @@ public class sms_send_receiver extends BroadcastReceiver {
         request_body.text = extras.getString("message_text") + "\n" + context.getString(R.string.status) + result_status;
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
-        OkHttpClient okhttp_client = network.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         final String error_head = "Send SMS status failed:";
@@ -86,17 +86,17 @@ public class sms_send_receiver extends BroadcastReceiver {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log.write_log(context, error_head + e.getMessage());
+                log.writeLog(context, error_head + e.getMessage());
                 sms.send_fallback_sms(context, request_body.text, sub);
-                resend.add_resend_loop(context, request_body.text);
+                resend.addResendLoop(context, request_body.text);
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     assert response.body() != null;
-                    log.write_log(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
-                    resend.add_resend_loop(context, request_body.text);
+                    log.writeLog(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                    resend.addResendLoop(context, request_body.text);
                 }
             }
         });

@@ -26,10 +26,9 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.qwe7002.telegram_rc.config.beacon;
-import com.qwe7002.telegram_rc.data_structure.beacon_list;
+import com.qwe7002.telegram_rc.data_structure.BeaconModel;
+import com.qwe7002.telegram_rc.data_structure.beaconList;
 import com.qwe7002.telegram_rc.static_class.remote_control;
-
-import org.altbeacon.beacon.Beacon;
 
 import java.util.ArrayList;
 
@@ -37,24 +36,17 @@ import io.paperdb.Paper;
 
 public class beacon_config_activity extends AppCompatActivity {
     protected static final String TAG = "monitoring_activity";
-    private final BroadcastReceiver flush_receiver = new BroadcastReceiver() {
+    private final BroadcastReceiver flushReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            flush_list_view();
+            flushListView();
         }
     };
 
-    void flush_list_view() {
+    void flushListView() {
         ListView beacon_listview = findViewById(R.id.beacon_listview);
-        if (beacon_list.beacons.size() > 0) {
-            final ArrayList<BeaconModel> list = new ArrayList<>();
-            for (Beacon beacon : beacon_list.beacons) {
-                BeaconModel model = new BeaconModel();
-                model.title = beacon.getBluetoothName();
-                model.address = beacon.getBluetoothAddress();
-                model.info = "Rssi: " + beacon.getRssi() + " dBm Power: " + beacon.getTxPower() + " dBm";
-                list.add(model);
-            }
+        if (beaconList.beacons.size() > 0) {
+            final ArrayList<BeaconModel> list = new ArrayList<>(beaconList.beacons);
             runOnUiThread(() -> {
                 CustomBeaconAdapter adapter = new CustomBeaconAdapter(list, beacon_config_activity.this);
                 beacon_listview.setAdapter(adapter);
@@ -68,22 +60,17 @@ public class beacon_config_activity extends AppCompatActivity {
         Context context = getApplicationContext();
         Paper.init(context);
         setContentView(R.layout.activity_beacon);
-        flush_list_view();
-        LocalBroadcastManager.getInstance(this).registerReceiver(flush_receiver,
-                new IntentFilter("flush_view"));
+        flushListView();
+        LocalBroadcastManager.getInstance(this).registerReceiver(flushReceiver,
+                new IntentFilter("flush_beacons_list"));
     }
 
     @Override
     protected void onDestroy() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(flush_receiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(flushReceiver);
         super.onDestroy();
     }
 
-    static class BeaconModel {
-        String title;
-        String address;
-        String info;
-    }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -92,22 +79,21 @@ public class beacon_config_activity extends AppCompatActivity {
         View dialog_view = inflater.inflate(R.layout.set_beacon_layout, null);
         SwitchMaterial enable = dialog_view.findViewById(R.id.beacon_enable_switch);
         SwitchMaterial use_vpn_switch = dialog_view.findViewById(R.id.beacon_use_vpn_hotspot_switch);
-        EditText delay = dialog_view.findViewById(R.id.beacon_delay_editview);
         EditText disable_count = dialog_view.findViewById(R.id.beacon_disable_count_editview);
         EditText enable_count = dialog_view.findViewById(R.id.beacon_enable_count_editview);
         beacon config = Paper.book("beacon_config").read("config", new beacon());
+        assert config != null;
         use_vpn_switch.setChecked(config.use_vpn_hotspot);
-        if (!remote_control.is_vpn_hotsport_exist(context)) {
+        if (!remote_control.isVPNHotspotExist(context)) {
             use_vpn_switch.setChecked(false);
         }
-        if (!Settings.System.canWrite(context) && remote_control.is_vpn_hotsport_exist(context)) {
+        if (!Settings.System.canWrite(context) && remote_control.isVPNHotspotExist(context)) {
             use_vpn_switch.setChecked(true);
         }
-        if (Settings.System.canWrite(context) && remote_control.is_vpn_hotsport_exist(context)) {
+        if (Settings.System.canWrite(context) && remote_control.isVPNHotspotExist(context)) {
             use_vpn_switch.setEnabled(true);
         }
 
-        delay.setText(String.valueOf(config.delay));
         disable_count.setText(String.valueOf(config.disable_count));
         enable_count.setText(String.valueOf(config.enable_count));
         new AlertDialog.Builder(this).setTitle("Beacon configuration")
@@ -115,7 +101,6 @@ public class beacon_config_activity extends AppCompatActivity {
                 .setPositiveButton(R.string.ok_button, (dialog, which) -> {
                     config.opposite = enable.isChecked();
                     config.use_vpn_hotspot = use_vpn_switch.isChecked();
-                    config.delay = Long.parseLong(delay.getText().toString());
                     config.disable_count = Integer.parseInt(disable_count.getText().toString());
                     config.enable_count = Integer.parseInt(enable_count.getText().toString());
                     Paper.book("beacon_config").write("config", config);
@@ -166,26 +151,28 @@ public class beacon_config_activity extends AppCompatActivity {
             TextView address_view = view.findViewById(R.id.beacon_address_textview);
             TextView info_view = view.findViewById(R.id.beacon_info_textview);
             final CheckBox check_box_view = view.findViewById(R.id.beacon_select_checkbox);
-
-            title_view.setText(list.get(position).title);
-            address_view.setText("Address: " + list.get(position).address);
-            info_view.setText(list.get(position).info);
-            if (listen_list.contains(list.get(position).address)) {
+            BeaconModel beacon = list.get(position);
+            title_view.setText(beacon.getUuid());
+            address_view.setText("MaJor: " + beacon.getMajor() + " Minor: " + beacon.getMinor());
+            info_view.setText("Rssi: " + beacon.getRssi() + " dBm Distance: " + beacon.getDistance() + " dBm");
+            if (listen_list.contains(beaconList.beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor()))) {
                 check_box_view.setChecked(true);
             }
             check_box_view.setOnClickListener(v -> {
-                String address = list.get(position).address;
-                ArrayList<String> listen_list_temp = Paper.book("beacon_config").read("address", new ArrayList<>());
+                String address = beaconList.beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor());
+                ArrayList<String> listenListTemp = Paper.book("beacon_config").read("address", new ArrayList<>());
                 if (check_box_view.isChecked()) {
-                    if (!listen_list_temp.contains(address)) {
-                        listen_list_temp.add(address);
+                    assert listenListTemp != null;
+                    if (!listenListTemp.contains(address)) {
+                        listenListTemp.add(address);
                     }
                 } else {
-                    listen_list_temp.remove(address);
+                    assert listenListTemp != null;
+                    listenListTemp.remove(address);
                 }
-                Log.d(TAG, "beacon_address: " + listen_list_temp);
-                Paper.book("beacon_config").write("address", listen_list_temp);
-                listen_list = listen_list_temp;
+                Log.d(TAG, "beacon_address: " + listenListTemp);
+                Paper.book("beacon_config").write("address", listenListTemp);
+                listen_list = listenListTemp;
             });
 
             return view;

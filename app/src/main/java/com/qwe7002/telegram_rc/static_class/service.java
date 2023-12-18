@@ -14,7 +14,7 @@ import com.qwe7002.telegram_rc.notification_listener_service;
 import java.util.Set;
 
 public class service {
-    public static void stop_all_service(Context context) {
+    public static void stopAllService(Context context) {
         Intent intent = new Intent(CONST.BROADCAST_STOP_SERVICE);
         context.sendBroadcast(intent);
         try {
@@ -24,11 +24,11 @@ public class service {
         }
     }
 
-    public static void start_service(Context context, Boolean battery_switch, Boolean chat_command_switch) {
+    public static void startService(Context context, Boolean battery_switch, Boolean chat_command_switch) {
         Intent battery_service = new Intent(context, com.qwe7002.telegram_rc.battery_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
-        start_beacon_service(context);
-        if (is_notify_listener(context)) {
+        startBeaconService(context);
+        if (isNotifyListener(context)) {
             ComponentName this_component_name = new ComponentName(context, notification_listener_service.class);
             PackageManager package_manager = context.getPackageManager();
             package_manager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
@@ -43,13 +43,13 @@ public class service {
 
     }
 
-    public static void start_beacon_service(Context context) {
+    public static void startBeaconService(Context context) {
         Intent beacon_service = new Intent(context, beacon_receiver_service.class);
         context.startForegroundService(beacon_service);
 
     }
 
-    public static boolean is_notify_listener(Context context) {
+    public static boolean isNotifyListener(Context context) {
         Set<String> packageNames = NotificationManagerCompat.getEnabledListenerPackages(context);
         return packageNames.contains(context.getPackageName());
     }

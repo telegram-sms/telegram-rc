@@ -54,7 +54,7 @@ public class notification_listener_service extends NotificationListenerService {
         context = getApplicationContext();
         Paper.init(context);
         sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
-        Notification notification = other.get_notification_obj(getApplicationContext(), getString(R.string.Notification_Listener_title));
+        Notification notification = other.getNotificationObj(getApplicationContext(), getString(R.string.Notification_Listener_title));
         startForeground(notify.NOTIFICATION_LISTENER_SERVICE, notification);
 
     }
@@ -99,12 +99,12 @@ public class notification_listener_service extends NotificationListenerService {
         String title = extras.getString(Notification.EXTRA_TITLE, "None");
         String content = extras.getString(Notification.EXTRA_TEXT, "None");
         if (Objects.equals(title, "None") && Objects.equals(content, "None")) {
-            log.write_log(context, "无法获得标题和信息");
+            log.writeLog(context, "无法获得标题和信息");
             return;
         }
         String bot_token = sharedPreferences.getString("bot_token", "");
         String chat_id = sharedPreferences.getString("chat_id", "");
-        String request_uri = network.get_url(bot_token, "sendMessage");
+        String request_uri = network.getUrl(bot_token, "sendMessage");
         request_message request_body = new request_message();
         if ((System.currentTimeMillis() - lastSendTime) <= 1000L && Objects.equals(lastPackage, package_name)) {
             if (Objects.equals(lastMessage, title + content)) {
@@ -115,7 +115,7 @@ public class notification_listener_service extends NotificationListenerService {
         request_body.message_thread_id = sharedPreferences.getString("message_thread_id", "");
         request_body.text = getString(R.string.receive_notification_title) + "\n" + getString(R.string.app_name_title) + app_name + "\n" + getString(R.string.title) + title + "\n" + getString(R.string.content) + content;
         RequestBody body = RequestBody.create(new Gson().toJson(request_body), CONST.JSON);
-        OkHttpClient okhttp_client = network.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+        OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         lastPackage = package_name;
@@ -126,8 +126,8 @@ public class notification_listener_service extends NotificationListenerService {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log.write_log(context, error_head + e.getMessage());
-                resend.add_resend_loop(context, request_body.text);
+                log.writeLog(context, error_head + e.getMessage());
+                resend.addResendLoop(context, request_body.text);
             }
 
             @Override
@@ -135,8 +135,8 @@ public class notification_listener_service extends NotificationListenerService {
                 assert response.body() != null;
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
-                    log.write_log(context, error_head + response.code() + " " + result);
-                    resend.add_resend_loop(context, request_body.text);
+                    log.writeLog(context, error_head + response.code() + " " + result);
+                    resend.addResendLoop(context, request_body.text);
                 }
             }
         });

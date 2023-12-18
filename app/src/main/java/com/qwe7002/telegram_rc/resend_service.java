@@ -42,7 +42,7 @@ public class resend_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         resend_list = Paper.book().read(table_name, new ArrayList<>());
-        Notification notification = other.get_notification_obj(context, getString(R.string.failed_resend));
+        Notification notification = other.getNotificationObj(context, getString(R.string.failed_resend));
         startForeground(notify.RESEND_SERVICE, notification);
         return START_NOT_STICKY;
     }
@@ -67,7 +67,7 @@ public class resend_service extends Service {
                 Paper.book().write(table_name, resend_list_local);
             }
         } catch (IOException e) {
-            log.write_log(context, "An error occurred while resending: " + e.getMessage());
+            log.writeLog(context, "An error occurred while resending: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -82,14 +82,14 @@ public class resend_service extends Service {
         receiver = new stop_notify_receiver();
         registerReceiver(receiver, filter);
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-        request_uri = network.get_url(sharedPreferences.getString("bot_token", ""), "SendMessage");
+        request_uri = network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage");
 
         new Thread(() -> {
             resend_list = Paper.book().read(table_name, new ArrayList<>());
             while (true) {
-                if (network.check_network_status(context)) {
+                if (network.checkNetworkStatus(context)) {
                     ArrayList<String> send_list = resend_list;
-                    OkHttpClient okhttp_client = network.get_okhttp_obj(sharedPreferences.getBoolean("doh_switch", true));
+                    OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
                     for (String item : send_list) {
                         network_progress_handle(item, sharedPreferences.getString("chat_id", ""), okhttp_client,sharedPreferences.getString("message_thread_id", ""));
                     }
@@ -105,7 +105,7 @@ public class resend_service extends Service {
                     e.printStackTrace();
                 }
             }
-            log.write_log(context, "The resend failure message is complete.");
+            log.writeLog(context, "The resend failure message is complete.");
             stopSelf();
         }).start();
     }

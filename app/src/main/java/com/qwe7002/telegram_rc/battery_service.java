@@ -49,7 +49,7 @@ public class battery_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = other.get_notification_obj(context, getString(R.string.battery_monitoring_notify));
+        Notification notification = other.getNotificationObj(context, getString(R.string.battery_monitoring_notify));
         startForeground(notify.BATTERY, notification);
         return START_STICKY;
     }
@@ -103,14 +103,14 @@ public class battery_service extends Service {
         request_body.chat_id = battery_service.chat_id;
         request_body.text = obj.content;
         request_body.message_thread_id = message_thread_id;
-        String request_uri = network.get_url(battery_service.bot_token, "sendMessage");
+        String request_uri = network.getUrl(battery_service.bot_token, "sendMessage");
         if ((System.currentTimeMillis() - last_receive_time) <= 10000L && last_receive_message_id != -1) {
-            request_uri = network.get_url(bot_token, "editMessageText");
+            request_uri = network.getUrl(bot_token, "editMessageText");
             request_body.message_id = last_receive_message_id;
             android.util.Log.d(TAG, "onReceive: edit_mode");
         }
         last_receive_time = System.currentTimeMillis();
-        OkHttpClient okhttp_client = network.get_okhttp_obj(battery_service.doh_switch);
+        OkHttpClient okhttp_client = network.getOkhttpObj(battery_service.doh_switch);
         String request_body_raw = new Gson().toJson(request_body);
         RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
         Request request = new Request.Builder().url(request_uri).method("POST", body).build();
@@ -119,7 +119,7 @@ public class battery_service extends Service {
         try {
             Response response = call.execute();
             if (response.code() == 200) {
-                last_receive_message_id = other.get_message_id(Objects.requireNonNull(response.body()).string());
+                last_receive_message_id = other.getMessageId(Objects.requireNonNull(response.body()).string());
             } else {
                 assert response.body() != null;
                 last_receive_message_id = -1;
@@ -129,7 +129,7 @@ public class battery_service extends Service {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            log.write_log(context, error_head + e.getMessage());
+            log.writeLog(context, error_head + e.getMessage());
             if (obj.action.equals(Intent.ACTION_BATTERY_LOW)) {
                 sms.send_fallback_sms(context, request_body.text, -1);
             }
@@ -175,14 +175,14 @@ public class battery_service extends Service {
                     break;
                 case Intent.ACTION_BATTERY_LOW:
                     prebody.append(context.getString(R.string.battery_low));
-                    if (remote_control.is_tether_active(context)) {
-                        remote_control.disable_tether(context, TetherManager.TetherMode.TETHERING_WIFI);
+                    if (remote_control.isHotspotActive(context)) {
+                        remote_control.disableHotspot(context, TetherManager.TetherMode.TETHERING_WIFI);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     if (Paper.book("temp").read("wifi_open", false)) {
                         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                         assert wifiManager != null;
-                        remote_control.disable_vpn_ap(wifiManager);
+                        remote_control.disableVPNHotspot(wifiManager);
                         prebody.append("\n").append(getString(R.string.disable_wifi)).append(context.getString(R.string.action_success));
                     }
                     break;
