@@ -27,7 +27,6 @@ public class service {
     public static void startService(Context context, Boolean battery_switch, Boolean chat_command_switch) {
         Intent battery_service = new Intent(context, com.qwe7002.telegram_rc.battery_service.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
-        startBeaconService(context);
         if (isNotifyListener(context)) {
             ComponentName this_component_name = new ComponentName(context, notification_listener_service.class);
             PackageManager packageManager = context.getPackageManager();

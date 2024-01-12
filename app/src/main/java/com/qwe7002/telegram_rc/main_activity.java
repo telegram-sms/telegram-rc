@@ -96,6 +96,7 @@ public class main_activity extends AppCompatActivity {
         final SwitchMaterial doh_switch = findViewById(R.id.doh_switch);
         final SwitchMaterial charger_status_switch = findViewById(R.id.charger_status_switch);
         final SwitchMaterial verification_code_switch = findViewById(R.id.verification_code_switch);
+        final SwitchMaterial shizuku_switch = findViewById(R.id.shizuku_switch);
         final SwitchMaterial root_switch = findViewById(R.id.root_switch);
         final SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
         final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
@@ -127,9 +128,9 @@ public class main_activity extends AppCompatActivity {
             privacy_mode_switch.setVisibility(View.GONE);
         }
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
+        service.startBeaconService(context);
         if (sharedPreferences.getBoolean("initialized", false)) {
             service.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
-
         }
 
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
@@ -194,7 +195,7 @@ public class main_activity extends AppCompatActivity {
         verification_code_switch.setChecked(sharedPreferences.getBoolean("verification_code", false));
 
         doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
-        doh_switch.setEnabled(!Paper.book("system_config").read("proxy_config", new proxy()).enable);
+        doh_switch.setEnabled(!Objects.requireNonNull(Paper.book("system_config").read("proxy_config", new proxy())).enable);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
             assert tm != null;
@@ -228,7 +229,10 @@ public class main_activity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
-
+        if(!remote_control.isShizukuExist(context)) {
+            shizuku_switch.setVisibility(View.GONE);
+        }
+        shizuku_switch.setOnClickListener(view -> runOnUiThread(() -> root_switch.setChecked(shizuku_switch.isChecked())));
         root_switch.setOnClickListener(view -> new Thread(() -> {
             if (!shell.checkRoot()) {
                 runOnUiThread(() -> root_switch.setChecked(false));

@@ -27,13 +27,13 @@ public class scanner_activity extends Activity {
         setContentView(R.layout.activity_scanner);
         CodeScannerView scannerView = findViewById(R.id.scanner_view);
         mCodeScanner = new CodeScanner(this, scannerView);
-        mCodeScanner.setFormats(new ArrayList<BarcodeFormat>() {{
+        mCodeScanner.setFormats(new ArrayList<>() {{
             add(BarcodeFormat.QR_CODE);
         }});
         mCodeScanner.setDecodeCallback(result -> runOnUiThread(() -> {
             String TAG = "activity_scanner";
             Log.d(TAG, "format: " + result.getBarcodeFormat() + " content: " + result.getText());
-            if (!json_validate(result.getText())) {
+            if (!jsonValidate(result.getText())) {
                 Toast.makeText(this, "The QR code is not legal", Toast.LENGTH_SHORT).show();
                 mCodeScanner.startPreview();
                 return;
@@ -58,7 +58,7 @@ public class scanner_activity extends Activity {
         super.onPause();
     }
 
-    boolean json_validate(String jsonStr) {
+    boolean jsonValidate(String jsonStr) {
         JsonElement jsonElement;
         try {
             jsonElement = JsonParser.parseString(jsonStr);

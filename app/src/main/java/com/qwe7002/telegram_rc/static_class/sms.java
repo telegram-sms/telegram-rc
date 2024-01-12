@@ -1,13 +1,16 @@
 package com.qwe7002.telegram_rc.static_class;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.telephony.SmsManager;
+import android.util.Log;
 
 import androidx.core.content.PermissionChecker;
 
@@ -57,9 +60,10 @@ public class sms {
         send_sms(context, send_to, content, slot, sub_id, -1);
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     public static void send_sms(Context context, String send_to, String content, int slot, int sub_id, long message_id) {
         if (PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
-            android.util.Log.d("send_sms", "No permission.");
+            Log.d("send_sms", "No permission.");
             return;
         }
         if (!other.isPhoneNumber(send_to)) {
@@ -71,7 +75,7 @@ public class sms {
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = network.getUrl(bot_token, "sendMessage");
         if (message_id != -1) {
-            android.util.Log.d("send_sms", "Find the message_id and switch to edit mode.");
+            Log.d("send_sms", "Find the message_id and switch to edit mode.");
             request_uri = network.getUrl(bot_token, "editMessageText");
         }
         request_message request_body = new request_message();
@@ -108,12 +112,17 @@ public class sms {
         ArrayList<PendingIntent> send_receiver_list = new ArrayList<>();
         IntentFilter filter = new IntentFilter("send_sms");
         BroadcastReceiver receiver = new sms_send_receiver();
-        context.getApplicationContext().registerReceiver(receiver, filter);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.getApplicationContext().registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            context.getApplicationContext().registerReceiver(receiver, filter);
+        }
         Intent sent_intent = new Intent("send_sms");
         sent_intent.putExtra("message_id", message_id);
         sent_intent.putExtra("message_text", send_content);
         sent_intent.putExtra("sub_id", sms_manager.getSubscriptionId());
-        PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, sent_intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, sent_intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         send_receiver_list.add(sentIntent);
         sms_manager.sendMultipartTextMessage(send_to, null, divideContents, send_receiver_list, null);
     }

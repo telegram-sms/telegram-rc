@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class logcat_activity extends AppCompatActivity {
     private Context context;
-    private file_observer observer;
+    private fileObserver observer;
     private TextView logcat_textview;
     private final int line = 100;
 
@@ -29,7 +29,7 @@ public class logcat_activity extends AppCompatActivity {
         logcat_textview = findViewById(R.id.logcat_textview);
         this.setTitle(R.string.logcat);
         logcat_textview.setText(log.readLog(context, line));
-        observer = new file_observer(context, logcat_textview);
+        observer = new fileObserver(context, logcat_textview);
         logcat_textview.setGravity(Gravity.BOTTOM);
     }
 
@@ -58,11 +58,11 @@ public class logcat_activity extends AppCompatActivity {
         return true;
     }
 
-    class file_observer extends FileObserver {
+    class fileObserver extends FileObserver {
         private final Context context;
         private final TextView logcat;
 
-        file_observer(@NotNull Context context, TextView logcat) {
+        fileObserver(@NotNull Context context, TextView logcat) {
             super(context.getFilesDir().getAbsolutePath());
             this.context = context;
             this.logcat = logcat;

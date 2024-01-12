@@ -150,7 +150,7 @@ public class sms_receiver extends BroadcastReceiver {
                         break;
                     case "/switchdata":
                         if (!data_enable) {
-                            open_data(context);
+                            openData(context);
                         }
                         raw_request_body_text = context.getString(R.string.system_message_head) + "\n" + context.getString(R.string.switch_data);
                         request_body.text = raw_request_body_text;
@@ -241,7 +241,7 @@ public class sms_receiver extends BroadcastReceiver {
                 log.writeLog(context, error_head + e.getMessage());
                 sms.send_fallback_sms(context, final_raw_request_body_text, sub_id);
                 resend.addResendLoop(context, request_body.text);
-                command_handle(sharedPreferences, message_body, data_enable);
+                commandHandle(sharedPreferences, message_body, data_enable);
             }
 
             @Override
@@ -261,12 +261,12 @@ public class sms_receiver extends BroadcastReceiver {
                     }
                     other.addMessageList(other.getMessageId(result), message_address, slot);
                 }
-                command_handle(sharedPreferences, message_body, data_enable);
+                commandHandle(sharedPreferences, message_body, data_enable);
             }
         });
     }
 
-    private void command_handle(@NotNull SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
+    private void commandHandle(@NotNull SharedPreferences sharedPreferences, String message_body, boolean data_enable) {
         if (sharedPreferences.getBoolean("root", false)) {
             if (message_body.toLowerCase().replace("_", "").equals("/data")) {
                 if (data_enable) {
@@ -276,11 +276,11 @@ public class sms_receiver extends BroadcastReceiver {
         }
     }
 
-    void open_data(Context context) {
+    void openData(Context context) {
         com.qwe7002.telegram_rc.root_kit.network.setData(true);
-        int loop_count = 0;
+        int loopCount = 0;
         while (!network.checkNetworkStatus(context)) {
-            if (loop_count >= 100) {
+            if (loopCount >= 100) {
                 break;
             }
             try {
@@ -289,7 +289,7 @@ public class sms_receiver extends BroadcastReceiver {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            ++loop_count;
+            ++loopCount;
         }
     }
 }

@@ -6,7 +6,5 @@ public class CONST {
     public static final int SYSTEM_CONFIG_VERSION = 1;
     public static final String BROADCAST_STOP_SERVICE = "com.qwe7002.telegram_rc.stop_all";
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    public static final String VPN_HOTSPOT_PACKAGE_NAME = "be.mygod.vpnhotspot";
     public static final int RESULT_CONFIG_JSON = 1;
-    public static final String TERMUX_PACKAGE_NAME = "com.termux";
 }

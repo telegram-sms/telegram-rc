@@ -34,14 +34,12 @@ public class network {
         assert connectivityManager != null;
         boolean network_status = false;
         android.net.Network[] networks = connectivityManager.getAllNetworks();
-        if (networks.length != 0) {
-            for (android.net.Network network : networks) {
-                NetworkCapabilities network_capabilities = connectivityManager.getNetworkCapabilities(network);
-                Log.d("check_network_status", "check_network_status: " + network_capabilities);
-                assert network_capabilities != null;
-                if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    network_status = true;
-                }
+        for (android.net.Network network : networks) {
+            NetworkCapabilities network_capabilities = connectivityManager.getNetworkCapabilities(network);
+            Log.d("check_network_status", "check_network_status: " + network_capabilities);
+            assert network_capabilities != null;
+            if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                network_status = true;
             }
         }
         return network_status;
@@ -53,14 +51,12 @@ public class network {
         boolean network_status = false;
         assert manager != null;
         android.net.Network[] networks = manager.getAllNetworks();
-        if (networks.length != 0) {
-            for (android.net.Network network : networks) {
-                NetworkCapabilities network_capabilities = manager.getNetworkCapabilities(network);
-                Log.d("check_network_status", "check_network_status: " + network_capabilities);
-                assert network_capabilities != null;
-                if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
-                    network_status = true;
-                }
+        for (android.net.Network network : networks) {
+            NetworkCapabilities network_capabilities = manager.getNetworkCapabilities(network);
+            Log.d("check_network_status", "check_network_status: " + network_capabilities);
+            assert network_capabilities != null;
+            if (network_capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
+                network_status = true;
             }
         }
         return network_status;

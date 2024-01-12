@@ -35,13 +35,13 @@ public class notify_apps_list_activity extends AppCompatActivity {
     private Context context;
 
     @NotNull
-    private List<app_info> scan_app_list(PackageManager packageManager) {
-        List<app_info> app_info_list = new ArrayList<>();
+    private List<appInfo> scanAppList(PackageManager packageManager) {
+        List<appInfo> app_info_list = new ArrayList<>();
         try {
             List<PackageInfo> package_info_list = packageManager.getInstalledPackages(0);
             for (int i = 0; i < package_info_list.size(); i++) {
                 PackageInfo package_info = package_info_list.get(i);
-                app_info app_info = new app_info();
+                appInfo app_info = new appInfo();
                 if (package_info.packageName.equals(context.getPackageName())) {
                     continue;
                 }
@@ -86,7 +86,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
 
         app_list.setAdapter(app_adapter);
         new Thread(() -> {
-            final List<app_info> app_info_list = scan_app_list(notify_apps_list_activity.this.getPackageManager());
+            final List<appInfo> app_info_list = scanAppList(notify_apps_list_activity.this.getPackageManager());
             runOnUiThread(() -> {
                 ProgressBar scan_label = findViewById(R.id.progress_view);
                 scan_label.setVisibility(View.GONE);
@@ -98,15 +98,15 @@ public class notify_apps_list_activity extends AppCompatActivity {
     static class app_adapter extends BaseAdapter implements Filterable {
         final String TAG = "notify_activity";
         List<String> listen_list;
-        List<app_info> app_info_list = new ArrayList<>();
-        List<app_info> view_app_info_list = new ArrayList<>();
+        List<appInfo> app_info_list = new ArrayList<>();
+        List<appInfo> view_app_info_list = new ArrayList<>();
         private final Context context;
         private final Filter filter = new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 FilterResults results = new FilterResults();
-                List<app_info> list = new ArrayList<>();
-                for (app_info app_info_item : app_info_list) {
+                List<appInfo> list = new ArrayList<>();
+                for (appInfo app_info_item : app_info_list) {
                     if (app_info_item.app_name.toLowerCase().contains(constraint.toString().toLowerCase())) {
                         list.add(app_info_item);
                     }
@@ -119,7 +119,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
             @SuppressWarnings("unchecked")
             @Override
             protected void publishResults(CharSequence constraint, @NotNull FilterResults results) {
-                view_app_info_list = (ArrayList<app_info>) results.values;
+                view_app_info_list = (ArrayList<appInfo>) results.values;
                 notifyDataSetChanged();
 
             }
@@ -130,11 +130,11 @@ public class notify_apps_list_activity extends AppCompatActivity {
             this.listen_list = Paper.book("system_config").read("notify_listen_list", new ArrayList<>());
         }
 
-        public List<app_info> getData() {
+        public List<appInfo> getData() {
             return app_info_list;
         }
 
-        public void setData(List<app_info> apps_info_list) {
+        public void setData(List<appInfo> apps_info_list) {
             this.app_info_list = apps_info_list;
             this.view_app_info_list = app_info_list;
             notifyDataSetChanged();
@@ -164,7 +164,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
         @Override
         public View getView(int position, View convert_view, ViewGroup parent) {
             view_holder view_holder_object;
-            app_info app_info = view_app_info_list.get(position);
+            appInfo app_info = view_app_info_list.get(position);
             if (convert_view == null) {
                 view_holder_object = new view_holder();
                 convert_view = LayoutInflater.from(context).inflate(R.layout.item_app_info, parent, false);
@@ -181,7 +181,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
             view_holder_object.package_name.setText(app_info.package_name);
             view_holder_object.app_checkbox.setChecked(listen_list.contains(app_info.package_name));
             view_holder_object.app_checkbox.setOnClickListener(v -> {
-                app_info item_info = (app_info) getItem(position);
+                appInfo item_info = (appInfo) getItem(position);
                 String package_name = item_info.package_name;
                 List<String> listen_list_temp = Paper.book("system_config").read("notify_listen_list", new ArrayList<>());
                 if (view_holder_object.app_checkbox.isChecked()) {
@@ -212,7 +212,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
 
     }
 
-    static class app_info {
+    static class appInfo {
         Drawable app_icon;
         String package_name;
         String app_name;

@@ -77,6 +77,17 @@ class beacon_receiver_service : Service() {
     @SuppressLint("InvalidWakeLockTag", "WakelockTimeout")
     override fun onCreate() {
         super.onCreate()
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d(TAG, "onCreate: permission denied")
+            return
+        }
         Paper.init(applicationContext)
         wakelock =
             (Objects.requireNonNull(applicationContext.getSystemService(POWER_SERVICE)) as PowerManager).newWakeLock(
@@ -133,17 +144,6 @@ class beacon_receiver_service : Service() {
             .setBeaconBatchListener(batchListener)
             .build()
 
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.d(TAG, "onCreate: permission denied")
-            return
-        }
         LocalBroadcastManager.getInstance(this).registerReceiver(
             flushReceiver,
             IntentFilter("flush_beacons_list")
@@ -350,10 +350,10 @@ class beacon_receiver_service : Service() {
     ${getString(R.string.current_battery_level)}
     """.trimIndent()
         }${
-            chat_command_service.get_battery_info(applicationContext)
+            chat_command_service.getBatteryInfo(applicationContext)
         }
                 ${getString(R.string.current_network_connection_status)}${
-            chat_command_service.get_network_type(
+            chat_command_service.getNetworkType(
                 applicationContext
             )
         }

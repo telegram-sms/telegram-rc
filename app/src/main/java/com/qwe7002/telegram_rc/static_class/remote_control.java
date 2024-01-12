@@ -16,7 +16,7 @@ public class remote_control {
 
     public static void disableVPNHotspot(android.net.wifi.WifiManager wifiManager) {
         Paper.book("temp").write("wifi_open", false);
-        com.qwe7002.telegram_rc.root_kit.activity_manage.forceStopService(CONST.VPN_HOTSPOT_PACKAGE_NAME);
+        com.qwe7002.telegram_rc.root_kit.activity_manage.forceStopService("be.mygod.vpnhotspot");
         com.qwe7002.telegram_rc.root_kit.network.setWifi(false);
         try {
             while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
@@ -52,7 +52,7 @@ public class remote_control {
             e.printStackTrace();
         }
 
-        com.qwe7002.telegram_rc.root_kit.activity_manage.startForegroundService(CONST.VPN_HOTSPOT_PACKAGE_NAME, CONST.VPN_HOTSPOT_PACKAGE_NAME + ".RepeaterService");
+        com.qwe7002.telegram_rc.root_kit.activity_manage.startForegroundService("be.mygod.vpnhotspot", "be.mygod.vpnhotspot.RepeaterService");
     }
 
 
@@ -78,7 +78,18 @@ public class remote_control {
     public static boolean isVPNHotspotExist(@NotNull Context context) {
         ApplicationInfo info;
         try {
-            info = context.getPackageManager().getApplicationInfo(CONST.VPN_HOTSPOT_PACKAGE_NAME, 0);
+            info = context.getPackageManager().getApplicationInfo("be.mygod.vpnhotspot", 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            info = null;
+        }
+
+        return info != null;
+    }
+    public static boolean isShizukuExist(@NotNull Context context) {
+        ApplicationInfo info;
+        try {
+            info = context.getPackageManager().getApplicationInfo("moe.shizuku.privileged.api", 0);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             info = null;

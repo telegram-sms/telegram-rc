@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 
 import com.fitc.wifihotspot.TetherManager;
 import com.qwe7002.telegram_rc.static_class.log;
@@ -35,12 +34,6 @@ public class boot_receiver extends BroadcastReceiver {
                 resend.start_resend_service(context);
             }
             if (sharedPreferences.getBoolean("root", false)) {
-                if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        android.util.Log.i(TAG, "Android 12 detected, modify background restrictions");
-                        com.qwe7002.telegram_rc.root_kit.shell.runShellCommand("setprop persist.sys.fflag.override.settings_enable_monitor_phantom_procs false");
-                    }
-                }
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
                     com.qwe7002.telegram_rc.root_kit.network.addDummyDevice(dummy_ip_addr);

@@ -7,14 +7,17 @@ import android.app.Service;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -24,6 +27,7 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -85,7 +89,7 @@ public class chat_command_service extends Service {
     private static boolean first_request = true;
 
     @SuppressLint({"HardwareIds", "MissingPermission"})
-    private static String get_data_stats(Context context) {
+    private static String getDataStats(Context context) {
         String result = "";
         if (remote_control.isDataUsageAccess(context)) {
             int data_flush_day = Paper.book("system_config").read("data_flush_day", 1);
@@ -109,40 +113,52 @@ public class chat_command_service extends Service {
                         result = "\n" + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sub_id, from);
                         break;
                     case 2:
-                        String sim1_imsi;
-                        String sim1_result_usage = "";
+                        String sim1_imsi = "";
+                        String sim1_result_usage;
+                        String sim2_imsi = "";
+                        String sim2_result_usage;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            sim1_imsi = Paper.book("system_config").read("sim1_imsi", "");
-                            assert sim1_imsi != null;
-                            if (!sim1_imsi.equals("")) {
-                                sim1_result_usage = get_data_usage(context, sim1_imsi, from);
+                            Uri uri = Uri.parse("content://telephony/siminfo");
+                            Cursor cursor;
+                            ContentResolver contentResolver = context.getContentResolver();
+                            cursor = contentResolver.query(uri,
+                                    new String[]{"_id", "sim_id", "imsi","icc_id","number","display_name"}, "0=0",
+                                    new String[]{}, null);
+                            if (null != cursor) {
+                                try {
+                                    while (cursor.moveToNext()) {
+                                        @SuppressLint("Range") int sim_id = cursor.getInt(cursor.getColumnIndex("sim_id"));
+                                        @SuppressLint("Range") String imsi_id = cursor.getString(cursor.getColumnIndex("imsi"));
+                                        switch (sim_id){
+                                            case 0:
+                                                sim1_imsi = imsi_id;
+                                                Log.d(TAG, "getDataStats: "+sim1_imsi);
+                                                break;
+                                            case 1:
+                                                sim2_imsi = imsi_id;
+                                                Log.d(TAG, "getDataStats: "+sim2_imsi);
+                                                break;
+                                        }
+                                    }
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                                break;
                             }
                         } else {
                             TelephonyManager telephonyManager = (TelephonyManager) context
                                     .getSystemService(Context.TELEPHONY_SERVICE);
                             assert telephonyManager != null;
                             sim1_imsi = telephonyManager.getSubscriberId();
-                            sim1_result_usage = get_data_usage(context, sim1_imsi, from);
+                            telephonyManager = telephonyManager.createForSubscriptionId(other.getSubId(context, 1));
+                            sim2_imsi = telephonyManager.getSubscriberId();
+
                         }
+                        sim1_result_usage = get_data_usage(context, sim1_imsi, from);
                         if (!sim1_result_usage.equals("")) {
                             result = "\nSIM1 " + context.getString(R.string.mobile_data_usage) + sim1_result_usage;
                         }
-                        String sim2_imsi;
-                        String sim2_result_usage = "";
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            sim2_imsi = Paper.book("system_config").read("sim2_imsi", "");
-                            assert sim2_imsi != null;
-                            if (!sim2_imsi.equals("")) {
-                                sim2_result_usage = get_data_usage(context, sim2_imsi, from);
-                            }
-                        } else {
-                            TelephonyManager telephonyManager = (TelephonyManager) context
-                                    .getSystemService(Context.TELEPHONY_SERVICE);
-                            assert telephonyManager != null;
-                            telephonyManager = telephonyManager.createForSubscriptionId(other.getSubId(context, 1));
-                            sim2_imsi = telephonyManager.getSubscriberId();
-                            sim2_result_usage = get_data_usage(context, sim2_imsi, from);
-                        }
+                        sim2_result_usage = get_data_usage(context, sim2_imsi, from);
                         if (!sim2_result_usage.equals("")) {
                             result += "\nSIM2 " + context.getString(R.string.mobile_data_usage) + sim2_result_usage;
                         }
@@ -154,7 +170,7 @@ public class chat_command_service extends Service {
         return result;
     }
 
-    private static String check_cellular_network_type(int type) {
+    private static String checkCellularNetworkType(int type) {
         String net_type = "Unknown";
         switch (type) {
             case TelephonyManager.NETWORK_TYPE_NR:
@@ -230,7 +246,7 @@ public class chat_command_service extends Service {
 
 
     @NotNull
-    static String get_battery_info(@NotNull Context context) {
+    static String getBatteryInfo(@NotNull Context context) {
         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
         int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -262,7 +278,7 @@ public class chat_command_service extends Service {
         return battery_string_builder.toString();
     }
 
-    private boolean get_me() {
+    private boolean getMe() {
         OkHttpClient okhttp_client_new = okhttp_client;
         String request_uri = network.getUrl(bot_token, "getMe");
         Request request = new Request.Builder().url(request_uri).build();
@@ -293,7 +309,7 @@ public class chat_command_service extends Service {
         return false;
     }
 
-    public static String get_network_type(@NotNull Context context) {
+    public static String getNetworkType(@NotNull Context context) {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connect_manager != null;
@@ -314,7 +330,7 @@ public class chat_command_service extends Service {
                         android.util.Log.i("get_network_type", "No permission.");
                         return net_type;
                     }
-                    net_type = check_cellular_network_type(telephonyManager.getDataNetworkType());
+                    net_type = checkCellularNetworkType(telephonyManager.getDataNetworkType());
                 }
                 if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
                     net_type = "Bluetooth";
@@ -328,7 +344,7 @@ public class chat_command_service extends Service {
         return net_type;
     }
 
-    private void receive_handle(@NotNull JsonObject result_obj, boolean get_id_only) {
+    private void receiveHandle(@NotNull JsonObject result_obj, boolean get_id_only) {
         long update_id = result_obj.get("update_id").getAsLong();
         offset = update_id + 1;
         if (get_id_only) {
@@ -508,7 +524,7 @@ public class chat_command_service extends Service {
                     break;
                 }
 
-                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap ;
+                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap;
                 if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
                     result_string = result_string.replace(" -", "@" + bot_username + " -");
                 }
@@ -522,7 +538,7 @@ public class chat_command_service extends Service {
                         .getSystemService(Context.TELEPHONY_SERVICE);
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    networkStats = get_data_stats(context);
+                    networkStats = getDataStats(context);
                     cardInfo = "\nSIM: " + other.getSimDisplayName(context, 0);
                     if (other.getActiveCard(context) == 2) {
                         cardInfo = "\n" + getString(R.string.current_data_card) + ": SIM" + other.getDataSimId(context) + "\nSIM1: " + other.getSimDisplayName(context, 0) + "\nSIM2: " + other.getSimDisplayName(context, 1);
@@ -545,7 +561,7 @@ public class chat_command_service extends Service {
                 }
                 if (sharedPreferences.getBoolean("root", false) && remote_control.isVPNHotspotExist(context)) {
                     isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status);
-                    if (com.qwe7002.telegram_rc.root_kit.activity_manage.checkServiceIsRunning(CONST.VPN_HOTSPOT_PACKAGE_NAME, ".RepeaterService")) {
+                    if (com.qwe7002.telegram_rc.root_kit.activity_manage.checkServiceIsRunning("be.mygod.vpnhotspot", ".RepeaterService")) {
                         isHotspotRunning += getString(R.string.enable);
                     } else {
                         isHotspotRunning += getString(R.string.disable);
@@ -557,7 +573,7 @@ public class chat_command_service extends Service {
                 } else {
                     beaconStatus += getString(R.string.disable);
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context) + isHotspotRunning + beaconStatus + spamCount + networkStats + cardInfo;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context) + isHotspotRunning + beaconStatus + spamCount + networkStats + cardInfo;
                 android.util.Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
@@ -606,7 +622,7 @@ public class chat_command_service extends Service {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                     }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context);
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context);
                     request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                     break;
                 } else {
@@ -628,7 +644,7 @@ public class chat_command_service extends Service {
                     Paper.book("temp").write("wifi_open", false);
                     result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                 }
-                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + get_battery_info(context) + "\n" + getString(R.string.current_network_connection_status) + get_network_type(context);
+                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context);
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
                 break;
@@ -1003,7 +1019,7 @@ public class chat_command_service extends Service {
             if (other.parseStringToLong(chat_id) < 0) {
                 bot_username = Paper.book().read("bot_username", null);
                 if (bot_username == null) {
-                    while (!get_me()) {
+                    while (!getMe()) {
                         log.writeLog(context, "Failed to get bot Username, Wait 5 seconds and try again.");
                         try {
                             Thread.sleep(5000);
@@ -1064,7 +1080,7 @@ public class chat_command_service extends Service {
                     if (result_obj.get("ok").getAsBoolean()) {
                         JsonArray result_array = result_obj.get("result").getAsJsonArray();
                         for (JsonElement item : result_array) {
-                            receive_handle(item.getAsJsonObject(), first_request);
+                            receiveHandle(item.getAsJsonObject(), first_request);
                         }
                         first_request = false;
                     }

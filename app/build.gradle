@@ -54,7 +54,7 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.browser:browser:1.7.0'
     implementation 'com.squareup.okio:okio:3.3.0'
     implementation "com.squareup.okhttp3:okhttp:5.0.0-alpha.2"
@@ -67,6 +67,14 @@ dependencies {
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.3'
     implementation "androidx.core:core-ktx:1.12.0"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.0'
+    def libsuVersion = '5.2.2'
+
+    // The core module that provides APIs to a shell
+    implementation "com.github.topjohnwu.libsu:core:${libsuVersion}"
+
+    // Optional: APIs for creating root services. Depends on ":core"
+    implementation "com.github.topjohnwu.libsu:service:${libsuVersion}"
+
 }
 repositories {
     mavenCentral()
