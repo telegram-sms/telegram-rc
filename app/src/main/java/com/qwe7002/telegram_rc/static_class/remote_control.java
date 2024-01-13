@@ -12,8 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import io.paperdb.Paper;
 
 public class remote_control {
-
-
     public static void disableVPNHotspot(android.net.wifi.WifiManager wifiManager) {
         Paper.book("temp").write("wifi_open", false);
         com.qwe7002.telegram_rc.root_kit.activity_manage.forceStopService("be.mygod.vpnhotspot");

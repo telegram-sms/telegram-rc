@@ -153,8 +153,8 @@ public class beacon_config_activity extends AppCompatActivity {
             final CheckBox check_box_view = view.findViewById(R.id.beacon_select_checkbox);
             BeaconModel beacon = list.get(position);
             title_view.setText(beacon.getUuid());
-            address_view.setText("Major: " + beacon.getMajor() + " Minor: " + beacon.getMinor());
-            info_view.setText("Rssi: " + beacon.getRssi() + " dBm Distance: " + beacon.getDistance() + " meters");
+            address_view.setText("Major: " + beacon.getMajor() + " Minor: " + beacon.getMinor() + " Rssi: " + beacon.getRssi() + " dBm");
+            info_view.setText("Distance: " + (int) beacon.getDistance() + " meters");
             if (listen_list.contains(beaconList.beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor()))) {
                 check_box_view.setChecked(true);
             }
