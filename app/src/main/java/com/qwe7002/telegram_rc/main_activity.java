@@ -2,7 +2,6 @@ package com.qwe7002.telegram_rc;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -11,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
@@ -56,7 +54,6 @@ import com.qwe7002.telegram_rc.static_class.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -74,7 +71,6 @@ public class main_activity extends AppCompatActivity {
     private static boolean set_permission_back = false;
     private SharedPreferences sharedPreferences;
     private static String privacy_police;
-    private Button usage_button;
     private Button write_settings_button;
 
 
@@ -102,16 +98,11 @@ public class main_activity extends AppCompatActivity {
         final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
         final Button save_button = findViewById(R.id.save_button);
         final Button get_id_button = findViewById(R.id.get_id_button);
-        usage_button = findViewById(R.id.usage_button);
         write_settings_button = findViewById(R.id.write_settings_button);
         //load config
         Paper.init(context);
         sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
 
-        usage_button.setOnClickListener(v -> {
-            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-            startActivity(intent);
-        });
         write_settings_button.setOnClickListener(v -> {
             Intent write_system_intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
             startActivity(write_system_intent);
@@ -503,9 +494,6 @@ public class main_activity extends AppCompatActivity {
                 startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
             }
         }
-        if (remote_control.isDataUsageAccess(context)) {
-            usage_button.setVisibility(View.GONE);
-        }
         if (Settings.System.canWrite(context)) {
             write_settings_button.setVisibility(View.GONE);
         }
@@ -611,13 +599,6 @@ public class main_activity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (other.getActiveCard(context) == 2 && remote_control.isDataUsageAccess(context)) {
-                MenuItem set_sim_imsi = menu.findItem(R.id.set_sim_imsi);
-                set_sim_imsi.setVisible(true);
-            }
-        }
-
         return true;
     }
 
@@ -684,21 +665,6 @@ public class main_activity extends AppCompatActivity {
             case R.id.spam_sms_keyword_edittext:
                 startActivity(new Intent(this, spam_list_activity.class));
                 return true;
-            case R.id.set_sim_imsi:
-                View imsi_dialog_view = inflater.inflate(R.layout.set_imsi_layout, null);
-                final EditText imsi1 = imsi_dialog_view.findViewById(R.id.imsi1_editview);
-                final EditText imsi2 = imsi_dialog_view.findViewById(R.id.imsi2_editview);
-                imsi1.setText(Paper.book("system_config").read("sim1_imsi", ""));
-                imsi2.setText(Paper.book("system_config").read("sim2_imsi", ""));
-                new AlertDialog.Builder(this).setTitle(R.string.set_sim_imsi)
-                        .setView(imsi_dialog_view)
-                        .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                            String sim1_imsi = imsi1.getText().toString();
-                            String sim2_imsi = imsi2.getText().toString();
-                            Paper.book("system_config").write("sim1_imsi", sim1_imsi).write("sim2_imsi", sim2_imsi);
-                        })
-                        .show();
-                return true;
             case R.id.set_proxy_menu_item:
                 View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
                 final SwitchMaterial doh_switch = findViewById(R.id.doh_switch);
@@ -737,14 +703,6 @@ public class main_activity extends AppCompatActivity {
                             }).start();
                         })
                         .show();
-                return true;
-            case R.id.set_data_flush_day:
-                final Calendar calendar = Calendar.getInstance();
-                new DatePickerDialog(this,
-                        (view, year, month, dayOfMonth) -> Paper.book("system_config").write("data_flush_day", dayOfMonth),
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        Paper.book("system_config").read("data_flush_day", 1)).show();
                 return true;
             case R.id.user_manual_menu_item:
                 file_name = "/guide/" + context.getString(R.string.Lang) + "/user-manual";

@@ -165,12 +165,6 @@
                 android:text="@string/using_doh"
                 tools:ignore="RtlSymmetry" />
 
-            <Button
-                android:id="@+id/usage_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:alpha="@dimen/button_alpha"
-                android:text="@string/data_usage_permissions_button" />
 
             <Button
                 android:id="@+id/write_settings_button"

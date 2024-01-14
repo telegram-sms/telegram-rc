@@ -75,7 +75,7 @@ class beacon_receiver_service : Service() {
 
     private val reloadConfigReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            config = Paper.book("beacon_config").read("config", beacon())!!
+            config = Paper.book("beacon").read("config", beacon())!!
         }
     }
 
@@ -102,7 +102,7 @@ class beacon_receiver_service : Service() {
         if (!this.wakelock.isHeld) {
             this.wakelock.acquire()
         }
-        config = Paper.book("beacon_config").read("config", beacon())!!
+        config = Paper.book("beacon").read("config", beacon())!!
         LocalBroadcastManager.getInstance(this).registerReceiver(
             reloadConfigReceiver,
             IntentFilter("reload_beacon_config")
@@ -132,7 +132,7 @@ class beacon_receiver_service : Service() {
                 Log.d(TAG, "onCreate: $item")
             }
             LocalBroadcastManager.getInstance(applicationContext)
-                .sendBroadcast(Intent("flush_beacons_list"));
+                .sendBroadcast(Intent("flush_beacons_list"))
         }
         val beaconLayout =
             "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24" // search the Internet to find the layout string of your specific beacon
@@ -165,22 +165,22 @@ class beacon_receiver_service : Service() {
                         context
                     )
                 ) {
-                    config.useVpnHotspot = false;
+                    config.useVpnHotspot = false
                 }
-                wifiIsEnableStatus = Paper.book("temp").read("wifi_open", false)!!;
+                wifiIsEnableStatus = Paper.book("temp").read("wifi_open", false)!!
             } else {
                 if (!Settings.System.canWrite(context) && remote_control.isVPNHotspotExist(
                         context
                     )
                 ) {
-                    config.useVpnHotspot = true;
+                    config.useVpnHotspot = true
                 }
-                wifiIsEnableStatus = remote_control.isHotspotActive(context);
+                wifiIsEnableStatus = remote_control.isHotspotActive(context)
             }
             if (Paper.book().read("disable_beacon", false)!!) {
-                notFoundCount = 0;
-                detectCount = 0;
-                return;
+                notFoundCount = 0
+                detectCount = 0
+                return
             }
             val info = getBatteryInfo()
             if (!info.isCharging && info.batteryLevel < 25 && !wifiIsEnableStatus && !config.opposite) {
@@ -190,7 +190,7 @@ class beacon_receiver_service : Service() {
                 return
             }
             val listenBeaconList =
-                Paper.book("beacon_config").read("address", ArrayList<String>())!!
+                Paper.book("beacon").read("address", ArrayList<String>())!!
             if (listenBeaconList.size == 0) {
                 notFoundCount = 0
                 detectCount = 0
@@ -224,8 +224,12 @@ class beacon_receiver_service : Service() {
                     val distance = detectBeacon.distance.toInt().toString()
                     beaconStatus = "\nBeacon Distance: $distance meter"
                     notFoundCount = 0
-                    ++detectCount
-                };
+                    if (detectBeacon.distance>=200.0) {
+                        Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation")
+                    } else {
+                        ++detectCount
+                    }
+                }
             } else {
                 beaconStatus = "\nBeacon Not Found."
                 if (notFoundCount > 1) {
@@ -338,7 +342,7 @@ class beacon_receiver_service : Service() {
         val request_body = request_message()
         request_body.chat_id = chat_id
         request_body.message_thread_id = messageThreadId
-        request_body.text = message + "\n" + getString(R.string.current_battery_level) + getBatteryInfoMsg() + "\n" + getString(R.string.current_network_connection_status) +networkType();
+        request_body.text = message + "\n" + getString(R.string.current_battery_level) + getBatteryInfoMsg() + "\n" + getString(R.string.current_network_connection_status) +networkType()
         val requestBodyJson = Gson().toJson(request_body)
         val body: RequestBody = requestBodyJson.toRequestBody(CONST.JSON)
         val requestObj: Request = Request.Builder().url(requestUrl).method("POST", body).build()

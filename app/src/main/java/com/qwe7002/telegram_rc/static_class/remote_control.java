@@ -1,6 +1,5 @@
 package com.qwe7002.telegram_rc.static_class;
 
-import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -97,11 +96,5 @@ public class remote_control {
     }
 
 
-    public static boolean isDataUsageAccess(@NotNull Context context) {
-        AppOpsManager appOps = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
-        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
-                android.os.Process.myUid(), context.getPackageName());
-        return mode == AppOpsManager.MODE_ALLOWED;
-    }
 
 }

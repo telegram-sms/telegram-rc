@@ -4,30 +4,22 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.Service;
-import android.app.usage.NetworkStats;
-import android.app.usage.NetworkStatsManager;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Process;
-import android.os.RemoteException;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -55,10 +47,7 @@ import com.qwe7002.telegram_rc.static_class.ussd;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -88,87 +77,6 @@ public class chat_command_service extends Service {
     private network_callback callback;
     private static boolean first_request = true;
 
-    @SuppressLint({"HardwareIds", "MissingPermission"})
-    private static String getDataStats(Context context) {
-        String result = "";
-        if (remote_control.isDataUsageAccess(context)) {
-            int data_flush_day = Paper.book("system_config").read("data_flush_day", 1);
-            Calendar cal = Calendar.getInstance();
-            Calendar now_time_cal = Calendar.getInstance();
-            now_time_cal.setTime(new Date());
-            if (now_time_cal.get(Calendar.DAY_OF_MONTH) >= data_flush_day) {
-                cal.add(Calendar.MONTH, 0);
-            } else {
-                cal.add(Calendar.MONTH, -1);
-            }
-            cal.set(Calendar.DAY_OF_MONTH, data_flush_day);
-            cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            long from = cal.getTimeInMillis();
-            try {
-                switch (other.getActiveCard(context)) {
-                    case 1:
-                        String sub_id = null;
-                        result = "\n" + context.getString(R.string.mobile_data_usage) + get_data_usage(context, sub_id, from);
-                        break;
-                    case 2:
-                        String sim1_imsi = "";
-                        String sim1_result_usage;
-                        String sim2_imsi = "";
-                        String sim2_result_usage;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            Uri uri = Uri.parse("content://telephony/siminfo");
-                            Cursor cursor;
-                            ContentResolver contentResolver = context.getContentResolver();
-                            cursor = contentResolver.query(uri,
-                                    new String[]{"_id", "sim_id", "imsi","icc_id","number","display_name"}, "0=0",
-                                    new String[]{}, null);
-                            if (null != cursor) {
-                                try {
-                                    while (cursor.moveToNext()) {
-                                        @SuppressLint("Range") int sim_id = cursor.getInt(cursor.getColumnIndex("sim_id"));
-                                        @SuppressLint("Range") String imsi_id = cursor.getString(cursor.getColumnIndex("imsi"));
-                                        switch (sim_id){
-                                            case 0:
-                                                sim1_imsi = imsi_id;
-                                                Log.d(TAG, "getDataStats: "+sim1_imsi);
-                                                break;
-                                            case 1:
-                                                sim2_imsi = imsi_id;
-                                                Log.d(TAG, "getDataStats: "+sim2_imsi);
-                                                break;
-                                        }
-                                    }
-                                }catch (Exception e){
-                                    e.printStackTrace();
-                                }
-                                break;
-                            }
-                        } else {
-                            TelephonyManager telephonyManager = (TelephonyManager) context
-                                    .getSystemService(Context.TELEPHONY_SERVICE);
-                            assert telephonyManager != null;
-                            sim1_imsi = telephonyManager.getSubscriberId();
-                            telephonyManager = telephonyManager.createForSubscriptionId(other.getSubId(context, 1));
-                            sim2_imsi = telephonyManager.getSubscriberId();
-
-                        }
-                        sim1_result_usage = get_data_usage(context, sim1_imsi, from);
-                        if (!sim1_result_usage.equals("")) {
-                            result = "\nSIM1 " + context.getString(R.string.mobile_data_usage) + sim1_result_usage;
-                        }
-                        sim2_result_usage = get_data_usage(context, sim2_imsi, from);
-                        if (!sim2_result_usage.equals("")) {
-                            result += "\nSIM2 " + context.getString(R.string.mobile_data_usage) + sim2_result_usage;
-                        }
-                }
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
-    }
 
     private static String checkCellularNetworkType(int type) {
         String net_type = "Unknown";
@@ -533,12 +441,10 @@ public class chat_command_service extends Service {
             case "/ping":
             case "/getinfo":
                 String cardInfo = "";
-                String networkStats = "";
                 TelephonyManager telephonyManager = (TelephonyManager) context
                         .getSystemService(Context.TELEPHONY_SERVICE);
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    networkStats = getDataStats(context);
                     cardInfo = "\nSIM: " + other.getSimDisplayName(context, 0);
                     if (other.getActiveCard(context) == 2) {
                         cardInfo = "\n" + getString(R.string.current_data_card) + ": SIM" + other.getDataSimId(context) + "\nSIM1: " + other.getSimDisplayName(context, 0) + "\nSIM2: " + other.getSimDisplayName(context, 1);
@@ -573,7 +479,7 @@ public class chat_command_service extends Service {
                 } else {
                     beaconStatus += getString(R.string.disable);
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context) + isHotspotRunning + beaconStatus + spamCount + networkStats + cardInfo;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context) + isHotspotRunning + beaconStatus + spamCount + cardInfo;
                 android.util.Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
@@ -899,30 +805,6 @@ public class chat_command_service extends Service {
         });
     }
 
-    private static String get_data_usage(Context context, String sub_id, long from) throws RemoteException {
-        NetworkStatsManager service = context.getSystemService(NetworkStatsManager.class);
-        NetworkStats.Bucket bucket =
-                service.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, sub_id, from, System.currentTimeMillis());
-        return get_size(bucket.getTxBytes() + bucket.getRxBytes());
-    }
-
-    private static String get_size(long size) {
-        final int GB = 1024 * 1024 * 1024;
-        final int MB = 1024 * 1024;
-        final int KB = 1024;
-        DecimalFormat df = new DecimalFormat("0.00");
-        String resultSize;
-        if (size / GB >= 1) {
-            resultSize = df.format(size / (float) GB) + "GB";
-        } else if (size / MB >= 1) {
-            resultSize = df.format(size / (float) MB) + "MB";
-        } else if (size / KB >= 1) {
-            resultSize = df.format(size / (float) KB) + "KB";
-        } else {
-            resultSize = size + "Byte";
-        }
-        return resultSize;
-    }
 
     static class CALLBACK_DATA_VALUE {
         final static String SEND = "send";
