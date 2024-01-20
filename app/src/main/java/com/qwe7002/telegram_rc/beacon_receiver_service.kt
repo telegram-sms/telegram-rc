@@ -141,7 +141,7 @@ class beacon_receiver_service : Service() {
 
         scanner = BeaconScanner.Builder(application)
             .setBeaconParser(beaconParser)
-            .setBeaconExpirationDuration(10)
+            .setBeaconExpirationDuration(30)
             .setScanDuration(
                 ScanDuration.UNIFORM
             )
@@ -232,7 +232,7 @@ class beacon_receiver_service : Service() {
                 }
             } else {
                 beaconStatus = "\nBeacon Not Found."
-                if (notFoundCount > 1) {
+                if (notFoundCount >= 5) {
                     detectCount = 0
                 }
                 ++notFoundCount
