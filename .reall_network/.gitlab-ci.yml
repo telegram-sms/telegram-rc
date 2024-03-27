@@ -37,7 +37,7 @@ release:nightly:
         - ghr_v0.14.0_linux_amd64/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
 
 build:
-    image: alvrme/alpine-android:android-31-jdk11
+    image: alvrme/alpine-android:android-31-jdk17
     stage: build
     script:
         - echo -n ${KEYSTORE} | base64 -d > app/keys.jks
