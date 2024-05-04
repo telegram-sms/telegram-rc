@@ -1,0 +1,55 @@
+stages:
+    - build
+    - deploy
+cache:
+    key: ${CI_PROJECT_ID}
+    paths:
+        - .gradle/
+
+variables:
+    OWNER: telegram-sms
+    REPO: telegram-rc
+
+release:master:
+    dependencies:
+        - build
+    stage: deploy
+    only:
+        - master
+    script:
+        - apk --update --no-cache add git openssl bash curl wget 
+        - wget https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_linux_amd64.tar.gz
+        - tar -zxvf  ghr_v0.14.0_linux_amd64.tar.gz
+        - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
+        - ghr_v0.14.0_linux_amd64/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
+
+release:nightly:
+    dependencies:
+        - build
+    stage: deploy
+    only:
+        - nightly
+    script:
+        - apk --update --no-cache add git openssl bash curl wget
+        - wget https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_linux_amd64.tar.gz
+        - tar -zxvf  ghr_v0.14.0_linux_amd64.tar.gz
+        - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
+        - ghr_v0.14.0_linux_amd64/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
+
+build:
+    image: alvrme/alpine-android:android-31-jdk17
+    stage: build
+    script:
+        - echo -n ${KEYSTORE} | base64 -d > app/keys.jks
+        - git submodule update --init --recursive
+        - export VERSION_CODE=${CI_PIPELINE_ID}
+        - export VERSION_NAME=${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}
+        - export GRADLE_USER_HOME=$(pwd)/.gradle && mkdir -p ${GRADLE_USER_HOME}
+        - echo -e "org.gradle.jvmargs=-Xmx1536m\n org.gradle.parallel=true" >> ${GRADLE_USER_HOME}/gradle.properties
+        - chmod +x ./gradlew
+        - ./gradlew app:copy_language_pack
+        - ./gradlew assembleRelease
+    artifacts:
+        paths:
+            - app/build/outputs/apk/release/app-release.apk
+        expire_in: 1 week
