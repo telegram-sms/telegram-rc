@@ -10,6 +10,7 @@ import aga.android.luch.parsers.BeaconParserFactory
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -61,7 +62,7 @@ class beacon_receiver_service : Service() {
     private lateinit var okhttpClient: OkHttpClient
     private lateinit var chatId: String
     private lateinit var requestUrl: String
-    lateinit var messageThreadId: String
+    private lateinit var messageThreadId: String
     private lateinit var scanner: IScanner
     private lateinit var config: beacon
     private lateinit var wakelock: WakeLock
@@ -197,6 +198,13 @@ class beacon_receiver_service : Service() {
                 Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
                 return
             }
+            val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+            if(!bluetoothAdapter!!.isEnabled){
+                notFoundCount = 0
+                detectCount = 0
+                Log.i(TAG, "Bluetooth has been turned off")
+                return
+            }
             var foundBeacon = false
             var detectBeacon: BeaconModel? = null
             for (beacon in beacons) {
@@ -204,10 +212,10 @@ class beacon_receiver_service : Service() {
                     TAG,
                     "UUID: " + beacon.uuid + " Rssi: " + beacon.rssi
                 )
-                for (beacon_address in listenBeaconList) {
+                for (beaconAddress in listenBeaconList) {
 
                     if (beaconList.beaconItemName(beacon.uuid, beacon.major, beacon.minor)
-                            .equals(beacon_address)
+                            .equals(beaconAddress)
                     ) {
                         foundBeacon = true
                         break
@@ -370,12 +378,12 @@ class beacon_receiver_service : Service() {
             )
             battery_level = 100
         }
-        val intentfilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus = applicationContext.registerReceiver(null, intentfilter)!!
-        val charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        val battery_string_builder = StringBuilder().append(battery_level).append("%")
-        when (charge_status) {
-            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> battery_string_builder.append(
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = applicationContext.registerReceiver(null, filter)!!
+        val chargeStatus = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val batteryStringBuilder = StringBuilder().append(battery_level).append("%")
+        when (chargeStatus) {
+            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> batteryStringBuilder.append(
                 " ("
             ).append(applicationContext.getString(R.string.charging)).append(")")
 
@@ -383,12 +391,12 @@ class beacon_receiver_service : Service() {
                 BatteryManager.EXTRA_PLUGGED,
                 -1
             )) {
-                BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> battery_string_builder.append(
+                BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> batteryStringBuilder.append(
                     " ("
                 ).append(applicationContext.getString(R.string.not_charging)).append(")")
             }
         }
-        return battery_string_builder.toString()
+        return batteryStringBuilder.toString()
     }
     private fun getBatteryInfo(): BatteryInfo {
         val info = BatteryInfo()

@@ -5,12 +5,18 @@ buildscript {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        jcenter()
+        maven {
+            url = uri("https://maven.pkg.github.com/agap/luch")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+            }
+        }
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22"
+        classpath 'com.android.tools.build:gradle:8.4.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20"
     }
 }
 
@@ -19,7 +25,13 @@ allprojects {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        jcenter()
+        maven {
+            url = uri("https://maven.pkg.github.com/agap/luch")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+            }
+        }
     }
 }
 

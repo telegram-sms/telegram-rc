@@ -15,6 +15,7 @@ import com.qwe7002.telegram_rc.static_class.service;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import io.paperdb.Paper;
 
@@ -29,7 +30,8 @@ public class boot_receiver extends BroadcastReceiver {
         if (sharedPreferences.getBoolean("initialized", false)) {
             log.writeLog(context, "Received [" + intent.getAction() + "] broadcast, starting background service.");
             service.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
-            if (Paper.book().read("resend_list", new ArrayList<>()).size() != 0) {
+            service.startBeaconService(context);
+            if (Objects.requireNonNull(Paper.book().read("resend_list", new ArrayList<>())).size() != 0) {
                 android.util.Log.d(TAG, "An unsent message was detected, and the automatic resend process was initiated.");
                 resend.start_resend_service(context);
             }

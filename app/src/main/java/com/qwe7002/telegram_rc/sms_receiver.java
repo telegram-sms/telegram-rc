@@ -63,17 +63,17 @@ public class sms_receiver extends BroadcastReceiver {
         String chat_id = sharedPreferences.getString("chat_id", "");
         String request_uri = network.getUrl(bot_token, "sendMessage");
 
-        int intent_slot = extras.getInt("slot", -1);
-        final int sub_id = extras.getInt("subscription", -1);
-        if (other.getActiveCard(context) >= 2 && intent_slot == -1) {
+        int intentSlot = extras.getInt("slot", -1);
+        final int subId = extras.getInt("subscription", -1);
+        if (other.getActiveCard(context) >= 2 && intentSlot == -1) {
             SubscriptionManager manager = SubscriptionManager.from(context);
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                SubscriptionInfo info = manager.getActiveSubscriptionInfo(sub_id);
-                intent_slot = info.getSimSlotIndex();
+                SubscriptionInfo info = manager.getActiveSubscriptionInfo(subId);
+                intentSlot = info.getSimSlotIndex();
             }
         }
-        final int slot = intent_slot;
-        String dual_sim = other.getDualSimCardDisplay(context, intent_slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
+        final int slot = intentSlot;
+        String dual_sim = other.getDualSimCardDisplay(context, intentSlot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
 
         Object[] pdus = (Object[]) extras.get("pdus");
         assert pdus != null;
@@ -158,7 +158,7 @@ public class sms_receiver extends BroadcastReceiver {
                     case "/sendussd":
                         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                             if (command_list.length == 2) {
-                                ussd.send_ussd(context, message_list[1], sub_id);
+                                ussd.send_ussd(context, message_list[1], subId);
                                 return;
                             }
                         }
@@ -179,7 +179,7 @@ public class sms_receiver extends BroadcastReceiver {
                                 }
                                 msg_send_content.append(message_list[i]);
                             }
-                            int send_slot = intent_slot;
+                            int send_slot = intentSlot;
                             if (other.getActiveCard(context) > 1) {
                                 switch (command_list[0].trim()) {
                                     case "/sendsms1":
@@ -212,14 +212,15 @@ public class sms_receiver extends BroadcastReceiver {
                 if (message_body.contains(block_list_item)) {
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(context.getString(R.string.time_format), Locale.UK);
                     String write_message = request_body.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(new Date(System.currentTimeMillis()));
-                    ArrayList<String> spam_sms_list;
+                    ArrayList<String> spamSmsList;
                     Paper.init(context);
-                    spam_sms_list = Paper.book().read("spam_sms_list", new ArrayList<>());
-                    if (spam_sms_list.size() >= 5) {
-                        spam_sms_list.remove(0);
+                    spamSmsList = Paper.book().read("spam_sms_list", new ArrayList<>());
+                    assert spamSmsList != null;
+                    if (spamSmsList.size() >= 5) {
+                        spamSmsList.remove(0);
                     }
-                    spam_sms_list.add(write_message);
-                    Paper.book().write("spam_sms_list", spam_sms_list);
+                    spamSmsList.add(write_message);
+                    Paper.book().write("spam_sms_list", spamSmsList);
                     android.util.Log.i(TAG, "Detected message contains blacklist keywords, add spam list");
                     return;
                 }
@@ -239,7 +240,7 @@ public class sms_receiver extends BroadcastReceiver {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
                 log.writeLog(context, error_head + e.getMessage());
-                sms.send_fallback_sms(context, final_raw_request_body_text, sub_id);
+                sms.send_fallback_sms(context, final_raw_request_body_text, subId);
                 resend.addResendLoop(context, request_body.text);
                 commandHandle(sharedPreferences, message_body, data_enable);
             }
@@ -251,7 +252,7 @@ public class sms_receiver extends BroadcastReceiver {
                 if (response.code() != 200) {
                     log.writeLog(context, error_head + response.code() + " " + result);
                     if (!final_is_flash) {
-                        sms.send_fallback_sms(context, final_raw_request_body_text, sub_id);
+                        sms.send_fallback_sms(context, final_raw_request_body_text, subId);
                     }
                     resend.addResendLoop(context, request_body.text);
                 } else {
