@@ -43,6 +43,7 @@ public class service {
     }
 
     public static void startBeaconService(Context context) {
+
         Intent beacon_service = new Intent(context, beacon_receiver_service.class);
         context.startForegroundService(beacon_service);
 

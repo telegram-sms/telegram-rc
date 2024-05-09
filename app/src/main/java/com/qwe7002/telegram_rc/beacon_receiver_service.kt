@@ -92,7 +92,6 @@ class beacon_receiver_service : Service() {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.d(TAG, "onCreate: permission denied")
-            return
         }
         Paper.init(applicationContext)
         wakelock =
@@ -363,7 +362,7 @@ class beacon_receiver_service : Service() {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                Log.d(TAG, "onResponse: " + (response.body?.string() ?: ""))
+                Log.d(TAG, "onResponse: " + response.body.string())
             }
         })
     }

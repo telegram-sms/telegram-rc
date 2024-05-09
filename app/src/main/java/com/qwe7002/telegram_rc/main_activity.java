@@ -119,9 +119,9 @@ public class main_activity extends AppCompatActivity {
             privacy_mode_switch.setVisibility(View.GONE);
         }
         privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
-        service.startBeaconService(context);
         if (sharedPreferences.getBoolean("initialized", false)) {
             service.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+            service.startBeaconService(context);
         }
 
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
@@ -278,7 +278,6 @@ public class main_activity extends AppCompatActivity {
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     progress_dialog.cancel();
-                    assert response.body() != null;
                     if (response.code() != 200) {
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
@@ -292,7 +291,7 @@ public class main_activity extends AppCompatActivity {
                     String result = Objects.requireNonNull(response.body()).string();
                     JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                     JsonArray chat_list = result_obj.getAsJsonArray("result");
-                    if (chat_list.size() == 0) {
+                    if (chat_list.isEmpty()) {
                         Looper.prepare();
                         Snackbar.make(v, R.string.unable_get_recent, Snackbar.LENGTH_LONG).show();
                         Looper.loop();
@@ -314,7 +313,7 @@ public class main_activity extends AppCompatActivity {
                                 if (chat_obj.has("title")) {
                                     username = new StringBuilder(chat_obj.get("title").getAsString());
                                 }
-                                if (username.toString().equals("") && !chat_obj.has("username")) {
+                                if (username.toString().isEmpty() && !chat_obj.has("username")) {
                                     if (chat_obj.has("first_name")) {
                                         username = new StringBuilder(chat_obj.get("first_name").getAsString());
                                     }
@@ -417,7 +416,6 @@ public class main_activity extends AppCompatActivity {
                     progress_dialog.cancel();
                     String new_bot_token = bot_token_editview.getText().toString().trim();
                     if (response.code() != 200) {
-                        assert response.body() != null;
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description");
@@ -436,7 +434,7 @@ public class main_activity extends AppCompatActivity {
                     editor.putString("bot_token", new_bot_token);
                     editor.putString("chat_id", chat_id_editview.getText().toString().trim());
                     editor.putString("message_thread_id", message_thread_id_editview.getText().toString().trim());
-                    if (trusted_phone_number_editview.getText().toString().trim().length() != 0) {
+                    if (!trusted_phone_number_editview.getText().toString().trim().isEmpty()) {
                         editor.putString("trusted_phone_number", trusted_phone_number_editview.getText().toString().trim());
                         editor.putBoolean("fallback_sms", fallback_sms_switch.isChecked());
                     }
@@ -675,7 +673,7 @@ public class main_activity extends AppCompatActivity {
                 final EditText proxy_username = proxy_dialog_view.findViewById(R.id.proxy_username_editview);
                 final EditText proxy_password = proxy_dialog_view.findViewById(R.id.proxy_password_editview);
                 proxy proxy_item = Paper.book("system_config").read("proxy_config", new proxy());
-                proxy_enable.setChecked(proxy_item.enable);
+                proxy_enable.setChecked(Objects.requireNonNull(proxy_item).enable);
                 proxy_doh_socks5.setChecked(proxy_item.dns_over_socks5);
                 proxy_host.setText(proxy_item.host);
                 proxy_port.setText(String.valueOf(proxy_item.port));

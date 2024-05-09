@@ -2,7 +2,10 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
+    //noinspection GrDeprecatedAPIUsage
     compileSdkVersion 34
+    //noinspection GrDeprecatedAPIUsage
+    buildToolsVersion '34.0.0'
     defaultConfig {
         applicationId "com.qwe7002.telegram_rc"
         minSdkVersion 26
@@ -44,7 +47,6 @@ android {
         }
     }
     namespace 'com.qwe7002.telegram_rc'
-    buildToolsVersion '34.0.0'
 }
 
 dependencies {
