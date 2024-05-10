@@ -17,6 +17,7 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -266,7 +267,7 @@ public class main_activity extends AppCompatActivity {
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, "onFailure: ", e);
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
                     log.writeLog(context, error_message);
@@ -401,7 +402,7 @@ public class main_activity extends AppCompatActivity {
             call.enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, "onFailure: ", e);
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
                     log.writeLog(context, error_message);
@@ -513,7 +514,7 @@ public class main_activity extends AppCompatActivity {
             try {
                 customTabsIntent.launchUrl(context, uri);
             } catch (ActivityNotFoundException e) {
-                e.printStackTrace();
+                Log.e(TAG, "show_privacy_dialog: ", e);
                 Snackbar.make(findViewById(R.id.bot_token_editview), "Browser not found.", Snackbar.LENGTH_LONG).show();
             }
         });
@@ -614,7 +615,7 @@ public class main_activity extends AppCompatActivity {
                     packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
                     versionName = packageInfo.versionName;
                 } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, "onOptionsItemSelected: ", e);
                 }
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.about_title);
@@ -724,7 +725,7 @@ public class main_activity extends AppCompatActivity {
         try {
             customTabsIntent.launchUrl(this, uri);
         } catch (ActivityNotFoundException e) {
-            e.printStackTrace();
+            Log.e(TAG, "onOptionsItemSelected: ", e);
             Snackbar.make(findViewById(R.id.bot_token_editview), "Browser not found.", Snackbar.LENGTH_LONG).show();
         }
         return true;
