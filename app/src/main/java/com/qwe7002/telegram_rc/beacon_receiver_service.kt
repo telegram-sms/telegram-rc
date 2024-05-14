@@ -369,18 +369,18 @@ class beacon_receiver_service : Service() {
 
     fun getBatteryInfoMsg(): String {
         val batteryManager = (applicationContext.getSystemService(BATTERY_SERVICE) as BatteryManager)
-        var battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        if (battery_level > 100) {
+        var batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        if (batteryLevel > 100) {
             Log.i(
                 "get_battery_info",
                 "The previous battery is over 100%, and the correction is 100%."
             )
-            battery_level = 100
+            batteryLevel = 100
         }
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         val batteryStatus = applicationContext.registerReceiver(null, filter)!!
         val chargeStatus = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        val batteryStringBuilder = StringBuilder().append(battery_level).append("%")
+        val batteryStringBuilder = StringBuilder().append(batteryLevel).append("%")
         when (chargeStatus) {
             BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> batteryStringBuilder.append(
                 " ("
