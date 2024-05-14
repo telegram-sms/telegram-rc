@@ -30,7 +30,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class sms {
-    public static void send_fallback_sms(Context context, String content, int sub_id) {
+    public static void sendFallbackSMS(Context context, String content, int sub_id) {
         final String TAG = "send_fallback_sms";
         if (androidx.core.content.PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             android.util.Log.d(TAG, ": No permission.");
@@ -56,12 +56,12 @@ public class sms {
         sms_manager.sendMultipartTextMessage(trust_number, null, divideContents, null, null);
     }
 
-    public static void send_sms(Context context, String send_to, String content, int slot, int sub_id) {
-        send_sms(context, send_to, content, slot, sub_id, -1);
+    public static void sendSMS(Context context, String send_to, String content, int slot, int sub_id) {
+        sendSMS(context, send_to, content, slot, sub_id, -1);
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    public static void send_sms(Context context, String send_to, String content, int slot, int sub_id, long message_id) {
+    public static void sendSMS(Context context, String send_to, String content, int slot, int sub_id, long message_id) {
         if (PermissionChecker.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PermissionChecker.PERMISSION_GRANTED) {
             Log.d("send_sms", "No permission.");
             return;
@@ -98,14 +98,14 @@ public class sms {
         Call call = okhttp_client.newCall(request);
         try {
             Response response = call.execute();
-            if (response.code() != 200 || response.body() == null) {
+            if (response.code() != 200) {
                 throw new IOException(String.valueOf(response.code()));
             }
             if (message_id == -1) {
                 message_id = other.getMessageId(Objects.requireNonNull(response.body()).string());
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d("sendSMS", "sendSMS: "+e);
             log.writeLog(context, "failed to send message:" + e.getMessage());
         }
         ArrayList<String> divideContents = sms_manager.divideMessage(content);

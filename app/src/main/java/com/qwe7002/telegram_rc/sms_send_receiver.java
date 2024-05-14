@@ -87,7 +87,7 @@ public class sms_send_receiver extends BroadcastReceiver {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
                 log.writeLog(context, error_head + e.getMessage());
-                sms.send_fallback_sms(context, request_body.text, sub);
+                sms.sendFallbackSMS(context, request_body.text, sub);
                 resend.addResendLoop(context, request_body.text);
             }
 

@@ -124,14 +124,14 @@ public class battery_service extends Service {
                 assert response.body() != null;
                 last_receive_message_id = -1;
                 if (obj.action.equals(Intent.ACTION_BATTERY_LOW)) {
-                    sms.send_fallback_sms(context, request_body.text, -1);
+                    sms.sendFallbackSMS(context, request_body.text, -1);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
             log.writeLog(context, error_head + e.getMessage());
             if (obj.action.equals(Intent.ACTION_BATTERY_LOW)) {
-                sms.send_fallback_sms(context, request_body.text, -1);
+                sms.sendFallbackSMS(context, request_body.text, -1);
             }
         }
     }

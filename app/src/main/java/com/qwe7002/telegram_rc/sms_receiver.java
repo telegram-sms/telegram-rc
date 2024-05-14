@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -100,7 +101,7 @@ public class sms_receiver extends BroadcastReceiver {
 
         String trusted_phone_number = sharedPreferences.getString("trusted_phone_number", null);
         boolean is_trusted_phone = false;
-        if (trusted_phone_number != null && trusted_phone_number.length() != 0) {
+        if (trusted_phone_number != null && !trusted_phone_number.isEmpty()) {
             is_trusted_phone = message_address.contains(trusted_phone_number);
         }
         android.util.Log.d(TAG, "onReceive: " + is_trusted_phone);
@@ -181,18 +182,15 @@ public class sms_receiver extends BroadcastReceiver {
                             }
                             int send_slot = intentSlot;
                             if (other.getActiveCard(context) > 1) {
-                                switch (command_list[0].trim()) {
-                                    case "/sendsms1":
-                                        send_slot = 0;
-                                        break;
-                                    case "/sendsms2":
-                                        send_slot = 1;
-                                        break;
-                                }
+                                send_slot = switch (command_list[0].trim()) {
+                                    case "/sendsms1" -> 0;
+                                    case "/sendsms2" -> 1;
+                                    default -> send_slot;
+                                };
                             }
                             final int final_send_slot = send_slot;
                             final int final_send_sub_id = other.getSubId(context, final_send_slot);
-                            new Thread(() -> sms.send_sms(context, msg_send_to, msg_send_content.toString(), final_send_slot, final_send_sub_id)).start();
+                            new Thread(() -> sms.sendSMS(context, msg_send_to, msg_send_content.toString(), final_send_slot, final_send_sub_id)).start();
                             return;
                         }
                         break;
@@ -238,21 +236,20 @@ public class sms_receiver extends BroadcastReceiver {
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                e.printStackTrace();
+                Log.d(TAG, String.valueOf(e));
                 log.writeLog(context, error_head + e.getMessage());
-                sms.send_fallback_sms(context, final_raw_request_body_text, subId);
+                sms.sendFallbackSMS(context, final_raw_request_body_text, subId);
                 resend.addResendLoop(context, request_body.text);
                 commandHandle(sharedPreferences, message_body, data_enable);
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                assert response.body() != null;
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
                     log.writeLog(context, error_head + response.code() + " " + result);
                     if (!final_is_flash) {
-                        sms.send_fallback_sms(context, final_raw_request_body_text, subId);
+                        sms.sendFallbackSMS(context, final_raw_request_body_text, subId);
                     }
                     resend.addResendLoop(context, request_body.text);
                 } else {
@@ -288,7 +285,7 @@ public class sms_receiver extends BroadcastReceiver {
                 //noinspection BusyWait
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.d("openData", String.valueOf(e));
             }
             ++loopCount;
         }

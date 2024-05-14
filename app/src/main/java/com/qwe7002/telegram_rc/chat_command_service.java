@@ -316,7 +316,7 @@ public class chat_command_service extends Service {
             } else {
                 sub_id = other.getSubId(context, slot);
             }
-            sms.send_sms(context, to, content, slot, sub_id, message_id);
+            sms.sendSMS(context, to, content, slot, sub_id, message_id);
             set_sms_send_status_standby();
             return;
         }
@@ -667,7 +667,7 @@ public class chat_command_service extends Service {
                             msg_send_content.append(msg_send_list[i]);
                         }
                         if (other.getActiveCard(context) == 1) {
-                            sms.send_sms(context, msg_send_to, msg_send_content.toString(), -1, -1);
+                            sms.sendSMS(context, msg_send_to, msg_send_content.toString(), -1, -1);
                             return;
                         }
                         int send_slot = -1;
@@ -679,7 +679,7 @@ public class chat_command_service extends Service {
                         }
                         int sub_id = other.getSubId(context, send_slot);
                         if (sub_id != -1) {
-                            sms.send_sms(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
+                            sms.sendSMS(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
                             return;
                         }
                     }
@@ -979,7 +979,7 @@ public class chat_command_service extends Service {
                         }
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
-                        sms.send_fallback_sms(context, result_message, -1);
+                        sms.sendFallbackSMS(context, result_message, -1);
                         service.stopAllService(context);
                         break;
                     }

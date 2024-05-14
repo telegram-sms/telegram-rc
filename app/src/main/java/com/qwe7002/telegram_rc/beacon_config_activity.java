@@ -45,7 +45,7 @@ public class beacon_config_activity extends AppCompatActivity {
 
     void flushListView() {
         ListView beacon_listview = findViewById(R.id.beacon_listview);
-        if (beaconList.beacons.size() > 0) {
+        if (!beaconList.beacons.isEmpty()) {
             ArrayList<BeaconModel> list = new ArrayList<>();
             for (BeaconModel beacon : beaconList.beacons) {
                 if(beacon.getDistance()<200.0){

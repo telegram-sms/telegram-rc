@@ -99,7 +99,7 @@ public class call_receiver extends BroadcastReceiver {
                     public void onFailure(@NonNull Call call, @NonNull IOException e) {
                         e.printStackTrace();
                         log.writeLog(context, error_head + e.getMessage());
-                        sms.send_fallback_sms(context, request_body.text, other.getSubId(context, slot));
+                        sms.sendFallbackSMS(context, request_body.text, other.getSubId(context, slot));
                         resend.addResendLoop(context, request_body.text);
                     }
 

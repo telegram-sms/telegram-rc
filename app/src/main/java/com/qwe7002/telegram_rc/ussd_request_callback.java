@@ -79,7 +79,7 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
                 log.writeLog(context, error_head + e.getMessage());
-                sms.send_fallback_sms(context, request_body.text, -1);
+                sms.sendFallbackSMS(context, request_body.text, -1);
                 resend.addResendLoop(context, request_body.text);
             }
 
@@ -88,7 +88,7 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
                 if (response.code() != 200) {
                     assert response.body() != null;
                     log.writeLog(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
-                    sms.send_fallback_sms(context, request_body.text, -1);
+                    sms.sendFallbackSMS(context, request_body.text, -1);
                     resend.addResendLoop(context, request_body.text);
                 }
             }
