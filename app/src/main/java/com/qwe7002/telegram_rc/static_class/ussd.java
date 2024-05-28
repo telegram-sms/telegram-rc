@@ -43,16 +43,16 @@ public class ussd {
             Log.i(TAG, "send_ussd: No permission.");
         }
 
-        String bot_token = sharedPreferences.getString("bot_token", "");
-        String chat_id = sharedPreferences.getString("chat_id", "");
-        String request_uri = network.getUrl(bot_token, "sendMessage");
-        request_message request_body = new request_message();
-        request_body.chat_id = chat_id;
-        request_body.text = context.getString(R.string.send_ussd_head) + "\n" + context.getString(R.string.ussd_code_running);
-        String request_body_raw = new Gson().toJson(request_body);
+        String botToken = sharedPreferences.getString("bot_token", "");
+        String chatId = sharedPreferences.getString("chat_id", "");
+        String requestUri = network.getUrl(botToken, "sendMessage");
+        request_message requestBody = new request_message();
+        requestBody.chat_id = chatId;
+        requestBody.text = context.getString(R.string.send_ussd_head) + "\n" + context.getString(R.string.ussd_code_running);
+        String request_body_raw = new Gson().toJson(requestBody);
         RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
         OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
-        Request request = new Request.Builder().url(request_uri).method("POST", body).build();
+        Request request = new Request.Builder().url(requestUri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);
         TelephonyManager telephonyManager = tm;
         new Thread(() -> {
@@ -61,7 +61,7 @@ public class ussd {
                 Response response = call.execute();
                 message_id = other.getMessageId(Objects.requireNonNull(response.body()).string());
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.d(TAG, "send_ussd: "+e);
             }
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                 Looper.prepare();
