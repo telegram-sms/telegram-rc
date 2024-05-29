@@ -43,6 +43,8 @@ import com.qwe7002.telegram_rc.static_class.other
 import com.qwe7002.telegram_rc.static_class.remote_control
 import com.qwe7002.telegram_rc.static_class.resend
 import io.paperdb.Paper
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -118,7 +120,7 @@ class beacon_receiver_service : Service() {
         startForeground(notify.BEACON_SERVICE, notification)
 
         val batchListener = IBeaconBatchListener { beacons ->
-            beaconList.beacons = ArrayList()
+            val beacon = ArrayList<BeaconModel>()
             beacons.toList().map {
                 val item = BeaconModel(
                     uuid = it.getIdentifierAsUuid(1).toString(),
@@ -128,9 +130,11 @@ class beacon_receiver_service : Service() {
                     hardwareAddress = it.hardwareAddress,
                     distance = scanner.ranger.calculateDistance(it)
                 )
-                beaconList.beacons.add(item)
+                beacon.add(item)
                 Log.d(TAG, "onCreate: $item")
+
             }
+            beaconList.beacons = beacon
             LocalBroadcastManager.getInstance(applicationContext)
                 .sendBroadcast(Intent("flush_beacons_list"))
         }
@@ -198,7 +202,7 @@ class beacon_receiver_service : Service() {
                 return
             }
             val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-            if(!bluetoothAdapter!!.isEnabled){
+            if (!bluetoothAdapter!!.isEnabled) {
                 notFoundCount = 0
                 detectCount = 0
                 Log.i(TAG, "Bluetooth has been turned off")
@@ -231,7 +235,7 @@ class beacon_receiver_service : Service() {
                     val distance = detectBeacon.distance.toInt().toString()
                     beaconStatus = "\nBeacon Distance: $distance meter"
                     notFoundCount = 0
-                    if (detectBeacon.distance>=200.0) {
+                    if (detectBeacon.distance >= 200.0) {
                         Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation")
                     } else {
                         ++detectCount
@@ -315,9 +319,15 @@ class beacon_receiver_service : Service() {
 
             var message: String? = null
             when (switchStatus) {
-                STATUS_ENABLE_AP -> message = "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${getString(R.string.action_success)}$beaconStatus"
+                STATUS_ENABLE_AP -> message =
+                    "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
+                        getString(R.string.action_success)
+                    }$beaconStatus"
 
-                STATUS_DISABLE_AP -> message = "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${getString(R.string.action_success)}$beaconStatus"
+                STATUS_DISABLE_AP -> message =
+                    "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
+                        getString(R.string.action_success)
+                    }$beaconStatus"
             }
             message?.let { networkHandle(it, chatId, okhttpClient) }
 
@@ -349,7 +359,10 @@ class beacon_receiver_service : Service() {
         val request_body = request_message()
         request_body.chat_id = chat_id
         request_body.message_thread_id = messageThreadId
-        request_body.text = message + "\n" + getString(R.string.current_battery_level) + getBatteryInfoMsg() + "\n" + getString(R.string.current_network_connection_status) +networkType()
+        request_body.text =
+            message + "\n" + getString(R.string.current_battery_level) + getBatteryInfoMsg() + "\n" + getString(
+                R.string.current_network_connection_status
+            ) + networkType()
         val requestBodyJson = Gson().toJson(request_body)
         val body: RequestBody = requestBodyJson.toRequestBody(CONST.JSON)
         val requestObj: Request = Request.Builder().url(requestUrl).method("POST", body).build()
@@ -368,7 +381,8 @@ class beacon_receiver_service : Service() {
     }
 
     fun getBatteryInfoMsg(): String {
-        val batteryManager = (applicationContext.getSystemService(BATTERY_SERVICE) as BatteryManager)
+        val batteryManager =
+            (applicationContext.getSystemService(BATTERY_SERVICE) as BatteryManager)
         var batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         if (batteryLevel > 100) {
             Log.i(
@@ -397,6 +411,7 @@ class beacon_receiver_service : Service() {
         }
         return batteryStringBuilder.toString()
     }
+
     private fun getBatteryInfo(): BatteryInfo {
         val info = BatteryInfo()
         val batteryManager =
@@ -459,6 +474,7 @@ class beacon_receiver_service : Service() {
         }
         return netType
     }
+
     private fun checkCellularNetworkType(type: Int): String {
         var netType = "Unknown"
         when (type) {
@@ -475,8 +491,10 @@ class beacon_receiver_service : Service() {
                     netType += " (NR Standby)"
                 }
             }
+
             TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_TD_SCDMA, TelephonyManager.NETWORK_TYPE_UMTS -> netType =
                 "3G"
+
             TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
                 "2G"
         }
