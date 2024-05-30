@@ -113,7 +113,6 @@ class beacon_receiver_service : Service() {
         requestUrl = network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage")
         chatId = sharedPreferences.getString("chat_id", "")!!
         messageThreadId = sharedPreferences.getString("message_thread_id", "")!!
-        wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
         okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
         val notification =
             other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
@@ -122,17 +121,19 @@ class beacon_receiver_service : Service() {
         val batchListener = IBeaconBatchListener { beacons ->
             val beacon = ArrayList<BeaconModel>()
             beacons.toList().map {
-                val item = BeaconModel(
-                    uuid = it.getIdentifierAsUuid(1).toString(),
-                    major = it.getIdentifierAsInt(2),
-                    minor = it.getIdentifierAsInt(3),
-                    rssi = it.rssi.toInt(),
-                    hardwareAddress = it.hardwareAddress,
-                    distance = scanner.ranger.calculateDistance(it)
-                )
-                beacon.add(item)
-                Log.d(TAG, "onCreate: $item")
-
+                try {
+                    val item = BeaconModel(
+                        uuid = it.getIdentifierAsUuid(1).toString(),
+                        major = it.getIdentifierAsInt(2),
+                        minor = it.getIdentifierAsInt(3),
+                        rssi = it.rssi.toInt(),
+                        hardwareAddress = it.hardwareAddress,
+                        distance = scanner.ranger.calculateDistance(it)
+                    )
+                    beacon.add(item)
+                } catch (e: ConcurrentModificationException) {
+                    Log.d(TAG, "onCreate: $e")
+                }
             }
             beaconList.beacons = beacon
             LocalBroadcastManager.getInstance(applicationContext)
