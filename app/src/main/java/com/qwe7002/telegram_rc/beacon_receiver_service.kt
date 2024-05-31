@@ -21,7 +21,6 @@ import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
-import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
@@ -35,8 +34,7 @@ import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.config.beacon
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
-import com.qwe7002.telegram_rc.data_structure.beaconList
-import com.qwe7002.telegram_rc.data_structure.beaconList.beacons
+import com.qwe7002.telegram_rc.data_structure.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.request_message
 import com.qwe7002.telegram_rc.root_kit.radio
 import com.qwe7002.telegram_rc.static_class.CONST
@@ -70,6 +68,7 @@ class beacon_receiver_service : Service() {
     private lateinit var config: beacon
     private lateinit var wakelock: WakeLock
     private var isRoot = false
+    var beacons: java.util.ArrayList<BeaconModel> = java.util.ArrayList()
     override fun onBind(intent: Intent): IBinder {
         TODO("Return the communication channel to the service.")
     }
@@ -141,7 +140,7 @@ class beacon_receiver_service : Service() {
             val intents = Intent("flush_beacons_list")
             val gson = Gson()
 
-            intents.putExtra("beaconList",gson.toJson(beacon))
+            intents.putExtra("beaconList", gson.toJson(beacon))
             applicationContext.sendBroadcast(intents)
         }
         val beaconLayout =
@@ -243,8 +242,7 @@ class beacon_receiver_service : Service() {
                 )
                 for (beaconAddress in listenBeaconList) {
 
-                    if (beaconList.beaconItemName(beacon.uuid, beacon.major, beacon.minor)
-                            .equals(beaconAddress)
+                    if (beaconItemName(beacon.uuid, beacon.major, beacon.minor) == beaconAddress
                     ) {
                         foundBeacon = true
                         break

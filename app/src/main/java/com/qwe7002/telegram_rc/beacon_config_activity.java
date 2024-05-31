@@ -1,5 +1,7 @@
 package com.qwe7002.telegram_rc;
 
+import static com.qwe7002.telegram_rc.data_structure.BeaconModelKt.beaconItemName;
+
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,7 +31,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.data_structure.BeaconModel;
-import com.qwe7002.telegram_rc.data_structure.beaconList;
 import com.qwe7002.telegram_rc.static_class.remote_control;
 
 import java.util.ArrayList;
@@ -166,11 +167,11 @@ public class beacon_config_activity extends AppCompatActivity {
             titleView.setText(beacon.getUuid());
             addressView.setText("Major: " + beacon.getMajor() + " Minor: " + beacon.getMinor() + " Rssi: " + beacon.getRssi() + " dBm");
             infoView.setText("Distance: " + (int) beacon.getDistance() + " meters");
-            if (listen_list.contains(beaconList.beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor()))) {
+            if (listen_list.contains(beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor()))) {
                 checkBoxView.setChecked(true);
             }
             checkBoxView.setOnClickListener(v -> {
-                String address = beaconList.beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor());
+                String address = beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor());
                 ArrayList<String> listenListTemp = Paper.book("beacon").read("address", new ArrayList<>());
                 if (checkBoxView.isChecked()) {
                     assert listenListTemp != null;

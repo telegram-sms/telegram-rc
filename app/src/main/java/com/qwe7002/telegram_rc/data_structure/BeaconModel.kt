@@ -8,3 +8,7 @@ data class BeaconModel(
     val hardwareAddress: String,
     val distance: Double
 )
+
+fun beaconItemName(uuid: String, major: Int, minor: Int): String {
+    return "UUID:" + uuid + "Major:" + major + "Minor:" + minor
+}
