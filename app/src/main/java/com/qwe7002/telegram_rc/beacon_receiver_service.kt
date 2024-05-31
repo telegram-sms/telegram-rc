@@ -20,9 +20,12 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
+import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
+import android.os.Process
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -43,8 +46,6 @@ import com.qwe7002.telegram_rc.static_class.other
 import com.qwe7002.telegram_rc.static_class.remote_control
 import com.qwe7002.telegram_rc.static_class.resend
 import io.paperdb.Paper
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -68,6 +69,7 @@ class beacon_receiver_service : Service() {
     private lateinit var scanner: IScanner
     private lateinit var config: beacon
     private lateinit var wakelock: WakeLock
+    private var isRoot = false
     override fun onBind(intent: Intent): IBinder {
         TODO("Return the communication channel to the service.")
     }
@@ -82,7 +84,7 @@ class beacon_receiver_service : Service() {
         }
     }
 
-    @SuppressLint("InvalidWakeLockTag", "WakelockTimeout")
+    @SuppressLint("InvalidWakeLockTag", "WakelockTimeout", "UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
         if (ActivityCompat.checkSelfPermission(
@@ -114,6 +116,7 @@ class beacon_receiver_service : Service() {
         chatId = sharedPreferences.getString("chat_id", "")!!
         messageThreadId = sharedPreferences.getString("message_thread_id", "")!!
         okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        isRoot = sharedPreferences.getBoolean("root", false)
         val notification =
             other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
         startForeground(notify.BEACON_SERVICE, notification)
@@ -135,9 +138,11 @@ class beacon_receiver_service : Service() {
                     Log.d(TAG, "onCreate: $e")
                 }
             }
-            beaconList.beacons = beacon
-            LocalBroadcastManager.getInstance(applicationContext)
-                .sendBroadcast(Intent("flush_beacons_list"))
+            val intents = Intent("flush_beacons_list")
+            val gson = Gson()
+
+            intents.putExtra("beaconList",gson.toJson(beacon))
+            applicationContext.sendBroadcast(intents)
         }
         val beaconLayout =
             "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24" // search the Internet to find the layout string of your specific beacon
@@ -158,8 +163,28 @@ class beacon_receiver_service : Service() {
             flushReceiver,
             IntentFilter("flush_beacons_list")
         )
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(CONST.BROADCAST_STOP_SERVICE)
+        val broadcastReceiver = broadcast_receiver()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(broadcastReceiver, intentFilter, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(broadcastReceiver, intentFilter)
+        }
         scanner.start()
 
+    }
+
+
+    private class broadcast_receiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            Log.d("beaconReceiver", "onReceive: " + intent.action)
+            assert(intent.action != null)
+            if (CONST.BROADCAST_STOP_SERVICE == intent.action) {
+                Log.i("beaconReceiver", "Received stop signal, quitting now...")
+                Process.killProcess(Process.myPid())
+            }
+        }
     }
 
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -482,14 +507,16 @@ class beacon_receiver_service : Service() {
             TelephonyManager.NETWORK_TYPE_NR -> netType = "NR"
             TelephonyManager.NETWORK_TYPE_LTE -> {
                 netType = "LTE"
-                if (radio.isLTECA()) {
-                    netType += "+"
-                }
-                if (radio.isNRConnected()) {
-                    netType += " & NR"
-                }
-                if (radio.isNRStandby()) {
-                    netType += " (NR Standby)"
+                if (isRoot) {
+                    if (radio.isLTECA()) {
+                        netType += "+"
+                    }
+                    if (radio.isNRConnected()) {
+                        netType += " & NR"
+                    }
+                    if (radio.isNRStandby()) {
+                        netType += " (NR Standby)"
+                    }
                 }
             }
 

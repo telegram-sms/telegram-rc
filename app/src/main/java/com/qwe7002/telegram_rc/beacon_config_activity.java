@@ -25,6 +25,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.data_structure.BeaconModel;
 import com.qwe7002.telegram_rc.data_structure.beaconList;
@@ -39,16 +41,19 @@ public class beacon_config_activity extends AppCompatActivity {
     private final BroadcastReceiver flushReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            flushListView();
+            Gson gson = new Gson();
+            ArrayList<BeaconModel> arrayList =gson.fromJson( intent.getStringExtra("beaconList"),new TypeToken<ArrayList<BeaconModel>>(){}.getType());
+            assert arrayList != null;
+            flushListView(arrayList);
         }
     };
 
-    void flushListView() {
+    void flushListView(ArrayList<BeaconModel> arrayList) {
         ListView beacon_listview = findViewById(R.id.beacon_listview);
-        if (!beaconList.beacons.isEmpty()) {
+        if (!arrayList.isEmpty()) {
             ArrayList<BeaconModel> list = new ArrayList<>();
-            for (BeaconModel beacon : beaconList.beacons) {
-                if(beacon.getDistance()<200.0){
+            for (BeaconModel beacon : arrayList) {
+                if (beacon.getDistance() < 200.0) {
                     list.add(beacon);
                 }
             }
@@ -66,9 +71,9 @@ public class beacon_config_activity extends AppCompatActivity {
         Context context = getApplicationContext();
         Paper.init(context);
         setContentView(R.layout.activity_beacon);
-        flushListView();
-        LocalBroadcastManager.getInstance(this).registerReceiver(flushReceiver,
-                new IntentFilter("flush_beacons_list"));
+        flushListView(new ArrayList<>());
+        registerReceiver(flushReceiver,
+                new IntentFilter("flush_beacons_list"), Context.RECEIVER_EXPORTED);
     }
 
     @Override

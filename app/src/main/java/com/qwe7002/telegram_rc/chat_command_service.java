@@ -59,6 +59,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+/** @noinspection CallToPrintStackTrace*/
 @SuppressWarnings({"BusyWait", "ConstantConditions"})
 public class chat_command_service extends Service {
     private static final String TAG = "chat_command";
@@ -78,7 +79,7 @@ public class chat_command_service extends Service {
     private static boolean first_request = true;
 
 
-    private static String checkCellularNetworkType(int type) {
+    private static String checkCellularNetworkType(int type,SharedPreferences sharedPreferences) {
         String net_type = "Unknown";
         switch (type) {
             case TelephonyManager.NETWORK_TYPE_NR:
@@ -86,15 +87,17 @@ public class chat_command_service extends Service {
                 break;
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
-                if (com.qwe7002.telegram_rc.root_kit.radio.isLTECA()) {
-                    net_type += "+";
-                }
-                if (com.qwe7002.telegram_rc.root_kit.radio.isNRConnected()) {
-                    net_type += " & NR";
-                    break;
-                }
-                if (com.qwe7002.telegram_rc.root_kit.radio.isNRStandby()) {
-                    net_type += " (NR Standby)";
+                if (sharedPreferences.getBoolean("root", false)) {
+                    if (com.qwe7002.telegram_rc.root_kit.radio.isLTECA()) {
+                        net_type += "+";
+                    }
+                    if (com.qwe7002.telegram_rc.root_kit.radio.isNRConnected()) {
+                        net_type += " & NR";
+                        break;
+                    }
+                    if (com.qwe7002.telegram_rc.root_kit.radio.isNRStandby()) {
+                        net_type += " (NR Standby)";
+                    }
                 }
                 break;
             case TelephonyManager.NETWORK_TYPE_HSPAP:
@@ -217,7 +220,7 @@ public class chat_command_service extends Service {
         return false;
     }
 
-    public static String getNetworkType(@NotNull Context context) {
+    public static String getNetworkType(@NotNull Context context,SharedPreferences sharedPreferences) {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connect_manager != null;
@@ -238,7 +241,7 @@ public class chat_command_service extends Service {
                         android.util.Log.i("get_network_type", "No permission.");
                         return net_type;
                     }
-                    net_type = checkCellularNetworkType(telephonyManager.getDataNetworkType());
+                    net_type = checkCellularNetworkType(telephonyManager.getDataNetworkType(),sharedPreferences);
                 }
                 if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
                     net_type = "Bluetooth";
@@ -433,7 +436,7 @@ public class chat_command_service extends Service {
                 }
 
                 String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap;
-                if (!message_type_is_private && privacy_mode && !bot_username.equals("")) {
+                if (!message_type_is_private && privacy_mode && !bot_username.isEmpty()) {
                     result_string = result_string.replace(" -", "@" + bot_username + " -");
                 }
                 request_body.text = result_string;
@@ -453,7 +456,7 @@ public class chat_command_service extends Service {
                 String spamCount = "";
                 ArrayList<String> spam_list = Paper.book().read("spam_sms_list", new ArrayList<>());
                 assert spam_list != null;
-                if (spam_list.size() != 0) {
+                if (!spam_list.isEmpty()) {
                     spamCount = "\n" + getString(R.string.spam_count_title) + spam_list.size();
                 }
                 String isHotspotRunning = "";
@@ -479,7 +482,7 @@ public class chat_command_service extends Service {
                 } else {
                     beaconStatus += getString(R.string.disable);
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context) + isHotspotRunning + beaconStatus + spamCount + cardInfo;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context,sharedPreferences) + isHotspotRunning + beaconStatus + spamCount + cardInfo;
                 android.util.Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
@@ -504,23 +507,14 @@ public class chat_command_service extends Service {
                         String[] command_list_data = request_msg.split(" ");
                         int tether_mode = TetherManager.TetherMode.TETHERING_WIFI;
                         if (command_list_data.length == 2) {
-                            switch (command_list_data[1].toLowerCase()) {
-                                case "bluetooth":
-                                    tether_mode = TetherManager.TetherMode.TETHERING_BLUETOOTH;
-                                    break;
-                                case "ncm":
-                                    tether_mode = TetherManager.TetherMode.TETHERING_NCM;
-                                    break;
-                                case "usb":
-                                    tether_mode = TetherManager.TetherMode.TETHERING_USB;
-                                    break;
-                                case "nic":
-                                    tether_mode = TetherManager.TetherMode.TETHERING_ETHERNET;
-                                    break;
-                                case "wigig":
-                                    tether_mode = TetherManager.TetherMode.TETHERING_WIGIG;
-                                    break;
-                            }
+                            tether_mode = switch (command_list_data[1].toLowerCase()) {
+                                case "bluetooth" -> TetherManager.TetherMode.TETHERING_BLUETOOTH;
+                                case "ncm" -> TetherManager.TetherMode.TETHERING_NCM;
+                                case "usb" -> TetherManager.TetherMode.TETHERING_USB;
+                                case "nic" -> TetherManager.TetherMode.TETHERING_ETHERNET;
+                                case "wigig" -> TetherManager.TetherMode.TETHERING_WIGIG;
+                                default -> tether_mode;
+                            };
                         }
                         Paper.book("temp").write("tether_mode", tether_mode);
                         remote_control.enableHotspot(context, tether_mode);
@@ -528,7 +522,7 @@ public class chat_command_service extends Service {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                     }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context);
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context,sharedPreferences);
                     request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                     break;
                 } else {
@@ -550,7 +544,7 @@ public class chat_command_service extends Service {
                     Paper.book("temp").write("wifi_open", false);
                     result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                 }
-                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context);
+                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context,sharedPreferences);
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
                 break;
@@ -587,7 +581,7 @@ public class chat_command_service extends Service {
                 break;
             case "/getspamsms":
                 ArrayList<String> spam_sms_list = Paper.book().read("spam_sms_list", new ArrayList<>());
-                if (spam_sms_list.size() == 0) {
+                if (spam_sms_list.isEmpty()) {
                     request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.no_spam_history);
                     break;
                 }
@@ -699,7 +693,7 @@ public class chat_command_service extends Service {
                 break;
             default:
                 if (!message_type_is_private && send_sms_next_status == -1) {
-                    if (!message_type.equals("supergroup") || message_thread_id.equals("")) {
+                    if (!message_type.equals("supergroup") || message_thread_id.isEmpty()) {
                         android.util.Log.i(TAG, "receive_handle: The conversation is not Private and does not prompt an error.");
                         return;
                     }

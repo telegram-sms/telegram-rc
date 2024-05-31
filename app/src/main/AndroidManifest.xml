@@ -63,7 +63,9 @@
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="location"
-            android:permission="location" />
+            android:permission="location"
+            android:process=":beacon"
+            />
 
         <activity
             android:name=".spam_list_activity"
