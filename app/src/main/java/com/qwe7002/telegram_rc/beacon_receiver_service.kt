@@ -32,6 +32,7 @@ import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.config.beacon
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.beaconItemName
@@ -68,7 +69,6 @@ class beacon_receiver_service : Service() {
     private lateinit var config: beacon
     private lateinit var wakelock: WakeLock
     private var isRoot = false
-    var beacons: java.util.ArrayList<BeaconModel> = java.util.ArrayList()
     override fun onBind(intent: Intent): IBinder {
         TODO("Return the communication channel to the service.")
     }
@@ -158,7 +158,7 @@ class beacon_receiver_service : Service() {
             .setBeaconBatchListener(batchListener)
             .build()
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(
+        registerReceiver(
             flushReceiver,
             IntentFilter("flush_beacons_list")
         )
@@ -235,6 +235,11 @@ class beacon_receiver_service : Service() {
             }
             var foundBeacon = false
             var detectBeacon: BeaconModel? = null
+            val gson = Gson()
+            val beacons = gson.fromJson<java.util.ArrayList<BeaconModel>>(
+                intent.getStringExtra("beaconList"),
+                object : TypeToken<java.util.ArrayList<BeaconModel?>?>() {}.type
+            )
             for (beacon in beacons) {
                 Log.d(
                     TAG,
