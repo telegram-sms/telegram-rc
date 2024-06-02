@@ -124,16 +124,19 @@ class beacon_receiver_service : Service() {
             val beacon = ArrayList<BeaconModel>()
             beacons.toList().map {
                 try {
+                    val current = it
                     val item = BeaconModel(
-                        uuid = it.getIdentifierAsUuid(1).toString(),
-                        major = it.getIdentifierAsInt(2),
-                        minor = it.getIdentifierAsInt(3),
-                        rssi = it.rssi.toInt(),
-                        hardwareAddress = it.hardwareAddress,
-                        distance = scanner.ranger.calculateDistance(it)
+                        uuid = current.getIdentifierAsUuid(1).toString(),
+                        major = current.getIdentifierAsInt(2),
+                        minor = current.getIdentifierAsInt(3),
+                        rssi = current.rssi.toInt(),
+                        hardwareAddress = current.hardwareAddress,
+                        distance = scanner.ranger.calculateDistance(current)
                     )
                     beacon.add(item)
                 } catch (e: ConcurrentModificationException) {
+                    Log.d(TAG, "onCreate: $e")
+                }catch (e: NullPointerException){
                     Log.d(TAG, "onCreate: $e")
                 }
             }
