@@ -12,7 +12,7 @@ import io.paperdb.Paper
 import kotlin.Any
 import kotlin.String
 
-class boot_receiver : BroadcastReceiver() {
+class bootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val TAG = "boot_receiver"
         Log.d(TAG, "Receive action: " + intent.action)

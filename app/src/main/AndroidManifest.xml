@@ -98,7 +98,7 @@
 
         <activity android:name=".logcat_activity" /> <!-- uncomment the following to enable scanning for over 30 minutes on Android 7+ -->
         <service
-            android:name=".battery_service"
+            android:name=".batteryService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="specialUse"
@@ -106,7 +106,7 @@
             android:process=":battery" />
 
         <receiver
-            android:name=".boot_receiver"
+            android:name=".bootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -123,7 +123,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".call_receiver"
+            android:name=".callReceiver"
             android:exported="true">
             <intent-filter android:priority="2147483647">
                 <action android:name="android.intent.action.PHONE_STATE" />
