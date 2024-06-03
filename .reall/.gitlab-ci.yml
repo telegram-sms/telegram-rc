@@ -10,19 +10,6 @@ variables:
     OWNER: telegram-sms
     REPO: telegram-rc
 
-release:master:
-    dependencies:
-        - build
-    stage: deploy
-    only:
-        - master
-    script:
-        - apk --update --no-cache add git openssl bash curl wget 
-        - wget https://github.com/tcnksm/ghr/releases/download/v0.16.2/ghr_v0.16.2_linux_amd64.tar.gz
-        - tar -zxvf ghr_v0.16.2_linux_amd64.tar.gz
-        - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
-        - ghr_v0.16.2_linux_amd64/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
-
 release:nightly:
     dependencies:
         - build

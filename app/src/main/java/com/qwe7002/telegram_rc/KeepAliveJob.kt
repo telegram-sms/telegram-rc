@@ -35,10 +35,6 @@ class KeepAliveJob : JobService() {
             val jobScheduler =
                 context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
 
-            val pendingJobs = jobScheduler.allPendingJobs
-            if (pendingJobs.isNotEmpty()) {
-                Log.d("startJob", "startJob: $pendingJobs")
-            }
             val jobInfoBuilder = JobInfo.Builder(
                 10,
                 ComponentName(context.packageName, KeepAliveJob::class.java.getName())

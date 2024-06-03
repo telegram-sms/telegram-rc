@@ -32,7 +32,7 @@ import java.util.Objects
 
 class BatteryService : Service() {
     private lateinit var batteryReceiver: batteryBroadcastReceiver
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification =
             other.getNotificationObj(
                 applicationContext,

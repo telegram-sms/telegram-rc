@@ -84,7 +84,7 @@ public class main_activity extends AppCompatActivity {
         privacy_police = "/guide/" + context.getString(R.string.Lang) + "/privacy-policy";
         final EditText bot_token_editview = findViewById(R.id.bot_token_editview);
         final EditText chat_id_editview = findViewById(R.id.chat_id_editview);
-        final EditText trusted_phone_number_editview = findViewById(R.id.trusted_phone_number_editview);
+        final EditText trustedPhoneNumberEditview = findViewById(R.id.trusted_phone_number_editview);
         final EditText message_thread_id_editview = findViewById(R.id.message_thread_id_editview);
         final TextInputLayout message_thread_id_view = findViewById(R.id.message_thread_id_view);
         final SwitchMaterial chat_command_switch = findViewById(R.id.chat_command_switch);
@@ -94,9 +94,9 @@ public class main_activity extends AppCompatActivity {
         final SwitchMaterial charger_status_switch = findViewById(R.id.charger_status_switch);
         final SwitchMaterial verification_code_switch = findViewById(R.id.verification_code_switch);
         final SwitchMaterial shizuku_switch = findViewById(R.id.shizuku_switch);
-        final SwitchMaterial root_switch = findViewById(R.id.root_switch);
+        final SwitchMaterial rootSwitch = findViewById(R.id.root_switch);
         final SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
-        final SwitchMaterial display_dual_sim_display_name_switch = findViewById(R.id.display_dual_sim_switch);
+        final SwitchMaterial displayDualSimDisplayNameSwitch = findViewById(R.id.display_dual_sim_switch);
         final Button save_button = findViewById(R.id.save_button);
         final Button get_id_button = findViewById(R.id.get_id_button);
         write_settings_button = findViewById(R.id.write_settings_button);
@@ -127,20 +127,20 @@ public class main_activity extends AppCompatActivity {
         }
 
 
-        boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
+        boolean displayDualSimDisplayName = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             if (other.getActiveCard(context) < 2) {
-                display_dual_sim_display_name_switch.setEnabled(false);
-                display_dual_sim_display_name_config = false;
+                displayDualSimDisplayNameSwitch.setEnabled(false);
+                displayDualSimDisplayName = false;
             }
-            display_dual_sim_display_name_switch.setChecked(display_dual_sim_display_name_config);
+            displayDualSimDisplayNameSwitch.setChecked(displayDualSimDisplayName);
         }
-        root_switch.setChecked(sharedPreferences.getBoolean("root", false));
+        rootSwitch.setChecked(sharedPreferences.getBoolean("root", false));
 
         bot_token_editview.setText(bot_token_save);
         chat_id_editview.setText(chat_id_save);
         message_thread_id_editview.setText(message_thread_id_save);
-        trusted_phone_number_editview.setText(sharedPreferences.getString("trusted_phone_number", ""));
+        trustedPhoneNumberEditview.setText(sharedPreferences.getString("trusted_phone_number", ""));
 
         battery_monitoring_switch.setChecked(sharedPreferences.getBoolean("battery_monitoring_switch", false));
         charger_status_switch.setChecked(sharedPreferences.getBoolean("charger_status", false));
@@ -160,11 +160,11 @@ public class main_activity extends AppCompatActivity {
         });
 
         fallback_sms_switch.setChecked(sharedPreferences.getBoolean("fallback_sms", false));
-        if (trusted_phone_number_editview.length() == 0) {
+        if (trustedPhoneNumberEditview.length() == 0) {
             fallback_sms_switch.setVisibility(View.GONE);
             fallback_sms_switch.setChecked(false);
         }
-        trusted_phone_number_editview.addTextChangedListener(new TextWatcher() {
+        trustedPhoneNumberEditview.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -175,7 +175,7 @@ public class main_activity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (trusted_phone_number_editview.length() != 0) {
+                if (trustedPhoneNumberEditview.length() != 0) {
                     fallback_sms_switch.setVisibility(View.VISIBLE);
                 } else {
                     fallback_sms_switch.setVisibility(View.GONE);
@@ -194,17 +194,17 @@ public class main_activity extends AppCompatActivity {
             TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
             assert tm != null;
             if (tm.getPhoneCount() <= 1) {
-                display_dual_sim_display_name_switch.setVisibility(View.GONE);
+                displayDualSimDisplayNameSwitch.setVisibility(View.GONE);
             }
         }
-        display_dual_sim_display_name_switch.setOnClickListener(v -> {
+        displayDualSimDisplayNameSwitch.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                display_dual_sim_display_name_switch.setChecked(false);
+                displayDualSimDisplayNameSwitch.setChecked(false);
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
             } else {
                 if (other.getActiveCard(context) < 2) {
-                    display_dual_sim_display_name_switch.setEnabled(false);
-                    display_dual_sim_display_name_switch.setChecked(false);
+                    displayDualSimDisplayNameSwitch.setEnabled(false);
+                    displayDualSimDisplayNameSwitch.setChecked(false);
                 }
             }
         });
@@ -226,10 +226,10 @@ public class main_activity extends AppCompatActivity {
         if(!remote_control.isShizukuExist(context)) {
             shizuku_switch.setVisibility(View.GONE);
         }
-        shizuku_switch.setOnClickListener(view -> runOnUiThread(() -> root_switch.setChecked(shizuku_switch.isChecked())));
-        root_switch.setOnClickListener(view -> new Thread(() -> {
+        shizuku_switch.setOnClickListener(view -> runOnUiThread(() -> rootSwitch.setChecked(shizuku_switch.isChecked())));
+        rootSwitch.setOnClickListener(view -> new Thread(() -> {
             if (!shell.checkRoot()) {
-                runOnUiThread(() -> root_switch.setChecked(false));
+                runOnUiThread(() -> rootSwitch.setChecked(false));
             }
         }).start());
         get_id_button.setOnClickListener(v -> {
@@ -356,7 +356,7 @@ public class main_activity extends AppCompatActivity {
                 Snackbar.make(v, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG).show();
                 return;
             }
-            if (fallback_sms_switch.isChecked() && trusted_phone_number_editview.getText().toString().isEmpty()) {
+            if (fallback_sms_switch.isChecked() && trustedPhoneNumberEditview.getText().toString().isEmpty()) {
                 Snackbar.make(v, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show();
                 return;
             }
@@ -437,16 +437,16 @@ public class main_activity extends AppCompatActivity {
                     editor.putString("bot_token", new_bot_token);
                     editor.putString("chat_id", chat_id_editview.getText().toString().trim());
                     editor.putString("message_thread_id", message_thread_id_editview.getText().toString().trim());
-                    if (!trusted_phone_number_editview.getText().toString().trim().isEmpty()) {
-                        editor.putString("trusted_phone_number", trusted_phone_number_editview.getText().toString().trim());
+                    if (!trustedPhoneNumberEditview.getText().toString().trim().isEmpty()) {
+                        editor.putString("trusted_phone_number", trustedPhoneNumberEditview.getText().toString().trim());
                         editor.putBoolean("fallback_sms", fallback_sms_switch.isChecked());
                     }
                     editor.putBoolean("chat_command", chat_command_switch.isChecked());
                     editor.putBoolean("battery_monitoring_switch", battery_monitoring_switch.isChecked());
                     editor.putBoolean("charger_status", charger_status_switch.isChecked());
-                    editor.putBoolean("display_dual_sim_display_name", display_dual_sim_display_name_switch.isChecked());
+                    editor.putBoolean("display_dual_sim_display_name", displayDualSimDisplayNameSwitch.isChecked());
                     editor.putBoolean("verification_code", verification_code_switch.isChecked());
-                    editor.putBoolean("root", root_switch.isChecked());
+                    editor.putBoolean("root", rootSwitch.isChecked());
                     editor.putBoolean("doh_switch", doh_switch.isChecked());
                     editor.putBoolean("privacy_mode", privacy_mode_switch.isChecked());
                     editor.putBoolean("initialized", true);
