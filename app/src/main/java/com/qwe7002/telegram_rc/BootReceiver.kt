@@ -40,7 +40,7 @@ class BootReceiver : BroadcastReceiver() {
             if (sharedPreferences.getBoolean("root", false)) {
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     val dummyIpAddr = Paper.book("system_config").read<String>("dummy_ip_addr")
-                    network.addDummyDevice(dummyIpAddr)
+                    network.addDummyDevice(dummyIpAddr.toString())
                 }
             }
         }

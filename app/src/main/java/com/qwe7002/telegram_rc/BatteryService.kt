@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ServiceInfo
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
@@ -33,8 +34,14 @@ class BatteryService : Service() {
     private lateinit var batteryReceiver: batteryBroadcastReceiver
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val notification =
-            other.getNotificationObj(applicationContext, getString(R.string.battery_monitoring_notify))
-        startForeground(notify.BATTERY, notification)
+            other.getNotificationObj(
+                applicationContext,
+                getString(R.string.battery_monitoring_notify)
+            )
+        startForeground(
+            notify.BATTERY, notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        )
         return START_STICKY
     }
 
@@ -59,7 +66,7 @@ class BatteryService : Service() {
         filter.addAction(CONST.BROADCAST_STOP_SERVICE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(batteryReceiver, filter, RECEIVER_EXPORTED)
-        }else{
+        } else {
             registerReceiver(batteryReceiver, filter)
         }
         sendLoopList = ArrayList()

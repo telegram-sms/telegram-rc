@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
@@ -134,7 +135,7 @@ public class chat_command_service extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = other.getNotificationObj(context, getString(R.string.chat_command_service_name));
-        startForeground(notify.CHAT_COMMAND, notification);
+        startForeground(notify.CHAT_COMMAND, notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         return START_STICKY;
     }
 
@@ -160,20 +161,20 @@ public class chat_command_service extends Service {
     static String getBatteryInfo(@NotNull Context context) {
         BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
-        int battery_level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-        if (battery_level > 100) {
+        int batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        if (batteryLevel > 100) {
             android.util.Log.i("get_battery_info", "The previous battery is over 100%, and the correction is 100%.");
-            battery_level = 100;
+            batteryLevel = 100;
         }
         IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = context.registerReceiver(null, intentfilter);
         assert batteryStatus != null;
         int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        StringBuilder battery_string_builder = new StringBuilder().append(battery_level).append("%");
+        StringBuilder batteryStringBuilder = new StringBuilder().append(batteryLevel).append("%");
         switch (charge_status) {
             case BatteryManager.BATTERY_STATUS_CHARGING:
             case BatteryManager.BATTERY_STATUS_FULL:
-                battery_string_builder.append(" (").append(context.getString(R.string.charging)).append(")");
+                batteryStringBuilder.append(" (").append(context.getString(R.string.charging)).append(")");
                 break;
             case BatteryManager.BATTERY_STATUS_DISCHARGING:
             case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
@@ -181,19 +182,19 @@ public class chat_command_service extends Service {
                     case BatteryManager.BATTERY_PLUGGED_AC:
                     case BatteryManager.BATTERY_PLUGGED_USB:
                     case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        battery_string_builder.append(" (").append(context.getString(R.string.not_charging)).append(")");
+                        batteryStringBuilder.append(" (").append(context.getString(R.string.not_charging)).append(")");
                         break;
                 }
                 break;
         }
-        return battery_string_builder.toString();
+        return batteryStringBuilder.toString();
     }
 
     private boolean getMe() {
-        OkHttpClient okhttp_client_new = okhttp_client;
+        OkHttpClient okhttpClientNew = okhttp_client;
         String request_uri = network.getUrl(bot_token, "getMe");
         Request request = new Request.Builder().url(request_uri).build();
-        Call call = okhttp_client_new.newCall(request);
+        Call call = okhttpClientNew.newCall(request);
         Response response;
         try {
             response = call.execute();

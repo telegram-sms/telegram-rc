@@ -1,30 +1,32 @@
-package com.qwe7002.telegram_rc.root_kit;
+package com.qwe7002.telegram_rc.root_kit
 
-public class network {
-
-
-    public static void setWifi(boolean enable) {
-        String state = "disable";
+object network {
+    @JvmStatic
+    fun setWifi(enable: Boolean) {
+        var state = "disable"
         if (enable) {
-            state = "enable";
+            state = "enable"
         }
-        shell.runShellCommand("svc wifi " + state);
+        shell.runShellCommand("svc wifi $state")
     }
 
-    public static void setData(boolean enable) {
-        String state = "disable";
+    @JvmStatic
+    fun setData(enable: Boolean) {
+        var state = "disable"
         if (enable) {
-            state = "enable";
+            state = "enable"
         }
-        shell.runShellCommand("svc data " + state);
+        shell.runShellCommand("svc data $state")
     }
 
 
-    public static void addDummyDevice(String ip_addr) {
-        shell.runShellCommand("ip link add dummy0 type dummy\nip addr add " + ip_addr + "/32 dev dummy0");
+    @JvmStatic
+    fun addDummyDevice(ip_addr: String) {
+        shell.runShellCommand("ip link add dummy0 type dummy\nip addr add $ip_addr/32 dev dummy0")
     }
 
-    public static void delDummyDevice() {
-        shell.runShellCommand("ip link del dummy0");
+    @JvmStatic
+    fun delDummyDevice() {
+        shell.runShellCommand("ip link del dummy0")
     }
 }

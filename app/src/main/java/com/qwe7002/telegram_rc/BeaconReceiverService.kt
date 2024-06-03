@@ -16,6 +16,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
@@ -74,6 +75,9 @@ class BeaconReceiverService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val notification =
+            other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
+        startForeground(notify.BEACON_SERVICE, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         return START_STICKY
     }
 
@@ -106,7 +110,7 @@ class BeaconReceiverService : Service() {
             this.wakelock.acquire()
         }
         config = Paper.book("beacon").read("config", beacon())!!
-        LocalBroadcastManager.getInstance(this).registerReceiver(
+       registerReceiver(
             reloadConfigReceiver,
             IntentFilter("reload_beacon_config")
         )
@@ -116,9 +120,6 @@ class BeaconReceiverService : Service() {
         messageThreadId = sharedPreferences.getString("message_thread_id", "")!!
         okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
         isRoot = sharedPreferences.getBoolean("root", false)
-        val notification =
-            other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
-        startForeground(notify.BEACON_SERVICE, notification)
 
         val batchListener = IBeaconBatchListener { beacons ->
             val beacon = ArrayList<BeaconModel>()
@@ -167,7 +168,7 @@ class BeaconReceiverService : Service() {
         )
         val intentFilter = IntentFilter()
         intentFilter.addAction(CONST.BROADCAST_STOP_SERVICE)
-        val broadcastReceiver = broadcast_receiver()
+        val broadcastReceiver = broadcastReceiver()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(broadcastReceiver, intentFilter, RECEIVER_EXPORTED)
         } else {
@@ -178,7 +179,7 @@ class BeaconReceiverService : Service() {
     }
 
 
-    private class broadcast_receiver : BroadcastReceiver() {
+    private class broadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             Log.d("beaconReceiver", "onReceive: " + intent.action)
             assert(intent.action != null)
@@ -514,13 +515,13 @@ class BeaconReceiverService : Service() {
             TelephonyManager.NETWORK_TYPE_LTE -> {
                 netType = "LTE"
                 if (isRoot) {
-                    if (radio.isLTECA()) {
+                    if (radio.isLTECA) {
                         netType += "+"
                     }
-                    if (radio.isNRConnected()) {
+                    if (radio.isNRConnected) {
                         netType += " & NR"
                     }
-                    if (radio.isNRStandby()) {
+                    if (radio.isNRStandby) {
                         netType += " (NR Standby)"
                     }
                 }

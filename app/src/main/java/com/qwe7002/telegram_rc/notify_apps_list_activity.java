@@ -36,27 +36,27 @@ public class notify_apps_list_activity extends AppCompatActivity {
 
     @NotNull
     private List<appInfo> scanAppList(PackageManager packageManager) {
-        List<appInfo> app_info_list = new ArrayList<>();
+        List<appInfo> appInfoList = new ArrayList<>();
         try {
-            List<PackageInfo> package_info_list = packageManager.getInstalledPackages(0);
-            for (int i = 0; i < package_info_list.size(); i++) {
-                PackageInfo package_info = package_info_list.get(i);
-                appInfo app_info = new appInfo();
-                if (package_info.packageName.equals(context.getPackageName())) {
+            List<PackageInfo> packageInfoList = packageManager.getInstalledPackages(0);
+            for (int i = 0; i < packageInfoList.size(); i++) {
+                PackageInfo packageInfo = packageInfoList.get(i);
+                appInfo appInfo = new appInfo();
+                if (packageInfo.packageName.equals(context.getPackageName())) {
                     continue;
                 }
-                app_info.package_name = package_info.packageName;
-                app_info.app_name = package_info.applicationInfo.loadLabel(packageManager).toString();
-                if (package_info.applicationInfo.loadIcon(packageManager) == null) {
+                appInfo.package_name = packageInfo.packageName;
+                appInfo.app_name = packageInfo.applicationInfo.loadLabel(packageManager).toString();
+                if (packageInfo.applicationInfo.loadIcon(packageManager) == null) {
                     continue;
                 }
-                app_info.app_icon = package_info.applicationInfo.loadIcon(packageManager);
-                app_info_list.add(app_info);
+                appInfo.app_icon = packageInfo.applicationInfo.loadIcon(packageManager);
+                appInfoList.add(appInfo);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return app_info_list;
+        return appInfoList;
     }
 
     @Override

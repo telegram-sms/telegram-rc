@@ -157,6 +157,7 @@ public class other {
         Notification.Builder notification = new Notification.Builder(context, notification_name).setAutoCancel(false)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setOngoing(true)
+                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setTicker(context.getString(R.string.app_name))
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText(notification_name + context.getString(R.string.service_is_running));
@@ -167,7 +168,7 @@ public class other {
         int active_card = other.getActiveCard(context);
         if (active_card >= 2) {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                Log.i("get_sub_id", "get_sub_id: No permission");
+                Log.i("getSubId", "get_sub_id: No permission");
                 return -1;
             }
             SubscriptionManager subscriptionManager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);

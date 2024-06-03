@@ -32,6 +32,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission
@@ -93,7 +94,6 @@
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="specialUse"
-            android:permission="location"
             android:process=":command" />
 
         <activity android:name=".LogcatActivity" /> <!-- uncomment the following to enable scanning for over 30 minutes on Android 7+ -->
@@ -102,7 +102,6 @@
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="specialUse"
-            android:permission="location"
             android:process=":battery" />
 
         <receiver
@@ -132,7 +131,7 @@
         </receiver>
 
         <activity
-            android:name=".qrcode_show_activity"
+            android:name=".QRCodeShowActivity"
             android:label="@string/transfer_configuration" />
         <activity android:name=".ScannerActivity" />
         <activity

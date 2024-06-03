@@ -24,12 +24,12 @@ class ScannerActivity : Activity() {
         setContentView(R.layout.activity_scanner)
         val scannerView = findViewById<CodeScannerView>(R.id.scanner_view)
         mCodeScanner = CodeScanner(this, scannerView)
-        mCodeScanner!!.formats = object : ArrayList<BarcodeFormat?>() {
+        object : ArrayList<BarcodeFormat?>() {
             init {
                 add(BarcodeFormat.QR_CODE)
             }
-        }
-        mCodeScanner!!.decodeCallback = DecodeCallback { result: Result ->
+        }.also { this.mCodeScanner!!.formats = it }
+        DecodeCallback { result: Result ->
             runOnUiThread {
                 val TAG = "activity_scanner"
                 Log.d(TAG, "format: " + result.barcodeFormat + " content: " + result.text)
@@ -42,7 +42,7 @@ class ScannerActivity : Activity() {
                 setResult(CONST.RESULT_CONFIG_JSON, intent)
                 finish()
             }
-        }
+        }.also { mCodeScanner!!.decodeCallback = it }
         scannerView.setOnClickListener { view: View? -> mCodeScanner!!.startPreview() }
     }
 

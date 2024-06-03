@@ -109,7 +109,7 @@ public class main_activity extends AppCompatActivity {
             startActivity(write_system_intent);
         });
         if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
-            show_privacy_dialog();
+            showPrivacyDialog();
         }
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
@@ -123,8 +123,9 @@ public class main_activity extends AppCompatActivity {
         if (sharedPreferences.getBoolean("initialized", false)) {
             service.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
             service.startBeaconService(context);
+            KeepAliveJob.Companion.startJob(context);
         }
-        KeepAliveJob.Companion.startJob(context);
+
 
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -360,7 +361,7 @@ public class main_activity extends AppCompatActivity {
                 return;
             }
             if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
-                show_privacy_dialog();
+                showPrivacyDialog();
                 return;
             }
 
@@ -452,8 +453,10 @@ public class main_activity extends AppCompatActivity {
                     editor.putBoolean("privacy_dialog_agree", true);
                     editor.apply();
                     new Thread(() -> {
+                        KeepAliveJob.Companion.stopJob(context);
                         service.stopAllService(context);
                         service.startService(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked());
+                        KeepAliveJob.Companion.startJob(context);
                     }).start();
                     Looper.prepare();
                     Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)
@@ -499,7 +502,7 @@ public class main_activity extends AppCompatActivity {
         }
     }
 
-    private void show_privacy_dialog() {
+    private void showPrivacyDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.privacy_reminder_title);
         builder.setMessage(R.string.privacy_reminder_information);
@@ -633,7 +636,7 @@ public class main_activity extends AppCompatActivity {
                 return true;
             case R.id.config_qrcode_menu_item:
                 if (sharedPreferences.getBoolean("initialized", false)) {
-                    startActivity(new Intent(this, qrcode_show_activity.class));
+                    startActivity(new Intent(this, QRCodeShowActivity.class));
                 } else {
                     Snackbar.make(findViewById(R.id.bot_token_editview), "Uninitialized.", Snackbar.LENGTH_LONG).show();
                 }
@@ -696,9 +699,12 @@ public class main_activity extends AppCompatActivity {
                             proxy_item.password = proxy_password.getText().toString();
                             Paper.book("system_config").write("proxy_config", proxy_item);
                             new Thread(() -> {
+                                KeepAliveJob.Companion.stopJob(context);
                                 service.stopAllService(context);
                                 if (sharedPreferences.getBoolean("initialized", false)) {
                                     service.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
+                                    service.startBeaconService(context);
+                                    KeepAliveJob.Companion.startJob(context);
                                 }
                             }).start();
                         })
