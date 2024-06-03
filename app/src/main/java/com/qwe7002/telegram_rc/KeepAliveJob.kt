@@ -9,7 +9,7 @@ import android.content.Context
 import com.qwe7002.telegram_rc.static_class.service
 
 
-class keepAliveJob : JobService() {
+class KeepAliveJob : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
         val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
@@ -36,7 +36,7 @@ class keepAliveJob : JobService() {
 
             val jobInfoBuilder = JobInfo.Builder(
                 10,
-                ComponentName(context.packageName, keepAliveJob::class.java.getName())
+                ComponentName(context.packageName, KeepAliveJob::class.java.getName())
             )
                 .setPersisted(true)
             jobInfoBuilder.setMinimumLatency(5000)

@@ -26,7 +26,7 @@ import okhttp3.Response
 import java.io.IOException
 import java.util.Objects
 
-class callReceiver : BroadcastReceiver() {
+class CallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Paper.init(context)
         Log.d("call_receiver", "Receive action: " + intent.action)

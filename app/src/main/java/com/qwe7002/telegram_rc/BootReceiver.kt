@@ -12,7 +12,7 @@ import io.paperdb.Paper
 import kotlin.Any
 import kotlin.String
 
-class bootReceiver : BroadcastReceiver() {
+class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val TAG = "boot_receiver"
         Log.d(TAG, "Receive action: " + intent.action)
@@ -29,7 +29,7 @@ class bootReceiver : BroadcastReceiver() {
                 sharedPreferences.getBoolean("chat_command", false)
             )
             service.startBeaconService(context)
-            keepAliveJob.startJob(context)
+            KeepAliveJob.startJob(context)
             if (Paper.book().read<ArrayList<Any>>("resend_list", ArrayList())!!.isNotEmpty()) {
                 Log.d(
                     TAG,

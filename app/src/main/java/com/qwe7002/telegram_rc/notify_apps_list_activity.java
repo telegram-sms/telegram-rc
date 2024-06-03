@@ -142,7 +142,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            if (view_app_info_list != null && view_app_info_list.size() > 0) {
+            if (view_app_info_list != null && !view_app_info_list.isEmpty()) {
                 return view_app_info_list.size();
             }
             return 0;
@@ -150,7 +150,7 @@ public class notify_apps_list_activity extends AppCompatActivity {
 
         @Override
         public Object getItem(int position) {
-            if (view_app_info_list != null && view_app_info_list.size() > 0) {
+            if (view_app_info_list != null && !view_app_info_list.isEmpty()) {
                 return view_app_info_list.get(position);
             }
             return null;
@@ -185,10 +185,12 @@ public class notify_apps_list_activity extends AppCompatActivity {
                 String package_name = item_info.package_name;
                 List<String> listen_list_temp = Paper.book("system_config").read("notify_listen_list", new ArrayList<>());
                 if (view_holder_object.app_checkbox.isChecked()) {
+                    assert listen_list_temp != null;
                     if (!listen_list_temp.contains(package_name)) {
                         listen_list_temp.add(package_name);
                     }
                 } else {
+                    assert listen_list_temp != null;
                     listen_list_temp.remove(package_name);
                 }
                 Log.d(TAG, "notify_listen_list: " + listen_list_temp);

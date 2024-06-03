@@ -56,7 +56,7 @@ import java.io.IOException
 import java.util.Objects
 
 
-class beacon_receiver_service : Service() {
+class BeaconReceiverService : Service() {
     private val TAG = "beacon_receviver"
     private lateinit var wifiManager: WifiManager
     private var notFoundCount = 0

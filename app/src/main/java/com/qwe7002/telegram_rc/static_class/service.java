@@ -8,7 +8,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationManagerCompat;
 
-import com.qwe7002.telegram_rc.beacon_receiver_service;
+import com.qwe7002.telegram_rc.BeaconReceiverService;
 import com.qwe7002.telegram_rc.chat_command_service;
 import com.qwe7002.telegram_rc.notification_listener_service;
 
@@ -26,7 +26,7 @@ public class service {
     }
 
     public static void startService(Context context, Boolean battery_switch, Boolean chat_command_switch) {
-        Intent battery_service = new Intent(context, com.qwe7002.telegram_rc.batteryService.class);
+        Intent battery_service = new Intent(context, com.qwe7002.telegram_rc.BatteryService.class);
         Intent chat_long_polling_service = new Intent(context, chat_command_service.class);
         if (isNotifyListener(context)) {
             ComponentName this_component_name = new ComponentName(context, notification_listener_service.class);
@@ -45,7 +45,7 @@ public class service {
 
     public static void startBeaconService(Context context) {
 
-        Intent beacon_service = new Intent(context, beacon_receiver_service.class);
+        Intent beacon_service = new Intent(context, BeaconReceiverService.class);
         context.startForegroundService(beacon_service);
 
     }

@@ -124,7 +124,7 @@ public class main_activity extends AppCompatActivity {
             service.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
             service.startBeaconService(context);
         }
-        keepAliveJob.Companion.startJob(context);
+        KeepAliveJob.Companion.startJob(context);
 
         boolean display_dual_sim_display_name_config = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -536,7 +536,7 @@ public class main_activity extends AppCompatActivity {
                     Snackbar.make(findViewById(R.id.bot_token_editview), R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
                     return;
                 }
-                Intent intent = new Intent(context, scanner_activity.class);
+                Intent intent = new Intent(context, ScannerActivity.class);
                 //noinspection deprecation
                 startActivityForResult(intent, 1);
                 break;
@@ -629,7 +629,7 @@ public class main_activity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 0);
                 return true;
             case R.id.logcat_menu_item:
-                startActivity(new Intent(this, logcat_activity.class));
+                startActivity(new Intent(this, LogcatActivity.class));
                 return true;
             case R.id.config_qrcode_menu_item:
                 if (sharedPreferences.getBoolean("initialized", false)) {

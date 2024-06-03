@@ -63,6 +63,7 @@ public class resend_service extends Service {
             Response response = call.execute();
             if (response.code() == 200) {
                 ArrayList<String> resend_list_local = Paper.book().read(table_name, new ArrayList<>());
+                assert resend_list_local != null;
                 resend_list_local.remove(message);
                 Paper.book().write(table_name, resend_list_local);
             }
@@ -94,7 +95,7 @@ public class resend_service extends Service {
                         network_progress_handle(item, sharedPreferences.getString("chat_id", ""), okhttp_client,sharedPreferences.getString("message_thread_id", ""));
                     }
                     resend_list = Paper.book().read(table_name, new ArrayList<>());
-                    if (resend_list == send_list || Objects.requireNonNull(resend_list).size() == 0) {
+                    if (resend_list == send_list || Objects.requireNonNull(resend_list).isEmpty()) {
                         break;
                     }
                 }

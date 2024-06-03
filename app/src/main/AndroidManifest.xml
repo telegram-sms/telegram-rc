@@ -60,7 +60,7 @@
         tools:ignore="DataExtractionRules,GoogleAppIndexingWarning"
         tools:targetApi="s">
         <service
-            android:name=".beacon_receiver_service"
+            android:name=".BeaconReceiverService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="location"
@@ -96,9 +96,9 @@
             android:permission="location"
             android:process=":command" />
 
-        <activity android:name=".logcat_activity" /> <!-- uncomment the following to enable scanning for over 30 minutes on Android 7+ -->
+        <activity android:name=".LogcatActivity" /> <!-- uncomment the following to enable scanning for over 30 minutes on Android 7+ -->
         <service
-            android:name=".batteryService"
+            android:name=".BatteryService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="specialUse"
@@ -106,7 +106,7 @@
             android:process=":battery" />
 
         <receiver
-            android:name=".bootReceiver"
+            android:name=".BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -123,7 +123,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".callReceiver"
+            android:name=".CallReceiver"
             android:exported="true">
             <intent-filter android:priority="2147483647">
                 <action android:name="android.intent.action.PHONE_STATE" />
@@ -134,7 +134,7 @@
         <activity
             android:name=".qrcode_show_activity"
             android:label="@string/transfer_configuration" />
-        <activity android:name=".scanner_activity" />
+        <activity android:name=".ScannerActivity" />
         <activity
             android:name=".main_activity"
             android:exported="true"
@@ -151,7 +151,7 @@
         </activity>
 
         <service
-            android:name=".keepAliveJob"
+            android:name=".KeepAliveJob"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
