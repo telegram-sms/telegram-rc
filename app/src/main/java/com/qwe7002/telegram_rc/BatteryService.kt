@@ -39,37 +39,16 @@ class BatteryService : Service() {
 
         return START_STICKY
     }
-    fun startForegroundNotification() {
+    private fun startForegroundNotification() {
         val notification =
             other.getNotificationObj(
                 applicationContext,
                 getString(R.string.battery_monitoring_notify)
             )
-        // Create a PendingIntent for the broadcast receiver
-        val deleteIntent = Intent(applicationContext, DeleteReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            applicationContext,
-            notify.BATTERY,
-            deleteIntent,
-            PendingIntent.FLAG_CANCEL_CURRENT
-        )
-        // Set the deleteIntent on the notification
-        notification.setDeleteIntent(pendingIntent)
         startForeground(
             notify.BATTERY, notification.build(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         )
-    }
-
-    internal inner class DeleteReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            // Get the notification ID from the intent
-            Log.d("battery", "onReceive: Received notification that it was removed, try to pull it up again.")
-            val notificationId = intent.getIntExtra(Notification.EXTRA_NOTIFICATION_ID, 0)
-            if (notificationId == notify.BATTERY) {
-                startForegroundNotification()
-            }
-        }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")

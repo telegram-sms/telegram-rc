@@ -39,32 +39,12 @@ class ResendService : Service() {
     fun startForegroundNotification() {
         val notification: Notification.Builder =
             other.getNotificationObj(applicationContext, getString(R.string.failed_resend))
-        // Create a PendingIntent for the broadcast receiver
-        val deleteIntent = Intent(applicationContext, DeleteReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            applicationContext,
-            notify.RESEND_SERVICE,
-            deleteIntent,
-            PendingIntent.FLAG_CANCEL_CURRENT
-        )
-        // Set the deleteIntent on the notification
-        notification.setDeleteIntent(pendingIntent)
         startForeground(
             notify.RESEND_SERVICE, notification.build(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
         )
     }
 
-    internal inner class DeleteReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            // Get the notification ID from the intent
-            Log.d("battery", "onReceive: Received notification that it was removed, try to pull it up again.")
-            val notificationId = intent.getIntExtra(Notification.EXTRA_NOTIFICATION_ID, 0)
-            if (notificationId == notify.RESEND_SERVICE) {
-                startForegroundNotification()
-            }
-        }
-    }
 
 
     private fun networkProgressHandle(

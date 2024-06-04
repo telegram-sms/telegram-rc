@@ -3,7 +3,6 @@ package com.qwe7002.telegram_rc;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -22,7 +21,6 @@ import android.os.PowerManager;
 import android.os.Process;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -144,25 +142,9 @@ public class chat_command_service extends Service {
 
     void startForegroundNotification() {
         Notification.Builder notification = other.getNotificationObj(context, getString(R.string.chat_command_service_name));
-// Create a PendingIntent for the broadcast receiver
-        Intent deleteIntent = new Intent(context, DeleteReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, notify.CHAT_COMMAND, deleteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-// Set the deleteIntent on the notification
-        notification.setDeleteIntent(pendingIntent);
         startForeground(notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
     }
 
-    public class DeleteReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d("chat", "onReceive: Received notification that it was removed, try to pull it up again.");
-            // Get the notification ID from the intent
-            int notificationId = intent.getIntExtra(Notification.EXTRA_NOTIFICATION_ID, 0);
-            if (notificationId == notify.CHAT_COMMAND) {
-                startForegroundNotification();
-            }
-        }
-    }
 
     @Override
     public void onDestroy() {
