@@ -49,8 +49,8 @@ public class ussd {
         request_message requestBody = new request_message();
         requestBody.chat_id = chatId;
         requestBody.text = context.getString(R.string.send_ussd_head) + "\n" + context.getString(R.string.ussd_code_running);
-        String request_body_raw = new Gson().toJson(requestBody);
-        RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
+        String requestBodyRaw = new Gson().toJson(requestBody);
+        RequestBody body = RequestBody.create(requestBodyRaw, CONST.JSON);
         OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
         Request request = new Request.Builder().url(requestUri).method("POST", body).build();
         Call call = okhttp_client.newCall(request);

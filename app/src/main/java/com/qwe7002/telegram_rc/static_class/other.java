@@ -150,7 +150,7 @@ public class other {
     @NotNull
     public static Notification.Builder getNotificationObj(@NotNull Context context, String notification_name) {
         NotificationChannel channel = new NotificationChannel(notification_name, notification_name,
-                NotificationManager.IMPORTANCE_MAX);
+                NotificationManager.IMPORTANCE_MIN);
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         assert manager != null;
         manager.createNotificationChannel(channel);
