@@ -51,36 +51,15 @@ class NotificationListenerService : NotificationListenerService() {
             applicationContext,
             getString(R.string.Notification_Listener_title)
         )
-        // Create a PendingIntent for the broadcast receiver
-        val deleteIntent = Intent(applicationContext, DeleteReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            applicationContext,
-            notify.NOTIFICATION_LISTENER_SERVICE,
-            deleteIntent,
-            PendingIntent.FLAG_CANCEL_CURRENT
-        )
-        // Set the deleteIntent on the notification
-        notification.setDeleteIntent(pendingIntent)
         startForeground(
             notify.NOTIFICATION_LISTENER_SERVICE, notification.build(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         )
-    }
-
-    internal inner class DeleteReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            // Get the notification ID from the intent
-            Log.d("battery", "onReceive: Received notification that it was removed, try to pull it up again.")
-            val notificationId = intent.getIntExtra(Notification.EXTRA_NOTIFICATION_ID, 0)
-            if (notificationId == notify.BATTERY) {
-                startForegroundNotification()
-            }
-        }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        val package_name = sbn.packageName
-        Log.d(TAG, "onNotificationPosted: $package_name")
+        val packageName = sbn.packageName
+        Log.d(TAG, "onNotificationPosted: $packageName")
 
         if (!sharedPreferences.getBoolean("initialized", false)) {
             Log.i(TAG, "Uninitialized, Notification receiver is deactivated.")
@@ -89,21 +68,21 @@ class NotificationListenerService : NotificationListenerService() {
 
         val listenList: List<String> =
             Paper.book("system_config").read("notify_listen_list", ArrayList())!!
-        if (!listenList.contains(package_name)) {
-            Log.i(TAG, "[$package_name] Not in the list of listening packages.")
+        if (!listenList.contains(packageName)) {
+            Log.i(TAG, "[$packageName] Not in the list of listening packages.")
             return
         }
         val extras = sbn.notification.extras!!
         var appName: String? = "unknown"
         Log.d(TAG, "onNotificationPosted: $appNameList")
-        if (appNameList.containsKey(package_name)) {
-            appName = appNameList[package_name]
+        if (appNameList.containsKey(packageName)) {
+            appName = appNameList[packageName]
         } else {
             val pm = applicationContext.packageManager
             try {
-                val application_info = pm.getApplicationInfo(sbn.packageName, 0)
-                appName = pm.getApplicationLabel(application_info) as String
-                appNameList[package_name] = appName
+                val applicationInfo = pm.getApplicationInfo(sbn.packageName, 0)
+                appName = pm.getApplicationLabel(applicationInfo) as String
+                appNameList[packageName] = appName
             } catch (e: PackageManager.NameNotFoundException) {
                 e.printStackTrace()
             }
@@ -117,7 +96,7 @@ class NotificationListenerService : NotificationListenerService() {
         val chatId = sharedPreferences.getString("chat_id", "")
         val requestUri = network.getUrl(botToken, "sendMessage")
         val requestBody = request_message()
-        if ((System.currentTimeMillis() - lastSendTime) <= 1000L && (lastPackage == package_name)) {
+        if ((System.currentTimeMillis() - lastSendTime) <= 1000L && (lastPackage == packageName)) {
             if (lastMessage == title + content) {
                 return
             }
@@ -136,7 +115,7 @@ class NotificationListenerService : NotificationListenerService() {
         )
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
-        lastPackage = package_name
+        lastPackage = packageName
         lastMessage = title + content
         lastSendTime = System.currentTimeMillis()
         val error_head = "Send notification failed:"
