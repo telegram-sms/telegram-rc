@@ -14,9 +14,9 @@ class QRCodeShowActivity : AppCompatActivity() {
         val context = applicationContext
         val sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE)
         val config = config_list()
-        config.bot_token = sharedPreferences.getString("bot_token", "")
-        config.chat_id = sharedPreferences.getString("chat_id", "")
-        config.trusted_phone_number = sharedPreferences.getString("trusted_phone_number", "")
+        config.bot_token = sharedPreferences.getString("bot_token", "").toString()
+        config.chat_id = sharedPreferences.getString("chat_id", "").toString()
+        config.trusted_phone_number = sharedPreferences.getString("trusted_phone_number", "").toString()
         config.fallback_sms = sharedPreferences.getBoolean("fallback_sms", false)
         config.chat_command = sharedPreferences.getBoolean("chat_command", false)
         config.battery_monitoring_switch =
@@ -37,9 +37,9 @@ class QRCodeShowActivity : AppCompatActivity() {
 
 
     private class config_list {
-        var bot_token: String? = ""
-        var chat_id: String? = ""
-        var trusted_phone_number: String? = ""
+        lateinit var bot_token: String
+        lateinit var chat_id: String
+        lateinit var trusted_phone_number: String
         var fallback_sms: Boolean = false
         var chat_command: Boolean = false
         var battery_monitoring_switch: Boolean = false
