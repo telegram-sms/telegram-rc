@@ -3,6 +3,7 @@ package com.qwe7002.telegram_rc;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -21,6 +22,7 @@ import android.os.PowerManager;
 import android.os.Process;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -60,7 +62,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-/** @noinspection CallToPrintStackTrace*/
+/**
+ * @noinspection CallToPrintStackTrace
+ */
 @SuppressWarnings({"BusyWait", "ConstantConditions"})
 public class chat_command_service extends Service {
     private static final String TAG = "chat_command";
@@ -80,7 +84,7 @@ public class chat_command_service extends Service {
     private static boolean first_request = true;
 
 
-    private static String checkCellularNetworkType(int type,SharedPreferences sharedPreferences) {
+    private static String checkCellularNetworkType(int type, SharedPreferences sharedPreferences) {
         String net_type = "Unknown";
         switch (type) {
             case TelephonyManager.NETWORK_TYPE_NR:
@@ -134,11 +138,31 @@ public class chat_command_service extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = other.getNotificationObj(context, getString(R.string.chat_command_service_name));
-        startForeground(notify.CHAT_COMMAND, notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        startForegroundNotification();
         return START_STICKY;
     }
 
+    void startForegroundNotification() {
+        Notification.Builder notification = other.getNotificationObj(context, getString(R.string.chat_command_service_name));
+// Create a PendingIntent for the broadcast receiver
+        Intent deleteIntent = new Intent(context, DeleteReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, notify.CHAT_COMMAND, deleteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+// Set the deleteIntent on the notification
+        notification.setDeleteIntent(pendingIntent);
+        startForeground(notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+    }
+
+    public class DeleteReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("chat", "onReceive: Received notification that it was removed, try to pull it up again.");
+            // Get the notification ID from the intent
+            int notificationId = intent.getIntExtra(Notification.EXTRA_NOTIFICATION_ID, 0);
+            if (notificationId == notify.CHAT_COMMAND) {
+                startForegroundNotification();
+            }
+        }
+    }
 
     @Override
     public void onDestroy() {
@@ -221,7 +245,7 @@ public class chat_command_service extends Service {
         return false;
     }
 
-    public static String getNetworkType(@NotNull Context context,SharedPreferences sharedPreferences) {
+    public static String getNetworkType(@NotNull Context context, SharedPreferences sharedPreferences) {
         String net_type = "Unknown";
         ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connect_manager != null;
@@ -242,7 +266,7 @@ public class chat_command_service extends Service {
                         android.util.Log.i("get_network_type", "No permission.");
                         return net_type;
                     }
-                    net_type = checkCellularNetworkType(telephonyManager.getDataNetworkType(),sharedPreferences);
+                    net_type = checkCellularNetworkType(telephonyManager.getDataNetworkType(), sharedPreferences);
                 }
                 if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
                     net_type = "Bluetooth";
@@ -483,7 +507,7 @@ public class chat_command_service extends Service {
                 } else {
                     beaconStatus += getString(R.string.disable);
                 }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context,sharedPreferences) + isHotspotRunning + beaconStatus + spamCount + cardInfo;
+                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context, sharedPreferences) + isHotspotRunning + beaconStatus + spamCount + cardInfo;
                 android.util.Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
@@ -523,7 +547,7 @@ public class chat_command_service extends Service {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                     }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context,sharedPreferences);
+                    result_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context, sharedPreferences);
                     request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
                     break;
                 } else {
@@ -545,7 +569,7 @@ public class chat_command_service extends Service {
                     Paper.book("temp").write("wifi_open", false);
                     result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
                 }
-                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context,sharedPreferences);
+                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context, sharedPreferences);
 
                 request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
                 break;

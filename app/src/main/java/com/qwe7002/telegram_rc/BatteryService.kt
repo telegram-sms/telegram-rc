@@ -1,6 +1,8 @@
 package com.qwe7002.telegram_rc
 
 import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -33,16 +35,41 @@ import java.util.Objects
 class BatteryService : Service() {
     private lateinit var batteryReceiver: batteryBroadcastReceiver
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startForegroundNotification()
+
+        return START_STICKY
+    }
+    fun startForegroundNotification() {
         val notification =
             other.getNotificationObj(
                 applicationContext,
                 getString(R.string.battery_monitoring_notify)
             )
+        // Create a PendingIntent for the broadcast receiver
+        val deleteIntent = Intent(applicationContext, DeleteReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            applicationContext,
+            notify.BATTERY,
+            deleteIntent,
+            PendingIntent.FLAG_CANCEL_CURRENT
+        )
+        // Set the deleteIntent on the notification
+        notification.setDeleteIntent(pendingIntent)
         startForeground(
-            notify.BATTERY, notification,
+            notify.BATTERY, notification.build(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         )
-        return START_STICKY
+    }
+
+    internal inner class DeleteReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            // Get the notification ID from the intent
+            Log.d("battery", "onReceive: Received notification that it was removed, try to pull it up again.")
+            val notificationId = intent.getIntExtra(Notification.EXTRA_NOTIFICATION_ID, 0)
+            if (notificationId == notify.BATTERY) {
+                startForegroundNotification()
+            }
+        }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")

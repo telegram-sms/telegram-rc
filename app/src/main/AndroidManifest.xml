@@ -79,9 +79,9 @@
             android:name=".notify_apps_list_activity"
             android:windowSoftInputMode="adjustPan" />
 
-        <service android:name=".resend_service" />
+        <service android:name=".ResendService" />
         <service
-            android:name=".notification_listener_service"
+            android:name=".NotificationListenerService"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">

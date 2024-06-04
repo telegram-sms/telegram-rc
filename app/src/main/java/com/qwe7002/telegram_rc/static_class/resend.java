@@ -3,7 +3,7 @@ package com.qwe7002.telegram_rc.static_class;
 import android.content.Context;
 import android.content.Intent;
 
-import com.qwe7002.telegram_rc.resend_service;
+import com.qwe7002.telegram_rc.ResendService;
 
 import java.util.ArrayList;
 
@@ -20,7 +20,7 @@ public class resend {
     }
 
     public static void start_resend_service(Context context) {
-        Intent intent = new Intent(context, resend_service.class);
+        Intent intent = new Intent(context, ResendService.class);
         context.startForegroundService(intent);
     }
 }

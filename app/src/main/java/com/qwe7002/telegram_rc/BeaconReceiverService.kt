@@ -9,6 +9,8 @@ import aga.android.luch.ScanDuration
 import aga.android.luch.parsers.BeaconParserFactory
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.PendingIntent
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
@@ -75,10 +77,39 @@ class BeaconReceiverService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+       startForegroundNotification()
+        return START_STICKY
+    }
+
+    fun startForegroundNotification() {
         val notification =
             other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
-        startForeground(notify.BEACON_SERVICE, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
-        return START_STICKY
+        // Create a PendingIntent for the broadcast receiver
+        val deleteIntent = Intent(applicationContext, DeleteReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            applicationContext,
+            notify.BEACON_SERVICE,
+            deleteIntent,
+            PendingIntent.FLAG_CANCEL_CURRENT
+        )
+        // Set the deleteIntent on the notification
+        notification.setDeleteIntent(pendingIntent)
+        startForeground(
+            notify.BEACON_SERVICE, notification.build(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
+    }
+
+    internal inner class DeleteReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            // Get the notification ID from the intent
+            Log.d("battery", "onReceive: Received notification that it was removed, try to pull it up again.")
+            val notificationId = intent.getIntExtra(Notification.EXTRA_NOTIFICATION_ID, 0)
+            if (notificationId == notify.BATTERY) {
+                startForegroundNotification()
+            }
+        }
     }
 
     private val reloadConfigReceiver: BroadcastReceiver = object : BroadcastReceiver() {

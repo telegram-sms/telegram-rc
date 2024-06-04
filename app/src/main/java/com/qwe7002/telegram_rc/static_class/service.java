@@ -11,7 +11,7 @@ import androidx.core.app.NotificationManagerCompat;
 import com.qwe7002.telegram_rc.BatteryService;
 import com.qwe7002.telegram_rc.BeaconReceiverService;
 import com.qwe7002.telegram_rc.chat_command_service;
-import com.qwe7002.telegram_rc.notification_listener_service;
+import com.qwe7002.telegram_rc.NotificationListenerService;
 
 import java.util.Set;
 
@@ -30,7 +30,7 @@ public class service {
 
 
         if (isNotifyListener(context)) {
-            ComponentName this_component_name = new ComponentName(context, notification_listener_service.class);
+            ComponentName this_component_name = new ComponentName(context, NotificationListenerService.class);
             PackageManager packageManager = context.getPackageManager();
             packageManager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
             packageManager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);

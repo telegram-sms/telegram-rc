@@ -23,7 +23,9 @@ class KeepAliveJob : JobService() {
             service.startBeaconService(applicationContext)
         }
         Log.d("telegram-rc", "startJob: Try to pull up the service")
-        return false
+        this.jobFinished(params, false)
+        startJob(applicationContext)
+        return true
     }
 
     override fun onStopJob(params: JobParameters?): Boolean {
@@ -43,6 +45,7 @@ class KeepAliveJob : JobService() {
             jobInfoBuilder.setMinimumLatency(5000)
             jobInfoBuilder.setOverrideDeadline(JobInfo.DEFAULT_INITIAL_BACKOFF_MILLIS)
             jobScheduler.schedule(jobInfoBuilder.build())
+
         }
 
         fun stopJob(context: Context) {

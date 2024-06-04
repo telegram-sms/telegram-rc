@@ -148,20 +148,20 @@ public class other {
     }
 
     @NotNull
-    public static Notification getNotificationObj(@NotNull Context context, String notification_name) {
+    public static Notification.Builder getNotificationObj(@NotNull Context context, String notification_name) {
         NotificationChannel channel = new NotificationChannel(notification_name, notification_name,
-                NotificationManager.IMPORTANCE_MIN);
+                NotificationManager.IMPORTANCE_MAX);
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         assert manager != null;
         manager.createNotificationChannel(channel);
-        Notification.Builder notification = new Notification.Builder(context, notification_name).setAutoCancel(false)
+
+        return new Notification.Builder(context, notification_name).setAutoCancel(false)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setOngoing(true)
                 .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setTicker(context.getString(R.string.app_name))
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText(notification_name + context.getString(R.string.service_is_running));
-        return notification.build();
     }
 
     public static int getSubId(Context context, int slot) {

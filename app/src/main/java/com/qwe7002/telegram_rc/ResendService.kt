@@ -1,136 +1,162 @@
-package com.qwe7002.telegram_rc;
+package com.qwe7002.telegram_rc
 
-import android.app.Notification;
-import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.os.IBinder;
+import android.app.Notification
+import android.app.PendingIntent
+import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.ServiceInfo
+import android.os.IBinder
+import android.util.Log
+import com.google.gson.Gson
+import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.static_class.CONST
+import com.qwe7002.telegram_rc.static_class.log
+import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.notify
+import com.qwe7002.telegram_rc.static_class.other
+import io.paperdb.Paper
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 
-import androidx.annotation.Nullable;
+class ResendService : Service() {
+    lateinit var requestUri: String
+    lateinit var receiver: stop_notify_receiver
+    val table_name: String = "resend_list"
 
-import com.google.gson.Gson;
-import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.static_class.CONST;
-import com.qwe7002.telegram_rc.static_class.log;
-import com.qwe7002.telegram_rc.static_class.network;
-import com.qwe7002.telegram_rc.static_class.notify;
-import com.qwe7002.telegram_rc.static_class.other;
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        resend_list = Paper.book().read(table_name, ArrayList())
 
-import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
-
-import io.paperdb.Paper;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-public class resend_service extends Service {
-    Context context;
-    String request_uri;
-    stop_notify_receiver receiver;
-    static ArrayList<String> resend_list;
-    final String table_name = "resend_list";
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        resend_list = Paper.book().read(table_name, new ArrayList<>());
-        Notification notification = other.getNotificationObj(context, getString(R.string.failed_resend));
-        startForeground(notify.RESEND_SERVICE, notification);
-        return START_NOT_STICKY;
+        startForegroundNotification()
+        return START_NOT_STICKY
     }
 
-    private void network_progress_handle(@NotNull String message, String chat_id, OkHttpClient okhttp_client,String message_thread_id) {
-        request_message request_body = new request_message();
-        request_body.chat_id = chat_id;
-        request_body.text = message;
-        request_body.message_thread_id = message_thread_id;
-        if (message.contains("<code>") && message.contains("</code>")) {
-            request_body.parse_mode = "html";
-        }
-        String request_body_json = new Gson().toJson(request_body);
-        RequestBody body = RequestBody.create(request_body_json, CONST.JSON);
-        Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
-        Call call = okhttp_client.newCall(request_obj);
-        try {
-            Response response = call.execute();
-            if (response.code() == 200) {
-                ArrayList<String> resend_list_local = Paper.book().read(table_name, new ArrayList<>());
-                assert resend_list_local != null;
-                resend_list_local.remove(message);
-                Paper.book().write(table_name, resend_list_local);
+    fun startForegroundNotification() {
+        val notification: Notification.Builder =
+            other.getNotificationObj(applicationContext, getString(R.string.failed_resend))
+        // Create a PendingIntent for the broadcast receiver
+        val deleteIntent = Intent(applicationContext, DeleteReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            applicationContext,
+            notify.RESEND_SERVICE,
+            deleteIntent,
+            PendingIntent.FLAG_CANCEL_CURRENT
+        )
+        // Set the deleteIntent on the notification
+        notification.setDeleteIntent(pendingIntent)
+        startForeground(
+            notify.RESEND_SERVICE, notification.build(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
+    }
+
+    internal inner class DeleteReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            // Get the notification ID from the intent
+            Log.d("battery", "onReceive: Received notification that it was removed, try to pull it up again.")
+            val notificationId = intent.getIntExtra(Notification.EXTRA_NOTIFICATION_ID, 0)
+            if (notificationId == notify.RESEND_SERVICE) {
+                startForegroundNotification()
             }
-        } catch (IOException e) {
-            log.writeLog(context, "An error occurred while resending: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        context = getApplicationContext();
-        Paper.init(context);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(CONST.BROADCAST_STOP_SERVICE);
-        receiver = new stop_notify_receiver();
-        registerReceiver(receiver, filter);
-        SharedPreferences sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
-        request_uri = network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage");
 
-        new Thread(() -> {
-            resend_list = Paper.book().read(table_name, new ArrayList<>());
+    private fun networkProgressHandle(
+        message: String,
+        chat_id: String,
+        okhttp_client: OkHttpClient,
+        message_thread_id: String
+    ) {
+        val request_body = request_message()
+        request_body.chat_id = chat_id
+        request_body.text = message
+        request_body.message_thread_id = message_thread_id
+        if (message.contains("<code>") && message.contains("</code>")) {
+            request_body.parse_mode = "html"
+        }
+        val requestBodyJson = Gson().toJson(request_body)
+        val body: RequestBody = requestBodyJson.toRequestBody(CONST.JSON)
+        val requestObj: Request = Request.Builder().url(requestUri).method("POST", body).build()
+        val call = okhttp_client.newCall(requestObj)
+        try {
+            val response = call.execute()
+            if (response.code == 200) {
+                val resendListLocal = Paper.book().read(table_name, ArrayList<String>())!!
+                resendListLocal.remove(message)
+                Paper.book().write(table_name, resendListLocal)
+            }
+        } catch (e: IOException) {
+            log.writeLog(applicationContext, "An error occurred while resending: " + e.message)
+            e.printStackTrace()
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        Paper.init(applicationContext)
+        val filter = IntentFilter()
+        filter.addAction(CONST.BROADCAST_STOP_SERVICE)
+        receiver = stop_notify_receiver()
+        registerReceiver(receiver, filter)
+        val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
+        requestUri = network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage")
+
+        Thread {
+            resend_list = Paper.book().read(table_name, ArrayList())
             while (true) {
-                if (network.checkNetworkStatus(context)) {
-                    ArrayList<String> send_list = resend_list;
-                    OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
-                    for (String item : send_list) {
-                        network_progress_handle(item, sharedPreferences.getString("chat_id", ""), okhttp_client,sharedPreferences.getString("message_thread_id", ""));
+                if (network.checkNetworkStatus(applicationContext)) {
+                    val send_list = resend_list
+                    val okhttp_client =
+                        network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+                    for (item in send_list!!) {
+                        networkProgressHandle(
+                            item,
+                            sharedPreferences.getString("chat_id", "").toString(),
+                            okhttp_client,
+                            sharedPreferences.getString("message_thread_id", "").toString()
+                        )
                     }
-                    resend_list = Paper.book().read(table_name, new ArrayList<>());
-                    if (resend_list == send_list || Objects.requireNonNull(resend_list).isEmpty()) {
-                        break;
+                    resend_list = Paper.book().read(table_name, ArrayList())
+                    if (resend_list === send_list || resend_list!!.isEmpty()) {
+                        break
                     }
                 }
                 try {
-                    //noinspection BusyWait
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.sleep(1000)
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
             }
-            log.writeLog(context, "The resend failure message is complete.");
-            stopSelf();
-        }).start();
+            log.writeLog(applicationContext, "The resend failure message is complete.")
+            stopSelf()
+        }.start()
     }
 
-    @Override
-    public void onDestroy() {
-        stopForeground(true);
-        unregisterReceiver(receiver);
-        super.onDestroy();
+    override fun onDestroy() {
+        unregisterReceiver(receiver)
+        super.onDestroy()
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
-    class stop_notify_receiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, @NotNull Intent intent) {
-            if (Objects.equals(intent.getAction(), CONST.BROADCAST_STOP_SERVICE)) {
-                android.util.Log.i("resend_loop", "Received stop signal, quitting now...");
-                stopSelf();
+    inner class stop_notify_receiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == CONST.BROADCAST_STOP_SERVICE) {
+                Log.i("resend_loop", "Received stop signal, quitting now...")
+                stopSelf()
             }
         }
+    }
+
+    companion object {
+        var resend_list: ArrayList<String>? = null
     }
 }
