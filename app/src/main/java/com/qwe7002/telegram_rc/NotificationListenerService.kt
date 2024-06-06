@@ -1,9 +1,6 @@
 package com.qwe7002.telegram_rc
 
 import android.app.Notification
-import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -123,7 +120,7 @@ class NotificationListenerService : NotificationListenerService() {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 log.writeLog(applicationContext, error_head + e.message)
-                resend.addResendLoop(applicationContext, requestBody.text)
+                resend.addResendLoop(requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -131,7 +128,7 @@ class NotificationListenerService : NotificationListenerService() {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
                     log.writeLog(applicationContext, error_head + response.code + " " + result)
-                    resend.addResendLoop(applicationContext, requestBody.text)
+                    resend.addResendLoop(requestBody.text)
                 }
             }
         })

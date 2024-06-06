@@ -88,14 +88,14 @@ public class sms_send_receiver extends BroadcastReceiver {
                 e.printStackTrace();
                 log.writeLog(context, error_head + e.getMessage());
                 sms.sendFallbackSMS(context, request_body.text, sub);
-                resend.addResendLoop(context, request_body.text);
+                resend.addResendLoop(request_body.text);
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     log.writeLog(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
-                    resend.addResendLoop(context, request_body.text);
+                    resend.addResendLoop(request_body.text);
                 }
             }
         });

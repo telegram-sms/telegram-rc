@@ -410,7 +410,7 @@ class BeaconReceiverService : Service() {
         call.enqueue(object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
-                resend.addResendLoop(applicationContext, request_body.text)
+                resend.addResendLoop(request_body.text)
                 e.printStackTrace()
             }
 

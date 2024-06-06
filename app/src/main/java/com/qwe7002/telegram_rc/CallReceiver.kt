@@ -103,7 +103,7 @@ class CallReceiver : BroadcastReceiver() {
                             request_body.text,
                             other.getSubId(context, slot)
                         )
-                        resend.addResendLoop(context, request_body.text)
+                        resend.addResendLoop(request_body.text)
                     }
 
                     @Throws(IOException::class)
@@ -114,7 +114,7 @@ class CallReceiver : BroadcastReceiver() {
                                 error_head + response.code + " " + Objects.requireNonNull(response.body)
                                     .string()
                             )
-                            resend.addResendLoop(context, request_body.text)
+                            resend.addResendLoop(request_body.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!other.isPhoneNumber(incomingNumber!!)) {

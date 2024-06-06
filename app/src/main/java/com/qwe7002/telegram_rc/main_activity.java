@@ -228,7 +228,7 @@ public class main_activity extends AppCompatActivity {
         }
         shizuku_switch.setOnClickListener(view -> runOnUiThread(() -> rootSwitch.setChecked(shizuku_switch.isChecked())));
         rootSwitch.setOnClickListener(view -> new Thread(() -> {
-            if (!Shell.checkRoot()) {
+            if (!Shell.INSTANCE.checkRoot()) {
                 runOnUiThread(() -> rootSwitch.setChecked(false));
             }
         }).start());

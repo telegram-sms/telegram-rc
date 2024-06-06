@@ -81,7 +81,7 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
                 Log.d("ussdRequest", "onFailure: " +e);
                 log.writeLog(context, error_head + e.getMessage());
                 sms.sendFallbackSMS(context, request_body.text, -1);
-                resend.addResendLoop(context, request_body.text);
+                resend.addResendLoop(request_body.text);
             }
 
             @Override
@@ -89,7 +89,7 @@ public class ussd_request_callback extends TelephonyManager.UssdResponseCallback
                 if (response.code() != 200) {
                     log.writeLog(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
                     sms.sendFallbackSMS(context, request_body.text, -1);
-                    resend.addResendLoop(context, request_body.text);
+                    resend.addResendLoop(request_body.text);
                 }
             }
         });

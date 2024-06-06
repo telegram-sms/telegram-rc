@@ -30,13 +30,13 @@ class BootReceiver : BroadcastReceiver() {
             )
             service.startBeaconService(context)
             KeepAliveJob.startJob(context)
-            if (Paper.book().read<ArrayList<Any>>("resend_list", ArrayList())!!.isNotEmpty()) {
+/*            if (Paper.book().read<ArrayList<Any>>("resend_list", ArrayList())!!.isNotEmpty()) {
                 Log.d(
                     TAG,
                     "An unsent message was detected, and the automatic resend process was initiated."
                 )
                 resend.start_resend_service(context)
-            }
+            }*/
             if (sharedPreferences.getBoolean("root", false)) {
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     val dummyIpAddr = Paper.book("system_config").read<String>("dummy_ip_addr")

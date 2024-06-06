@@ -35,6 +35,7 @@ import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.reply_markup_keyboard;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.data_structure.sms_request_info;
+import com.qwe7002.telegram_rc.root_kit.Radio;
 import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.log;
 import com.qwe7002.telegram_rc.static_class.network;
@@ -91,14 +92,14 @@ public class chat_command_service extends Service {
             case TelephonyManager.NETWORK_TYPE_LTE:
                 net_type = "LTE";
                 if (sharedPreferences.getBoolean("root", false)) {
-                    if (com.qwe7002.telegram_rc.root_kit.Radio.isLTECA()) {
+                    if (Radio.INSTANCE.isLTECA()) {
                         net_type += "+";
                     }
-                    if (com.qwe7002.telegram_rc.root_kit.Radio.isNRConnected()) {
+                    if (Radio.INSTANCE.isNRConnected()) {
                         net_type += " & NR";
                         break;
                     }
-                    if (com.qwe7002.telegram_rc.root_kit.Radio.isNRStandby()) {
+                    if (Radio.INSTANCE.isNRStandby()) {
                         net_type += " (NR Standby)";
                     }
                 }
