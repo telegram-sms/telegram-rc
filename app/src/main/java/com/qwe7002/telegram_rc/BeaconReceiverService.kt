@@ -9,8 +9,6 @@ import aga.android.luch.ScanDuration
 import aga.android.luch.parsers.BeaconParserFactory
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Notification
-import android.app.PendingIntent
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
@@ -32,7 +30,6 @@ import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -40,7 +37,7 @@ import com.qwe7002.telegram_rc.config.beacon
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.request_message
-import com.qwe7002.telegram_rc.root_kit.radio
+import com.qwe7002.telegram_rc.root_kit.Radio
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.notify
@@ -77,7 +74,6 @@ class BeaconReceiverService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
        startForegroundNotification()
         return START_STICKY
     }
@@ -190,7 +186,7 @@ class BeaconReceiverService : Service() {
     }
 
 
-    private class broadcastReceiver : BroadcastReceiver() {
+    private inner class broadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             Log.d("beaconReceiver", "onReceive: " + intent.action)
             assert(intent.action != null)
@@ -424,7 +420,7 @@ class BeaconReceiverService : Service() {
         })
     }
 
-    fun getBatteryInfoMsg(): String {
+    private fun getBatteryInfoMsg(): String {
         val batteryManager =
             (applicationContext.getSystemService(BATTERY_SERVICE) as BatteryManager)
         var batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
@@ -526,13 +522,13 @@ class BeaconReceiverService : Service() {
             TelephonyManager.NETWORK_TYPE_LTE -> {
                 netType = "LTE"
                 if (isRoot) {
-                    if (radio.isLTECA) {
+                    if (Radio.isLTECA) {
                         netType += "+"
                     }
-                    if (radio.isNRConnected) {
+                    if (Radio.isNRConnected) {
                         netType += " & NR"
                     }
-                    if (radio.isNRStandby) {
+                    if (Radio.isNRStandby) {
                         netType += " (NR Standby)"
                     }
                 }

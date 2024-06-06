@@ -21,7 +21,7 @@ class LogcatActivity : AppCompatActivity() {
         setContentView(R.layout.activity_logcat)
         logcatTextview = findViewById(R.id.logcat_textview)
         this.setTitle(R.string.logcat)
-        logcatTextview.setText(log.readLog(applicationContext, line))
+        logcatTextview.text = log.readLog(applicationContext, line)
         observer = fileObserver(applicationContext, logcatTextview)
         logcatTextview.setGravity(Gravity.BOTTOM)
     }

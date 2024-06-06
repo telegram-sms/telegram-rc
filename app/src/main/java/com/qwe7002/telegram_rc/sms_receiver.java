@@ -268,14 +268,14 @@ public class sms_receiver extends BroadcastReceiver {
         if (sharedPreferences.getBoolean("root", false)) {
             if (message_body.toLowerCase().replace("_", "").equals("/data")) {
                 if (data_enable) {
-                    com.qwe7002.telegram_rc.root_kit.network.setData(false);
+                    com.qwe7002.telegram_rc.root_kit.Networks.setData(false);
                 }
             }
         }
     }
 
     void openData(Context context) {
-        com.qwe7002.telegram_rc.root_kit.network.setData(true);
+        com.qwe7002.telegram_rc.root_kit.Networks.setData(true);
         int loopCount = 0;
         while (!network.checkNetworkStatus(context)) {
             if (loopCount >= 100) {

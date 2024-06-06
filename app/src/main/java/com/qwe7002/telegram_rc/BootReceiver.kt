@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.qwe7002.telegram_rc.root_kit.network
+import com.qwe7002.telegram_rc.root_kit.Networks
 import com.qwe7002.telegram_rc.static_class.log
 import com.qwe7002.telegram_rc.static_class.resend
 import com.qwe7002.telegram_rc.static_class.service
@@ -40,7 +40,7 @@ class BootReceiver : BroadcastReceiver() {
             if (sharedPreferences.getBoolean("root", false)) {
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     val dummyIpAddr = Paper.book("system_config").read<String>("dummy_ip_addr")
-                    network.addDummyDevice(dummyIpAddr.toString())
+                    Networks.addDummyDevice(dummyIpAddr.toString())
                 }
             }
         }

@@ -45,7 +45,7 @@ import com.google.gson.JsonParser;
 import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.root_kit.shell;
+import com.qwe7002.telegram_rc.root_kit.Shell;
 import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.log;
 import com.qwe7002.telegram_rc.static_class.network;
@@ -228,7 +228,7 @@ public class main_activity extends AppCompatActivity {
         }
         shizuku_switch.setOnClickListener(view -> runOnUiThread(() -> rootSwitch.setChecked(shizuku_switch.isChecked())));
         rootSwitch.setOnClickListener(view -> new Thread(() -> {
-            if (!shell.checkRoot()) {
+            if (!Shell.checkRoot()) {
                 runOnUiThread(() -> rootSwitch.setChecked(false));
             }
         }).start());

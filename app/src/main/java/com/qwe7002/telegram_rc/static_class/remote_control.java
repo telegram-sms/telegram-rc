@@ -13,8 +13,8 @@ import io.paperdb.Paper;
 public class remote_control {
     public static void disableVPNHotspot(android.net.wifi.WifiManager wifiManager) {
         Paper.book("temp").write("wifi_open", false);
-        com.qwe7002.telegram_rc.root_kit.activity_manage.forceStopService("be.mygod.vpnhotspot");
-        com.qwe7002.telegram_rc.root_kit.network.setWifi(false);
+        com.qwe7002.telegram_rc.root_kit.ActivityManage.forceStopService("be.mygod.vpnhotspot");
+        com.qwe7002.telegram_rc.root_kit.Networks.setWifi(false);
         try {
             while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
                 Thread.sleep(100);
@@ -23,7 +23,7 @@ public class remote_control {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        com.qwe7002.telegram_rc.root_kit.network.setWifi(true);
+        com.qwe7002.telegram_rc.root_kit.Networks.setWifi(true);
         try {
             while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100);
@@ -39,7 +39,7 @@ public class remote_control {
             disableVPNHotspot(wifiManager);
         }
         Paper.book("temp").write("wifi_open", true);
-        com.qwe7002.telegram_rc.root_kit.network.setWifi(true);
+        com.qwe7002.telegram_rc.root_kit.Networks.setWifi(true);
         try {
             while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100);
@@ -49,7 +49,7 @@ public class remote_control {
             e.printStackTrace();
         }
 
-        com.qwe7002.telegram_rc.root_kit.activity_manage.startForegroundService("be.mygod.vpnhotspot", "be.mygod.vpnhotspot.RepeaterService");
+        com.qwe7002.telegram_rc.root_kit.ActivityManage.startForegroundService("be.mygod.vpnhotspot", "be.mygod.vpnhotspot.RepeaterService");
     }
 
 

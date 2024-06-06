@@ -8,6 +8,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import com.qwe7002.telegram_rc.static_class.service
+import java.util.concurrent.TimeUnit
 
 
 class KeepAliveJob : JobService() {
@@ -42,7 +43,7 @@ class KeepAliveJob : JobService() {
                 ComponentName(context.packageName, KeepAliveJob::class.java.getName())
             )
                 .setPersisted(true)
-            jobInfoBuilder.setMinimumLatency(5000)
+            jobInfoBuilder.setMinimumLatency(TimeUnit.SECONDS.toMillis(5))
             jobInfoBuilder.setOverrideDeadline(JobInfo.DEFAULT_INITIAL_BACKOFF_MILLIS)
             jobScheduler.schedule(jobInfoBuilder.build())
 
