@@ -89,7 +89,7 @@ class ReSendJob : JobService() {
                 context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
 
             val jobInfoBuilder = JobInfo.Builder(
-                10,
+                20,
                 ComponentName(context.packageName, KeepAliveJob::class.java.getName())
             )
                 .setPersisted(true)
