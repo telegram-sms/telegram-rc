@@ -124,6 +124,7 @@ public class main_activity extends AppCompatActivity {
             service.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
             service.startBeaconService(context);
             KeepAliveJob.Companion.startJob(context);
+            ReSendJob.Companion.startJob(context);
         }
 
 
@@ -609,7 +610,7 @@ public class main_activity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         LayoutInflater inflater = this.getLayoutInflater();
-        String file_name = null;
+        String fileName = null;
         switch (item.getItemId()) {
             case R.id.about_menu_item:
                 PackageManager packageManager = context.getPackageManager();
@@ -670,34 +671,34 @@ public class main_activity extends AppCompatActivity {
                 return true;
             case R.id.set_proxy_menu_item:
                 View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
-                final SwitchMaterial doh_switch = findViewById(R.id.doh_switch);
-                final SwitchMaterial proxy_enable = proxy_dialog_view.findViewById(R.id.proxy_enable_switch);
-                final SwitchMaterial proxy_doh_socks5 = proxy_dialog_view.findViewById(R.id.doh_over_socks5_switch);
-                final EditText proxy_host = proxy_dialog_view.findViewById(R.id.proxy_host_editview);
-                final EditText proxy_port = proxy_dialog_view.findViewById(R.id.proxy_port_editview);
-                final EditText proxy_username = proxy_dialog_view.findViewById(R.id.proxy_username_editview);
-                final EditText proxy_password = proxy_dialog_view.findViewById(R.id.proxy_password_editview);
-                proxy proxy_item = Paper.book("system_config").read("proxy_config", new proxy());
-                proxy_enable.setChecked(Objects.requireNonNull(proxy_item).enable);
-                proxy_doh_socks5.setChecked(proxy_item.dns_over_socks5);
-                proxy_host.setText(proxy_item.host);
-                proxy_port.setText(String.valueOf(proxy_item.port));
-                proxy_username.setText(proxy_item.username);
-                proxy_password.setText(proxy_item.password);
+                final SwitchMaterial dohSwitch = findViewById(R.id.doh_switch);
+                final SwitchMaterial proxyEnable = proxy_dialog_view.findViewById(R.id.proxy_enable_switch);
+                final SwitchMaterial proxyDohSocks5 = proxy_dialog_view.findViewById(R.id.doh_over_socks5_switch);
+                final EditText proxyHost = proxy_dialog_view.findViewById(R.id.proxy_host_editview);
+                final EditText proxyPort = proxy_dialog_view.findViewById(R.id.proxy_port_editview);
+                final EditText proxyUsername = proxy_dialog_view.findViewById(R.id.proxy_username_editview);
+                final EditText proxyPassword = proxy_dialog_view.findViewById(R.id.proxy_password_editview);
+                proxy proxyItem = Paper.book("system_config").read("proxy_config", new proxy());
+                proxyEnable.setChecked(Objects.requireNonNull(proxyItem).enable);
+                proxyDohSocks5.setChecked(proxyItem.dns_over_socks5);
+                proxyHost.setText(proxyItem.host);
+                proxyPort.setText(String.valueOf(proxyItem.port));
+                proxyUsername.setText(proxyItem.username);
+                proxyPassword.setText(proxyItem.password);
                 new AlertDialog.Builder(this).setTitle(R.string.proxy_dialog_title)
                         .setView(proxy_dialog_view)
                         .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                            if (!doh_switch.isChecked()) {
-                                doh_switch.setChecked(true);
+                            if (!dohSwitch.isChecked()) {
+                                dohSwitch.setChecked(true);
                             }
-                            doh_switch.setEnabled(!proxy_enable.isChecked());
-                            proxy_item.enable = proxy_enable.isChecked();
-                            proxy_item.dns_over_socks5 = proxy_doh_socks5.isChecked();
-                            proxy_item.host = proxy_host.getText().toString();
-                            proxy_item.port = Integer.parseInt(proxy_port.getText().toString());
-                            proxy_item.username = proxy_username.getText().toString();
-                            proxy_item.password = proxy_password.getText().toString();
-                            Paper.book("system_config").write("proxy_config", proxy_item);
+                            dohSwitch.setEnabled(!proxyEnable.isChecked());
+                            proxyItem.enable = proxyEnable.isChecked();
+                            proxyItem.dns_over_socks5 = proxyDohSocks5.isChecked();
+                            proxyItem.host = proxyHost.getText().toString();
+                            proxyItem.port = Integer.parseInt(proxyPort.getText().toString());
+                            proxyItem.username = proxyUsername.getText().toString();
+                            proxyItem.password = proxyPassword.getText().toString();
+                            Paper.book("system_config").write("proxy_config", proxyItem);
                             new Thread(() -> {
                                 KeepAliveJob.Companion.stopJob(context);
                                 service.stopAllService(context);
@@ -711,20 +712,20 @@ public class main_activity extends AppCompatActivity {
                         .show();
                 return true;
             case R.id.user_manual_menu_item:
-                file_name = "/guide/" + context.getString(R.string.Lang) + "/user-manual";
+                fileName = "/guide/" + context.getString(R.string.Lang) + "/user-manual";
                 break;
             case R.id.privacy_policy_menu_item:
-                file_name = privacy_police;
+                fileName = privacy_police;
                 break;
             case R.id.question_and_answer_menu_item:
-                file_name = "/guide/" + context.getString(R.string.Lang) + "/Q&A";
+                fileName = "/guide/" + context.getString(R.string.Lang) + "/Q&A";
                 break;
             case R.id.donate_menu_item:
-                file_name = "/donate";
+                fileName = "/donate";
                 break;
         }
-        assert file_name != null;
-        Uri uri = Uri.parse("https://get.telegram-sms.com" + file_name);
+        assert fileName != null;
+        Uri uri = Uri.parse("https://get.telegram-sms.com" + fileName);
         CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         CustomTabColorSchemeParams params = new CustomTabColorSchemeParams.Builder().setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary)).build();
         builder.setDefaultColorSchemeParams(params);

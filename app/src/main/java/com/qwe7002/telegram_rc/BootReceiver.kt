@@ -6,10 +6,8 @@ import android.content.Intent
 import android.util.Log
 import com.qwe7002.telegram_rc.root_kit.Networks
 import com.qwe7002.telegram_rc.static_class.log
-import com.qwe7002.telegram_rc.static_class.resend
 import com.qwe7002.telegram_rc.static_class.service
 import io.paperdb.Paper
-import kotlin.Any
 import kotlin.String
 
 class BootReceiver : BroadcastReceiver() {
@@ -30,6 +28,7 @@ class BootReceiver : BroadcastReceiver() {
             )
             service.startBeaconService(context)
             KeepAliveJob.startJob(context)
+            ReSendJob.startJob(context);
 /*            if (Paper.book().read<ArrayList<Any>>("resend_list", ArrayList())!!.isNotEmpty()) {
                 Log.d(
                     TAG,
@@ -39,8 +38,8 @@ class BootReceiver : BroadcastReceiver() {
             }*/
             if (sharedPreferences.getBoolean("root", false)) {
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
-                    val dummyIpAddr = Paper.book("system_config").read<String>("dummy_ip_addr")
-                    Networks.addDummyDevice(dummyIpAddr.toString())
+                    val dummyIp = Paper.book("system_config").read<String>("dummy_ip_addr")
+                    Networks.addDummyDevice(dummyIp.toString())
                 }
             }
         }
