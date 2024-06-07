@@ -44,7 +44,6 @@ class ReSendJob : JobService() {
             if (sendList.isNotEmpty()){
                 log.writeLog(applicationContext, "The resend failure message is complete.")
             }
-
             jobFinished(params, false)
         }.start()
         return true

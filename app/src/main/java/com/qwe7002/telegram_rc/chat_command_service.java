@@ -41,7 +41,7 @@ import com.qwe7002.telegram_rc.static_class.log;
 import com.qwe7002.telegram_rc.static_class.network;
 import com.qwe7002.telegram_rc.static_class.notify;
 import com.qwe7002.telegram_rc.static_class.other;
-import com.qwe7002.telegram_rc.static_class.remote_control;
+import com.qwe7002.telegram_rc.static_class.RemoteControl;
 import com.qwe7002.telegram_rc.static_class.service;
 import com.qwe7002.telegram_rc.static_class.sms;
 import com.qwe7002.telegram_rc.static_class.ussd;
@@ -433,7 +433,7 @@ public class chat_command_service extends Service {
                     switch_ap += "\n" + getString(R.string.switch_ap_message);
                 }
                 if (sharedPreferences.getBoolean("root", false)) {
-                    if (remote_control.isVPNHotspotExist(context)) {
+                    if (RemoteControl.isVPNHotspotExist(context)) {
                         switch_ap += "\n" + getString(R.string.switch_ap_message).replace("/hotspot", "/vpnhotspot");
                     }
                     switch_ap += "\n" + getString(R.string.switch_data_message);
@@ -470,13 +470,13 @@ public class chat_command_service extends Service {
                 String isHotspotRunning = "";
                 if (Settings.System.canWrite(context)) {
                     isHotspotRunning += "\n" + getString(R.string.hotspot_status);
-                    if (remote_control.isHotspotActive(context)) {
+                    if (RemoteControl.isHotspotActive(context)) {
                         isHotspotRunning += getString(R.string.enable);
                     } else {
                         isHotspotRunning += getString(R.string.disable);
                     }
                 }
-                if (sharedPreferences.getBoolean("root", false) && remote_control.isVPNHotspotExist(context)) {
+                if (sharedPreferences.getBoolean("root", false) && RemoteControl.isVPNHotspotExist(context)) {
                     isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status);
                     if (com.qwe7002.telegram_rc.root_kit.ActivityManage.checkServiceIsRunning("be.mygod.vpnhotspot", ".RepeaterService")) {
                         isHotspotRunning += getString(R.string.enable);
@@ -508,7 +508,7 @@ public class chat_command_service extends Service {
                 break;
             case "/hotspot":
                 if (Settings.System.canWrite(context)) {
-                    boolean ap_status = remote_control.isHotspotActive(context);
+                    boolean ap_status = RemoteControl.isHotspotActive(context);
                     String result_ap;
                     if (!ap_status) {
                         result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
@@ -525,7 +525,7 @@ public class chat_command_service extends Service {
                             };
                         }
                         Paper.book("temp").write("tether_mode", tether_mode);
-                        remote_control.enableHotspot(context, tether_mode);
+                        RemoteControl.enableHotspot(context, tether_mode);
                     } else {
                         Paper.book("temp").write("tether_open", false);
                         result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
@@ -537,7 +537,7 @@ public class chat_command_service extends Service {
                     command = "/vpnhotspot";
                 }
             case "/vpnhotspot":
-                if (!sharedPreferences.getBoolean("root", false) || !remote_control.isVPNHotspotExist(context)) {
+                if (!sharedPreferences.getBoolean("root", false) || !RemoteControl.isVPNHotspotExist(context)) {
                     request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
                     break;
                 }
@@ -547,7 +547,7 @@ public class chat_command_service extends Service {
                 String result_vpn_ap;
                 if (!wifi_open) {
                     result_vpn_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                    new Thread(() -> remote_control.enableVPNHotspot(wifiManager)).start();
+                    new Thread(() -> RemoteControl.enableVPNHotspot(wifiManager)).start();
                 } else {
                     Paper.book("temp").write("wifi_open", false);
                     result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
@@ -785,7 +785,7 @@ public class chat_command_service extends Service {
 
                 if (splite_command_value.equals("/hotspot") || splite_command_value.equals("/vpnhotspot")) {
                     if (!Paper.book("temp").read("tether_open", false)) {
-                        remote_control.disableHotspot(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
+                        RemoteControl.disableHotspot(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
                         Paper.book("temp").delete("tether_mode");
                     }
                 }
@@ -795,7 +795,7 @@ public class chat_command_service extends Service {
                             if (!Paper.book("temp").read("wifi_open", false)) {
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                                 assert wifiManager != null;
-                                remote_control.disableVPNHotspot(wifiManager);
+                                RemoteControl.disableVPNHotspot(wifiManager);
                             }
                             break;
                         case "/mobiledata":

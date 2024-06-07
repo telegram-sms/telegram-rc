@@ -1,10 +1,13 @@
-package com.qwe7002.telegram_rc.static_class;
+package com.qwe7002.telegram_rc.static_class
 
-import okhttp3.MediaType;
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 
-public class CONST {
-    public static final int SYSTEM_CONFIG_VERSION = 1;
-    public static final String BROADCAST_STOP_SERVICE = "com.qwe7002.telegram_rc.stop_all";
-    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    public static final int RESULT_CONFIG_JSON = 1;
+object CONST {
+    const val SYSTEM_CONFIG_VERSION: Int = 1
+    const val BROADCAST_STOP_SERVICE: String = "com.qwe7002.telegram_rc.stop_all"
+
+    @JvmField
+    val JSON: MediaType = "application/json; charset=utf-8".toMediaType()
+    const val RESULT_CONFIG_JSON: Int = 1
 }

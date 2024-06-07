@@ -42,7 +42,7 @@ import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.notify
 import com.qwe7002.telegram_rc.static_class.other
-import com.qwe7002.telegram_rc.static_class.remote_control
+import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.resend
 import io.paperdb.Paper
 import okhttp3.Call
@@ -201,7 +201,7 @@ class BeaconReceiverService : Service() {
         override fun onReceive(context: Context, intent: Intent) {
             val wifiIsEnableStatus: Boolean
             if (config.useVpnHotspot) {
-                if (!remote_control.isVPNHotspotExist(context) && Settings.System.canWrite(
+                if (!RemoteControl.isVPNHotspotExist(context) && Settings.System.canWrite(
                         context
                     )
                 ) {
@@ -209,13 +209,13 @@ class BeaconReceiverService : Service() {
                 }
                 wifiIsEnableStatus = Paper.book("temp").read("wifi_open", false)!!
             } else {
-                if (!Settings.System.canWrite(context) && remote_control.isVPNHotspotExist(
+                if (!Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(
                         context
                     )
                 ) {
                     config.useVpnHotspot = true
                 }
-                wifiIsEnableStatus = remote_control.isHotspotActive(context)
+                wifiIsEnableStatus = RemoteControl.isHotspotActive(context)
             }
             if (Paper.book().read("disable_beacon", false)!!) {
                 notFoundCount = 0
@@ -300,9 +300,9 @@ class BeaconReceiverService : Service() {
                         detectCount = 0
                         notFoundCount = 0
                         if (config.useVpnHotspot) {
-                            remote_control.disableVPNHotspot(wifiManager)
+                            RemoteControl.disableVPNHotspot(wifiManager)
                         } else {
-                            remote_control.disableHotspot(
+                            RemoteControl.disableHotspot(
                                 context,
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
@@ -314,9 +314,9 @@ class BeaconReceiverService : Service() {
                         detectCount = 0
                         notFoundCount = 0
                         if (config.useVpnHotspot) {
-                            remote_control.enableVPNHotspot(wifiManager)
+                            RemoteControl.enableVPNHotspot(wifiManager)
                         } else {
-                            remote_control.enableHotspot(
+                            RemoteControl.enableHotspot(
                                 context,
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
@@ -331,9 +331,9 @@ class BeaconReceiverService : Service() {
                         detectCount = 0
                         notFoundCount = 0
                         if (config.useVpnHotspot) {
-                            remote_control.enableVPNHotspot(wifiManager)
+                            RemoteControl.enableVPNHotspot(wifiManager)
                         } else {
-                            remote_control.enableHotspot(
+                            RemoteControl.enableHotspot(
                                 context,
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
@@ -345,9 +345,9 @@ class BeaconReceiverService : Service() {
                         detectCount = 0
                         notFoundCount = 0
                         if (config.useVpnHotspot) {
-                            remote_control.disableVPNHotspot(wifiManager)
+                            RemoteControl.disableVPNHotspot(wifiManager)
                         } else {
-                            remote_control.disableHotspot(
+                            RemoteControl.disableHotspot(
                                 context,
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )

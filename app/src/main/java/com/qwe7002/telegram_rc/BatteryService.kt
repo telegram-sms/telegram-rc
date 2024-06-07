@@ -1,8 +1,6 @@
 package com.qwe7002.telegram_rc
 
 import android.annotation.SuppressLint
-import android.app.Notification
-import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -23,7 +21,7 @@ import com.qwe7002.telegram_rc.static_class.log
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.notify
 import com.qwe7002.telegram_rc.static_class.other
-import com.qwe7002.telegram_rc.static_class.remote_control
+import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.sms
 import io.paperdb.Paper
 import okhttp3.Request
@@ -168,8 +166,8 @@ class BatteryService : Service() {
                 Intent.ACTION_BATTERY_OKAY -> prebody.append(context.getString(R.string.low_battery_status_end))
                 Intent.ACTION_BATTERY_LOW -> {
                     prebody.append(context.getString(R.string.battery_low))
-                    if (remote_control.isHotspotActive(context)) {
-                        remote_control.disableHotspot(
+                    if (RemoteControl.isHotspotActive(context)) {
+                        RemoteControl.disableHotspot(
                             context,
                             TetherManager.TetherMode.TETHERING_WIFI
                         )
@@ -179,7 +177,7 @@ class BatteryService : Service() {
                     if (Paper.book("temp").read("wifi_open", false)!!) {
                         val wifiManager =
                             (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
-                        remote_control.disableVPNHotspot(wifiManager)
+                        RemoteControl.disableVPNHotspot(wifiManager)
                         prebody.append("\n").append(getString(R.string.disable_wifi))
                             .append(context.getString(R.string.action_success))
                     }

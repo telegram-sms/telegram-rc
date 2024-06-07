@@ -50,7 +50,6 @@ import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.log;
 import com.qwe7002.telegram_rc.static_class.network;
 import com.qwe7002.telegram_rc.static_class.other;
-import com.qwe7002.telegram_rc.static_class.remote_control;
 import com.qwe7002.telegram_rc.static_class.service;
 
 import java.io.IOException;
@@ -93,7 +92,6 @@ public class main_activity extends AppCompatActivity {
         final SwitchMaterial doh_switch = findViewById(R.id.doh_switch);
         final SwitchMaterial charger_status_switch = findViewById(R.id.charger_status_switch);
         final SwitchMaterial verification_code_switch = findViewById(R.id.verification_code_switch);
-        final SwitchMaterial shizuku_switch = findViewById(R.id.shizuku_switch);
         final SwitchMaterial rootSwitch = findViewById(R.id.root_switch);
         final SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
         final SwitchMaterial displayDualSimDisplayNameSwitch = findViewById(R.id.display_dual_sim_switch);
@@ -224,10 +222,6 @@ public class main_activity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
-        if(!remote_control.isShizukuExist(context)) {
-            shizuku_switch.setVisibility(View.GONE);
-        }
-        shizuku_switch.setOnClickListener(view -> runOnUiThread(() -> rootSwitch.setChecked(shizuku_switch.isChecked())));
         rootSwitch.setOnClickListener(view -> new Thread(() -> {
             if (!Shell.INSTANCE.checkRoot()) {
                 runOnUiThread(() -> rootSwitch.setChecked(false));
@@ -379,16 +373,16 @@ public class main_activity extends AppCompatActivity {
             }
 
             //noinspection deprecation
-            final ProgressDialog progress_dialog = new ProgressDialog(main_activity.this);
+            final ProgressDialog progressDialog = new ProgressDialog(main_activity.this);
             //noinspection deprecation
-            progress_dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progress_dialog.setTitle(getString(R.string.connect_wait_title));
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setTitle(getString(R.string.connect_wait_title));
             //noinspection deprecation
-            progress_dialog.setMessage(getString(R.string.connect_wait_message));
+            progressDialog.setMessage(getString(R.string.connect_wait_message));
             //noinspection deprecation
-            progress_dialog.setIndeterminate(false);
-            progress_dialog.setCancelable(false);
-            progress_dialog.show();
+            progressDialog.setIndeterminate(false);
+            progressDialog.setCancelable(false);
+            progressDialog.show();
 
             String request_uri = network.getUrl(bot_token_editview.getText().toString().trim(), "sendMessage");
             request_message request_body = new request_message();
@@ -406,7 +400,7 @@ public class main_activity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     Log.e(TAG, "onFailure: ", e);
-                    progress_dialog.cancel();
+                    progressDialog.cancel();
                     String error_message = error_head + e.getMessage();
                     log.writeLog(context, error_message);
                     Looper.prepare();
@@ -417,7 +411,7 @@ public class main_activity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    progress_dialog.cancel();
+                    progressDialog.cancel();
                     String new_bot_token = bot_token_editview.getText().toString().trim();
                     if (response.code() != 200) {
                         String result = Objects.requireNonNull(response.body()).string();
@@ -455,9 +449,11 @@ public class main_activity extends AppCompatActivity {
                     editor.apply();
                     new Thread(() -> {
                         KeepAliveJob.Companion.stopJob(context);
+                        ReSendJob.Companion.stopJob(context);
                         service.stopAllService(context);
                         service.startService(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked());
                         KeepAliveJob.Companion.startJob(context);
+                        ReSendJob.Companion.startJob(context);
                     }).start();
                     Looper.prepare();
                     Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)

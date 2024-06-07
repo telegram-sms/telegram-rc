@@ -31,7 +31,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.qwe7002.telegram_rc.config.beacon;
 import com.qwe7002.telegram_rc.data_structure.BeaconModel;
-import com.qwe7002.telegram_rc.static_class.remote_control;
+import com.qwe7002.telegram_rc.static_class.RemoteControl;
 
 import java.util.ArrayList;
 
@@ -96,13 +96,13 @@ public class beacon_config_activity extends AppCompatActivity {
         beacon config = Paper.book("beacon").read("config", new beacon());
         assert config != null;
         useVpnHotspotSwitch.setChecked(config.useVpnHotspot);
-        if (!remote_control.isVPNHotspotExist(context)) {
+        if (!RemoteControl.isVPNHotspotExist(context)) {
             useVpnHotspotSwitch.setChecked(false);
         }
-        if (!Settings.System.canWrite(context) && remote_control.isVPNHotspotExist(context)) {
+        if (!Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(context)) {
             useVpnHotspotSwitch.setChecked(true);
         }
-        if (Settings.System.canWrite(context) && remote_control.isVPNHotspotExist(context)) {
+        if (Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(context)) {
             useVpnHotspotSwitch.setEnabled(true);
         }
 

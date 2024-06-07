@@ -1,100 +1,92 @@
-package com.qwe7002.telegram_rc.static_class;
+package com.qwe7002.telegram_rc.static_class
 
-import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
+import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.net.wifi.WifiManager
+import com.fitc.wifihotspot.TetherManager
+import com.qwe7002.telegram_rc.root_kit.ActivityManage.forceStopService
+import com.qwe7002.telegram_rc.root_kit.ActivityManage.startForegroundService
+import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
+import io.paperdb.Paper
 
-import com.fitc.wifihotspot.TetherManager;
-
-import org.jetbrains.annotations.NotNull;
-
-import io.paperdb.Paper;
-
-public class remote_control {
-    public static void disableVPNHotspot(android.net.wifi.WifiManager wifiManager) {
-        Paper.book("temp").write("wifi_open", false);
-        com.qwe7002.telegram_rc.root_kit.ActivityManage.forceStopService("be.mygod.vpnhotspot");
-        com.qwe7002.telegram_rc.root_kit.Networks.setWifi(false);
+object RemoteControl {
+    @JvmStatic
+    fun disableVPNHotspot(wifiManager: WifiManager) {
+        Paper.book("temp").write("wifi_open", false)
+        forceStopService("be.mygod.vpnhotspot")
+        setWifi(false)
         try {
-            while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_DISABLED) {
-                Thread.sleep(100);
+            while (wifiManager.wifiState != WifiManager.WIFI_STATE_DISABLED) {
+                Thread.sleep(100)
             }
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.sleep(1000)
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
-        com.qwe7002.telegram_rc.root_kit.Networks.setWifi(true);
+        setWifi(true)
         try {
-            while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
-                Thread.sleep(100);
+            while (wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+                Thread.sleep(100)
             }
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.sleep(1000)
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
     }
 
-    public static void enableVPNHotspot(android.net.wifi.WifiManager wifiManager) {
-        if (wifiManager.isWifiEnabled()) {
-            disableVPNHotspot(wifiManager);
+    @JvmStatic
+    fun enableVPNHotspot(wifiManager: WifiManager) {
+        if (wifiManager.isWifiEnabled) {
+            disableVPNHotspot(wifiManager)
         }
-        Paper.book("temp").write("wifi_open", true);
-        com.qwe7002.telegram_rc.root_kit.Networks.setWifi(true);
+        Paper.book("temp").write("wifi_open", true)
+        setWifi(true)
         try {
-            while (wifiManager.getWifiState() != android.net.wifi.WifiManager.WIFI_STATE_ENABLED) {
-                Thread.sleep(100);
+            while (wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
+                Thread.sleep(100)
             }
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.sleep(1000)
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
 
-        com.qwe7002.telegram_rc.root_kit.ActivityManage.startForegroundService("be.mygod.vpnhotspot", "be.mygod.vpnhotspot.RepeaterService");
+        startForegroundService("be.mygod.vpnhotspot", "be.mygod.vpnhotspot.RepeaterService")
     }
 
 
-    public static void enableHotspot(Context context, int mode) {
-        Paper.book("temp").write("tether_open", true);
-        TetherManager manager = new TetherManager(context);
-        manager.startTethering(mode, null);
+    @JvmStatic
+    fun enableHotspot(context: Context, mode: Int) {
+        Paper.book("temp").write("tether_open", true)
+        val manager = TetherManager(context)
+        manager.startTethering(mode, null)
     }
 
-    public static void disableHotspot(Context context, int mode) {
-        Paper.book("temp").write("tether_open", false);
-        TetherManager manager = new TetherManager(context);
-        manager.stopTethering(mode);
+    @JvmStatic
+    fun disableHotspot(context: Context, mode: Int) {
+        Paper.book("temp").write("tether_open", false)
+        val manager = TetherManager(context)
+        manager.stopTethering(mode)
     }
 
-    public static boolean isHotspotActive(Context context) {
-        TetherManager manager = new TetherManager(context);
-        Paper.book("temp").write("tether_open", manager.isTetherActive());
-        return manager.isTetherActive();
+    @JvmStatic
+    fun isHotspotActive(context: Context): Boolean {
+        val manager = TetherManager(context)
+        Paper.book("temp").write("tether_open", manager.isTetherActive)
+        return manager.isTetherActive
     }
 
 
-    public static boolean isVPNHotspotExist(@NotNull Context context) {
-        ApplicationInfo info;
+    @JvmStatic
+    fun isVPNHotspotExist(context: Context): Boolean {
+        var info: ApplicationInfo?
         try {
-            info = context.getPackageManager().getApplicationInfo("be.mygod.vpnhotspot", 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            info = null;
+            info = context.packageManager.getApplicationInfo("be.mygod.vpnhotspot", 0)
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+            info = null
         }
 
-        return info != null;
+        return info != null
     }
-    public static boolean isShizukuExist(@NotNull Context context) {
-        ApplicationInfo info;
-        try {
-            info = context.getPackageManager().getApplicationInfo("moe.shizuku.privileged.api", 0);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            info = null;
-        }
-
-        return info != null;
-    }
-
-
-
 }

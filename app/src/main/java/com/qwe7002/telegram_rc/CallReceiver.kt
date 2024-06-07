@@ -57,7 +57,7 @@ class CallReceiver : BroadcastReceiver() {
         private val slot = Paper.book("temp").read<Int>("incoming_slot")!!
 
         init {
-            incomingNumber = Paper.book("temp").read("incoming_number")
+            incomingNumber = Paper.book("temp").read<String>("incoming_number").toString()
         }
 
         @Deprecated("Deprecated in Java")
@@ -70,40 +70,40 @@ class CallReceiver : BroadcastReceiver() {
                     Log.i("call_status_listener", "Uninitialized, Phone receiver is deactivated.")
                     return
                 }
-                val bot_token = sharedPreferences.getString("bot_token", "")
-                val chat_id = sharedPreferences.getString("chat_id", "")
-                val request_uri = network.getUrl(bot_token, "sendMessage")
-                val request_body = request_message()
-                request_body.chat_id = chat_id
-                request_body.message_thread_id =
+                val botToken = sharedPreferences.getString("bot_token", "")
+                val chatId = sharedPreferences.getString("chat_id", "")
+                val requestUri = network.getUrl(botToken, "sendMessage")
+                val requestBody = request_message()
+                requestBody.chat_id = chatId
+                requestBody.message_thread_id =
                     sharedPreferences.getString("message_thread_id", "")
-                val dual_sim = other.getDualSimCardDisplay(
+                val dualSim = other.getDualSimCardDisplay(
                     context,
                     slot,
                     sharedPreferences.getBoolean("display_dual_sim_display_name", false)
                 )
-                request_body.text = """
-                    [$dual_sim${context.getString(R.string.missed_call_head)}]
+                requestBody.text = """
+                    [$dualSim${context.getString(R.string.missed_call_head)}]
                     ${context.getString(R.string.Incoming_number)}$incomingNumber
                     """.trimIndent()
 
-                val request_body_raw = Gson().toJson(request_body)
-                val body: RequestBody = request_body_raw.toRequestBody(CONST.JSON)
-                val okhttp_client =
+                val requestBodyRaw = Gson().toJson(requestBody)
+                val body: RequestBody = requestBodyRaw.toRequestBody(CONST.JSON)
+                val okhttpClient =
                     network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
-                val request: Request = Request.Builder().url(request_uri).method("POST", body).build()
-                val call = okhttp_client.newCall(request)
-                val error_head = "Send missed call error:"
+                val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
+                val call = okhttpClient.newCall(request)
+                val errorHead = "Send missed call error:"
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         e.printStackTrace()
-                        log.writeLog(context, error_head + e.message)
+                        log.writeLog(context, errorHead + e.message)
                         sms.sendFallbackSMS(
                             context,
-                            request_body.text,
+                            requestBody.text,
                             other.getSubId(context, slot)
                         )
-                        resend.addResendLoop(request_body.text)
+                        resend.addResendLoop(requestBody.text)
                     }
 
                     @Throws(IOException::class)
@@ -111,10 +111,10 @@ class CallReceiver : BroadcastReceiver() {
                         if (response.code != 200) {
                             log.writeLog(
                                 context,
-                                error_head + response.code + " " + Objects.requireNonNull(response.body)
+                                errorHead + response.code + " " + Objects.requireNonNull(response.body)
                                     .string()
                             )
-                            resend.addResendLoop(request_body.text)
+                            resend.addResendLoop(requestBody.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!other.isPhoneNumber(incomingNumber!!)) {
@@ -135,7 +135,7 @@ class CallReceiver : BroadcastReceiver() {
 
         companion object {
             private var lastStatus = TelephonyManager.CALL_STATE_IDLE
-            private var incomingNumber: String? = null
+            private lateinit var incomingNumber: String
         }
     }
 }
