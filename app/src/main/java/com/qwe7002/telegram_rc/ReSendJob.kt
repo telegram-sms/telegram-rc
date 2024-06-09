@@ -6,14 +6,12 @@ import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
-import android.net.NetworkRequest
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.request_message
 import com.qwe7002.telegram_rc.static_class.CONST
-import com.qwe7002.telegram_rc.static_class.log
+import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
 import io.paperdb.Paper
-import kotlinx.coroutines.Job
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -42,7 +40,7 @@ class ReSendJob : JobService() {
                 )
             }
             if (sendList.isNotEmpty()){
-                log.writeLog(applicationContext, "The resend failure message is complete.")
+                LogManage.writeLog(applicationContext, "The resend failure message is complete.")
             }
             jobFinished(params, false)
         }.start()
@@ -78,7 +76,7 @@ class ReSendJob : JobService() {
                 Paper.book().write(tableName, resendListLocal)
             }
         } catch (e: IOException) {
-            log.writeLog(applicationContext, "An error occurred while resending: " + e.message)
+            LogManage.writeLog(applicationContext, "An error occurred while resending: " + e.message)
             e.printStackTrace()
         }
     }

@@ -62,7 +62,7 @@
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="location"
-            android:permission="location"
+            android:permission="android.permission.FOREGROUND_SERVICE"
             android:process=":beacon" />
 
         <activity
@@ -95,6 +95,7 @@
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="specialUse"
+            android:permission="android.permission.FOREGROUND_SERVICE"
             android:process=":command" />
 
         <activity android:name=".LogcatActivity" />
@@ -103,6 +104,7 @@
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="specialUse"
+            android:permission="android.permission.FOREGROUND_SERVICE"
             android:process=":battery" />
 
         <receiver

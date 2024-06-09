@@ -67,7 +67,7 @@ public class sms {
             return;
         }
         if (!other.isPhoneNumber(send_to)) {
-            log.writeLog(context, "[" + send_to + "] is an illegal phone number");
+            LogManage.writeLog(context, "[" + send_to + "] is an illegal phone number");
             return;
         }
         SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
@@ -106,7 +106,7 @@ public class sms {
             }
         } catch (IOException e) {
             Log.d("sendSMS", "sendSMS: "+e);
-            log.writeLog(context, "failed to send message:" + e.getMessage());
+            LogManage.writeLog(context, "failed to send message:" + e.getMessage());
         }
         ArrayList<String> divideContents = sms_manager.divideMessage(content);
         ArrayList<PendingIntent> send_receiver_list = new ArrayList<>();

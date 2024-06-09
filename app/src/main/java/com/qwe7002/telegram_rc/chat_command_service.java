@@ -38,7 +38,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.data_structure.sms_request_info;
 import com.qwe7002.telegram_rc.root_kit.Radio;
 import com.qwe7002.telegram_rc.static_class.CONST;
-import com.qwe7002.telegram_rc.static_class.log;
+import com.qwe7002.telegram_rc.static_class.LogManage;
 import com.qwe7002.telegram_rc.static_class.network;
 import com.qwe7002.telegram_rc.static_class.notify;
 import com.qwe7002.telegram_rc.static_class.other;
@@ -212,7 +212,7 @@ public class chat_command_service extends Service {
             response = call.execute();
         } catch (IOException e) {
             e.printStackTrace();
-            log.writeLog(context, "Get username failed:" + e.getMessage());
+            LogManage.writeLog(context, "Get username failed:" + e.getMessage());
             return false;
         }
         if (response.code() == 200) {
@@ -226,7 +226,7 @@ public class chat_command_service extends Service {
             JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
             if (result_obj.get("ok").getAsBoolean()) {
                 bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                log.writeLog(context, "Get the bot username: " + bot_username);
+                LogManage.writeLog(context, "Get the bot username: " + bot_username);
             }
             return true;
         }
@@ -322,7 +322,7 @@ public class chat_command_service extends Service {
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    log.writeLog(context, "failed to send message:" + e.getMessage());
+                    LogManage.writeLog(context, "failed to send message:" + e.getMessage());
                 }
                 return;
             }
@@ -337,7 +337,7 @@ public class chat_command_service extends Service {
             return;
         }
         if (message_obj == null) {
-            log.writeLog(context, "Request type is not allowed by security policy.");
+            LogManage.writeLog(context, "Request type is not allowed by security policy.");
             return;
         }
 
@@ -367,7 +367,7 @@ public class chat_command_service extends Service {
         assert from_obj != null;
         String from_id = from_obj.get("id").getAsString();
         if (!Objects.equals(chat_id, from_id)) {
-            log.writeLog(context, "Chat ID[" + from_id + "] not allow");
+            LogManage.writeLog(context, "Chat ID[" + from_id + "] not allow");
             return;
         }
 
@@ -499,7 +499,7 @@ public class chat_command_service extends Service {
                 android.util.Log.d(TAG, "receive_handle: " + request_body.text);
                 break;
             case "/log":
-                request_body.text = getString(R.string.system_message_head) + log.readLog(context, 10);
+                request_body.text = getString(R.string.system_message_head) + LogManage.readLog(context, 10);
                 break;
             case "/wifi":
                 if (!sharedPreferences.getBoolean("root", false)) {
@@ -626,7 +626,7 @@ public class chat_command_service extends Service {
                             Paper.book().write("spam_sms_list", resend_list_local);
                         }
                     }
-                    log.writeLog(context, "Send spam message is complete.");
+                    LogManage.writeLog(context, "Send spam message is complete.");
                 }).start();
                 return;
             case "/autoswitch":
@@ -772,7 +772,7 @@ public class chat_command_service extends Service {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log.writeLog(context, error_head + e.getMessage());
+                LogManage.writeLog(context, error_head + e.getMessage());
             }
 
             @Override
@@ -780,7 +780,7 @@ public class chat_command_service extends Service {
                 assert response.body() != null;
                 String response_string = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
-                    log.writeLog(context, error_head + response.code() + " " + response_string);
+                    LogManage.writeLog(context, error_head + response.code() + " " + response_string);
                     return;
                 }
                 String splite_command_value = final_command.replace("_", "");
@@ -865,7 +865,7 @@ public class chat_command_service extends Service {
     private void when_network_change() {
         if (network.checkNetworkStatus(context)) {
             if (!thread_main.isAlive()) {
-                log.writeLog(context, "Network connections has been restored.");
+                LogManage.writeLog(context, "Network connections has been restored.");
                 thread_main = new Thread(new thread_main_runnable());
                 thread_main.start();
             }
@@ -909,7 +909,7 @@ public class chat_command_service extends Service {
                 bot_username = Paper.book().read("bot_username", null);
                 if (bot_username == null) {
                     while (!getMe()) {
-                        log.writeLog(context, "Failed to get bot Username, Wait 5 seconds and try again.");
+                        LogManage.writeLog(context, "Failed to get bot Username, Wait 5 seconds and try again.");
                         try {
                             Thread.sleep(5000);
                         } catch (InterruptedException e) {
@@ -943,11 +943,11 @@ public class chat_command_service extends Service {
                 } catch (IOException e) {
                     e.printStackTrace();
                     if (!network.checkNetworkStatus(context)) {
-                        log.writeLog(context, "No network connections available. ");
+                        LogManage.writeLog(context, "No network connections available. ");
                         break;
                     }
                     int sleep_time = 5;
-                    log.writeLog(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
+                    LogManage.writeLog(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
                     try {
                         Thread.sleep(sleep_time * 1000L);
                     } catch (InterruptedException e1) {
@@ -974,7 +974,7 @@ public class chat_command_service extends Service {
                         first_request = false;
                     }
                 } else {
-                    log.writeLog(context, "response code:" + response.code());
+                    LogManage.writeLog(context, "response code:" + response.code());
                     if (response.code() == 401) {
                         assert response.body() != null;
                         String result;

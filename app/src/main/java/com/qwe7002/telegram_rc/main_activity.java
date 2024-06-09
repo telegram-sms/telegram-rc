@@ -47,7 +47,7 @@ import com.qwe7002.telegram_rc.data_structure.polling_json;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.root_kit.Shell;
 import com.qwe7002.telegram_rc.static_class.CONST;
-import com.qwe7002.telegram_rc.static_class.log;
+import com.qwe7002.telegram_rc.static_class.LogManage;
 import com.qwe7002.telegram_rc.static_class.network;
 import com.qwe7002.telegram_rc.static_class.other;
 import com.qwe7002.telegram_rc.static_class.service;
@@ -267,7 +267,7 @@ public class main_activity extends AppCompatActivity {
                     Log.e(TAG, "onFailure: ", e);
                     progress_dialog.cancel();
                     String error_message = error_head + e.getMessage();
-                    log.writeLog(context, error_message);
+                    LogManage.writeLog(context, error_message);
                     Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                     Looper.loop();
@@ -280,7 +280,7 @@ public class main_activity extends AppCompatActivity {
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description").getAsString();
-                        log.writeLog(context, error_message);
+                        LogManage.writeLog(context, error_message);
                         Looper.prepare();
                         Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                         Looper.loop();
@@ -402,7 +402,7 @@ public class main_activity extends AppCompatActivity {
                     Log.e(TAG, "onFailure: ", e);
                     progressDialog.cancel();
                     String error_message = error_head + e.getMessage();
-                    log.writeLog(context, error_message);
+                    LogManage.writeLog(context, error_message);
                     Looper.prepare();
                     Snackbar.make(v, error_message, Snackbar.LENGTH_LONG)
                             .show();
@@ -417,7 +417,7 @@ public class main_activity extends AppCompatActivity {
                         String result = Objects.requireNonNull(response.body()).string();
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String error_message = error_head + result_obj.get("description");
-                        log.writeLog(context, error_message);
+                        LogManage.writeLog(context, error_message);
                         Looper.prepare();
                         Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
                         Looper.loop();

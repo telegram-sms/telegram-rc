@@ -13,7 +13,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.request_message
 import com.qwe7002.telegram_rc.static_class.CONST
-import com.qwe7002.telegram_rc.static_class.log
+import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.notify
 import com.qwe7002.telegram_rc.static_class.other
@@ -126,7 +126,7 @@ class NotificationListenerService : NotificationListenerService() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                log.writeLog(applicationContext, error_head + e.message)
+                LogManage.writeLog(applicationContext, error_head + e.message)
                 Resend.addResendLoop(requestBody.text)
             }
 
@@ -134,7 +134,7 @@ class NotificationListenerService : NotificationListenerService() {
             override fun onResponse(call: Call, response: Response) {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
-                    log.writeLog(applicationContext, error_head + response.code + " " + result)
+                    LogManage.writeLog(applicationContext, error_head + response.code + " " + result)
                     Resend.addResendLoop(requestBody.text)
                 }
             }

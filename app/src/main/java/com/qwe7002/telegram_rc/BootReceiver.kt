@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.qwe7002.telegram_rc.root_kit.Networks
-import com.qwe7002.telegram_rc.static_class.log
+import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.service
 import io.paperdb.Paper
 import kotlin.String
@@ -17,7 +17,7 @@ class BootReceiver : BroadcastReceiver() {
         Paper.init(context)
         val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
         if (sharedPreferences.getBoolean("initialized", false)) {
-            log.writeLog(
+            LogManage.writeLog(
                 context,
                 "Received [" + intent.action + "] broadcast, starting background service."
             )

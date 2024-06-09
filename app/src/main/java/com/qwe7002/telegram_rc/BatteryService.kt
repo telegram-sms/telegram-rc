@@ -17,7 +17,7 @@ import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.request_message
 import com.qwe7002.telegram_rc.static_class.CONST
-import com.qwe7002.telegram_rc.static_class.log
+import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.notify
 import com.qwe7002.telegram_rc.static_class.other
@@ -127,7 +127,7 @@ class BatteryService : Service() {
             }
         } catch (e: IOException) {
             e.printStackTrace()
-            log.writeLog(applicationContext, errorHead + e.message)
+            LogManage.writeLog(applicationContext, errorHead + e.message)
             if (obj.action == Intent.ACTION_BATTERY_LOW) {
                 sms.sendFallbackSMS(applicationContext, requestBody.text, -1)
             }

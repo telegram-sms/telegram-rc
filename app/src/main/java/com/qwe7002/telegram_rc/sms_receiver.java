@@ -19,7 +19,7 @@ import com.github.sumimakito.codeauxlib.CodeauxLibPortable;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.CONST;
-import com.qwe7002.telegram_rc.static_class.log;
+import com.qwe7002.telegram_rc.static_class.LogManage;
 import com.qwe7002.telegram_rc.static_class.network;
 import com.qwe7002.telegram_rc.static_class.other;
 import com.qwe7002.telegram_rc.static_class.Resend;
@@ -86,7 +86,7 @@ public class sms_receiver extends BroadcastReceiver {
             messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
         }
         if (messages.length == 0) {
-            log.writeLog(context, "Message length is equal to 0.");
+            LogManage.writeLog(context, "Message length is equal to 0.");
             return;
         }
 
@@ -129,7 +129,7 @@ public class sms_receiver extends BroadcastReceiver {
                     is_verification_code = true;
                 }
             } else {
-                log.writeLog(context, "SMS exceeds 140 characters, no verification code is recognized.");
+                LogManage.writeLog(context, "SMS exceeds 140 characters, no verification code is recognized.");
             }
 
         }
@@ -237,7 +237,7 @@ public class sms_receiver extends BroadcastReceiver {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.d(TAG, String.valueOf(e));
-                log.writeLog(context, error_head + e.getMessage());
+                LogManage.writeLog(context, error_head + e.getMessage());
                 sms.sendFallbackSMS(context, final_raw_request_body_text, subId);
                 Resend.addResendLoop(request_body.text);
                 commandHandle(sharedPreferences, message_body, data_enable);
@@ -247,14 +247,14 @@ public class sms_receiver extends BroadcastReceiver {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 String result = Objects.requireNonNull(response.body()).string();
                 if (response.code() != 200) {
-                    log.writeLog(context, error_head + response.code() + " " + result);
+                    LogManage.writeLog(context, error_head + response.code() + " " + result);
                     if (!final_is_flash) {
                         sms.sendFallbackSMS(context, final_raw_request_body_text, subId);
                     }
                     Resend.addResendLoop(request_body.text);
                 } else {
                     if (!other.isPhoneNumber(message_address)) {
-                        log.writeLog(context, "[" + message_address + "] Not a regular phone number.");
+                        LogManage.writeLog(context, "[" + message_address + "] Not a regular phone number.");
                         return;
                     }
                     other.addMessageList(other.getMessageId(result), message_address, slot);

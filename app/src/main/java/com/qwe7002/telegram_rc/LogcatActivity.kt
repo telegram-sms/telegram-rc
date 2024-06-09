@@ -8,7 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.qwe7002.telegram_rc.static_class.log
+import com.qwe7002.telegram_rc.static_class.LogManage
 
 @Suppress("DEPRECATION")
 class LogcatActivity : AppCompatActivity() {
@@ -21,7 +21,7 @@ class LogcatActivity : AppCompatActivity() {
         setContentView(R.layout.activity_logcat)
         logcatTextview = findViewById(R.id.logcat_textview)
         this.setTitle(R.string.logcat)
-        logcatTextview.text = log.readLog(applicationContext, line)
+        logcatTextview.text = LogManage.readLog(applicationContext, line)
         observer = fileObserver(applicationContext, logcatTextview)
         logcatTextview.setGravity(Gravity.BOTTOM)
     }
@@ -33,7 +33,7 @@ class LogcatActivity : AppCompatActivity() {
 
     public override fun onResume() {
         super.onResume()
-        logcatTextview.text = log.readLog(applicationContext, line)
+        logcatTextview.text = LogManage.readLog(applicationContext, line)
         observer.startWatching()
     }
 
@@ -43,7 +43,7 @@ class LogcatActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        log.resetLogFile(applicationContext)
+        LogManage.resetLogFile(applicationContext)
         return true
     }
 
@@ -53,7 +53,7 @@ class LogcatActivity : AppCompatActivity() {
         ) {
         override fun onEvent(event: Int, path: String?) {
             if (event == MODIFY && path!!.contains("error.log")) {
-                runOnUiThread { logcat!!.text = log.readLog(context, line) }
+                runOnUiThread { logcat!!.text = LogManage.readLog(context, line) }
             }
         }
     }

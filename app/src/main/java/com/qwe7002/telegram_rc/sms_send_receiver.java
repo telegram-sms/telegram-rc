@@ -15,7 +15,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.CONST;
-import com.qwe7002.telegram_rc.static_class.log;
+import com.qwe7002.telegram_rc.static_class.LogManage;
 import com.qwe7002.telegram_rc.static_class.network;
 import com.qwe7002.telegram_rc.static_class.Resend;
 import com.qwe7002.telegram_rc.static_class.sms;
@@ -86,7 +86,7 @@ public class sms_send_receiver extends BroadcastReceiver {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 e.printStackTrace();
-                log.writeLog(context, error_head + e.getMessage());
+                LogManage.writeLog(context, error_head + e.getMessage());
                 sms.sendFallbackSMS(context, request_body.text, sub);
                 Resend.addResendLoop(request_body.text);
             }
@@ -94,7 +94,7 @@ public class sms_send_receiver extends BroadcastReceiver {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
-                    log.writeLog(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
+                    LogManage.writeLog(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
                     Resend.addResendLoop(request_body.text);
                 }
             }
