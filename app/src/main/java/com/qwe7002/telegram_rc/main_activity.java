@@ -663,7 +663,7 @@ public class main_activity extends AppCompatActivity {
                 startActivity(new Intent(this, notify_apps_list_activity.class));
                 return true;
             case R.id.spam_sms_keyword_edittext:
-                startActivity(new Intent(this, spam_list_activity.class));
+                startActivity(new Intent(this, SpamActivity.class));
                 return true;
             case R.id.set_proxy_menu_item:
                 View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
