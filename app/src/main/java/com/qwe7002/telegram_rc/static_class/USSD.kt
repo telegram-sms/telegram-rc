@@ -68,6 +68,7 @@ object USSD {
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 Looper.prepare()
+                @Suppress("DEPRECATION")
                 telephonyManager!!.sendUssdRequest(
                     ussd,
                     USSDCallBack(context, sharedPreferences, messageId),
