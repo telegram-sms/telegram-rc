@@ -22,7 +22,7 @@ import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.log;
 import com.qwe7002.telegram_rc.static_class.network;
 import com.qwe7002.telegram_rc.static_class.other;
-import com.qwe7002.telegram_rc.static_class.resend;
+import com.qwe7002.telegram_rc.static_class.Resend;
 import com.qwe7002.telegram_rc.static_class.service;
 import com.qwe7002.telegram_rc.static_class.sms;
 import com.qwe7002.telegram_rc.static_class.ussd;
@@ -239,7 +239,7 @@ public class sms_receiver extends BroadcastReceiver {
                 Log.d(TAG, String.valueOf(e));
                 log.writeLog(context, error_head + e.getMessage());
                 sms.sendFallbackSMS(context, final_raw_request_body_text, subId);
-                resend.addResendLoop(request_body.text);
+                Resend.addResendLoop(request_body.text);
                 commandHandle(sharedPreferences, message_body, data_enable);
             }
 
@@ -251,7 +251,7 @@ public class sms_receiver extends BroadcastReceiver {
                     if (!final_is_flash) {
                         sms.sendFallbackSMS(context, final_raw_request_body_text, subId);
                     }
-                    resend.addResendLoop(request_body.text);
+                    Resend.addResendLoop(request_body.text);
                 } else {
                     if (!other.isPhoneNumber(message_address)) {
                         log.writeLog(context, "[" + message_address + "] Not a regular phone number.");

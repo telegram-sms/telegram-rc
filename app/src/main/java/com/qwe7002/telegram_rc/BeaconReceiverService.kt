@@ -43,7 +43,7 @@ import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.notify
 import com.qwe7002.telegram_rc.static_class.other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
-import com.qwe7002.telegram_rc.static_class.resend
+import com.qwe7002.telegram_rc.static_class.Resend
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -410,7 +410,7 @@ class BeaconReceiverService : Service() {
         call.enqueue(object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
-                resend.addResendLoop(request_body.text)
+                Resend.addResendLoop(request_body.text)
                 e.printStackTrace()
             }
 

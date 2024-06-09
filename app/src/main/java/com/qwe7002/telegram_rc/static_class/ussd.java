@@ -14,7 +14,7 @@ import androidx.core.app.ActivityCompat;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.R;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.ussd_request_callback;
+import com.qwe7002.telegram_rc.USSDCallBack;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -65,7 +65,7 @@ public class ussd {
             }
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                 Looper.prepare();
-                telephonyManager.sendUssdRequest(ussd, new ussd_request_callback(context, sharedPreferences, message_id), new Handler());
+                telephonyManager.sendUssdRequest(ussd, new USSDCallBack(context, sharedPreferences, message_id), new Handler());
                 Looper.loop();
             }
         }).start();

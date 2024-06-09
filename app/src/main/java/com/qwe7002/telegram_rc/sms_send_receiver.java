@@ -17,7 +17,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message;
 import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.log;
 import com.qwe7002.telegram_rc.static_class.network;
-import com.qwe7002.telegram_rc.static_class.resend;
+import com.qwe7002.telegram_rc.static_class.Resend;
 import com.qwe7002.telegram_rc.static_class.sms;
 
 import org.jetbrains.annotations.NotNull;
@@ -88,14 +88,14 @@ public class sms_send_receiver extends BroadcastReceiver {
                 e.printStackTrace();
                 log.writeLog(context, error_head + e.getMessage());
                 sms.sendFallbackSMS(context, request_body.text, sub);
-                resend.addResendLoop(request_body.text);
+                Resend.addResendLoop(request_body.text);
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.code() != 200) {
                     log.writeLog(context, error_head + response.code() + " " + Objects.requireNonNull(response.body()).string());
-                    resend.addResendLoop(request_body.text);
+                    Resend.addResendLoop(request_body.text);
                 }
             }
         });

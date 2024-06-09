@@ -14,7 +14,7 @@ import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.log
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.other
-import com.qwe7002.telegram_rc.static_class.resend
+import com.qwe7002.telegram_rc.static_class.Resend
 import com.qwe7002.telegram_rc.static_class.sms
 import io.paperdb.Paper
 import okhttp3.Call
@@ -103,7 +103,7 @@ class CallReceiver : BroadcastReceiver() {
                             requestBody.text,
                             other.getSubId(context, slot)
                         )
-                        resend.addResendLoop(requestBody.text)
+                        Resend.addResendLoop(requestBody.text)
                     }
 
                     @Throws(IOException::class)
@@ -114,7 +114,7 @@ class CallReceiver : BroadcastReceiver() {
                                 errorHead + response.code + " " + Objects.requireNonNull(response.body)
                                     .string()
                             )
-                            resend.addResendLoop(requestBody.text)
+                            Resend.addResendLoop(requestBody.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!other.isPhoneNumber(incomingNumber!!)) {

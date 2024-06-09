@@ -16,7 +16,7 @@ import com.qwe7002.telegram_rc.static_class.log
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.notify
 import com.qwe7002.telegram_rc.static_class.other
-import com.qwe7002.telegram_rc.static_class.resend
+import com.qwe7002.telegram_rc.static_class.Resend
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -120,7 +120,7 @@ class NotificationListenerService : NotificationListenerService() {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 log.writeLog(applicationContext, error_head + e.message)
-                resend.addResendLoop(requestBody.text)
+                Resend.addResendLoop(requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -128,7 +128,7 @@ class NotificationListenerService : NotificationListenerService() {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
                     log.writeLog(applicationContext, error_head + response.code + " " + result)
-                    resend.addResendLoop(requestBody.text)
+                    Resend.addResendLoop(requestBody.text)
                 }
             }
         })
