@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -48,10 +49,16 @@ class NotificationListenerService : NotificationListenerService() {
             applicationContext,
             getString(R.string.Notification_Listener_title)
         )
-        startForeground(
-            notify.NOTIFICATION_LISTENER_SERVICE, notification.build(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                notify.NOTIFICATION_LISTENER_SERVICE, notification.build(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        }else{
+            startForeground(
+                notify.NOTIFICATION_LISTENER_SERVICE, notification.build()
+            )
+        }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {

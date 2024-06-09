@@ -117,7 +117,7 @@ class CallReceiver : BroadcastReceiver() {
                             Resend.addResendLoop(requestBody.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
-                            if (!other.isPhoneNumber(incomingNumber!!)) {
+                            if (!other.isPhoneNumber(incomingNumber)) {
                                 log.writeLog(
                                     context,
                                     "[$incomingNumber] Not a regular phone number."

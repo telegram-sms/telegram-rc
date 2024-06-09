@@ -81,10 +81,16 @@ class BeaconReceiverService : Service() {
     private fun startForegroundNotification() {
         val notification =
             other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
-        startForeground(
-            notify.BEACON_SERVICE, notification.build(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                notify.BEACON_SERVICE, notification.build(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+            )
+        }else{
+            startForeground(
+                notify.BEACON_SERVICE, notification.build()
+            )
+        }
     }
 
 
@@ -288,10 +294,10 @@ class BeaconReceiverService : Service() {
                 }
                 ++notFoundCount
             }
-            val STATUS_STANDBY = -1
-            val STATUS_ENABLE_AP = 0
-            val STATUS_DISABLE_AP = 1
-            var switchStatus = STATUS_STANDBY
+            val STANDBY = -1
+            val ENABLE_AP = 0
+            val DISABLE_AP = 1
+            var switchStatus = STANDBY
             Log.d(TAG, "detect_singal_count: $detectCount")
             Log.d(TAG, "not_found_count: $notFoundCount")
             if (wifiIsEnableStatus && foundBeacon) {
@@ -307,7 +313,7 @@ class BeaconReceiverService : Service() {
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
                         }
-                        switchStatus = STATUS_DISABLE_AP
+                        switchStatus = DISABLE_AP
                     }
                 } else {
                     if (detectCount >= config.enableCount) {
@@ -321,7 +327,7 @@ class BeaconReceiverService : Service() {
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
                         }
-                        switchStatus = STATUS_ENABLE_AP
+                        switchStatus = ENABLE_AP
                     }
                 }
             }
@@ -338,7 +344,7 @@ class BeaconReceiverService : Service() {
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
                         }
-                        switchStatus = STATUS_ENABLE_AP
+                        switchStatus = ENABLE_AP
                     }
                 } else {
                     if (notFoundCount >= config.disableCount) {
@@ -352,19 +358,19 @@ class BeaconReceiverService : Service() {
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
                         }
-                        switchStatus = STATUS_DISABLE_AP
+                        switchStatus = DISABLE_AP
                     }
                 }
             }
 
             var message: String? = null
             when (switchStatus) {
-                STATUS_ENABLE_AP -> message =
+                ENABLE_AP -> message =
                     "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
                         getString(R.string.action_success)
                     }$beaconStatus"
 
-                STATUS_DISABLE_AP -> message =
+                DISABLE_AP -> message =
                     "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
                         getString(R.string.action_success)
                     }$beaconStatus"

@@ -16,6 +16,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Process;
@@ -143,7 +144,11 @@ public class chat_command_service extends Service {
 
     void startForegroundNotification() {
         Notification.Builder notification = other.getNotificationObj(context, getString(R.string.chat_command_service_name));
-        startForeground(notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        }else{
+            startForeground(notify.CHAT_COMMAND, notification.build());
+        }
     }
 
 
