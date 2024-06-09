@@ -650,7 +650,7 @@ public class main_activity extends AppCompatActivity {
                     Snackbar.make(findViewById(R.id.bot_token_editview), "No permission.", Snackbar.LENGTH_LONG).show();
                     return false;
                 }
-                startActivity(new Intent(this, beacon_config_activity.class));
+                startActivity(new Intent(this, BeaconActivity.class));
                 return true;
             case R.id.set_notify_menu_item:
                 if (!service.isNotifyListener(context)) {

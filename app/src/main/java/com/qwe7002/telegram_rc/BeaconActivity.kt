@@ -1,194 +1,195 @@
-package com.qwe7002.telegram_rc;
+package com.qwe7002.telegram_rc
 
-import static com.qwe7002.telegram_rc.data_structure.BeaconModelKt.beaconItemName;
+import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.ListView
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.qwe7002.telegram_rc.config.beacon
+import com.qwe7002.telegram_rc.data_structure.BeaconModel
+import com.qwe7002.telegram_rc.data_structure.beaconItemName
+import com.qwe7002.telegram_rc.static_class.RemoteControl.isVPNHotspotExist
+import io.paperdb.Paper
 
-import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.Bundle;
-import android.provider.Settings;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.qwe7002.telegram_rc.config.beacon;
-import com.qwe7002.telegram_rc.data_structure.BeaconModel;
-import com.qwe7002.telegram_rc.static_class.RemoteControl;
-
-import java.util.ArrayList;
-
-import io.paperdb.Paper;
-
-public class beacon_config_activity extends AppCompatActivity {
-    protected static final String TAG = "monitoring_activity";
-    private final BroadcastReceiver flushReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Gson gson = new Gson();
-            ArrayList<BeaconModel> arrayList =gson.fromJson( intent.getStringExtra("beaconList"),new TypeToken<ArrayList<BeaconModel>>(){}.getType());
-            assert arrayList != null;
-            flushListView(arrayList);
+class BeaconActivity : AppCompatActivity() {
+    private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val gson = Gson()
+            val arrayList = gson.fromJson<ArrayList<BeaconModel>>(
+                intent.getStringExtra("beaconList"),
+                object : TypeToken<ArrayList<BeaconModel>>() {}.type
+            )!!
+            flushListView(arrayList)
         }
-    };
+    }
 
-    void flushListView(ArrayList<BeaconModel> arrayList) {
-        ListView beacon_listview = findViewById(R.id.beacon_listview);
-        if (!arrayList.isEmpty()) {
-            ArrayList<BeaconModel> list = new ArrayList<>();
-            for (BeaconModel beacon : arrayList) {
-                if (beacon.getDistance() < 200.0) {
-                    list.add(beacon);
+    fun flushListView(arrayList: ArrayList<BeaconModel>) {
+        val beaconListview = findViewById<ListView>(R.id.beacon_listview)
+        if (arrayList.isNotEmpty()) {
+            val list = ArrayList<BeaconModel>()
+            for (beacon in arrayList) {
+                if (beacon.distance < 200.0) {
+                    list.add(beacon)
                 }
             }
 
-            runOnUiThread(() -> {
-                CustomBeaconAdapter adapter = new CustomBeaconAdapter(list, beacon_config_activity.this);
-                beacon_listview.setAdapter(adapter);
-            });
+            runOnUiThread {
+                val adapter = CustomBeaconAdapter(list, this@BeaconActivity)
+                beaconListview.adapter = adapter
+            }
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Context context = getApplicationContext();
-        Paper.init(context);
-        setContentView(R.layout.activity_beacon);
-        flushListView(new ArrayList<>());
-        registerReceiver(flushReceiver,
-                new IntentFilter("flush_beacons_list"), Context.RECEIVER_EXPORTED);
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val context = applicationContext
+        Paper.init(context)
+        setContentView(R.layout.activity_beacon)
+        flushListView(ArrayList())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                flushReceiver,
+                IntentFilter("flush_beacons_list"), RECEIVER_EXPORTED
+            )
+        } else {
+            registerReceiver(
+                flushReceiver,
+                IntentFilter("flush_beacons_list")
+            )
+        }
     }
 
-    @Override
-    protected void onDestroy() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(flushReceiver);
-        super.onDestroy();
+    override fun onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(flushReceiver)
+        super.onDestroy()
     }
 
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        Context context = getApplicationContext();
-        LayoutInflater inflater = this.getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.set_beacon_layout, null);
-        SwitchMaterial enable = dialogView.findViewById(R.id.beacon_enable_switch);
-        SwitchMaterial useVpnHotspotSwitch = dialogView.findViewById(R.id.beacon_use_vpn_hotspot_switch);
-        EditText disableCount = dialogView.findViewById(R.id.beacon_disable_count_editview);
-        EditText enableCount = dialogView.findViewById(R.id.beacon_enable_count_editview);
-        beacon config = Paper.book("beacon").read("config", new beacon());
-        assert config != null;
-        useVpnHotspotSwitch.setChecked(config.useVpnHotspot);
-        if (!RemoteControl.isVPNHotspotExist(context)) {
-            useVpnHotspotSwitch.setChecked(false);
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val context = applicationContext
+        val inflater = this.layoutInflater
+        val dialogView = inflater.inflate(R.layout.set_beacon_layout, null)
+        val enable = dialogView.findViewById<SwitchMaterial>(R.id.beacon_enable_switch)
+        val useVpnHotspotSwitch =
+            dialogView.findViewById<SwitchMaterial>(R.id.beacon_use_vpn_hotspot_switch)
+        val disableCount = dialogView.findViewById<EditText>(R.id.beacon_disable_count_editview)
+        val enableCount = dialogView.findViewById<EditText>(R.id.beacon_enable_count_editview)
+        val config = Paper.book("beacon").read("config", beacon())!!
+        useVpnHotspotSwitch.isChecked = config.useVpnHotspot
+        if (!isVPNHotspotExist(context)) {
+            useVpnHotspotSwitch.isChecked = false
         }
-        if (!Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(context)) {
-            useVpnHotspotSwitch.setChecked(true);
+        if (!Settings.System.canWrite(context) && isVPNHotspotExist(context)) {
+            useVpnHotspotSwitch.isChecked = true
         }
-        if (Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(context)) {
-            useVpnHotspotSwitch.setEnabled(true);
+        if (Settings.System.canWrite(context) && isVPNHotspotExist(context)) {
+            useVpnHotspotSwitch.isEnabled = true
         }
 
-        disableCount.setText(String.valueOf(config.disableCount));
-        enableCount.setText(String.valueOf(config.enableCount));
-        new AlertDialog.Builder(this).setTitle("Beacon configuration")
-                .setView(dialogView)
-                .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                    config.opposite = enable.isChecked();
-                    config.useVpnHotspot = useVpnHotspotSwitch.isChecked();
-                    config.disableCount = Integer.parseInt(disableCount.getText().toString());
-                    config.enableCount = Integer.parseInt(enableCount.getText().toString());
-                    Paper.book("beacon").write("config", config);
-                    LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("reload_beacon_config"));
-                }).show();
-        return true;
+        disableCount.setText(config.disableCount.toString())
+        enableCount.setText(config.enableCount.toString())
+        AlertDialog.Builder(this).setTitle("Beacon configuration")
+            .setView(dialogView)
+            .setPositiveButton(R.string.ok_button) { _: DialogInterface?, _: Int ->
+                config.opposite = enable.isChecked
+                config.useVpnHotspot = useVpnHotspotSwitch.isChecked
+                config.disableCount = disableCount.text.toString().toInt()
+                config.enableCount = enableCount.text.toString().toInt()
+                Paper.book("beacon").write("config", config)
+                LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(Intent("reload_beacon_config"))
+            }.show()
+        return true
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.beacon_menu, menu);
-        return true;
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.beacon_menu, menu)
+        return true
     }
 
-    static class CustomBeaconAdapter extends BaseAdapter {
-        ArrayList<BeaconModel> list;
-        Context context;
-        ArrayList<String> listen_list;
+    internal class CustomBeaconAdapter(var list: ArrayList<BeaconModel>, var context: Context) :
+        BaseAdapter() {
+        private var listenList: ArrayList<String>?
 
-        public CustomBeaconAdapter(ArrayList<BeaconModel> list, Context context) {
-            this.list = list;
-            this.context = context;
-            listen_list = Paper.book("beacon").read("address", new ArrayList<>());
+        init {
+            listenList = Paper.book("beacon").read("address", ArrayList())
         }
 
-        @Override
-        public int getCount() {
-            return list.size();
+        override fun getCount(): Int {
+            return list.size
         }
 
-        @Override
-        public Object getItem(int position) {
-            return list.get(position);
+        override fun getItem(position: Int): Any {
+            return list[position]
         }
 
-        @Override
-        public long getItemId(int position) {
-            return position;
+        override fun getItemId(position: Int): Long {
+            return position.toLong()
         }
 
         @SuppressLint("SetTextI18n")
-        @Override
-        public View getView(final int position, View convertView, ViewGroup parent) {
-            LayoutInflater inflater = LayoutInflater.from(context);
-            @SuppressLint({"ViewHolder", "InflateParams"}) View view = inflater.inflate(R.layout.item_beacon, null);
+        override fun getView(position: Int, convertView: View, parent: ViewGroup): View {
+            val inflater = LayoutInflater.from(context)
+            @SuppressLint("ViewHolder", "InflateParams") val view =
+                inflater.inflate(R.layout.item_beacon, null)
 
-            TextView titleView = view.findViewById(R.id.beacon_title_textview);
-            TextView addressView = view.findViewById(R.id.beacon_address_textview);
-            TextView infoView = view.findViewById(R.id.beacon_info_textview);
-            final CheckBox checkBoxView = view.findViewById(R.id.beacon_select_checkbox);
-            BeaconModel beacon = list.get(position);
-            titleView.setText(beacon.getUuid());
-            addressView.setText("Major: " + beacon.getMajor() + " Minor: " + beacon.getMinor() + " Rssi: " + beacon.getRssi() + " dBm");
-            infoView.setText("Distance: " + (int) beacon.getDistance() + " meters");
-            if (listen_list.contains(beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor()))) {
-                checkBoxView.setChecked(true);
+            val titleView = view.findViewById<TextView>(R.id.beacon_title_textview)
+            val addressView = view.findViewById<TextView>(R.id.beacon_address_textview)
+            val infoView = view.findViewById<TextView>(R.id.beacon_info_textview)
+            val checkBoxView = view.findViewById<CheckBox>(R.id.beacon_select_checkbox)
+            val beacon = list[position]
+            titleView.text = beacon.uuid
+            addressView.text =
+                "Major: " + beacon.major + " Minor: " + beacon.minor + " Rssi: " + beacon.rssi + " dBm"
+            infoView.text = "Distance: " + beacon.distance.toInt() + " meters"
+            if (listenList!!.contains(beaconItemName(beacon.uuid, beacon.major, beacon.minor))) {
+                checkBoxView.isChecked = true
             }
-            checkBoxView.setOnClickListener(v -> {
-                String address = beaconItemName(beacon.getUuid(), beacon.getMajor(), beacon.getMinor());
-                ArrayList<String> listenListTemp = Paper.book("beacon").read("address", new ArrayList<>());
-                if (checkBoxView.isChecked()) {
-                    assert listenListTemp != null;
-                    if (!listenListTemp.contains(address)) {
-                        listenListTemp.add(address);
+            checkBoxView.setOnClickListener { v: View? ->
+                val address = beaconItemName(beacon.uuid, beacon.major, beacon.minor)
+                val listenListTemp = Paper.book("beacon").read("address", ArrayList<String>())
+                if (checkBoxView.isChecked) {
+                    assert(listenListTemp != null)
+                    if (!listenListTemp!!.contains(address)) {
+                        listenListTemp.add(address)
                     }
                 } else {
-                    assert listenListTemp != null;
-                    listenListTemp.remove(address);
+                    assert(listenListTemp != null)
+                    listenListTemp!!.remove(address)
                 }
-                Log.d(TAG, "beacon_address: " + listenListTemp);
-                Paper.book("beacon").write("address", listenListTemp);
-                listen_list = listenListTemp;
-            });
+                Log.d(TAG, "beacon_address: $listenListTemp")
+                Paper.book("beacon").write("address", listenListTemp)
+                listenList = listenListTemp
+            }
 
-            return view;
+            return view
         }
+    }
+
+    companion object {
+        private const val TAG: String = "monitoring_activity"
     }
 }
 
