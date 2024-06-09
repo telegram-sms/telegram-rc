@@ -1,73 +1,80 @@
-package com.qwe7002.telegram_rc.static_class;
+package com.qwe7002.telegram_rc.static_class
 
-import android.Manifest;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Handler;
-import android.os.Looper;
-import android.telephony.TelephonyManager;
-import android.util.Log;
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.Looper
+import android.telephony.TelephonyManager
+import android.util.Log
+import androidx.core.app.ActivityCompat
+import com.google.gson.Gson
+import com.qwe7002.telegram_rc.R
+import com.qwe7002.telegram_rc.USSDCallBack
+import com.qwe7002.telegram_rc.data_structure.request_message
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
+import java.util.Objects
 
-import androidx.core.app.ActivityCompat;
+object USSD {
+    fun sendUssd(context: Context, ussdRaw: String?, subId: Int) {
+        val TAG = "send_ussd"
+        val ussd = other.getNineKeyMapConvert(ussdRaw)
 
-import com.google.gson.Gson;
-import com.qwe7002.telegram_rc.R;
-import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.USSDCallBack;
-
-import java.io.IOException;
-import java.util.Objects;
-
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-public class ussd {
-    public static void send_ussd(Context context, String ussdRaw, int subId) {
-        final String TAG = "send_ussd";
-        final String ussd = other.getNineKeyMapConvert(ussdRaw);
-
-        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        assert tm != null;
-
+        var tm: TelephonyManager? =
+            (context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager)
         if (subId != -1) {
-            tm = tm.createForSubscriptionId(subId);
+            tm = tm!!.createForSubscriptionId(subId)
         }
 
-        SharedPreferences sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE);
+        val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
 
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            Log.i(TAG, "send_ussd: No permission.");
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CALL_PHONE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.i(TAG, "send_ussd: No permission.")
         }
 
-        String botToken = sharedPreferences.getString("bot_token", "");
-        String chatId = sharedPreferences.getString("chat_id", "");
-        String requestUri = network.getUrl(botToken, "sendMessage");
-        request_message requestBody = new request_message();
-        requestBody.chat_id = chatId;
-        requestBody.text = context.getString(R.string.send_ussd_head) + "\n" + context.getString(R.string.ussd_code_running);
-        String requestBodyRaw = new Gson().toJson(requestBody);
-        RequestBody body = RequestBody.create(requestBodyRaw, CONST.JSON);
-        OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
-        Request request = new Request.Builder().url(requestUri).method("POST", body).build();
-        Call call = okhttp_client.newCall(request);
-        TelephonyManager telephonyManager = tm;
-        new Thread(() -> {
-            long message_id = -1L;
+        val botToken = sharedPreferences.getString("bot_token", "")
+        val chatId = sharedPreferences.getString("chat_id", "")
+        val requestUri = network.getUrl(botToken, "sendMessage")
+        val requestBody = request_message()
+        requestBody.chat_id = chatId
+        requestBody.text = """
+             ${context.getString(R.string.send_ussd_head)}
+             ${context.getString(R.string.ussd_code_running)}
+             """.trimIndent()
+        val requestBodyRaw = Gson().toJson(requestBody)
+        val body: RequestBody = requestBodyRaw.toRequestBody(CONST.JSON)
+        val okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
+        val call = okhttpClient.newCall(request)
+        val telephonyManager = tm
+        Thread {
+            var messageId = -1L
             try {
-                Response response = call.execute();
-                message_id = other.getMessageId(Objects.requireNonNull(response.body()).string());
-            } catch (IOException e) {
-                Log.d(TAG, "send_ussd: "+e);
+                val response = call.execute()
+                messageId = other.getMessageId(Objects.requireNonNull(response.body).string())
+            } catch (e: IOException) {
+                Log.d(TAG, "send_ussd: $e")
             }
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                Looper.prepare();
-                telephonyManager.sendUssdRequest(ussd, new USSDCallBack(context, sharedPreferences, message_id), new Handler());
-                Looper.loop();
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.CALL_PHONE
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                Looper.prepare()
+                telephonyManager!!.sendUssdRequest(
+                    ussd,
+                    USSDCallBack(context, sharedPreferences, messageId),
+                    Handler()
+                )
+                Looper.loop()
             }
-        }).start();
+        }.start()
     }
 }

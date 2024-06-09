@@ -25,7 +25,7 @@ import com.qwe7002.telegram_rc.static_class.other;
 import com.qwe7002.telegram_rc.static_class.Resend;
 import com.qwe7002.telegram_rc.static_class.service;
 import com.qwe7002.telegram_rc.static_class.sms;
-import com.qwe7002.telegram_rc.static_class.ussd;
+import com.qwe7002.telegram_rc.static_class.USSD;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -159,7 +159,7 @@ public class sms_receiver extends BroadcastReceiver {
                     case "/sendussd":
                         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                             if (command_list.length == 2) {
-                                ussd.send_ussd(context, message_list[1], subId);
+                                USSD.sendUssd(context, message_list[1], subId);
                                 return;
                             }
                         }

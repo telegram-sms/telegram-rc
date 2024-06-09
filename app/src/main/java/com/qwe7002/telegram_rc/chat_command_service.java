@@ -45,7 +45,7 @@ import com.qwe7002.telegram_rc.static_class.other;
 import com.qwe7002.telegram_rc.static_class.RemoteControl;
 import com.qwe7002.telegram_rc.static_class.service;
 import com.qwe7002.telegram_rc.static_class.sms;
-import com.qwe7002.telegram_rc.static_class.ussd;
+import com.qwe7002.telegram_rc.static_class.USSD;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -582,7 +582,7 @@ public class chat_command_service extends Service {
                     }
                     String[] command_list = request_msg.split(" ");
                     if (command_list.length == 2) {
-                        ussd.send_ussd(context, command_list[1], sub_id);
+                        USSD.sendUssd(context, command_list[1], sub_id);
                         return;
                     } else {
                         request_body.text = "Error";
