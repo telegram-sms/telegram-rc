@@ -7,7 +7,7 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
@@ -57,12 +57,12 @@ class ReSendJob : JobService() {
         okhttpClient: OkHttpClient,
         messageThreadId: String
     ) {
-        val requestBody = request_message()
-        requestBody.chat_id = chatId
+        val requestBody = requestMessage()
+        requestBody.chatId = chatId
         requestBody.text = message
-        requestBody.message_thread_id = messageThreadId
+        requestBody.messageThreadId = messageThreadId
         if (message.contains("<code>") && message.contains("</code>")) {
-            requestBody.parse_mode = "html"
+            requestBody.parseMode = "html"
         }
         val requestBodyJson = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyJson.toRequestBody(CONST.JSON)

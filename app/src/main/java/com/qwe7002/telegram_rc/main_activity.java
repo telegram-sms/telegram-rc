@@ -43,8 +43,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.qwe7002.telegram_rc.config.proxy;
-import com.qwe7002.telegram_rc.data_structure.polling_json;
-import com.qwe7002.telegram_rc.data_structure.request_message;
+import com.qwe7002.telegram_rc.data_structure.pollingJson;
+import com.qwe7002.telegram_rc.data_structure.requestMessage;
 import com.qwe7002.telegram_rc.root_kit.Shell;
 import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.LogManage;
@@ -249,7 +249,7 @@ public class main_activity extends AppCompatActivity {
             okhttp_client = okhttp_client.newBuilder()
                     .readTimeout(60, TimeUnit.SECONDS)
                     .build();
-            polling_json request_body = new polling_json();
+            pollingJson request_body = new pollingJson();
             request_body.timeout = 60;
             RequestBody body = RequestBody.create(new Gson().toJson(request_body), CONST.JSON);
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
@@ -385,9 +385,9 @@ public class main_activity extends AppCompatActivity {
             progressDialog.show();
 
             String request_uri = network.getUrl(bot_token_editview.getText().toString().trim(), "sendMessage");
-            request_message request_body = new request_message();
-            request_body.chat_id = chat_id_editview.getText().toString().trim();
-            request_body.message_thread_id = message_thread_id_editview.getText().toString().trim();
+            requestMessage request_body = new requestMessage();
+            request_body.chatId = chat_id_editview.getText().toString().trim();
+            request_body.messageThreadId = message_thread_id_editview.getText().toString().trim();
             request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.success_connect);
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);

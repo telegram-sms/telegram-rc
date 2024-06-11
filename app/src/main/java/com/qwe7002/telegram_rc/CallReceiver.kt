@@ -9,7 +9,7 @@ import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
@@ -73,9 +73,10 @@ class CallReceiver : BroadcastReceiver() {
                 val botToken = sharedPreferences.getString("bot_token", "")
                 val chatId = sharedPreferences.getString("chat_id", "")
                 val requestUri = network.getUrl(botToken, "sendMessage")
-                val requestBody = request_message()
-                requestBody.chat_id = chatId
-                requestBody.message_thread_id =
+                val requestBody =
+                    requestMessage()
+                requestBody.chatId = chatId
+                requestBody.messageThreadId =
                     sharedPreferences.getString("message_thread_id", "")
                 val dualSim = other.getDualSimCardDisplay(
                     context,

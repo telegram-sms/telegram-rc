@@ -6,7 +6,7 @@ import android.telephony.TelephonyManager
 import android.telephony.TelephonyManager.UssdResponseCallback
 import android.util.Log
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.LogManage
@@ -30,20 +30,21 @@ class USSDCallBack(
     private val dohSwitch: Boolean
     private var requestUri: String
     private val messageHeader: String
-    private val requestBody: request_message
+    private val requestBody: requestMessage
 
     init {
         Paper.init(context)
         val chatId = sharedPreferences.getString("chat_id", "")
         this.dohSwitch = sharedPreferences.getBoolean("doh_switch", true)
-        this.requestBody = request_message()
-        requestBody.chat_id = chatId
-        requestBody.message_thread_id = sharedPreferences.getString("message_thread_id", "")
+        this.requestBody =
+            requestMessage()
+        requestBody.chatId = chatId
+        requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
         val botToken = sharedPreferences.getString("bot_token", "")
         this.requestUri = network.getUrl(botToken, "SendMessage")
         if (messageId != -1L) {
             this.requestUri = network.getUrl(botToken, "editMessageText")
-            requestBody.message_id = messageId
+            requestBody.messageId = messageId
         }
         this.messageHeader = context.getString(R.string.send_ussd_head)
     }

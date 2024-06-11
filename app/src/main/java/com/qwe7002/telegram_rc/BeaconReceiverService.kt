@@ -36,7 +36,7 @@ import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.config.beacon
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.beaconItemName
-import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.root_kit.Radio
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.network
@@ -402,9 +402,10 @@ class BeaconReceiverService : Service() {
         chat_id: String,
         okhttp_client: OkHttpClient
     ) {
-        val request_body = request_message()
-        request_body.chat_id = chat_id
-        request_body.message_thread_id = messageThreadId
+        val request_body =
+            requestMessage()
+        request_body.chatId = chat_id
+        request_body.messageThreadId = messageThreadId
         request_body.text =
             message + "\n" + getString(R.string.current_battery_level) + getBatteryInfoMsg() + "\n" + getString(
                 R.string.current_network_connection_status

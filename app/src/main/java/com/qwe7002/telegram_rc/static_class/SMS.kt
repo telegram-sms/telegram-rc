@@ -16,7 +16,7 @@ import androidx.core.content.PermissionChecker
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.SMSSendResultReceiver
-import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -91,8 +91,8 @@ object SMS {
             Log.d("send_sms", "Find the message_id and switch to edit mode.")
             requestUri = network.getUrl(botToken, "editMessageText")
         }
-        val requestBody = request_message()
-        requestBody.chat_id = chatId
+        val requestBody = requestMessage()
+        requestBody.chatId = chatId
         val smsManager = if (subId == -1) {
             SmsManager.getDefault()
         } else {
@@ -112,7 +112,7 @@ object SMS {
             $sendContent
             ${context.getString(R.string.status)}${context.getString(R.string.sending)}
             """.trimIndent()
-        requestBody.message_id = privateMessageId
+        requestBody.messageId = privateMessageId
         val gson = Gson()
         val requestBodyRaw = gson.toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(CONST.JSON)

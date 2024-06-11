@@ -15,7 +15,7 @@ import android.os.Process
 import android.util.Log
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
@@ -97,14 +97,14 @@ class BatteryService : Service() {
 
     private fun networkHandle(obj: sendObj) {
         val TAG = "network_handle"
-        val requestBody = request_message()
-        requestBody.chat_id = chat_id
+        val requestBody = requestMessage()
+        requestBody.chatId = chat_id
         requestBody.text = obj.content
-        requestBody.message_thread_id = message_thread_id
+        requestBody.messageThreadId = message_thread_id
         var requestUri = network.getUrl(bot_token, "sendMessage")
         if ((System.currentTimeMillis() - lastReceiveTime) <= 10000L && lastReceiveMessageId != -1L) {
             requestUri = network.getUrl(bot_token, "editMessageText")
-            requestBody.message_id = lastReceiveMessageId
+            requestBody.messageId = lastReceiveMessageId
             Log.d(TAG, "onReceive: edit_mode")
         }
         lastReceiveTime = System.currentTimeMillis()

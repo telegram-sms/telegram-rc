@@ -13,7 +13,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.github.sumimakito.codeauxlib.CodeauxLibPortable
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.root_kit.Networks.setData
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
@@ -99,9 +99,9 @@ class SMSReceiver : BroadcastReceiver() {
             isTrustedPhone = messageAddress.contains(trustedPhoneNumber)
         }
         Log.d(TAG, "onReceive: $isTrustedPhone")
-        val requestBody = request_message()
-        requestBody.chat_id = chatId
-        requestBody.message_thread_id = sharedPreferences.getString("message_thread_id", "")
+        val requestBody = requestMessage()
+        requestBody.chatId = chatId
+        requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
         var messageBodyHtml = messageBody
         var flashSmsString = ""
         if (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0) {
@@ -118,7 +118,7 @@ class SMSReceiver : BroadcastReceiver() {
             if (messageBody.length <= 140) {
                 val verification = CodeauxLibPortable.find(context,messageBody)
                 if (verification != null) {
-                    requestBody.parse_mode = "html"
+                    requestBody.parseMode = "html"
                     messageBodyHtml = messageBody
                         .replace("<", "&lt;")
                         .replace(">", "&gt;")

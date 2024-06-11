@@ -32,10 +32,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.qwe7002.telegram_rc.data_structure.polling_json;
-import com.qwe7002.telegram_rc.data_structure.reply_markup_keyboard;
-import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.data_structure.sms_request_info;
+import com.qwe7002.telegram_rc.data_structure.pollingJson;
+import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard;
+import com.qwe7002.telegram_rc.data_structure.requestMessage;
+import com.qwe7002.telegram_rc.data_structure.smsRequestInfo;
 import com.qwe7002.telegram_rc.root_kit.Radio;
 import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.LogManage;
@@ -277,9 +277,9 @@ public class chat_command_service extends Service {
         }
 
         String message_type = "";
-        final request_message request_body = new request_message();
-        request_body.chat_id = chat_id;
-        request_body.message_thread_id = message_thread_id;
+        final requestMessage request_body = new requestMessage();
+        request_body.chatId = chat_id;
+        request_body.messageThreadId = message_thread_id;
         JsonObject message_obj = null;
         String callback_data = null;
         if (result_obj.has("message")) {
@@ -307,8 +307,8 @@ public class chat_command_service extends Service {
                 String dual_sim = other.getDualSimCardDisplay(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
                 String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + to + "\n" + context.getString(R.string.content) + content;
                 request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.cancel_button);
-                request_body.message_id = message_id;
-                request_body.message_thread_id = message_thread_id;
+                request_body.messageId = message_id;
+                request_body.messageThreadId = message_thread_id;
                 Gson gson = new Gson();
                 String request_body_raw = gson.toJson(request_body);
                 RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
@@ -378,7 +378,7 @@ public class chat_command_service extends Service {
             request_msg = message_obj.get("text").getAsString();
         }
         if (message_obj.has("reply_to_message")) {
-            sms_request_info save_item = Paper.book().read(message_obj.get("reply_to_message").getAsJsonObject().get("message_id").getAsString(), null);
+            smsRequestInfo save_item = Paper.book().read(message_obj.get("reply_to_message").getAsJsonObject().get("message_id").getAsString(), null);
             if (save_item != null && !request_msg.isEmpty()) {
                 String phone_number = save_item.phone;
                 int card_slot = save_item.card;
@@ -602,8 +602,8 @@ public class chat_command_service extends Service {
                     if (network.checkNetworkStatus(context)) {
                         OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
                         for (String item : spam_sms_list) {
-                            request_message send_sms_request_body = new request_message();
-                            send_sms_request_body.chat_id = chat_id;
+                            requestMessage send_sms_request_body = new requestMessage();
+                            send_sms_request_body.chatId = chat_id;
                             send_sms_request_body.text = item;
                             String request_uri = network.getUrl(bot_token, "sendMessage");
                             String request_body_json = new Gson().toJson(send_sms_request_body);
@@ -747,12 +747,12 @@ public class chat_command_service extends Service {
                     break;
                 case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
                     Paper.book("send_temp").write("content", request_msg);
-                    reply_markup_keyboard.keyboard_markup keyboardMarkup = new reply_markup_keyboard.keyboard_markup();
-                    ArrayList<ArrayList<reply_markup_keyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
-                    inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.send_button), CALLBACK_DATA_VALUE.SEND));
-                    inlineKeyboardButtons.add(reply_markup_keyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), CALLBACK_DATA_VALUE.CANCEL));
-                    keyboardMarkup.inline_keyboard = inlineKeyboardButtons;
-                    request_body.reply_markup = keyboardMarkup;
+                    replyMarkupKeyboard.keyboard_markup keyboardMarkup = new replyMarkupKeyboard.keyboard_markup();
+                    ArrayList<ArrayList<replyMarkupKeyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
+                    inlineKeyboardButtons.add(replyMarkupKeyboard.get_inline_keyboard_obj(context.getString(R.string.send_button), CALLBACK_DATA_VALUE.SEND));
+                    inlineKeyboardButtons.add(replyMarkupKeyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), CALLBACK_DATA_VALUE.CANCEL));
+                    keyboardMarkup.inlineKeyboard = inlineKeyboardButtons;
+                    request_body.keyboardMarkup = keyboardMarkup;
                     result_send = context.getString(R.string.to) + Paper.book("send_temp").read("to") + "\n" + context.getString(R.string.content) + Paper.book("send_temp").read("content", "");
                     send_sms_next_status = SEND_SMS_STATUS.SEND_STATUS;
                     break;
@@ -927,7 +927,7 @@ public class chat_command_service extends Service {
                         .writeTimeout(http_timeout, TimeUnit.SECONDS)
                         .build();
                 String request_uri = network.getUrl(bot_token, "getUpdates");
-                polling_json request_body = new polling_json();
+                pollingJson request_body = new pollingJson();
                 request_body.offset = offset;
                 request_body.timeout = timeout;
                 if (first_request) {

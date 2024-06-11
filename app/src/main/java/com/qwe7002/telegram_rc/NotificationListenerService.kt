@@ -11,7 +11,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.request_message
+import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
@@ -99,14 +99,14 @@ class NotificationListenerService : NotificationListenerService() {
         val botToken = sharedPreferences.getString("bot_token", "")
         val chatId = sharedPreferences.getString("chat_id", "")
         val requestUri = network.getUrl(botToken, "sendMessage")
-        val requestBody = request_message()
+        val requestBody = requestMessage()
         if ((System.currentTimeMillis() - lastSendTime) <= 1000L && (lastPackage == packageName)) {
             if (lastMessage == title + content) {
                 return
             }
         }
-        requestBody.chat_id = chatId
-        requestBody.message_thread_id = sharedPreferences.getString("message_thread_id", "")
+        requestBody.chatId = chatId
+        requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
         requestBody.text = """
             ${getString(R.string.receive_notification_title)}
             ${getString(R.string.app_name_title)}$appName
