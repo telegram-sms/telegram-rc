@@ -7,7 +7,7 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
-import com.qwe7002.telegram_rc.static_class.service
+import com.qwe7002.telegram_rc.static_class.ServiceManage
 import java.util.concurrent.TimeUnit
 
 
@@ -16,12 +16,12 @@ class KeepAliveJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
         if (sharedPreferences.getBoolean("initialized", false)) {
-            service.startService(
+            ServiceManage.startService(
                 applicationContext,
                 sharedPreferences.getBoolean("battery_monitoring_switch", false),
                 sharedPreferences.getBoolean("chat_command", false)
             )
-            service.startBeaconService(applicationContext)
+            ServiceManage.startBeaconService(applicationContext)
         }
         Log.d("telegram-rc", "startJob: Try to pull up the service")
         this.jobFinished(params, false)

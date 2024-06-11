@@ -15,7 +15,7 @@ import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.other
 import com.qwe7002.telegram_rc.static_class.Resend
-import com.qwe7002.telegram_rc.static_class.sms
+import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -98,7 +98,7 @@ class CallReceiver : BroadcastReceiver() {
                     override fun onFailure(call: Call, e: IOException) {
                         e.printStackTrace()
                         LogManage.writeLog(context, errorHead + e.message)
-                        sms.sendFallbackSMS(
+                        SMS.sendFallbackSMS(
                             context,
                             requestBody.text,
                             other.getSubId(context, slot)

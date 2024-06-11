@@ -21,8 +21,8 @@ import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.other
-import com.qwe7002.telegram_rc.static_class.service
-import com.qwe7002.telegram_rc.static_class.sms
+import com.qwe7002.telegram_rc.static_class.ServiceManage
+import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -142,8 +142,8 @@ class SMSReceiver : BroadcastReceiver() {
                 when (commandList[0]) {
                     "/restartservice" -> {
                         Thread {
-                            service.stopAllService(context)
-                            service.startService(
+                            ServiceManage.stopAllService(context)
+                            ServiceManage.startService(
                                 context,
                                 sharedPreferences.getBoolean("battery_monitoring_switch", false),
                                 sharedPreferences.getBoolean("chat_command", false)
@@ -207,7 +207,7 @@ class SMSReceiver : BroadcastReceiver() {
                                 }
                             }
                             Thread {
-                                sms.sendSMS(
+                                SMS.sendSMS(
                                     context,
                                     msgSendTo,
                                     msgSendContent.toString(),
@@ -263,7 +263,7 @@ class SMSReceiver : BroadcastReceiver() {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d(TAG, e.toString())
                 writeLog(context, errorHead + e.message)
-                sms.sendFallbackSMS(context, finalRawRequestBodyText, subId)
+                SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 addResendLoop(requestBody.text)
                 commandHandle(sharedPreferences, messageBody, dataEnable)
             }
@@ -274,7 +274,7 @@ class SMSReceiver : BroadcastReceiver() {
                 if (response.code != 200) {
                     writeLog(context, errorHead + response.code + " " + result)
                     if (!finalIsFlash) {
-                        sms.sendFallbackSMS(context, finalRawRequestBodyText, subId)
+                        SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                     }
                     addResendLoop(requestBody.text)
                 } else {

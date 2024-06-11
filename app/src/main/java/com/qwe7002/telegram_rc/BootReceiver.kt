@@ -6,7 +6,7 @@ import android.content.Intent
 import android.util.Log
 import com.qwe7002.telegram_rc.root_kit.Networks
 import com.qwe7002.telegram_rc.static_class.LogManage
-import com.qwe7002.telegram_rc.static_class.service
+import com.qwe7002.telegram_rc.static_class.ServiceManage
 import io.paperdb.Paper
 import kotlin.String
 
@@ -21,12 +21,12 @@ class BootReceiver : BroadcastReceiver() {
                 context,
                 "Received [" + intent.action + "] broadcast, starting background service."
             )
-            service.startService(
+            ServiceManage.startService(
                 context,
                 sharedPreferences.getBoolean("battery_monitoring_switch", false),
                 sharedPreferences.getBoolean("chat_command", false)
             )
-            service.startBeaconService(context)
+            ServiceManage.startBeaconService(context)
             KeepAliveJob.startJob(context)
             ReSendJob.startJob(context);
             if (sharedPreferences.getBoolean("root", false)) {

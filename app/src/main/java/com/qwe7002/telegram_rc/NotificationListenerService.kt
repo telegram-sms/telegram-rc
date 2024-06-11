@@ -15,7 +15,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
-import com.qwe7002.telegram_rc.static_class.notify
+import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.other
 import com.qwe7002.telegram_rc.static_class.Resend
 import io.paperdb.Paper
@@ -51,12 +51,12 @@ class NotificationListenerService : NotificationListenerService() {
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
-                notify.NOTIFICATION_LISTENER_SERVICE, notification.build(),
+                Notify.NOTIFICATION_LISTENER_SERVICE, notification.build(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
         }else{
             startForeground(
-                notify.NOTIFICATION_LISTENER_SERVICE, notification.build()
+                Notify.NOTIFICATION_LISTENER_SERVICE, notification.build()
             )
         }
     }

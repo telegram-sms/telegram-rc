@@ -1,60 +1,64 @@
-package com.qwe7002.telegram_rc.static_class;
+package com.qwe7002.telegram_rc.static_class
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.util.Log;
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.util.Log
+import androidx.core.app.NotificationManagerCompat
+import com.qwe7002.telegram_rc.BatteryService
+import com.qwe7002.telegram_rc.BeaconReceiverService
+import com.qwe7002.telegram_rc.NotificationListenerService
+import com.qwe7002.telegram_rc.chat_command_service
 
-import androidx.core.app.NotificationManagerCompat;
-
-import com.qwe7002.telegram_rc.BatteryService;
-import com.qwe7002.telegram_rc.BeaconReceiverService;
-import com.qwe7002.telegram_rc.chat_command_service;
-import com.qwe7002.telegram_rc.NotificationListenerService;
-
-import java.util.Set;
-
-public class service {
-    public static void stopAllService(Context context) {
-        Intent intent = new Intent(CONST.BROADCAST_STOP_SERVICE);
-        context.sendBroadcast(intent);
+object ServiceManage {
+    @JvmStatic
+    fun stopAllService(context: Context) {
+        val intent = Intent(CONST.BROADCAST_STOP_SERVICE)
+        context.sendBroadcast(intent)
         try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Log.e("Service", "stopAllService: ", e);
+            Thread.sleep(1000)
+        } catch (e: InterruptedException) {
+            Log.e("Service", "stopAllService: ", e)
         }
     }
 
-    public static void startService(Context context, Boolean batterySwitch, Boolean chatCommandSwitch) {
-
-
+    @JvmStatic
+    fun startService(context: Context, batterySwitch: Boolean, chatCommandSwitch: Boolean) {
         if (isNotifyListener(context)) {
-            ComponentName this_component_name = new ComponentName(context, NotificationListenerService.class);
-            PackageManager packageManager = context.getPackageManager();
-            packageManager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-            packageManager.setComponentEnabledSetting(this_component_name, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+            val thisComponentName =
+                ComponentName(context, NotificationListenerService::class.java)
+            val packageManager = context.packageManager
+            packageManager.setComponentEnabledSetting(
+                thisComponentName,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP
+            )
+            packageManager.setComponentEnabledSetting(
+                thisComponentName,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
         }
         if (batterySwitch) {
-            Intent batteryService = new Intent(context, BatteryService.class);
-            context.startForegroundService(batteryService);
+            val batteryService = Intent(context, BatteryService::class.java)
+            context.startForegroundService(batteryService)
         }
         if (chatCommandSwitch) {
-            Intent chatLongPollingService = new Intent(context, chat_command_service.class);
-            context.startForegroundService(chatLongPollingService);
+            val chatLongPollingService = Intent(context, chat_command_service::class.java)
+            context.startForegroundService(chatLongPollingService)
         }
-
     }
 
-    public static void startBeaconService(Context context) {
-
-        Intent beacon_service = new Intent(context, BeaconReceiverService.class);
-        context.startForegroundService(beacon_service);
-
+    @JvmStatic
+    fun startBeaconService(context: Context) {
+        val beaconService = Intent(context, BeaconReceiverService::class.java)
+        context.startForegroundService(beaconService)
     }
 
-    public static boolean isNotifyListener(Context context) {
-        Set<String> packageNames = NotificationManagerCompat.getEnabledListenerPackages(context);
-        return packageNames.contains(context.getPackageName());
+    @JvmStatic
+    fun isNotifyListener(context: Context): Boolean {
+        val packageNames = NotificationManagerCompat.getEnabledListenerPackages(context)
+        return packageNames.contains(context.packageName)
     }
 }

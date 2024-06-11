@@ -19,10 +19,10 @@ import com.qwe7002.telegram_rc.data_structure.request_message
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
-import com.qwe7002.telegram_rc.static_class.notify
+import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
-import com.qwe7002.telegram_rc.static_class.sms
+import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -44,7 +44,7 @@ class BatteryService : Service() {
                 getString(R.string.battery_monitoring_notify)
             )
         startForeground(
-            notify.BATTERY, notification.build(),
+            Notify.BATTERY, notification.build(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         )
     }
@@ -122,14 +122,14 @@ class BatteryService : Service() {
             } else {
                 lastReceiveMessageId = -1
                 if (obj.action == Intent.ACTION_BATTERY_LOW) {
-                    sms.sendFallbackSMS(applicationContext, requestBody.text, -1)
+                    SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                 }
             }
         } catch (e: IOException) {
             e.printStackTrace()
             LogManage.writeLog(applicationContext, errorHead + e.message)
             if (obj.action == Intent.ACTION_BATTERY_LOW) {
-                sms.sendFallbackSMS(applicationContext, requestBody.text, -1)
+                SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
             }
         }
     }

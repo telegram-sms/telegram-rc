@@ -1,8 +1,8 @@
-package com.qwe7002.telegram_rc.static_class;
+package com.qwe7002.telegram_rc.static_class
 
-public class notify {
-    public static final int BATTERY = 1;
-    public static final int CHAT_COMMAND = 2;
-    public static final int NOTIFICATION_LISTENER_SERVICE = 3;
-    public static final int BEACON_SERVICE = 6;
+object Notify {
+    const val BATTERY: Int = 1
+    const val CHAT_COMMAND: Int = 2
+    const val NOTIFICATION_LISTENER_SERVICE: Int = 3
+    const val BEACON_SERVICE: Int = 6
 }

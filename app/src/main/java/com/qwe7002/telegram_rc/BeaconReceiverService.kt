@@ -40,7 +40,7 @@ import com.qwe7002.telegram_rc.data_structure.request_message
 import com.qwe7002.telegram_rc.root_kit.Radio
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.network
-import com.qwe7002.telegram_rc.static_class.notify
+import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.Resend
@@ -83,12 +83,12 @@ class BeaconReceiverService : Service() {
             other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
-                notify.BEACON_SERVICE, notification.build(),
+                Notify.BEACON_SERVICE, notification.build(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
             )
         }else{
             startForeground(
-                notify.BEACON_SERVICE, notification.build()
+                Notify.BEACON_SERVICE, notification.build()
             )
         }
     }

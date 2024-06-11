@@ -11,7 +11,7 @@ import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
-import com.qwe7002.telegram_rc.static_class.sms
+import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -88,7 +88,7 @@ class USSDCallBack(
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("ussdRequest", "onFailure: $e")
                 LogManage.writeLog(context, errorHead + e.message)
-                sms.sendFallbackSMS(context, requestBody.text, -1)
+                SMS.sendFallbackSMS(context, requestBody.text, -1)
                 addResendLoop(requestBody.text)
             }
 
@@ -100,7 +100,7 @@ class USSDCallBack(
                         errorHead + response.code + " " + Objects.requireNonNull(response.body)
                             .string()
                     )
-                    sms.sendFallbackSMS(context, requestBody.text, -1)
+                    SMS.sendFallbackSMS(context, requestBody.text, -1)
                     addResendLoop(requestBody.text)
                 }
             }

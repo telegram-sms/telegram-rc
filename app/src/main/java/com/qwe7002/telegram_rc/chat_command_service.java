@@ -39,12 +39,12 @@ import com.qwe7002.telegram_rc.data_structure.sms_request_info;
 import com.qwe7002.telegram_rc.root_kit.Radio;
 import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.LogManage;
+import com.qwe7002.telegram_rc.static_class.ServiceManage;
 import com.qwe7002.telegram_rc.static_class.network;
-import com.qwe7002.telegram_rc.static_class.notify;
+import com.qwe7002.telegram_rc.static_class.Notify;
 import com.qwe7002.telegram_rc.static_class.other;
 import com.qwe7002.telegram_rc.static_class.RemoteControl;
-import com.qwe7002.telegram_rc.static_class.service;
-import com.qwe7002.telegram_rc.static_class.sms;
+import com.qwe7002.telegram_rc.static_class.SMS;
 import com.qwe7002.telegram_rc.static_class.USSD;
 
 import org.jetbrains.annotations.NotNull;
@@ -145,9 +145,9 @@ public class chat_command_service extends Service {
     void startForegroundNotification() {
         Notification.Builder notification = other.getNotificationObj(context, getString(R.string.chat_command_service_name));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            startForeground(Notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         }else{
-            startForeground(notify.CHAT_COMMAND, notification.build());
+            startForeground(Notify.CHAT_COMMAND, notification.build());
         }
     }
 
@@ -332,7 +332,7 @@ public class chat_command_service extends Service {
             } else {
                 sub_id = other.getSubId(context, slot);
             }
-            sms.sendSMS(context, to, content, slot, sub_id, message_id);
+            SMS.sendSMS(context, to, content, slot, sub_id, message_id);
             set_sms_send_status_standby();
             return;
         }
@@ -674,7 +674,7 @@ public class chat_command_service extends Service {
                             msg_send_content.append(msg_send_list[i]);
                         }
                         if (other.getActiveCard(context) == 1) {
-                            sms.sendSMS(context, msg_send_to, msg_send_content.toString(), -1, -1);
+                            SMS.sendSMS(context, msg_send_to, msg_send_content.toString(), -1, -1);
                             return;
                         }
                         int send_slot = -1;
@@ -686,7 +686,7 @@ public class chat_command_service extends Service {
                         }
                         int sub_id = other.getSubId(context, send_slot);
                         if (sub_id != -1) {
-                            sms.sendSMS(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
+                            SMS.sendSMS(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
                             return;
                         }
                     }
@@ -986,8 +986,8 @@ public class chat_command_service extends Service {
                         }
                         JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
                         String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
-                        sms.sendFallbackSMS(context, result_message, -1);
-                        service.stopAllService(context);
+                        SMS.sendFallbackSMS(context, result_message, -1);
+                        ServiceManage.stopAllService(context);
                         break;
                     }
                 }

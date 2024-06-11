@@ -12,7 +12,7 @@ import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.network
-import com.qwe7002.telegram_rc.static_class.sms
+import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -74,7 +74,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 writeLog(context, errorHead + e.message)
-                sms.sendFallbackSMS(context, requestBody.text, sub)
+                SMS.sendFallbackSMS(context, requestBody.text, sub)
                 addResendLoop(requestBody.text)
             }
 
