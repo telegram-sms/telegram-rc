@@ -582,7 +582,7 @@ public class chat_command_service extends Service {
                     }
                     String[] command_list = request_msg.split(" ");
                     if (command_list.length == 2) {
-                        USSD.sendUssd(context, command_list[1], sub_id);
+                        USSD.INSTANCE.sendUssd(context, command_list[1], sub_id);
                         return;
                     } else {
                         request_body.text = "Error";

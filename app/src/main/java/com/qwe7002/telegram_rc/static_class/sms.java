@@ -17,7 +17,7 @@ import androidx.core.content.PermissionChecker;
 import com.google.gson.Gson;
 import com.qwe7002.telegram_rc.R;
 import com.qwe7002.telegram_rc.data_structure.request_message;
-import com.qwe7002.telegram_rc.sms_send_receiver;
+import com.qwe7002.telegram_rc.SMSSendResultReceiver;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -111,7 +111,7 @@ public class sms {
         ArrayList<String> divideContents = sms_manager.divideMessage(content);
         ArrayList<PendingIntent> send_receiver_list = new ArrayList<>();
         IntentFilter filter = new IntentFilter("send_sms");
-        BroadcastReceiver receiver = new sms_send_receiver();
+        BroadcastReceiver receiver = new SMSSendResultReceiver();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.getApplicationContext().registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
