@@ -29,7 +29,7 @@ import java.io.IOException
 import java.util.Objects
 
 class NotificationListenerService : NotificationListenerService() {
-    val TAG: String = "notification_receiver"
+    private val logTag: String = "notification_receiver"
     lateinit var  sharedPreferences: SharedPreferences
 
     override fun onCreate() {
@@ -44,7 +44,7 @@ class NotificationListenerService : NotificationListenerService() {
         return START_STICKY
     }
 
-    fun startForegroundNotification() {
+    private fun startForegroundNotification() {
         val notification: Notification.Builder = Other.getNotificationObj(
             applicationContext,
             getString(R.string.Notification_Listener_title)
@@ -63,22 +63,22 @@ class NotificationListenerService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
-        Log.d(TAG, "onNotificationPosted: $packageName")
+        Log.d(logTag, "onNotificationPosted: $packageName")
 
         if (!sharedPreferences.getBoolean("initialized", false)) {
-            Log.i(TAG, "Uninitialized, Notification receiver is deactivated.")
+            Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
             return
         }
 
         val listenList: List<String> =
             Paper.book("system_config").read("notify_listen_list", ArrayList())!!
         if (!listenList.contains(packageName)) {
-            Log.i(TAG, "[$packageName] Not in the list of listening packages.")
+            Log.i(logTag, "[$packageName] Not in the list of listening packages.")
             return
         }
         val extras = sbn.notification.extras!!
         var appName: String? = "unknown"
-        Log.d(TAG, "onNotificationPosted: $appNameList")
+        Log.d(logTag, "onNotificationPosted: $appNameList")
         if (appNameList.containsKey(packageName)) {
             appName = appNameList[packageName]
         } else {
@@ -122,11 +122,11 @@ class NotificationListenerService : NotificationListenerService() {
         lastPackage = packageName
         lastMessage = title + content
         lastSendTime = System.currentTimeMillis()
-        val error_head = "Send notification failed:"
+        val errorHead = "Send notification failed:"
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                LogManage.writeLog(applicationContext, error_head + e.message)
+                LogManage.writeLog(applicationContext, errorHead + e.message)
                 Resend.addResendLoop(requestBody.text)
             }
 
@@ -134,7 +134,7 @@ class NotificationListenerService : NotificationListenerService() {
             override fun onResponse(call: Call, response: Response) {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
-                    LogManage.writeLog(applicationContext, error_head + response.code + " " + result)
+                    LogManage.writeLog(applicationContext, errorHead + response.code + " " + result)
                     Resend.addResendLoop(requestBody.text)
                 }
             }

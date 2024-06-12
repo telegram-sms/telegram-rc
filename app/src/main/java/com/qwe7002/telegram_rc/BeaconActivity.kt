@@ -167,7 +167,7 @@ class BeaconActivity : AppCompatActivity() {
             if (listenList!!.contains(beaconItemName(beacon.uuid, beacon.major, beacon.minor))) {
                 checkBoxView.isChecked = true
             }
-            checkBoxView.setOnClickListener { v: View? ->
+            checkBoxView.setOnClickListener {
                 val address = beaconItemName(beacon.uuid, beacon.major, beacon.minor)
                 val listenListTemp = Paper.book("beacon").read("address", ArrayList<String>())
                 if (checkBoxView.isChecked) {

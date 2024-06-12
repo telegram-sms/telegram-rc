@@ -19,7 +19,7 @@ import java.io.IOException
 import java.util.Objects
 
 object USSD {
-    fun sendUssd(context: Context, ussdRaw: String?, subId: Int) {
+    fun sendUssd(context: Context, ussdRaw: String, subId: Int) {
         val TAG = "send_ussd"
         val ussd = Other.getNineKeyMapConvert(ussdRaw)
 
@@ -39,8 +39,8 @@ object USSD {
             Log.i(TAG, "send_ussd: No permission.")
         }
 
-        val botToken = sharedPreferences.getString("bot_token", "")
-        val chatId = sharedPreferences.getString("chat_id", "")
+        val botToken = sharedPreferences.getString("bot_token", "").toString()
+        val chatId = sharedPreferences.getString("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = requestMessage()
         requestBody.chatId = chatId

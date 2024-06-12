@@ -54,7 +54,7 @@ class SpamActivity : AppCompatActivity() {
                     .show()
             }
 
-        fab.setOnClickListener { v: View? ->
+        fab.setOnClickListener {
             val spamDialogView = inflater.inflate(R.layout.set_keyword_layout, null)
             val editText = spamDialogView.findViewById<EditText>(R.id.spam_sms_keyword_editview)
             AlertDialog.Builder(this@SpamActivity).setTitle(R.string.spam_keyword_add_title)
@@ -68,7 +68,7 @@ class SpamActivity : AppCompatActivity() {
         }
     }
 
-    fun saveAndFlush(blackKeywordList: ArrayList<String>, listAdapter: ArrayAdapter<String>) {
+    private fun saveAndFlush(blackKeywordList: ArrayList<String>, listAdapter: ArrayAdapter<String>) {
         Log.d("save_and_flush", blackKeywordList.toString())
         Paper.book("system_config").write("block_keyword_list", blackKeywordList)
         listAdapter.notifyDataSetChanged()

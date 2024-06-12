@@ -43,7 +43,7 @@ class ScannerActivity : Activity() {
                 finish()
             }
         }.also { mCodeScanner!!.decodeCallback = it }
-        scannerView.setOnClickListener { view: View? -> mCodeScanner!!.startPreview() }
+        scannerView.setOnClickListener { mCodeScanner!!.startPreview() }
     }
 
 

@@ -26,14 +26,14 @@ import java.util.Objects
 class SMSSendResultReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Paper.init(context)
-        val TAG = "sms_send_receiver"
-        Log.d(TAG, "Receive action: " + intent.action)
+        val logTag = "sms_send_receiver"
+        Log.d(logTag, "Receive action: " + intent.action)
         val extras = intent.extras!!
         val sub = extras.getInt("sub_id")
         context.unregisterReceiver(this)
         val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
         if (!sharedPreferences.getBoolean("initialized", false)) {
-            Log.i(TAG, "Uninitialized, SMS send receiver is deactivated.")
+            Log.i(logTag, "Uninitialized, SMS send receiver is deactivated.")
             return
         }
         val botToken = sharedPreferences.getString("bot_token", "").toString()
@@ -44,7 +44,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         var requestUri = Network.getUrl(botToken, "sendMessage")
         val messageId = extras.getLong("message_id")
         if (messageId != -1L) {
-            Log.d(TAG, "Find the message_id and switch to edit mode.")
+            Log.d(logTag, "Find the message_id and switch to edit mode.")
             requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = messageId
         }

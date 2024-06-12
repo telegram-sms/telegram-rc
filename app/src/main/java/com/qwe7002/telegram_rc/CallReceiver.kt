@@ -40,7 +40,7 @@ class CallReceiver : BroadcastReceiver() {
                 }
                 val telephony = context
                     .getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-                val customPhoneListener = callStatusListerner(context)
+                val customPhoneListener = CallStatusListener(context)
                 telephony.listen(customPhoneListener, PhoneStateListener.LISTEN_CALL_STATE)
             }
 
@@ -53,7 +53,7 @@ class CallReceiver : BroadcastReceiver() {
         }
     }
 
-    internal class callStatusListerner(private val context: Context) : PhoneStateListener() {
+    internal class CallStatusListener(private val context: Context) : PhoneStateListener() {
         private val slot = Paper.book("temp").read<Int>("incoming_slot")!!
 
         init {

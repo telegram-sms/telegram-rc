@@ -39,12 +39,12 @@ import java.util.Objects
 class SMSReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Paper.init(context)
-        val TAG = "sms_receiver"
-        Log.d(TAG, "Receive action: " + intent.action)
+        val logTag = "sms_receiver"
+        Log.d(logTag, "Receive action: " + intent.action)
         val extras = intent.extras!!
         val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
         if (!sharedPreferences.getBoolean("initialized", false)) {
-            Log.i(TAG, "Uninitialized, SMS receiver is deactivated.")
+            Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
             return
         }
         val botToken = sharedPreferences.getString("bot_token", "").toString()
@@ -77,7 +77,7 @@ class SMSReceiver : BroadcastReceiver() {
         )
         for (i in pdus.indices) {
             val format = extras.getString("format")
-            Log.d(TAG, "format: $format")
+            Log.d(logTag, "format: $format")
             assert(format != null)
             messages[i] = SmsMessage.createFromPdu(pdus[i] as ByteArray, format)
         }
@@ -98,7 +98,7 @@ class SMSReceiver : BroadcastReceiver() {
         if (!trustedPhoneNumber.isNullOrEmpty()) {
             isTrustedPhone = messageAddress.contains(trustedPhoneNumber)
         }
-        Log.d(TAG, "onReceive: $isTrustedPhone")
+        Log.d(logTag, "onReceive: $isTrustedPhone")
         val requestBody = requestMessage()
         requestBody.chatId = chatId
         requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
@@ -184,7 +184,7 @@ class SMSReceiver : BroadcastReceiver() {
                                 Manifest.permission.SEND_SMS
                             ) != PackageManager.PERMISSION_GRANTED
                         ) {
-                            Log.i(TAG, "No SMS permission.")
+                            Log.i(logTag, "No SMS permission.")
                             return
                         }
                         val msgSendTo = Other.getSendPhoneNumber(commandList[1])
@@ -222,9 +222,9 @@ class SMSReceiver : BroadcastReceiver() {
                 }
             }
         }
-        Log.d(TAG, "onReceive: $isVerificationCode")
+        Log.d(logTag, "onReceive: $isVerificationCode")
         if (!isVerificationCode && !isTrustedPhone) {
-            Log.d(TAG, "onReceive: ")
+            Log.d(logTag, "onReceive: ")
             val blackListArray =
                 Paper.book("system_config").read("block_keyword_list", ArrayList<String>())!!
             for (blockListItem in blackListArray) {
@@ -245,7 +245,7 @@ class SMSReceiver : BroadcastReceiver() {
                     }
                     spamSmsList.add(writeMessage)
                     Paper.book().write("spam_sms_list", spamSmsList)
-                    Log.i(TAG, "Detected message contains blacklist keywords, add spam list")
+                    Log.i(logTag, "Detected message contains blacklist keywords, add spam list")
                     return
                 }
             }
@@ -261,7 +261,7 @@ class SMSReceiver : BroadcastReceiver() {
         val finalIsFlash = (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d(TAG, e.toString())
+                Log.d(logTag, e.toString())
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 addResendLoop(requestBody.text)

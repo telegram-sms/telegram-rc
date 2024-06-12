@@ -12,8 +12,8 @@ import kotlin.String
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val TAG = "boot_receiver"
-        Log.d(TAG, "Receive action: " + intent.action)
+        val logTag = "boot_receiver"
+        Log.d(logTag, "Receive action: " + intent.action)
         Paper.init(context)
         val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
         if (sharedPreferences.getBoolean("initialized", false)) {
@@ -28,7 +28,7 @@ class BootReceiver : BroadcastReceiver() {
             )
             ServiceManage.startBeaconService(context)
             KeepAliveJob.startJob(context)
-            ReSendJob.startJob(context);
+            ReSendJob.startJob(context)
             if (sharedPreferences.getBoolean("root", false)) {
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     val dummyIp = Paper.book("system_config").read<String>("dummy_ip_addr")
