@@ -79,7 +79,7 @@ object SMS {
             Log.d("send_sms", "No permission.")
             return
         }
-        if (!other.isPhoneNumber(sendTo)) {
+        if (!Other.isPhoneNumber(sendTo)) {
             writeLog(context, "[$sendTo] is an illegal phone number")
             return
         }
@@ -98,7 +98,7 @@ object SMS {
         } else {
             SmsManager.getSmsManagerForSubscriptionId(subId)
         }
-        val dualSim = other.getDualSimCardDisplay(
+        val dualSim = Other.getDualSimCardDisplay(
             context,
             slot,
             sharedPreferences.getBoolean("display_dual_sim_display_name", false)
@@ -125,7 +125,7 @@ object SMS {
                 throw IOException(response.code.toString())
             }
             if (privateMessageId == -1L) {
-                privateMessageId = other.getMessageId(Objects.requireNonNull(response.body).string())
+                privateMessageId = Other.getMessageId(Objects.requireNonNull(response.body).string())
             }
         } catch (e: IOException) {
             Log.d("sendSMS", "sendSMS: $e")

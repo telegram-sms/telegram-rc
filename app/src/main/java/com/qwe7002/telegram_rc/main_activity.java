@@ -49,7 +49,7 @@ import com.qwe7002.telegram_rc.root_kit.Shell;
 import com.qwe7002.telegram_rc.static_class.CONST;
 import com.qwe7002.telegram_rc.static_class.LogManage;
 import com.qwe7002.telegram_rc.static_class.network;
-import com.qwe7002.telegram_rc.static_class.other;
+import com.qwe7002.telegram_rc.static_class.Other;
 import com.qwe7002.telegram_rc.static_class.ServiceManage;
 
 import java.io.IOException;
@@ -112,7 +112,7 @@ public class main_activity extends AppCompatActivity {
         String bot_token_save = sharedPreferences.getString("bot_token", "");
         String chat_id_save = sharedPreferences.getString("chat_id", "");
         String message_thread_id_save = sharedPreferences.getString("message_thread_id", "");
-        if (other.parseStringToLong(chat_id_save) < 0) {
+        if (Other.parseStringToLong(chat_id_save) < 0) {
             privacy_mode_switch.setVisibility(View.VISIBLE);
         } else {
             privacy_mode_switch.setVisibility(View.GONE);
@@ -128,7 +128,7 @@ public class main_activity extends AppCompatActivity {
 
         boolean displayDualSimDisplayName = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            if (other.getActiveCard(context) < 2) {
+            if (Other.getActiveCard(context) < 2) {
                 displayDualSimDisplayNameSwitch.setEnabled(false);
                 displayDualSimDisplayName = false;
             }
@@ -201,7 +201,7 @@ public class main_activity extends AppCompatActivity {
                 displayDualSimDisplayNameSwitch.setChecked(false);
                 ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
             } else {
-                if (other.getActiveCard(context) < 2) {
+                if (Other.getActiveCard(context) < 2) {
                     displayDualSimDisplayNameSwitch.setEnabled(false);
                     displayDualSimDisplayNameSwitch.setChecked(false);
                 }
@@ -473,7 +473,7 @@ public class main_activity extends AppCompatActivity {
             privacy_mode_switch.setChecked(false);
             return;
         }
-        if (other.parseStringToLong(chat_id) < 0) {
+        if (Other.parseStringToLong(chat_id) < 0) {
             message_thread_id_view.setVisibility(View.VISIBLE);
             privacy_mode_switch.setVisibility(View.VISIBLE);
         } else {
@@ -545,7 +545,7 @@ public class main_activity extends AppCompatActivity {
                 if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                     TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
                     assert telephony_manager != null;
-                    if (telephony_manager.getPhoneCount() <= 1 || other.getActiveCard(context) < 2) {
+                    if (telephony_manager.getPhoneCount() <= 1 || Other.getActiveCard(context) < 2) {
                         display_dual_sim_display_name.setEnabled(false);
                         display_dual_sim_display_name.setChecked(false);
                     }

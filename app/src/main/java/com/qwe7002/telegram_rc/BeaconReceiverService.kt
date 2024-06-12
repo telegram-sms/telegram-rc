@@ -41,7 +41,7 @@ import com.qwe7002.telegram_rc.root_kit.Radio
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.Notify
-import com.qwe7002.telegram_rc.static_class.other
+import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.Resend
 import io.paperdb.Paper
@@ -80,7 +80,7 @@ class BeaconReceiverService : Service() {
 
     private fun startForegroundNotification() {
         val notification =
-            other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
+            Other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 Notify.BEACON_SERVICE, notification.build(),

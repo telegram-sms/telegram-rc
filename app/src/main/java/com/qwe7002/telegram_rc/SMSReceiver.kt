@@ -20,7 +20,7 @@ import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.qwe7002.telegram_rc.static_class.network
-import com.qwe7002.telegram_rc.static_class.other
+import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
@@ -53,7 +53,7 @@ class SMSReceiver : BroadcastReceiver() {
 
         var intentSlot = extras.getInt("slot", -1)
         val subId = extras.getInt("subscription", -1)
-        if (other.getActiveCard(context) >= 2 && intentSlot == -1) {
+        if (Other.getActiveCard(context) >= 2 && intentSlot == -1) {
             val manager = SubscriptionManager.from(context)
             if (ActivityCompat.checkSelfPermission(
                     context,
@@ -65,7 +65,7 @@ class SMSReceiver : BroadcastReceiver() {
             }
         }
         val slot = intentSlot
-        val dualSim = other.getDualSimCardDisplay(
+        val dualSim = Other.getDualSimCardDisplay(
             context,
             intentSlot,
             sharedPreferences.getBoolean("display_dual_sim_display_name", false)
@@ -187,8 +187,8 @@ class SMSReceiver : BroadcastReceiver() {
                             Log.i(TAG, "No SMS permission.")
                             return
                         }
-                        val msgSendTo = other.getSendPhoneNumber(commandList[1])
-                        if (other.isPhoneNumber(msgSendTo) && messageList.size > 2) {
+                        val msgSendTo = Other.getSendPhoneNumber(commandList[1])
+                        if (Other.isPhoneNumber(msgSendTo) && messageList.size > 2) {
                             val msgSendContent = StringBuilder()
                             var i = 2
                             while (i < messageList.size) {
@@ -199,7 +199,7 @@ class SMSReceiver : BroadcastReceiver() {
                                 ++i
                             }
                             var sendSlot = intentSlot
-                            if (other.getActiveCard(context) > 1) {
+                            if (Other.getActiveCard(context) > 1) {
                                 sendSlot = when (commandList[0].trim { it <= ' ' }) {
                                     "/sendsms1" -> 0
                                     "/sendsms2" -> 1
@@ -212,7 +212,7 @@ class SMSReceiver : BroadcastReceiver() {
                                     msgSendTo,
                                     msgSendContent.toString(),
                                     sendSlot,
-                                    other.getSubId(context, sendSlot)
+                                    Other.getSubId(context, sendSlot)
                                 )
                             }
                                 .start()
@@ -278,11 +278,11 @@ class SMSReceiver : BroadcastReceiver() {
                     }
                     addResendLoop(requestBody.text)
                 } else {
-                    if (!other.isPhoneNumber(messageAddress)) {
+                    if (!Other.isPhoneNumber(messageAddress)) {
                         writeLog(context, "[$messageAddress] Not a regular phone number.")
                         return
                     }
-                    other.addMessageList(other.getMessageId(result), messageAddress, slot)
+                    Other.addMessageList(Other.getMessageId(result), messageAddress, slot)
                 }
                 commandHandle(sharedPreferences, messageBody, dataEnable)
             }

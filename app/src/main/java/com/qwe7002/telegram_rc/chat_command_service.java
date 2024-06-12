@@ -42,7 +42,7 @@ import com.qwe7002.telegram_rc.static_class.LogManage;
 import com.qwe7002.telegram_rc.static_class.ServiceManage;
 import com.qwe7002.telegram_rc.static_class.network;
 import com.qwe7002.telegram_rc.static_class.Notify;
-import com.qwe7002.telegram_rc.static_class.other;
+import com.qwe7002.telegram_rc.static_class.Other;
 import com.qwe7002.telegram_rc.static_class.RemoteControl;
 import com.qwe7002.telegram_rc.static_class.SMS;
 import com.qwe7002.telegram_rc.static_class.USSD;
@@ -143,7 +143,7 @@ public class chat_command_service extends Service {
     }
 
     void startForegroundNotification() {
-        Notification.Builder notification = other.getNotificationObj(context, getString(R.string.chat_command_service_name));
+        Notification.Builder notification = Other.getNotificationObj(context, getString(R.string.chat_command_service_name));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(Notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         }else{
@@ -304,7 +304,7 @@ public class chat_command_service extends Service {
             if (!callback_data.equals(CALLBACK_DATA_VALUE.SEND)) {
                 set_sms_send_status_standby();
                 String request_uri = network.getUrl(bot_token, "editMessageText");
-                String dual_sim = other.getDualSimCardDisplay(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
+                String dual_sim = Other.getDualSimCardDisplay(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
                 String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + to + "\n" + context.getString(R.string.content) + content;
                 request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.cancel_button);
                 request_body.messageId = message_id;
@@ -327,10 +327,10 @@ public class chat_command_service extends Service {
                 return;
             }
             int sub_id = -1;
-            if (other.getActiveCard(context) == 1) {
+            if (Other.getActiveCard(context) == 1) {
                 slot = -1;
             } else {
-                sub_id = other.getSubId(context, slot);
+                sub_id = Other.getSubId(context, slot);
             }
             SMS.sendSMS(context, to, content, slot, sub_id, message_id);
             set_sms_send_status_standby();
@@ -421,7 +421,7 @@ public class chat_command_service extends Service {
             case "/start":
             case "/commandlist":
                 String sms_command = "\n" + getString(R.string.sendsms);
-                if (other.getActiveCard(context) == 2) {
+                if (Other.getActiveCard(context) == 2) {
                     sms_command = "\n" + getString(R.string.sendsms_dual);
                 }
                 sms_command += "\n" + getString(R.string.get_spam_sms);
@@ -429,7 +429,7 @@ public class chat_command_service extends Service {
                 String ussd_command = "";
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                     ussd_command = "\n" + getString(R.string.send_ussd_command);
-                    if (other.getActiveCard(context) == 2) {
+                    if (Other.getActiveCard(context) == 2) {
                         ussd_command = "\n" + getString(R.string.send_ussd_dual_command);
                     }
                 }
@@ -461,9 +461,9 @@ public class chat_command_service extends Service {
                         .getSystemService(Context.TELEPHONY_SERVICE);
                 assert telephonyManager != null;
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    cardInfo = "\nSIM: " + other.getSimDisplayName(context, 0);
-                    if (other.getActiveCard(context) == 2) {
-                        cardInfo = "\n" + getString(R.string.current_data_card) + ": SIM" + other.getDataSimId(context) + "\nSIM1: " + other.getSimDisplayName(context, 0) + "\nSIM2: " + other.getSimDisplayName(context, 1);
+                    cardInfo = "\nSIM: " + Other.getSimDisplayName(context, 0);
+                    if (Other.getActiveCard(context) == 2) {
+                        cardInfo = "\n" + getString(R.string.current_data_card) + ": SIM" + Other.getDataSimId(context) + "\nSIM1: " + Other.getSimDisplayName(context, 0) + "\nSIM2: " + Other.getSimDisplayName(context, 1);
                     }
                 }
                 String spamCount = "";
@@ -575,9 +575,9 @@ public class chat_command_service extends Service {
             case "/sendussd2":
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                     int sub_id = -1;
-                    if (other.getActiveCard(context) == 2) {
+                    if (Other.getActiveCard(context) == 2) {
                         if (command.equals("/sendussd2")) {
-                            sub_id = other.getSubId(context, 1);
+                            sub_id = Other.getSubId(context, 1);
                         }
                     }
                     String[] command_list = request_msg.split(" ");
@@ -664,8 +664,8 @@ public class chat_command_service extends Service {
             case "/sendsms2":
                 String[] msg_send_list = request_msg.split("\n");
                 if (msg_send_list.length > 2) {
-                    String msg_send_to = other.getSendPhoneNumber(msg_send_list[1]);
-                    if (other.isPhoneNumber(msg_send_to)) {
+                    String msg_send_to = Other.getSendPhoneNumber(msg_send_list[1]);
+                    if (Other.isPhoneNumber(msg_send_to)) {
                         StringBuilder msg_send_content = new StringBuilder();
                         for (int i = 2; i < msg_send_list.length; ++i) {
                             if (msg_send_list.length != 3 && i != 2) {
@@ -673,18 +673,18 @@ public class chat_command_service extends Service {
                             }
                             msg_send_content.append(msg_send_list[i]);
                         }
-                        if (other.getActiveCard(context) == 1) {
+                        if (Other.getActiveCard(context) == 1) {
                             SMS.sendSMS(context, msg_send_to, msg_send_content.toString(), -1, -1);
                             return;
                         }
                         int send_slot = -1;
-                        if (other.getActiveCard(context) > 1) {
+                        if (Other.getActiveCard(context) > 1) {
                             send_slot = 0;
                             if (command.equals("/sendsms2")) {
                                 send_slot = 1;
                             }
                         }
-                        int sub_id = other.getSubId(context, send_slot);
+                        int sub_id = Other.getSubId(context, send_slot);
                         if (sub_id != -1) {
                             SMS.sendSMS(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
                             return;
@@ -694,7 +694,7 @@ public class chat_command_service extends Service {
                     has_command = false;
                     send_sms_next_status = SEND_SMS_STATUS.PHONE_INPUT_STATUS;
                     int send_slot = -1;
-                    if (other.getActiveCard(context) > 1) {
+                    if (Other.getActiveCard(context) > 1) {
                         send_slot = 0;
                         if (command.equals("/sendsms2")) {
                             send_slot = 1;
@@ -735,8 +735,8 @@ public class chat_command_service extends Service {
                     result_send = getString(R.string.enter_number);
                     break;
                 case SEND_SMS_STATUS.MESSAGE_INPUT_STATUS:
-                    String temp_to = other.getSendPhoneNumber(request_msg);
-                    if (other.isPhoneNumber(temp_to)) {
+                    String temp_to = Other.getSendPhoneNumber(request_msg);
+                    if (Other.isPhoneNumber(temp_to)) {
                         Paper.book("send_temp").write("to", temp_to);
                         result_send = getString(R.string.enter_content);
                         send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;
@@ -785,7 +785,7 @@ public class chat_command_service extends Service {
                 }
                 String splite_command_value = final_command.replace("_", "");
                 if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
-                    Paper.book("send_temp").write("message_id", other.getMessageId(response_string));
+                    Paper.book("send_temp").write("message_id", Other.getMessageId(response_string));
                 }
 
                 if (splite_command_value.equals("/hotspot") || splite_command_value.equals("/vpnhotspot")) {
@@ -905,7 +905,7 @@ public class chat_command_service extends Service {
         @Override
         public void run() {
             android.util.Log.d(TAG, "run: thread main start");
-            if (other.parseStringToLong(chat_id) < 0) {
+            if (Other.parseStringToLong(chat_id) < 0) {
                 bot_username = Paper.book().read("bot_username", null);
                 if (bot_username == null) {
                     while (!getMe()) {

@@ -20,7 +20,7 @@ import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.Notify
-import com.qwe7002.telegram_rc.static_class.other
+import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
@@ -39,7 +39,7 @@ class BatteryService : Service() {
     }
     private fun startForegroundNotification() {
         val notification =
-            other.getNotificationObj(
+            Other.getNotificationObj(
                 applicationContext,
                 getString(R.string.battery_monitoring_notify)
             )
@@ -118,7 +118,7 @@ class BatteryService : Service() {
             val response = call.execute()
             if (response.code == 200) {
                 lastReceiveMessageId =
-                    other.getMessageId(Objects.requireNonNull(response.body).string())
+                    Other.getMessageId(Objects.requireNonNull(response.body).string())
             } else {
                 lastReceiveMessageId = -1
                 if (obj.action == Intent.ACTION_BATTERY_LOW) {

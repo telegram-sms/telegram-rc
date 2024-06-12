@@ -16,7 +16,7 @@ import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
 import com.qwe7002.telegram_rc.static_class.Notify
-import com.qwe7002.telegram_rc.static_class.other
+import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Resend
 import io.paperdb.Paper
 import okhttp3.Call
@@ -45,7 +45,7 @@ class NotificationListenerService : NotificationListenerService() {
     }
 
     fun startForegroundNotification() {
-        val notification: Notification.Builder = other.getNotificationObj(
+        val notification: Notification.Builder = Other.getNotificationObj(
             applicationContext,
             getString(R.string.Notification_Listener_title)
         )

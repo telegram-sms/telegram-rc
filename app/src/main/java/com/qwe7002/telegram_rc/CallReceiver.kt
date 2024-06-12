@@ -13,7 +13,7 @@ import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.static_class.CONST
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.network
-import com.qwe7002.telegram_rc.static_class.other
+import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
@@ -78,7 +78,7 @@ class CallReceiver : BroadcastReceiver() {
                 requestBody.chatId = chatId
                 requestBody.messageThreadId =
                     sharedPreferences.getString("message_thread_id", "")
-                val dualSim = other.getDualSimCardDisplay(
+                val dualSim = Other.getDualSimCardDisplay(
                     context,
                     slot,
                     sharedPreferences.getBoolean("display_dual_sim_display_name", false)
@@ -102,7 +102,7 @@ class CallReceiver : BroadcastReceiver() {
                         SMS.sendFallbackSMS(
                             context,
                             requestBody.text,
-                            other.getSubId(context, slot)
+                            Other.getSubId(context, slot)
                         )
                         Resend.addResendLoop(requestBody.text)
                     }
@@ -118,14 +118,14 @@ class CallReceiver : BroadcastReceiver() {
                             Resend.addResendLoop(requestBody.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
-                            if (!other.isPhoneNumber(incomingNumber)) {
+                            if (!Other.isPhoneNumber(incomingNumber)) {
                                 LogManage.writeLog(
                                     context,
                                     "[$incomingNumber] Not a regular phone number."
                                 )
                                 return
                             }
-                            other.addMessageList(other.getMessageId(result), incomingNumber, slot)
+                            Other.addMessageList(Other.getMessageId(result), incomingNumber, slot)
                         }
                     }
                 })

@@ -21,7 +21,7 @@ import java.util.Objects
 object USSD {
     fun sendUssd(context: Context, ussdRaw: String?, subId: Int) {
         val TAG = "send_ussd"
-        val ussd = other.getNineKeyMapConvert(ussdRaw)
+        val ussd = Other.getNineKeyMapConvert(ussdRaw)
 
         var tm: TelephonyManager? =
             (context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager)
@@ -58,7 +58,7 @@ object USSD {
             var messageId = -1L
             try {
                 val response = call.execute()
-                messageId = other.getMessageId(Objects.requireNonNull(response.body).string())
+                messageId = Other.getMessageId(Objects.requireNonNull(response.body).string())
             } catch (e: IOException) {
                 Log.d(TAG, "send_ussd: $e")
             }
