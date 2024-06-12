@@ -7,10 +7,10 @@ import android.telephony.TelephonyManager.UssdResponseCallback
 import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.requestMessage
-import com.qwe7002.telegram_rc.static_class.CONST
+import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.LogManage
-import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
 import okhttp3.Call
@@ -41,9 +41,9 @@ class USSDCallBack(
         requestBody.chatId = chatId
         requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
         val botToken = sharedPreferences.getString("bot_token", "")
-        this.requestUri = network.getUrl(botToken, "SendMessage")
+        this.requestUri = Network.getUrl(botToken, "SendMessage")
         if (messageId != -1L) {
-            this.requestUri = network.getUrl(botToken, "editMessageText")
+            this.requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = messageId
         }
         this.messageHeader = context.getString(R.string.send_ussd_head)
@@ -80,8 +80,8 @@ class USSDCallBack(
     private fun networkHandle(message: String) {
         requestBody.text = message
         val requestBodyJson = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyJson.toRequestBody(CONST.JSON)
-        val okhttpClient = network.getOkhttpObj(dohSwitch)
+        val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
+        val okhttpClient = Network.getOkhttpObj(dohSwitch)
         val requestObj: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(requestObj)
         val errorHead = "Send USSD failed:"

@@ -38,8 +38,8 @@ import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.root_kit.Radio
-import com.qwe7002.telegram_rc.static_class.CONST
-import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
@@ -128,10 +128,10 @@ class BeaconReceiverService : Service() {
             IntentFilter("reload_beacon_config")
         )
         val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
-        requestUrl = network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage")
+        requestUrl = Network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage")
         chatId = sharedPreferences.getString("chat_id", "")!!
         messageThreadId = sharedPreferences.getString("message_thread_id", "")!!
-        okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
         isRoot = sharedPreferences.getBoolean("root", false)
 
         val batchListener = IBeaconBatchListener { beacons ->
@@ -180,7 +180,7 @@ class BeaconReceiverService : Service() {
             IntentFilter("flush_beacons_list")
         )
         val intentFilter = IntentFilter()
-        intentFilter.addAction(CONST.BROADCAST_STOP_SERVICE)
+        intentFilter.addAction(Const.BROADCAST_STOP_SERVICE)
         val broadcastReceiver = broadcastReceiver()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(broadcastReceiver, intentFilter, RECEIVER_EXPORTED)
@@ -196,7 +196,7 @@ class BeaconReceiverService : Service() {
         override fun onReceive(context: Context, intent: Intent) {
             Log.d("beaconReceiver", "onReceive: " + intent.action)
             assert(intent.action != null)
-            if (CONST.BROADCAST_STOP_SERVICE == intent.action) {
+            if (Const.BROADCAST_STOP_SERVICE == intent.action) {
                 Log.i("beaconReceiver", "Received stop signal, quitting now...")
                 Process.killProcess(Process.myPid())
             }
@@ -411,7 +411,7 @@ class BeaconReceiverService : Service() {
                 R.string.current_network_connection_status
             ) + networkType()
         val requestBodyJson = Gson().toJson(request_body)
-        val body: RequestBody = requestBodyJson.toRequestBody(CONST.JSON)
+        val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
         val requestObj: Request = Request.Builder().url(requestUrl).method("POST", body).build()
         val call: Call = okhttp_client.newCall(requestObj)
         call.enqueue(object : Callback {

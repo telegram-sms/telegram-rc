@@ -16,9 +16,9 @@ import android.util.Log
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.requestMessage
-import com.qwe7002.telegram_rc.static_class.CONST
+import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
-import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
@@ -67,7 +67,7 @@ class BatteryService : Service() {
             filter.addAction(Intent.ACTION_POWER_CONNECTED)
             filter.addAction(Intent.ACTION_POWER_DISCONNECTED)
         }
-        filter.addAction(CONST.BROADCAST_STOP_SERVICE)
+        filter.addAction(Const.BROADCAST_STOP_SERVICE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(batteryReceiver, filter, RECEIVER_EXPORTED)
         } else {
@@ -101,16 +101,16 @@ class BatteryService : Service() {
         requestBody.chatId = chat_id
         requestBody.text = obj.content
         requestBody.messageThreadId = message_thread_id
-        var requestUri = network.getUrl(bot_token, "sendMessage")
+        var requestUri = Network.getUrl(bot_token, "sendMessage")
         if ((System.currentTimeMillis() - lastReceiveTime) <= 10000L && lastReceiveMessageId != -1L) {
-            requestUri = network.getUrl(bot_token, "editMessageText")
+            requestUri = Network.getUrl(bot_token, "editMessageText")
             requestBody.messageId = lastReceiveMessageId
             Log.d(TAG, "onReceive: edit_mode")
         }
         lastReceiveTime = System.currentTimeMillis()
-        val okhttpClient = network.getOkhttpObj(doh_switch)
+        val okhttpClient = Network.getOkhttpObj(doh_switch)
         val requestBodyRaw = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyRaw.toRequestBody(CONST.JSON)
+        val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send battery info failed:"
@@ -153,7 +153,7 @@ class BatteryService : Service() {
             val TAG = "battery_receiver"
             assert(intent.action != null)
             Log.d(TAG, "Receive action: " + intent.action)
-            if (intent.action == CONST.BROADCAST_STOP_SERVICE) {
+            if (intent.action == Const.BROADCAST_STOP_SERVICE) {
                 Log.i(TAG, "Received stop signal, quitting now...")
                 stopSelf()
                 Process.killProcess(Process.myPid())

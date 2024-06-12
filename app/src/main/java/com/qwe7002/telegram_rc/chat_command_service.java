@@ -37,10 +37,10 @@ import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard;
 import com.qwe7002.telegram_rc.data_structure.requestMessage;
 import com.qwe7002.telegram_rc.data_structure.smsRequestInfo;
 import com.qwe7002.telegram_rc.root_kit.Radio;
-import com.qwe7002.telegram_rc.static_class.CONST;
+import com.qwe7002.telegram_rc.static_class.Const;
 import com.qwe7002.telegram_rc.static_class.LogManage;
 import com.qwe7002.telegram_rc.static_class.ServiceManage;
-import com.qwe7002.telegram_rc.static_class.network;
+import com.qwe7002.telegram_rc.static_class.Network;
 import com.qwe7002.telegram_rc.static_class.Notify;
 import com.qwe7002.telegram_rc.static_class.Other;
 import com.qwe7002.telegram_rc.static_class.RemoteControl;
@@ -204,7 +204,7 @@ public class chat_command_service extends Service {
 
     private boolean getMe() {
         OkHttpClient okhttpClientNew = okhttp_client;
-        String request_uri = network.getUrl(bot_token, "getMe");
+        String request_uri = Network.getUrl(bot_token, "getMe");
         Request request = new Request.Builder().url(request_uri).build();
         Call call = okhttpClientNew.newCall(request);
         Response response;
@@ -303,7 +303,7 @@ public class chat_command_service extends Service {
             assert callback_data != null;
             if (!callback_data.equals(CALLBACK_DATA_VALUE.SEND)) {
                 set_sms_send_status_standby();
-                String request_uri = network.getUrl(bot_token, "editMessageText");
+                String request_uri = Network.getUrl(bot_token, "editMessageText");
                 String dual_sim = Other.getDualSimCardDisplay(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
                 String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + to + "\n" + context.getString(R.string.content) + content;
                 request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.cancel_button);
@@ -311,8 +311,8 @@ public class chat_command_service extends Service {
                 request_body.messageThreadId = message_thread_id;
                 Gson gson = new Gson();
                 String request_body_raw = gson.toJson(request_body);
-                RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
-                OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
+                RequestBody body = RequestBody.create(request_body_raw, Const.JSON);
+                OkHttpClient okhttp_client = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
                 Request request = new Request.Builder().url(request_uri).method("POST", body).build();
                 Call call = okhttp_client.newCall(request);
                 try {
@@ -599,15 +599,15 @@ public class chat_command_service extends Service {
                     break;
                 }
                 new Thread(() -> {
-                    if (network.checkNetworkStatus(context)) {
-                        OkHttpClient okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
+                    if (Network.checkNetworkStatus(context)) {
+                        OkHttpClient okhttp_client = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
                         for (String item : spam_sms_list) {
                             requestMessage send_sms_request_body = new requestMessage();
                             send_sms_request_body.chatId = chat_id;
                             send_sms_request_body.text = item;
-                            String request_uri = network.getUrl(bot_token, "sendMessage");
+                            String request_uri = Network.getUrl(bot_token, "sendMessage");
                             String request_body_json = new Gson().toJson(send_sms_request_body);
-                            RequestBody body = RequestBody.create(request_body_json, CONST.JSON);
+                            RequestBody body = RequestBody.create(request_body_json, Const.JSON);
                             Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
                             Call call = okhttp_client.newCall(request_obj);
                             call.enqueue(new Callback() {
@@ -760,8 +760,8 @@ public class chat_command_service extends Service {
             request_body.text = head + "\n" + result_send;
         }
 
-        String request_uri = network.getUrl(bot_token, "sendMessage");
-        RequestBody body = RequestBody.create(new Gson().toJson(request_body), CONST.JSON);
+        String request_uri = Network.getUrl(bot_token, "sendMessage");
+        RequestBody body = RequestBody.create(new Gson().toJson(request_body), Const.JSON);
         android.util.Log.d(TAG, "receive_handle: " + new Gson().toJson(request_body));
         Request send_request = new Request.Builder().url(request_uri).method("POST", body).build();
         Call call = okhttp_client.newCall(send_request);
@@ -804,7 +804,7 @@ public class chat_command_service extends Service {
                             }
                             break;
                         case "/mobiledata":
-                            com.qwe7002.telegram_rc.root_kit.Networks.setData(!network.getDataEnable(context));
+                            com.qwe7002.telegram_rc.root_kit.Networks.setData(!Network.getDataEnable(context));
                             break;
                     }
                 }
@@ -836,7 +836,7 @@ public class chat_command_service extends Service {
         chat_id = sharedPreferences.getString("chat_id", "");
         bot_token = sharedPreferences.getString("bot_token", "");
         message_thread_id = sharedPreferences.getString("message_thread_id", "");
-        okhttp_client = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
+        okhttp_client = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
         privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
         wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
         wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
@@ -851,7 +851,7 @@ public class chat_command_service extends Service {
         thread_main = new Thread(new thread_main_runnable());
         thread_main.start();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(CONST.BROADCAST_STOP_SERVICE);
+        intentFilter.addAction(Const.BROADCAST_STOP_SERVICE);
         NetworkRequest network_request = new NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
@@ -863,7 +863,7 @@ public class chat_command_service extends Service {
     }
 
     private void when_network_change() {
-        if (network.checkNetworkStatus(context)) {
+        if (Network.checkNetworkStatus(context)) {
             if (!thread_main.isAlive()) {
                 LogManage.writeLog(context, "Network connections has been restored.");
                 thread_main = new Thread(new thread_main_runnable());
@@ -885,7 +885,7 @@ public class chat_command_service extends Service {
         public void onReceive(Context context, @NotNull Intent intent) {
             android.util.Log.d(TAG, "onReceive: " + intent.getAction());
             assert intent.getAction() != null;
-            if (CONST.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
+            if (Const.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
                 android.util.Log.i(TAG, "Received stop signal, quitting now...");
                 stopSelf();
                 Process.killProcess(Process.myPid());
@@ -926,7 +926,7 @@ public class chat_command_service extends Service {
                         .readTimeout(http_timeout, TimeUnit.SECONDS)
                         .writeTimeout(http_timeout, TimeUnit.SECONDS)
                         .build();
-                String request_uri = network.getUrl(bot_token, "getUpdates");
+                String request_uri = Network.getUrl(bot_token, "getUpdates");
                 pollingJson request_body = new pollingJson();
                 request_body.offset = offset;
                 request_body.timeout = timeout;
@@ -934,7 +934,7 @@ public class chat_command_service extends Service {
                     request_body.timeout = 0;
                     android.util.Log.d(TAG, "run: first_request");
                 }
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), CONST.JSON);
+                RequestBody body = RequestBody.create(new Gson().toJson(request_body), Const.JSON);
                 Request request = new Request.Builder().url(request_uri).method("POST", body).build();
                 Call call = okhttp_client_new.newCall(request);
                 Response response;
@@ -942,7 +942,7 @@ public class chat_command_service extends Service {
                     response = call.execute();
                 } catch (IOException e) {
                     e.printStackTrace();
-                    if (!network.checkNetworkStatus(context)) {
+                    if (!Network.checkNetworkStatus(context)) {
                         LogManage.writeLog(context, "No network connections available. ");
                         break;
                     }

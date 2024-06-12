@@ -12,9 +12,9 @@ import android.service.notification.StatusBarNotification
 import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.requestMessage
-import com.qwe7002.telegram_rc.static_class.CONST
+import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
-import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Resend
@@ -98,7 +98,7 @@ class NotificationListenerService : NotificationListenerService() {
         }
         val botToken = sharedPreferences.getString("bot_token", "")
         val chatId = sharedPreferences.getString("chat_id", "")
-        val requestUri = network.getUrl(botToken, "sendMessage")
+        val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = requestMessage()
         if ((System.currentTimeMillis() - lastSendTime) <= 1000L && (lastPackage == packageName)) {
             if (lastMessage == title + content) {
@@ -113,8 +113,8 @@ class NotificationListenerService : NotificationListenerService() {
             ${getString(R.string.title)}$title
             ${getString(R.string.content)}$content
             """.trimIndent()
-        val body: RequestBody = Gson().toJson(requestBody).toRequestBody(CONST.JSON)
-        val okhttpClient = network.getOkhttpObj(
+        val body: RequestBody = Gson().toJson(requestBody).toRequestBody(Const.JSON)
+        val okhttpClient = Network.getOkhttpObj(
             sharedPreferences.getBoolean("doh_switch", true)
         )
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()

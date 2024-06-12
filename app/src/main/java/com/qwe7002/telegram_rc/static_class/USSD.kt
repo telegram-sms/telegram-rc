@@ -41,7 +41,7 @@ object USSD {
 
         val botToken = sharedPreferences.getString("bot_token", "")
         val chatId = sharedPreferences.getString("chat_id", "")
-        val requestUri = network.getUrl(botToken, "sendMessage")
+        val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = requestMessage()
         requestBody.chatId = chatId
         requestBody.text = """
@@ -49,8 +49,8 @@ object USSD {
              ${context.getString(R.string.ussd_code_running)}
              """.trimIndent()
         val requestBodyRaw = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyRaw.toRequestBody(CONST.JSON)
-        val okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+        val okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val telephonyManager = tm

@@ -10,9 +10,9 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.requestMessage
-import com.qwe7002.telegram_rc.static_class.CONST
+import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
-import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.qwe7002.telegram_rc.static_class.SMS
@@ -72,7 +72,7 @@ class CallReceiver : BroadcastReceiver() {
                 }
                 val botToken = sharedPreferences.getString("bot_token", "")
                 val chatId = sharedPreferences.getString("chat_id", "")
-                val requestUri = network.getUrl(botToken, "sendMessage")
+                val requestUri = Network.getUrl(botToken, "sendMessage")
                 val requestBody =
                     requestMessage()
                 requestBody.chatId = chatId
@@ -89,9 +89,9 @@ class CallReceiver : BroadcastReceiver() {
                     """.trimIndent()
 
                 val requestBodyRaw = Gson().toJson(requestBody)
-                val body: RequestBody = requestBodyRaw.toRequestBody(CONST.JSON)
+                val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
                 val okhttpClient =
-                    network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+                    Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
                 val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClient.newCall(request)
                 val errorHead = "Send missed call error:"

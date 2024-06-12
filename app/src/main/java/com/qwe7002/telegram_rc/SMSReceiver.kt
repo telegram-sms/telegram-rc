@@ -15,11 +15,11 @@ import com.github.sumimakito.codeauxlib.CodeauxLibPortable
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.root_kit.Networks.setData
-import com.qwe7002.telegram_rc.static_class.CONST
+import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
-import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.SMS
@@ -49,7 +49,7 @@ class SMSReceiver : BroadcastReceiver() {
         }
         val botToken = sharedPreferences.getString("bot_token", "")
         val chatId = sharedPreferences.getString("chat_id", "")
-        val requestUri = network.getUrl(botToken, "sendMessage")
+        val requestUri = Network.getUrl(botToken, "sendMessage")
 
         var intentSlot = extras.getInt("slot", -1)
         val subId = extras.getInt("subscription", -1)
@@ -131,7 +131,7 @@ class SMSReceiver : BroadcastReceiver() {
             }
         }
         requestBody.text = messageHead + messageBodyHtml
-        val dataEnable = network.getDataEnable(context)
+        val dataEnable = Network.getDataEnable(context)
         if (isTrustedPhone) {
             val messageCommand = messageBody.lowercase(Locale.getDefault()).replace("_", "")
             val commandList =
@@ -252,8 +252,8 @@ class SMSReceiver : BroadcastReceiver() {
         }
 
 
-        val body: RequestBody = RequestBody.create(CONST.JSON,Gson().toJson(requestBody))
-        val okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        val body: RequestBody = RequestBody.create(Const.JSON,Gson().toJson(requestBody))
+        val okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS forward failed:"
@@ -306,7 +306,7 @@ class SMSReceiver : BroadcastReceiver() {
     private fun openData(context: Context?) {
         setData(true)
         var loopCount = 0
-        while (!network.checkNetworkStatus(context!!)) {
+        while (!Network.checkNetworkStatus(context!!)) {
             if (loopCount >= 100) {
                 break
             }

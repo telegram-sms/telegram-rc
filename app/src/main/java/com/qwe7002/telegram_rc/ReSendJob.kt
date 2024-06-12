@@ -8,9 +8,9 @@ import android.content.ComponentName
 import android.content.Context
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.requestMessage
-import com.qwe7002.telegram_rc.static_class.CONST
+import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
-import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.Network
 import io.paperdb.Paper
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -25,12 +25,12 @@ class ReSendJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Paper.init(applicationContext)
         val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
-        requestUri = network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage")
+        requestUri = Network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage")
         Thread {
             val sendList: java.util.ArrayList<String>? =
                 Paper.book().read(tableName, java.util.ArrayList())
             val okhttpClient =
-                network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+                Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
             for (item in sendList!!) {
                 networkProgressHandle(
                     item,
@@ -65,7 +65,7 @@ class ReSendJob : JobService() {
             requestBody.parseMode = "html"
         }
         val requestBodyJson = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyJson.toRequestBody(CONST.JSON)
+        val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
         val requestObj: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(requestObj)
         try {

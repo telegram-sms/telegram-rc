@@ -8,10 +8,10 @@ import android.telephony.SmsManager
 import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.requestMessage
-import com.qwe7002.telegram_rc.static_class.CONST
+import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
-import com.qwe7002.telegram_rc.static_class.network
+import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
 import io.paperdb.Paper
 import okhttp3.Call
@@ -41,11 +41,11 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         val requestBody = requestMessage()
         requestBody.chatId = chatId
         requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
-        var requestUri = network.getUrl(botToken, "sendMessage")
+        var requestUri = Network.getUrl(botToken, "sendMessage")
         val messageId = extras.getLong("message_id")
         if (messageId != -1L) {
             Log.d(TAG, "Find the message_id and switch to edit mode.")
-            requestUri = network.getUrl(botToken, "editMessageText")
+            requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = messageId
         }
         var resultStatus = "Unknown"
@@ -65,8 +65,8 @@ class SMSSendResultReceiver : BroadcastReceiver() {
             ${context.getString(R.string.status)}$resultStatus
             """.trimIndent()
         val requestBodyRaw = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyRaw.toRequestBody(CONST.JSON)
-        val okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+        val okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS status failed:"

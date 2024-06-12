@@ -86,10 +86,10 @@ object SMS {
         val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
         val botToken = sharedPreferences.getString("bot_token", "").toString()
         val chatId = sharedPreferences.getString("chat_id", "").toString()
-        var requestUri = network.getUrl(botToken, "sendMessage")
+        var requestUri = Network.getUrl(botToken, "sendMessage")
         if (privateMessageId != -1L) {
             Log.d("send_sms", "Find the message_id and switch to edit mode.")
-            requestUri = network.getUrl(botToken, "editMessageText")
+            requestUri = Network.getUrl(botToken, "editMessageText")
         }
         val requestBody = requestMessage()
         requestBody.chatId = chatId
@@ -115,8 +115,8 @@ object SMS {
         requestBody.messageId = privateMessageId
         val gson = Gson()
         val requestBodyRaw = gson.toJson(requestBody)
-        val body: RequestBody = requestBodyRaw.toRequestBody(CONST.JSON)
-        val okhttpClient = network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+        val okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         try {

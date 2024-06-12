@@ -14,7 +14,7 @@ import com.qwe7002.telegram_rc.chat_command_service
 object ServiceManage {
     @JvmStatic
     fun stopAllService(context: Context) {
-        val intent = Intent(CONST.BROADCAST_STOP_SERVICE)
+        val intent = Intent(Const.BROADCAST_STOP_SERVICE)
         context.sendBroadcast(intent)
         try {
             Thread.sleep(1000)

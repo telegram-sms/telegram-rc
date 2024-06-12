@@ -46,9 +46,9 @@ import com.qwe7002.telegram_rc.config.proxy;
 import com.qwe7002.telegram_rc.data_structure.pollingJson;
 import com.qwe7002.telegram_rc.data_structure.requestMessage;
 import com.qwe7002.telegram_rc.root_kit.Shell;
-import com.qwe7002.telegram_rc.static_class.CONST;
+import com.qwe7002.telegram_rc.static_class.Const;
 import com.qwe7002.telegram_rc.static_class.LogManage;
-import com.qwe7002.telegram_rc.static_class.network;
+import com.qwe7002.telegram_rc.static_class.Network;
 import com.qwe7002.telegram_rc.static_class.Other;
 import com.qwe7002.telegram_rc.static_class.ServiceManage;
 
@@ -244,14 +244,14 @@ public class main_activity extends AppCompatActivity {
             progress_dialog.setIndeterminate(false);
             progress_dialog.setCancelable(false);
             progress_dialog.show();
-            String request_uri = network.getUrl(bot_token_editview.getText().toString().trim(), "getUpdates");
-            OkHttpClient okhttp_client = network.getOkhttpObj(doh_switch.isChecked());
+            String request_uri = Network.getUrl(bot_token_editview.getText().toString().trim(), "getUpdates");
+            OkHttpClient okhttp_client = Network.getOkhttpObj(doh_switch.isChecked());
             okhttp_client = okhttp_client.newBuilder()
                     .readTimeout(60, TimeUnit.SECONDS)
                     .build();
             pollingJson request_body = new pollingJson();
             request_body.timeout = 60;
-            RequestBody body = RequestBody.create(new Gson().toJson(request_body), CONST.JSON);
+            RequestBody body = RequestBody.create(new Gson().toJson(request_body), Const.JSON);
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             progress_dialog.setOnKeyListener((dialogInterface, i, keyEvent) -> {
@@ -384,15 +384,15 @@ public class main_activity extends AppCompatActivity {
             progressDialog.setCancelable(false);
             progressDialog.show();
 
-            String request_uri = network.getUrl(bot_token_editview.getText().toString().trim(), "sendMessage");
+            String request_uri = Network.getUrl(bot_token_editview.getText().toString().trim(), "sendMessage");
             requestMessage request_body = new requestMessage();
             request_body.chatId = chat_id_editview.getText().toString().trim();
             request_body.messageThreadId = message_thread_id_editview.getText().toString().trim();
             request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.success_connect);
             Gson gson = new Gson();
             String request_body_raw = gson.toJson(request_body);
-            RequestBody body = RequestBody.create(request_body_raw, CONST.JSON);
-            OkHttpClient okhttp_client = network.getOkhttpObj(doh_switch.isChecked());
+            RequestBody body = RequestBody.create(request_body_raw, Const.JSON);
+            OkHttpClient okhttp_client = Network.getOkhttpObj(doh_switch.isChecked());
             Request request = new Request.Builder().url(request_uri).method("POST", body).build();
             Call call = okhttp_client.newCall(request);
             final String error_head = "Send message failed:";
@@ -427,7 +427,7 @@ public class main_activity extends AppCompatActivity {
                         android.util.Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
                         Paper.book().destroy();
                     }
-                    Paper.book("system_config").write("version", CONST.SYSTEM_CONFIG_VERSION);
+                    Paper.book("system_config").write("version", Const.SYSTEM_CONFIG_VERSION);
                     SharedPreferences.Editor editor = sharedPreferences.edit().clear();
                     editor.putString("bot_token", new_bot_token);
                     editor.putString("chat_id", chat_id_editview.getText().toString().trim());
@@ -558,7 +558,7 @@ public class main_activity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
-            if (resultCode == CONST.RESULT_CONFIG_JSON) {
+            if (resultCode == Const.RESULT_CONFIG_JSON) {
                 JsonObject json_config = JsonParser.parseString(Objects.requireNonNull(data.getStringExtra("config_json"))).getAsJsonObject();
                 ((EditText) findViewById(R.id.bot_token_editview)).setText(json_config.get("bot_token").getAsString());
                 ((EditText) findViewById(R.id.chat_id_editview)).setText(json_config.get("chat_id").getAsString());
