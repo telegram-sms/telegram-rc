@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
@@ -154,14 +155,16 @@ public class other {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         assert manager != null;
         manager.createNotificationChannel(channel);
-
-        return new Notification.Builder(context, notification_name).setAutoCancel(false)
+        Notification.Builder builder = new Notification.Builder(context, notification_name).setAutoCancel(false)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setOngoing(true)
-                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setTicker(context.getString(R.string.app_name))
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText(notification_name + context.getString(R.string.service_is_running));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE);
+        }
+        return builder;
     }
 
     public static int getSubId(Context context, int slot) {
