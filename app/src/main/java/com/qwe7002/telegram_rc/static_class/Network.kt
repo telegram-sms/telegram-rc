@@ -77,13 +77,12 @@ object Network {
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
-        var proxy: Proxy? = null
-        assert(proxyConfig != null)
+        lateinit var proxy: Proxy
         if (proxyConfig!!.enable) {
             val policy = ThreadPolicy.Builder().permitAll().build()
             StrictMode.setThreadPolicy(policy)
-            val proxyAddr = InetSocketAddress(proxyConfig.host, proxyConfig.port)
-            proxy = Proxy(Proxy.Type.SOCKS, proxyAddr)
+            val inetSocketAddress = InetSocketAddress(proxyConfig.host, proxyConfig.port)
+            proxy = Proxy(Proxy.Type.SOCKS, inetSocketAddress)
             Authenticator.setDefault(object : Authenticator() {
                 override fun getPasswordAuthentication(): PasswordAuthentication? {
                     if (requestingHost.equals(proxyConfig.host, ignoreCase = true)) {
