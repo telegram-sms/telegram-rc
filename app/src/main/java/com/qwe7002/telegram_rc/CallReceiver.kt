@@ -70,8 +70,8 @@ class CallReceiver : BroadcastReceiver() {
                     Log.i("call_status_listener", "Uninitialized, Phone receiver is deactivated.")
                     return
                 }
-                val botToken = sharedPreferences.getString("bot_token", "")
-                val chatId = sharedPreferences.getString("chat_id", "")
+                val botToken = sharedPreferences.getString("bot_token", "").toString()
+                val chatId = sharedPreferences.getString("chat_id", "").toString()
                 val requestUri = Network.getUrl(botToken, "sendMessage")
                 val requestBody =
                     requestMessage()

@@ -37,16 +37,24 @@ class BatteryService : Service() {
 
         return START_STICKY
     }
+
     private fun startForegroundNotification() {
         val notification =
             Other.getNotificationObj(
                 applicationContext,
                 getString(R.string.battery_monitoring_notify)
             )
-        startForeground(
-            Notify.BATTERY, notification.build(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                Notify.BATTERY, notification.build(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(
+                Notify.BATTERY, notification.build()
+            )
+        }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")

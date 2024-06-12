@@ -25,7 +25,7 @@ class ReSendJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Paper.init(applicationContext)
         val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
-        requestUri = Network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage")
+        requestUri = Network.getUrl(sharedPreferences.getString("bot_token", "").toString(), "SendMessage")
         Thread {
             val sendList: java.util.ArrayList<String>? =
                 Paper.book().read(tableName, java.util.ArrayList())

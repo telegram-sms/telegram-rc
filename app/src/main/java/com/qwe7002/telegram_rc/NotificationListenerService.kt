@@ -49,7 +49,7 @@ class NotificationListenerService : NotificationListenerService() {
             applicationContext,
             getString(R.string.Notification_Listener_title)
         )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
                 Notify.NOTIFICATION_LISTENER_SERVICE, notification.build(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
@@ -96,8 +96,8 @@ class NotificationListenerService : NotificationListenerService() {
         if (title == "None" && content == "None") {
             return
         }
-        val botToken = sharedPreferences.getString("bot_token", "")
-        val chatId = sharedPreferences.getString("chat_id", "")
+        val botToken = sharedPreferences.getString("bot_token", "").toString()
+        val chatId = sharedPreferences.getString("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = requestMessage()
         if ((System.currentTimeMillis() - lastSendTime) <= 1000L && (lastPackage == packageName)) {

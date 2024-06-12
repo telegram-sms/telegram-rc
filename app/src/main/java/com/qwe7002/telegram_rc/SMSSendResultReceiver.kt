@@ -36,8 +36,8 @@ class SMSSendResultReceiver : BroadcastReceiver() {
             Log.i(TAG, "Uninitialized, SMS send receiver is deactivated.")
             return
         }
-        val botToken = sharedPreferences.getString("bot_token", "")
-        val chatId = sharedPreferences.getString("chat_id", "")
+        val botToken = sharedPreferences.getString("bot_token", "").toString()
+        val chatId = sharedPreferences.getString("chat_id", "").toString()
         val requestBody = requestMessage()
         requestBody.chatId = chatId
         requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")

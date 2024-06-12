@@ -74,23 +74,18 @@ class BeaconReceiverService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-       startForegroundNotification()
+        startForegroundNotification()
         return START_STICKY
     }
 
     private fun startForegroundNotification() {
         val notification =
             Other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                Notify.BEACON_SERVICE, notification.build(),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-            )
-        }else{
-            startForeground(
-                Notify.BEACON_SERVICE, notification.build()
-            )
-        }
+        startForeground(
+            Notify.BEACON_SERVICE, notification.build(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
+        
     }
 
 
@@ -123,12 +118,13 @@ class BeaconReceiverService : Service() {
             this.wakelock.acquire()
         }
         config = Paper.book("beacon").read("config", beacon())!!
-       registerReceiver(
+        registerReceiver(
             reloadConfigReceiver,
             IntentFilter("reload_beacon_config")
         )
         val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
-        requestUrl = Network.getUrl(sharedPreferences.getString("bot_token", ""), "SendMessage")
+        requestUrl =
+            Network.getUrl(sharedPreferences.getString("bot_token", "").toString(), "SendMessage")
         chatId = sharedPreferences.getString("chat_id", "")!!
         messageThreadId = sharedPreferences.getString("message_thread_id", "")!!
         okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
@@ -150,7 +146,7 @@ class BeaconReceiverService : Service() {
                     beacon.add(item)
                 } catch (e: ConcurrentModificationException) {
                     Log.d(TAG, "onCreate: $e")
-                }catch (e: NullPointerException){
+                } catch (e: NullPointerException) {
                     Log.d(TAG, "onCreate: $e")
                 }
             }
@@ -399,25 +395,25 @@ class BeaconReceiverService : Service() {
 
     private fun networkHandle(
         message: String,
-        chat_id: String,
-        okhttp_client: OkHttpClient
+        chatId1: String,
+        okhttpClient1: OkHttpClient
     ) {
-        val request_body =
+        val requestBody =
             requestMessage()
-        request_body.chatId = chat_id
-        request_body.messageThreadId = messageThreadId
-        request_body.text =
+        requestBody.chatId = chatId1
+        requestBody.messageThreadId = messageThreadId
+        requestBody.text =
             message + "\n" + getString(R.string.current_battery_level) + getBatteryInfoMsg() + "\n" + getString(
                 R.string.current_network_connection_status
             ) + networkType()
-        val requestBodyJson = Gson().toJson(request_body)
+        val requestBodyJson = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
         val requestObj: Request = Request.Builder().url(requestUrl).method("POST", body).build()
-        val call: Call = okhttp_client.newCall(requestObj)
+        val call: Call = okhttpClient1.newCall(requestObj)
         call.enqueue(object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
-                Resend.addResendLoop(request_body.text)
+                Resend.addResendLoop(requestBody.text)
                 e.printStackTrace()
             }
 

@@ -144,7 +144,7 @@ public class chat_command_service extends Service {
 
     void startForegroundNotification() {
         Notification.Builder notification = Other.getNotificationObj(context, getString(R.string.chat_command_service_name));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(Notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         }else{
             startForeground(Notify.CHAT_COMMAND, notification.build());
