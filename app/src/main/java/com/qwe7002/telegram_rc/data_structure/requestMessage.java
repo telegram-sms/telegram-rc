@@ -15,6 +15,6 @@ public class requestMessage {
     @SerializedName(value = "message_thread_id")
     public String messageThreadId;
     @SerializedName(value = "reply_markup")
-    public replyMarkupKeyboard.keyboard_markup keyboardMarkup;
+    public replyMarkupKeyboard.keyboardMarkup keyboardMarkup;
 }
 

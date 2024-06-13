@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 @SuppressWarnings({"unused", "RedundantSuppression"})
 public class replyMarkupKeyboard {
-    public static ArrayList<InlineKeyboardButton> get_inline_keyboard_obj(String text, String callbackData) {
+    public static ArrayList<InlineKeyboardButton> getInlineKeyboardObj(String text, String callbackData) {
         replyMarkupKeyboard.InlineKeyboardButton button = new replyMarkupKeyboard.InlineKeyboardButton();
         button.text = text;
         button.callbackData = callbackData;
@@ -14,7 +14,7 @@ public class replyMarkupKeyboard {
         return button_ArrayList;
     }
 
-    public static class keyboard_markup {
+    public static class keyboardMarkup {
         @SerializedName(value = "inline_keyboard")
         public ArrayList<ArrayList<InlineKeyboardButton>> inlineKeyboard;
 

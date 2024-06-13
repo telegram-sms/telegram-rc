@@ -747,10 +747,10 @@ public class chat_command_service extends Service {
                     break;
                 case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
                     Paper.book("send_temp").write("content", request_msg);
-                    replyMarkupKeyboard.keyboard_markup keyboardMarkup = new replyMarkupKeyboard.keyboard_markup();
+                    replyMarkupKeyboard.keyboardMarkup keyboardMarkup = new replyMarkupKeyboard.keyboardMarkup();
                     ArrayList<ArrayList<replyMarkupKeyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
-                    inlineKeyboardButtons.add(replyMarkupKeyboard.get_inline_keyboard_obj(context.getString(R.string.send_button), CALLBACK_DATA_VALUE.SEND));
-                    inlineKeyboardButtons.add(replyMarkupKeyboard.get_inline_keyboard_obj(context.getString(R.string.cancel_button), CALLBACK_DATA_VALUE.CANCEL));
+                    inlineKeyboardButtons.add(replyMarkupKeyboard.getInlineKeyboardObj(context.getString(R.string.send_button), CALLBACK_DATA_VALUE.SEND));
+                    inlineKeyboardButtons.add(replyMarkupKeyboard.getInlineKeyboardObj(context.getString(R.string.cancel_button), CALLBACK_DATA_VALUE.CANCEL));
                     keyboardMarkup.inlineKeyboard = inlineKeyboardButtons;
                     request_body.keyboardMarkup = keyboardMarkup;
                     result_send = context.getString(R.string.to) + Paper.book("send_temp").read("to") + "\n" + context.getString(R.string.content) + Paper.book("send_temp").read("content", "");
