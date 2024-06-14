@@ -1,739 +1,882 @@
-package com.qwe7002.telegram_rc;
+@file:Suppress("DEPRECATION")
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
-import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Looper;
-import android.os.PowerManager;
-import android.provider.Settings;
-import android.telephony.TelephonyManager;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+package com.qwe7002.telegram_rc
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.browser.customtabs.CustomTabColorSchemeParams;
-import androidx.browser.customtabs.CustomTabsIntent;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.ProgressDialog
+import android.content.ActivityNotFoundException
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Bundle
+import android.os.Looper
+import android.os.PowerManager
+import android.provider.Settings
+import android.telephony.TelephonyManager
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.browser.customtabs.CustomTabColorSchemeParams
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.android.material.textfield.TextInputLayout
+import com.google.gson.Gson
+import com.google.gson.JsonParser
+import com.qwe7002.telegram_rc.config.proxy
+import com.qwe7002.telegram_rc.data_structure.pollingJson
+import com.qwe7002.telegram_rc.data_structure.requestMessage
+import com.qwe7002.telegram_rc.root_kit.Shell.checkRoot
+import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
+import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
+import com.qwe7002.telegram_rc.static_class.Network.getUrl
+import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
+import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
+import com.qwe7002.telegram_rc.static_class.ServiceManage.isNotifyListener
+import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
+import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
+import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
+import io.paperdb.Paper
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.io.IOException
+import java.util.Objects
+import java.util.concurrent.TimeUnit
 
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.google.android.material.textfield.TextInputLayout;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.qwe7002.telegram_rc.config.proxy;
-import com.qwe7002.telegram_rc.data_structure.pollingJson;
-import com.qwe7002.telegram_rc.data_structure.requestMessage;
-import com.qwe7002.telegram_rc.root_kit.Shell;
-import com.qwe7002.telegram_rc.static_class.Const;
-import com.qwe7002.telegram_rc.static_class.LogManage;
-import com.qwe7002.telegram_rc.static_class.Network;
-import com.qwe7002.telegram_rc.static_class.Other;
-import com.qwe7002.telegram_rc.static_class.ServiceManage;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-
-import io.paperdb.Paper;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-public class main_activity extends AppCompatActivity {
-    private Context context = null;
-    private final String TAG = "main_activity";
-    private static boolean set_permission_back = false;
-    private SharedPreferences sharedPreferences;
-    private static String privacy_police;
-    private Button write_settings_button;
+class MainActivity : AppCompatActivity() {
+    private val TAG = "main_activity"
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var writeSettingsButton: Button
 
 
-    @SuppressLint({"BatteryLife", "QueryPermissionsNeeded"})
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        context = getApplicationContext();
-        privacy_police = "/guide/" + context.getString(R.string.Lang) + "/privacy-policy";
-        final EditText bot_token_editview = findViewById(R.id.bot_token_editview);
-        final EditText chat_id_editview = findViewById(R.id.chat_id_editview);
-        final EditText trustedPhoneNumberEditview = findViewById(R.id.trusted_phone_number_editview);
-        final EditText message_thread_id_editview = findViewById(R.id.message_thread_id_editview);
-        final TextInputLayout message_thread_id_view = findViewById(R.id.message_thread_id_view);
-        final SwitchMaterial chat_command_switch = findViewById(R.id.chat_command_switch);
-        final SwitchMaterial fallback_sms_switch = findViewById(R.id.fallback_sms_switch);
-        final SwitchMaterial battery_monitoring_switch = findViewById(R.id.battery_monitoring_switch);
-        final SwitchMaterial doh_switch = findViewById(R.id.doh_switch);
-        final SwitchMaterial charger_status_switch = findViewById(R.id.charger_status_switch);
-        final SwitchMaterial verification_code_switch = findViewById(R.id.verification_code_switch);
-        final SwitchMaterial rootSwitch = findViewById(R.id.root_switch);
-        final SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
-        final SwitchMaterial displayDualSimDisplayNameSwitch = findViewById(R.id.display_dual_sim_switch);
-        final Button save_button = findViewById(R.id.save_button);
-        final Button get_id_button = findViewById(R.id.get_id_button);
-        write_settings_button = findViewById(R.id.write_settings_button);
+    @SuppressLint("BatteryLife", "QueryPermissionsNeeded")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        privacy_police = "/guide/" + applicationContext.getString(R.string.Lang) + "/privacy-policy"
+        val botTokenEditView = findViewById<EditText>(R.id.bot_token_editview)
+        val chatIdEditView = findViewById<EditText>(R.id.chat_id_editview)
+        val trustedPhoneNumberEditView = findViewById<EditText>(R.id.trusted_phone_number_editview)
+        val messageThreadIdEditView = findViewById<EditText>(R.id.message_thread_id_editview)
+        val messageThreadIdView = findViewById<TextInputLayout>(R.id.message_thread_id_view)
+        val chatCommandSwitch = findViewById<SwitchMaterial>(R.id.chat_command_switch)
+        val fallbackSmsSwitch = findViewById<SwitchMaterial>(R.id.fallback_sms_switch)
+        val batteryMonitoringSwitch = findViewById<SwitchMaterial>(R.id.battery_monitoring_switch)
+        val dohSwitch = findViewById<SwitchMaterial>(R.id.doh_switch)
+        val chargerStatusSwitch = findViewById<SwitchMaterial>(R.id.charger_status_switch)
+        val verificationCodeSwitch = findViewById<SwitchMaterial>(R.id.verification_code_switch)
+        val rootSwitch = findViewById<SwitchMaterial>(R.id.root_switch)
+        val privacyModeSwitch = findViewById<SwitchMaterial>(R.id.privacy_switch)
+        val displayDualSimDisplayNameSwitch =
+            findViewById<SwitchMaterial>(R.id.display_dual_sim_switch)
+        val saveButton = findViewById<Button>(R.id.save_button)
+        val getIdButton = findViewById<Button>(R.id.get_id_button)
+        writeSettingsButton = findViewById(R.id.write_settings_button)
         //load config
-        Paper.init(context);
-        sharedPreferences = getSharedPreferences("data", MODE_PRIVATE);
+        Paper.init(applicationContext)
+        sharedPreferences = getSharedPreferences("data", MODE_PRIVATE)
 
-        write_settings_button.setOnClickListener(v -> {
-            Intent write_system_intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
-            startActivity(write_system_intent);
-        });
+        writeSettingsButton.setOnClickListener {
+            val writeSystemIntent = Intent(
+                Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse(
+                    "package:$packageName"
+                )
+            )
+            startActivity(writeSystemIntent)
+        }
         if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
-            showPrivacyDialog();
+            showPrivacyDialog()
         }
-        String bot_token_save = sharedPreferences.getString("bot_token", "");
-        String chat_id_save = sharedPreferences.getString("chat_id", "");
-        String message_thread_id_save = sharedPreferences.getString("message_thread_id", "");
-        if (Other.parseStringToLong(chat_id_save) < 0) {
-            privacy_mode_switch.setVisibility(View.VISIBLE);
+        val botTokenSave = sharedPreferences.getString("bot_token", "")
+        val chatIdSave = sharedPreferences.getString("chat_id", "")
+        val messageThreadIdSave = sharedPreferences.getString("message_thread_id", "")
+        if (parseStringToLong(chatIdSave!!) < 0) {
+            privacyModeSwitch.visibility = View.VISIBLE
         } else {
-            privacy_mode_switch.setVisibility(View.GONE);
+            privacyModeSwitch.visibility = View.GONE
         }
-        privacy_mode_switch.setChecked(sharedPreferences.getBoolean("privacy_mode", false));
+        privacyModeSwitch.isChecked = sharedPreferences.getBoolean("privacy_mode", false)
         if (sharedPreferences.getBoolean("initialized", false)) {
-            ServiceManage.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
-            ServiceManage.startBeaconService(context);
-            KeepAliveJob.Companion.startJob(context);
-            ReSendJob.Companion.startJob(context);
+            startService(
+                applicationContext,
+                sharedPreferences.getBoolean("battery_monitoring_switch", false),
+                sharedPreferences.getBoolean("chat_command", false)
+            )
+            startBeaconService(applicationContext)
+            KeepAliveJob.startJob(applicationContext)
+            ReSendJob.startJob(applicationContext)
         }
 
 
-        boolean displayDualSimDisplayName = sharedPreferences.getBoolean("display_dual_sim_display_name", false);
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            if (Other.getActiveCard(context) < 2) {
-                displayDualSimDisplayNameSwitch.setEnabled(false);
-                displayDualSimDisplayName = false;
+        var displayDualSimDisplayName =
+            sharedPreferences.getBoolean("display_dual_sim_display_name", false)
+        if (ContextCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.READ_PHONE_STATE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            if (getActiveCard(applicationContext) < 2) {
+                displayDualSimDisplayNameSwitch.isEnabled = false
+                displayDualSimDisplayName = false
             }
-            displayDualSimDisplayNameSwitch.setChecked(displayDualSimDisplayName);
+            displayDualSimDisplayNameSwitch.isChecked = displayDualSimDisplayName
         }
-        rootSwitch.setChecked(sharedPreferences.getBoolean("root", false));
+        rootSwitch.isChecked = sharedPreferences.getBoolean("root", false)
 
-        bot_token_editview.setText(bot_token_save);
-        chat_id_editview.setText(chat_id_save);
-        message_thread_id_editview.setText(message_thread_id_save);
-        trustedPhoneNumberEditview.setText(sharedPreferences.getString("trusted_phone_number", ""));
+        botTokenEditView.setText(botTokenSave)
+        chatIdEditView.setText(chatIdSave)
+        messageThreadIdEditView.setText(messageThreadIdSave)
+        trustedPhoneNumberEditView.setText(sharedPreferences.getString("trusted_phone_number", ""))
 
-        battery_monitoring_switch.setChecked(sharedPreferences.getBoolean("battery_monitoring_switch", false));
-        charger_status_switch.setChecked(sharedPreferences.getBoolean("charger_status", false));
+        batteryMonitoringSwitch.isChecked =
+            sharedPreferences.getBoolean("battery_monitoring_switch", false)
+        chargerStatusSwitch.isChecked = sharedPreferences.getBoolean("charger_status", false)
 
-        if (!battery_monitoring_switch.isChecked()) {
-            charger_status_switch.setChecked(false);
-            charger_status_switch.setVisibility(View.GONE);
+        if (!batteryMonitoringSwitch.isChecked) {
+            chargerStatusSwitch.isChecked = false
+            chargerStatusSwitch.visibility = View.GONE
         }
 
-        battery_monitoring_switch.setOnClickListener(v -> {
-            if (battery_monitoring_switch.isChecked()) {
-                charger_status_switch.setVisibility(View.VISIBLE);
+        batteryMonitoringSwitch.setOnClickListener {
+            if (batteryMonitoringSwitch.isChecked) {
+                chargerStatusSwitch.visibility = View.VISIBLE
             } else {
-                charger_status_switch.setVisibility(View.GONE);
-                charger_status_switch.setChecked(false);
+                chargerStatusSwitch.visibility = View.GONE
+                chargerStatusSwitch.isChecked = false
             }
-        });
-
-        fallback_sms_switch.setChecked(sharedPreferences.getBoolean("fallback_sms", false));
-        if (trustedPhoneNumberEditview.length() == 0) {
-            fallback_sms_switch.setVisibility(View.GONE);
-            fallback_sms_switch.setChecked(false);
         }
-        trustedPhoneNumberEditview.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        fallbackSmsSwitch.isChecked = sharedPreferences.getBoolean("fallback_sms", false)
+        if (trustedPhoneNumberEditView.length() == 0) {
+            fallbackSmsSwitch.visibility = View.GONE
+            fallbackSmsSwitch.isChecked = false
+        }
+        trustedPhoneNumberEditView.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
             }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
             }
 
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (trustedPhoneNumberEditview.length() != 0) {
-                    fallback_sms_switch.setVisibility(View.VISIBLE);
+            override fun afterTextChanged(s: Editable) {
+                if (trustedPhoneNumberEditView.length() != 0) {
+                    fallbackSmsSwitch.visibility = View.VISIBLE
                 } else {
-                    fallback_sms_switch.setVisibility(View.GONE);
-                    fallback_sms_switch.setChecked(false);
+                    fallbackSmsSwitch.visibility = View.GONE
+                    fallbackSmsSwitch.isChecked = false
                 }
             }
-        });
+        })
 
-        chat_command_switch.setChecked(sharedPreferences.getBoolean("chat_command", false));
-        chat_command_switch.setOnClickListener(v -> set_privacy_mode_checkbox(chat_id_editview.getText().toString(), chat_command_switch, privacy_mode_switch, message_thread_id_view));
-        verification_code_switch.setChecked(sharedPreferences.getBoolean("verification_code", false));
+        chatCommandSwitch.isChecked = sharedPreferences.getBoolean("chat_command", false)
+        chatCommandSwitch.setOnClickListener {
+            setPrivacyModeCheckbox(
+                chatIdEditView.text.toString(),
+                chatCommandSwitch,
+                privacyModeSwitch,
+                messageThreadIdView
+            )
+        }
+        verificationCodeSwitch.isChecked =
+            sharedPreferences.getBoolean("verification_code", false)
 
-        doh_switch.setChecked(sharedPreferences.getBoolean("doh_switch", true));
-        doh_switch.setEnabled(!Objects.requireNonNull(Paper.book("system_config").read("proxy_config", new proxy())).enable);
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            TelephonyManager tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-            assert tm != null;
-            if (tm.getPhoneCount() <= 1) {
-                displayDualSimDisplayNameSwitch.setVisibility(View.GONE);
+        dohSwitch.isChecked = sharedPreferences.getBoolean("doh_switch", true)
+        dohSwitch.isEnabled = Paper.book("system_config").read("proxy_config", proxy())!!.enable
+        if (ContextCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.READ_PHONE_STATE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val tm = checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
+            if (tm.phoneCount <= 1) {
+                displayDualSimDisplayNameSwitch.visibility = View.GONE
             }
         }
-        displayDualSimDisplayNameSwitch.setOnClickListener(v -> {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                displayDualSimDisplayNameSwitch.setChecked(false);
-                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, 1);
+        displayDualSimDisplayNameSwitch.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(
+                    applicationContext,
+                    Manifest.permission.READ_PHONE_STATE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                displayDualSimDisplayNameSwitch.isChecked = false
+                ActivityCompat.requestPermissions(
+                    this@MainActivity,
+                    arrayOf(Manifest.permission.READ_PHONE_STATE),
+                    1
+                )
             } else {
-                if (Other.getActiveCard(context) < 2) {
-                    displayDualSimDisplayNameSwitch.setEnabled(false);
-                    displayDualSimDisplayNameSwitch.setChecked(false);
+                if (getActiveCard(applicationContext) < 2) {
+                    displayDualSimDisplayNameSwitch.isEnabled = false
+                    displayDualSimDisplayNameSwitch.isChecked = false
                 }
             }
-        });
+        }
 
-        chat_id_editview.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                set_privacy_mode_checkbox(chat_id_editview.getText().toString(), chat_command_switch, privacy_mode_switch, message_thread_id_view);
+        chatIdEditView.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
             }
 
-            @Override
-            public void afterTextChanged(Editable s) {
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                setPrivacyModeCheckbox(
+                    chatIdEditView.text.toString(),
+                    chatCommandSwitch,
+                    privacyModeSwitch,
+                    messageThreadIdView
+                )
             }
-        });
-        rootSwitch.setOnClickListener(view -> new Thread(() -> {
-            if (!Shell.INSTANCE.checkRoot()) {
-                runOnUiThread(() -> rootSwitch.setChecked(false));
+
+            override fun afterTextChanged(s: Editable) {
             }
-        }).start());
-        get_id_button.setOnClickListener(v -> {
-            if (bot_token_editview.getText().toString().isEmpty()) {
-                Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show();
-                return;
-            }
-            new Thread(() -> ServiceManage.stopAllService(context)).start();
-            //noinspection deprecation
-            final ProgressDialog progress_dialog = new ProgressDialog(main_activity.this);
-            //noinspection deprecation
-            progress_dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progress_dialog.setTitle(getString(R.string.get_recent_chat_title));
-            //noinspection deprecation
-            progress_dialog.setMessage(getString(R.string.get_recent_chat_message));
-            //noinspection deprecation
-            progress_dialog.setIndeterminate(false);
-            progress_dialog.setCancelable(false);
-            progress_dialog.show();
-            String request_uri = Network.getUrl(bot_token_editview.getText().toString().trim(), "getUpdates");
-            OkHttpClient okhttp_client = Network.getOkhttpObj(doh_switch.isChecked());
-            okhttp_client = okhttp_client.newBuilder()
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .build();
-            pollingJson request_body = new pollingJson();
-            request_body.timeout = 60;
-            RequestBody body = RequestBody.create(new Gson().toJson(request_body), Const.JSON);
-            Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-            Call call = okhttp_client.newCall(request);
-            progress_dialog.setOnKeyListener((dialogInterface, i, keyEvent) -> {
-                if (keyEvent.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-                    call.cancel();
+        })
+        rootSwitch.setOnClickListener {
+            Thread {
+                if (!checkRoot()) {
+                    runOnUiThread { rootSwitch.isChecked = false }
                 }
-                return false;
-            });
-            final String error_head = "Get chat ID failed:";
-            call.enqueue(new Callback() {
-                @Override
-                public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    Log.e(TAG, "onFailure: ", e);
-                    progress_dialog.cancel();
-                    String error_message = error_head + e.getMessage();
-                    LogManage.writeLog(context, error_message);
-                    Looper.prepare();
-                    Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
-                    Looper.loop();
+            }.start()
+        }
+        getIdButton.setOnClickListener { v: View ->
+            if (botTokenEditView.text.toString().isEmpty()) {
+                Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            Thread { stopAllService(applicationContext) }.start()
+            val progressDialog = ProgressDialog(this@MainActivity)
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
+            progressDialog.setTitle(getString(R.string.get_recent_chat_title))
+            progressDialog.setMessage(getString(R.string.get_recent_chat_message))
+            progressDialog.isIndeterminate = false
+            progressDialog.setCancelable(false)
+            progressDialog.show()
+            val requestUri =
+                getUrl(botTokenEditView.text.toString().trim { it <= ' ' }, "getUpdates")
+            var okhttpClient = getOkhttpObj(dohSwitch.isChecked)
+            okhttpClient = okhttpClient.newBuilder()
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build()
+            val requestBody = pollingJson()
+            requestBody.timeout = 60
+            val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
+            val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
+            val call = okhttpClient.newCall(request)
+            progressDialog.setOnKeyListener { _: DialogInterface?, _: Int, keyEvent: KeyEvent ->
+                if (keyEvent.keyCode == KeyEvent.KEYCODE_BACK) {
+                    call.cancel()
+                }
+                false
+            }
+            val errorHead = "Get chat ID failed:"
+            call.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e(TAG, "onFailure: ", e)
+                    progressDialog.cancel()
+                    val errorMessage = errorHead + e.message
+                    writeLog(applicationContext, errorMessage)
+                    Looper.prepare()
+                    Snackbar.make(v, errorMessage, Snackbar.LENGTH_LONG).show()
+                    Looper.loop()
                 }
 
-                @Override
-                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    progress_dialog.cancel();
-                    if (response.code() != 200) {
-                        String result = Objects.requireNonNull(response.body()).string();
-                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                        String error_message = error_head + result_obj.get("description").getAsString();
-                        LogManage.writeLog(context, error_message);
-                        Looper.prepare();
-                        Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
-                        Looper.loop();
-                        return;
+                @Throws(IOException::class)
+                override fun onResponse(call: Call, response: Response) {
+                    progressDialog.cancel()
+                    if (response.code != 200) {
+                        val result = Objects.requireNonNull(response.body).string()
+                        val resultObj = JsonParser.parseString(result).asJsonObject
+                        val errorMessage = errorHead + resultObj["description"].asString
+                        writeLog(applicationContext, errorMessage)
+                        Looper.prepare()
+                        Snackbar.make(v, errorMessage, Snackbar.LENGTH_LONG).show()
+                        Looper.loop()
+                        return
                     }
-                    String result = Objects.requireNonNull(response.body()).string();
-                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                    JsonArray chat_list = result_obj.getAsJsonArray("result");
-                    if (chat_list.isEmpty()) {
-                        Looper.prepare();
-                        Snackbar.make(v, R.string.unable_get_recent, Snackbar.LENGTH_LONG).show();
-                        Looper.loop();
-                        return;
+                    val result = Objects.requireNonNull(response.body).string()
+                    val resultObj = JsonParser.parseString(result).asJsonObject
+                    val chatList = resultObj.getAsJsonArray("result")
+                    if (chatList.isEmpty) {
+                        Looper.prepare()
+                        Snackbar.make(v, R.string.unable_get_recent, Snackbar.LENGTH_LONG).show()
+                        Looper.loop()
+                        return
                     }
-                    final ArrayList<String> chat_name_list = new ArrayList<>();
-                    final ArrayList<String> chat_id_list = new ArrayList<>();
-                    final ArrayList<String> chat_topic_id_list = new ArrayList<>();
-                    for (JsonElement item : chat_list) {
-                        JsonObject item_obj = item.getAsJsonObject();
-                        if (item_obj.has("message")) {
-                            JsonObject message_obj = item_obj.get("message").getAsJsonObject();
-                            JsonObject chat_obj = message_obj.get("chat").getAsJsonObject();
-                            if (!chat_id_list.contains(chat_obj.get("id").getAsString())) {
-                                StringBuilder username = new StringBuilder();
-                                if (chat_obj.has("username")) {
-                                    username = new StringBuilder(chat_obj.get("username").getAsString());
+                    val chatNameList = ArrayList<String>()
+                    val chatIdList = ArrayList<String>()
+                    val chatTopicIdList = ArrayList<String>()
+                    for (item in chatList) {
+                        val itemObj = item.asJsonObject
+                        if (itemObj.has("message")) {
+                            val messageObj = itemObj["message"].asJsonObject
+                            val chatObj = messageObj["chat"].asJsonObject
+                            if (!chatIdList.contains(chatObj["id"].asString)) {
+                                var username = StringBuilder()
+                                if (chatObj.has("username")) {
+                                    username = StringBuilder(chatObj["username"].asString)
                                 }
-                                if (chat_obj.has("title")) {
-                                    username = new StringBuilder(chat_obj.get("title").getAsString());
+                                if (chatObj.has("title")) {
+                                    username = StringBuilder(chatObj["title"].asString)
                                 }
-                                if (username.toString().isEmpty() && !chat_obj.has("username")) {
-                                    if (chat_obj.has("first_name")) {
-                                        username = new StringBuilder(chat_obj.get("first_name").getAsString());
+                                if (username.toString().isEmpty() && !chatObj.has("username")) {
+                                    if (chatObj.has("first_name")) {
+                                        username = StringBuilder(chatObj["first_name"].asString)
                                     }
-                                    if (chat_obj.has("last_name")) {
-                                        username.append(" ").append(chat_obj.get("last_name").getAsString());
+                                    if (chatObj.has("last_name")) {
+                                        username.append(" ").append(chatObj["last_name"].asString)
                                     }
                                 }
-                                String type = chat_obj.get("type").getAsString();
-                                chat_name_list.add(username + "(" + type + ")");
-                                chat_id_list.add(chat_obj.get("id").getAsString());
-                                String thread_id = "";
-                                if (type.equals("supergroup") && message_obj.has("is_topic_message")) {
-                                    thread_id = message_obj.get("message_thread_id").getAsString();
+                                val type = chatObj["type"].asString
+                                chatNameList.add("$username($type)")
+                                chatIdList.add(chatObj["id"].asString)
+                                var threadId = ""
+                                if (type == "supergroup" && messageObj.has("is_topic_message")) {
+                                    threadId = messageObj["message_thread_id"].asString
                                 }
-                                chat_topic_id_list.add(thread_id);
+                                chatTopicIdList.add(threadId)
                             }
                         }
-                        if (item_obj.has("channel_post")) {
-                            JsonObject message_obj = item_obj.get("channel_post").getAsJsonObject();
-                            JsonObject chat_obj = message_obj.get("chat").getAsJsonObject();
-                            if (!chat_id_list.contains(chat_obj.get("id").getAsString())) {
-                                chat_name_list.add(chat_obj.get("title").getAsString() + "(Channel)");
-                                chat_id_list.add(chat_obj.get("id").getAsString());
+                        if (itemObj.has("channel_post")) {
+                            val messageObj = itemObj["channel_post"].asJsonObject
+                            val chatObj = messageObj["chat"].asJsonObject
+                            if (!chatIdList.contains(chatObj["id"].asString)) {
+                                chatNameList.add(chatObj["title"].asString + "(Channel)")
+                                chatIdList.add(chatObj["id"].asString)
                             }
                         }
                     }
-                    main_activity.this.runOnUiThread(() -> new AlertDialog.Builder(v.getContext()).setTitle(R.string.select_chat).setItems(chat_name_list.toArray(new String[0]), (dialogInterface, i) -> {
-                        chat_id_editview.setText(chat_id_list.get(i));
-                        message_thread_id_editview.setText(chat_topic_id_list.get(i));
-                    }).setPositiveButton("Cancel", null).show());
+                    this@MainActivity.runOnUiThread {
+                        AlertDialog.Builder(v.context).setTitle(R.string.select_chat)
+                            .setItems(chatNameList.toTypedArray<String>()) { _: DialogInterface?, i: Int ->
+                                chatIdEditView.setText(
+                                    chatIdList[i]
+                                )
+                                messageThreadIdEditView.setText(chatTopicIdList[i])
+                            }.setPositiveButton("Cancel", null).show()
+                    }
                 }
-            });
-        });
+            })
+        }
 
-        save_button.setOnClickListener(v -> {
-            if (bot_token_editview.getText().toString().isEmpty() || chat_id_editview.getText().toString().isEmpty()) {
-                Snackbar.make(v, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG).show();
-                return;
+        saveButton.setOnClickListener { v: View? ->
+            if (botTokenEditView.text.toString().isEmpty() || chatIdEditView.text.toString()
+                    .isEmpty()
+            ) {
+                Snackbar.make(v!!, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG)
+                    .show()
+                return@setOnClickListener
             }
-            if (fallback_sms_switch.isChecked() && trustedPhoneNumberEditview.getText().toString().isEmpty()) {
-                Snackbar.make(v, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show();
-                return;
+            if (fallbackSmsSwitch.isChecked && trustedPhoneNumberEditView.text.toString()
+                    .isEmpty()
+            ) {
+                Snackbar.make(v!!, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show()
+                return@setOnClickListener
             }
             if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
-                showPrivacyDialog();
-                return;
+                showPrivacyDialog()
+                return@setOnClickListener
             }
 
-            ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.CALL_PHONE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG}, 1);
-            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-            assert powerManager != null;
-            boolean has_ignored = powerManager.isIgnoringBatteryOptimizations(getPackageName());
-            if (!has_ignored) {
-                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                if (intent.resolveActivityInfo(getPackageManager(), PackageManager.MATCH_DEFAULT_ONLY) != null) {
-                    startActivity(intent);
+            ActivityCompat.requestPermissions(
+                this@MainActivity,
+                arrayOf(
+                    Manifest.permission.READ_SMS,
+                    Manifest.permission.SEND_SMS,
+                    Manifest.permission.RECEIVE_SMS,
+                    Manifest.permission.CALL_PHONE,
+                    Manifest.permission.READ_PHONE_STATE,
+                    Manifest.permission.READ_CALL_LOG
+                ),
+                1
+            )
+            val powerManager = checkNotNull(getSystemService(POWER_SERVICE) as PowerManager)
+            val hasIgnored = powerManager.isIgnoringBatteryOptimizations(packageName)
+            if (!hasIgnored) {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                intent.setData(Uri.parse("package:$packageName"))
+                if (intent.resolveActivityInfo(
+                        packageManager,
+                        PackageManager.MATCH_DEFAULT_ONLY
+                    ) != null
+                ) {
+                    startActivity(intent)
                 }
             }
 
-            //noinspection deprecation
-            final ProgressDialog progressDialog = new ProgressDialog(main_activity.this);
-            //noinspection deprecation
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.setTitle(getString(R.string.connect_wait_title));
-            //noinspection deprecation
-            progressDialog.setMessage(getString(R.string.connect_wait_message));
-            //noinspection deprecation
-            progressDialog.setIndeterminate(false);
-            progressDialog.setCancelable(false);
-            progressDialog.show();
+            val progressDialog = ProgressDialog(this@MainActivity)
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
+            progressDialog.setTitle(getString(R.string.connect_wait_title))
+            progressDialog.setMessage(getString(R.string.connect_wait_message))
+            progressDialog.isIndeterminate = false
+            progressDialog.setCancelable(false)
+            progressDialog.show()
 
-            String request_uri = Network.getUrl(bot_token_editview.getText().toString().trim(), "sendMessage");
-            requestMessage request_body = new requestMessage();
-            request_body.chatId = chat_id_editview.getText().toString().trim();
-            request_body.messageThreadId = message_thread_id_editview.getText().toString().trim();
-            request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.success_connect);
-            Gson gson = new Gson();
-            String request_body_raw = gson.toJson(request_body);
-            RequestBody body = RequestBody.create(request_body_raw, Const.JSON);
-            OkHttpClient okhttp_client = Network.getOkhttpObj(doh_switch.isChecked());
-            Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-            Call call = okhttp_client.newCall(request);
-            final String error_head = "Send message failed:";
-            call.enqueue(new Callback() {
-                @Override
-                public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    Log.e(TAG, "onFailure: ", e);
-                    progressDialog.cancel();
-                    String error_message = error_head + e.getMessage();
-                    LogManage.writeLog(context, error_message);
-                    Looper.prepare();
-                    Snackbar.make(v, error_message, Snackbar.LENGTH_LONG)
-                            .show();
-                    Looper.loop();
+            val requestUri =
+                getUrl(botTokenEditView.text.toString().trim { it <= ' ' }, "sendMessage")
+            val requestBody = requestMessage()
+            requestBody.chatId = chatIdEditView.text.toString().trim { it <= ' ' }
+            requestBody.messageThreadId =
+                messageThreadIdEditView.text.toString().trim { it <= ' ' }
+            requestBody.text = """
+                ${getString(R.string.system_message_head)}
+                ${getString(R.string.success_connect)}
+                """.trimIndent()
+            val gson = Gson()
+            val requestBodyRaw = gson.toJson(requestBody)
+            val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+            val okhttpClient = getOkhttpObj(dohSwitch.isChecked)
+            val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
+            val call = okhttpClient.newCall(request)
+            val errorHead = "Send message failed:"
+            call.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e(TAG, "onFailure: ", e)
+                    progressDialog.cancel()
+                    val errorMessage = errorHead + e.message
+                    writeLog(applicationContext, errorMessage)
+                    Looper.prepare()
+                    Snackbar.make(v!!, errorMessage, Snackbar.LENGTH_LONG)
+                        .show()
+                    Looper.loop()
                 }
 
-                @Override
-                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    progressDialog.cancel();
-                    String new_bot_token = bot_token_editview.getText().toString().trim();
-                    if (response.code() != 200) {
-                        String result = Objects.requireNonNull(response.body()).string();
-                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                        String error_message = error_head + result_obj.get("description");
-                        LogManage.writeLog(context, error_message);
-                        Looper.prepare();
-                        Snackbar.make(v, error_message, Snackbar.LENGTH_LONG).show();
-                        Looper.loop();
-                        return;
+                @Throws(IOException::class)
+                override fun onResponse(call: Call, response: Response) {
+                    progressDialog.cancel()
+                    val newBotToken = botTokenEditView.text.toString().trim { it <= ' ' }
+                    if (response.code != 200) {
+                        val result = Objects.requireNonNull(response.body).string()
+                        val resultObj = JsonParser.parseString(result).asJsonObject
+                        val errorMessage = errorHead + resultObj["description"]
+                        writeLog(applicationContext, errorMessage)
+                        Looper.prepare()
+                        Snackbar.make(v!!, errorMessage, Snackbar.LENGTH_LONG).show()
+                        Looper.loop()
+                        return
                     }
-                    if (!new_bot_token.equals(bot_token_save)) {
-                        android.util.Log.i(TAG, "onResponse: The current bot token does not match the saved bot token, clearing the message database.");
-                        Paper.book().destroy();
+                    if (newBotToken != botTokenSave) {
+                        Log.i(
+                            TAG,
+                            "onResponse: The current bot token does not match the saved bot token, clearing the message database."
+                        )
+                        Paper.book().destroy()
                     }
-                    Paper.book("system_config").write("version", Const.SYSTEM_CONFIG_VERSION);
-                    SharedPreferences.Editor editor = sharedPreferences.edit().clear();
-                    editor.putString("bot_token", new_bot_token);
-                    editor.putString("chat_id", chat_id_editview.getText().toString().trim());
-                    editor.putString("message_thread_id", message_thread_id_editview.getText().toString().trim());
-                    if (!trustedPhoneNumberEditview.getText().toString().trim().isEmpty()) {
-                        editor.putString("trusted_phone_number", trustedPhoneNumberEditview.getText().toString().trim());
-                        editor.putBoolean("fallback_sms", fallback_sms_switch.isChecked());
+                    Paper.book("system_config").write("version", Const.SYSTEM_CONFIG_VERSION)
+                    val editor = sharedPreferences.edit().clear()
+                    editor.putString("bot_token", newBotToken)
+                    editor.putString("chat_id", chatIdEditView.text.toString().trim { it <= ' ' })
+                    editor.putString(
+                        "message_thread_id",
+                        messageThreadIdEditView.text.toString().trim { it <= ' ' })
+                    if (trustedPhoneNumberEditView.text.toString().trim { it <= ' ' }.isNotEmpty()) {
+                        editor.putString(
+                            "trusted_phone_number",
+                            trustedPhoneNumberEditView.text.toString().trim { it <= ' ' })
+                        editor.putBoolean("fallback_sms", fallbackSmsSwitch.isChecked)
                     }
-                    editor.putBoolean("chat_command", chat_command_switch.isChecked());
-                    editor.putBoolean("battery_monitoring_switch", battery_monitoring_switch.isChecked());
-                    editor.putBoolean("charger_status", charger_status_switch.isChecked());
-                    editor.putBoolean("display_dual_sim_display_name", displayDualSimDisplayNameSwitch.isChecked());
-                    editor.putBoolean("verification_code", verification_code_switch.isChecked());
-                    editor.putBoolean("root", rootSwitch.isChecked());
-                    editor.putBoolean("doh_switch", doh_switch.isChecked());
-                    editor.putBoolean("privacy_mode", privacy_mode_switch.isChecked());
-                    editor.putBoolean("initialized", true);
-                    editor.putBoolean("privacy_dialog_agree", true);
-                    editor.apply();
-                    new Thread(() -> {
-                        KeepAliveJob.Companion.stopJob(context);
-                        ReSendJob.Companion.stopJob(context);
-                        ServiceManage.stopAllService(context);
-                        ServiceManage.startService(context, battery_monitoring_switch.isChecked(), chat_command_switch.isChecked());
-                        KeepAliveJob.Companion.startJob(context);
-                        ReSendJob.Companion.startJob(context);
-                    }).start();
-                    Looper.prepare();
-                    Snackbar.make(v, R.string.success, Snackbar.LENGTH_LONG)
-                            .show();
-                    Looper.loop();
+                    editor.putBoolean("chat_command", chatCommandSwitch.isChecked)
+                    editor.putBoolean(
+                        "battery_monitoring_switch",
+                        batteryMonitoringSwitch.isChecked
+                    )
+                    editor.putBoolean("charger_status", chargerStatusSwitch.isChecked)
+                    editor.putBoolean(
+                        "display_dual_sim_display_name",
+                        displayDualSimDisplayNameSwitch.isChecked
+                    )
+                    editor.putBoolean("verification_code", verificationCodeSwitch.isChecked)
+                    editor.putBoolean("root", rootSwitch.isChecked)
+                    editor.putBoolean("doh_switch", dohSwitch.isChecked)
+                    editor.putBoolean("privacy_mode", privacyModeSwitch.isChecked)
+                    editor.putBoolean("initialized", true)
+                    editor.putBoolean("privacy_dialog_agree", true)
+                    editor.apply()
+                    Thread {
+                        KeepAliveJob.stopJob(applicationContext)
+                        ReSendJob.stopJob(applicationContext)
+                        stopAllService(applicationContext)
+                        startService(
+                            applicationContext,
+                            batteryMonitoringSwitch.isChecked,
+                            chatCommandSwitch.isChecked
+                        )
+                        KeepAliveJob.startJob(applicationContext)
+                        ReSendJob.startJob(applicationContext)
+                    }.start()
+                    Looper.prepare()
+                    Snackbar.make(v!!, R.string.success, Snackbar.LENGTH_LONG)
+                        .show()
+                    Looper.loop()
                 }
-            });
-        });
-
+            })
+        }
     }
 
 
-    private void set_privacy_mode_checkbox(String chat_id, SwitchMaterial chat_command, SwitchMaterial privacy_mode_switch, TextInputLayout message_thread_id_view) {
-        if (!chat_command.isChecked()) {
-            message_thread_id_view.setVisibility(View.GONE);
-            privacy_mode_switch.setVisibility(View.GONE);
-            privacy_mode_switch.setChecked(false);
-            return;
+    private fun setPrivacyModeCheckbox(
+        chatId: String,
+        chatCommand: SwitchMaterial,
+        privacyModeSwitch: SwitchMaterial,
+        messageThreadIdView: TextInputLayout
+    ) {
+        if (!chatCommand.isChecked) {
+            messageThreadIdView.visibility = View.GONE
+            privacyModeSwitch.visibility = View.GONE
+            privacyModeSwitch.isChecked = false
+            return
         }
-        if (Other.parseStringToLong(chat_id) < 0) {
-            message_thread_id_view.setVisibility(View.VISIBLE);
-            privacy_mode_switch.setVisibility(View.VISIBLE);
+        if (parseStringToLong(chatId) < 0) {
+            messageThreadIdView.visibility = View.VISIBLE
+            privacyModeSwitch.visibility = View.VISIBLE
         } else {
-            message_thread_id_view.setVisibility(View.GONE);
-            privacy_mode_switch.setVisibility(View.GONE);
-            privacy_mode_switch.setChecked(false);
+            messageThreadIdView.visibility = View.GONE
+            privacyModeSwitch.visibility = View.GONE
+            privacyModeSwitch.isChecked = false
         }
     }
 
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        boolean back_status = set_permission_back;
-        set_permission_back = false;
-        if (back_status) {
-            if (ServiceManage.isNotifyListener(context)) {
-                startActivity(new Intent(main_activity.this, notify_apps_list_activity.class));
+    override fun onResume() {
+        super.onResume()
+        val backStatus = set_permission_back
+        set_permission_back = false
+        if (backStatus) {
+            if (isNotifyListener(applicationContext)) {
+                startActivity(Intent(this@MainActivity, NotifyActivity::class.java))
             }
         }
-        if (Settings.System.canWrite(context)) {
-            write_settings_button.setVisibility(View.GONE);
+        if (Settings.System.canWrite(applicationContext)) {
+            writeSettingsButton.visibility = View.GONE
         }
     }
 
-    private void showPrivacyDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.privacy_reminder_title);
-        builder.setMessage(R.string.privacy_reminder_information);
-        builder.setCancelable(false);
-        builder.setPositiveButton(R.string.agree, (dialog, which) -> sharedPreferences.edit().putBoolean("privacy_dialog_agree", true).apply());
-        builder.setNegativeButton(R.string.decline, null);
-        builder.setNeutralButton(R.string.visit_page, (dialog, which) -> {
-            Uri uri = Uri.parse("https://get.telegram-sms.com" + privacy_police);
-            CustomTabsIntent.Builder privacy_builder = new CustomTabsIntent.Builder();
-            //privacy_builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
-            CustomTabsIntent customTabsIntent = privacy_builder.build();
-            customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    private fun showPrivacyDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(R.string.privacy_reminder_title)
+        builder.setMessage(R.string.privacy_reminder_information)
+        builder.setCancelable(false)
+        builder.setPositiveButton(R.string.agree) { _: DialogInterface?, _: Int ->
+            sharedPreferences.edit().putBoolean("privacy_dialog_agree", true).apply()
+        }
+        builder.setNegativeButton(R.string.decline, null)
+        builder.setNeutralButton(R.string.visit_page) { _: DialogInterface?, _: Int ->
+            val uri = Uri.parse("https://get.telegram-sms.com$privacy_police")
+            val privacyBuilder = CustomTabsIntent.Builder()
+            val customTabsIntent = privacyBuilder.build()
+            customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             try {
-                customTabsIntent.launchUrl(context, uri);
-            } catch (ActivityNotFoundException e) {
-                Log.e(TAG, "show_privacy_dialog: ", e);
-                Snackbar.make(findViewById(R.id.bot_token_editview), "Browser not found.", Snackbar.LENGTH_LONG).show();
+                customTabsIntent.launchUrl(applicationContext, uri)
+            } catch (e: ActivityNotFoundException) {
+                Log.e(TAG, "show_privacy_dialog: ", e)
+                Snackbar.make(
+                    findViewById(R.id.bot_token_editview),
+                    "Browser not found.",
+                    Snackbar.LENGTH_LONG
+                ).show()
             }
-        });
-        AlertDialog dialog = builder.create();
-        dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setAllCaps(false);
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setAllCaps(false);
-        dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setAllCaps(false);
+        }
+        val dialog = builder.create()
+        dialog.show()
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).isAllCaps = false
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).isAllCaps = false
+        dialog.getButton(AlertDialog.BUTTON_NEUTRAL).isAllCaps = false
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case 0:
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            0 -> {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    android.util.Log.d(TAG, "No camera permissions.");
-                    Snackbar.make(findViewById(R.id.bot_token_editview), R.string.no_camera_permission, Snackbar.LENGTH_LONG).show();
-                    return;
+                    Log.d(TAG, "No camera permissions.")
+                    Snackbar.make(
+                        findViewById(R.id.bot_token_editview),
+                        R.string.no_camera_permission,
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    return
                 }
-                Intent intent = new Intent(context, ScannerActivity.class);
-                //noinspection deprecation
-                startActivityForResult(intent, 1);
-                break;
-            case 1:
-                SwitchMaterial display_dual_sim_display_name = findViewById(R.id.display_dual_sim_switch);
+                val intent = Intent(applicationContext, ScannerActivity::class.java)
+                startActivityForResult(intent, 1)
+            }
+
+            1 -> {
+                val displayDualSimDisplayName =
+                    findViewById<SwitchMaterial>(R.id.display_dual_sim_switch)
                 if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    TelephonyManager telephony_manager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-                    assert telephony_manager != null;
-                    if (telephony_manager.getPhoneCount() <= 1 || Other.getActiveCard(context) < 2) {
-                        display_dual_sim_display_name.setEnabled(false);
-                        display_dual_sim_display_name.setChecked(false);
+                    val telephonyManager =
+                        checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
+                    if (telephonyManager.phoneCount <= 1 || getActiveCard(
+                            applicationContext
+                        ) < 2
+                    ) {
+                        displayDualSimDisplayName.isEnabled = false
+                        displayDualSimDisplayName.isChecked = false
                     }
                 }
-                break;
+            }
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1) {
             if (resultCode == Const.RESULT_CONFIG_JSON) {
-                JsonObject json_config = JsonParser.parseString(Objects.requireNonNull(data.getStringExtra("config_json"))).getAsJsonObject();
-                ((EditText) findViewById(R.id.bot_token_editview)).setText(json_config.get("bot_token").getAsString());
-                ((EditText) findViewById(R.id.chat_id_editview)).setText(json_config.get("chat_id").getAsString());
-                ((SwitchMaterial) findViewById(R.id.battery_monitoring_switch)).setChecked(json_config.get("battery_monitoring_switch").getAsBoolean());
-                ((SwitchMaterial) findViewById(R.id.verification_code_switch)).setChecked(json_config.get("verification_code").getAsBoolean());
+                val jsonObject = JsonParser.parseString(
+                    data!!.getStringExtra("config_json")
+                ).asJsonObject
+                (findViewById<View>(R.id.bot_token_editview) as EditText).setText(
+                    jsonObject["bot_token"].asString
+                )
+                (findViewById<View>(R.id.chat_id_editview) as EditText).setText(
+                    jsonObject["chat_id"].asString
+                )
+                (findViewById<View>(R.id.battery_monitoring_switch) as SwitchMaterial).isChecked =
+                    jsonObject["battery_monitoring_switch"].asBoolean
+                (findViewById<View>(R.id.verification_code_switch) as SwitchMaterial).isChecked =
+                    jsonObject["verification_code"].asBoolean
 
-                SwitchMaterial charger_status = findViewById(R.id.charger_status_switch);
-                if (json_config.get("battery_monitoring_switch").getAsBoolean()) {
-                    charger_status.setChecked(json_config.get("charger_status").getAsBoolean());
-                    charger_status.setVisibility(View.VISIBLE);
+                val chargerStatus = findViewById<SwitchMaterial>(R.id.charger_status_switch)
+                if (jsonObject["battery_monitoring_switch"].asBoolean) {
+                    chargerStatus.isChecked = jsonObject["charger_status"].asBoolean
+                    chargerStatus.visibility = View.VISIBLE
                 } else {
-                    charger_status.setChecked(false);
-                    charger_status.setVisibility(View.GONE);
+                    chargerStatus.isChecked = false
+                    chargerStatus.visibility = View.GONE
                 }
 
-                SwitchMaterial chat_command = findViewById(R.id.chat_command_switch);
-                chat_command.setChecked(json_config.get("chat_command").getAsBoolean());
-                SwitchMaterial privacy_mode_switch = findViewById(R.id.privacy_switch);
-                privacy_mode_switch.setChecked(json_config.get("privacy_mode").getAsBoolean());
-                final com.google.android.material.textfield.TextInputLayout messageThreadIdView = findViewById(R.id.message_thread_id_view);
-                set_privacy_mode_checkbox(json_config.get("chat_id").getAsString(), chat_command, privacy_mode_switch, messageThreadIdView);
+                val chatCommand = findViewById<SwitchMaterial>(R.id.chat_command_switch)
+                chatCommand.isChecked = jsonObject["chat_command"].asBoolean
+                val privacyModeSwitch = findViewById<SwitchMaterial>(R.id.privacy_switch)
+                privacyModeSwitch.isChecked = jsonObject["privacy_mode"].asBoolean
+                val messageThreadIdView = findViewById<TextInputLayout>(R.id.message_thread_id_view)
+                setPrivacyModeCheckbox(
+                    jsonObject["chat_id"].asString,
+                    chatCommand,
+                    privacyModeSwitch,
+                    messageThreadIdView
+                )
 
-                EditText trusted_phone_number = findViewById(R.id.trusted_phone_number_editview);
-                trusted_phone_number.setText(json_config.get("trusted_phone_number").getAsString());
-                SwitchMaterial fallback_sms = findViewById(R.id.fallback_sms_switch);
-                fallback_sms.setChecked(json_config.get("fallback_sms").getAsBoolean());
-                if (trusted_phone_number.length() != 0) {
-                    fallback_sms.setVisibility(View.VISIBLE);
+                val trustedPhoneNumber =
+                    findViewById<EditText>(R.id.trusted_phone_number_editview)
+                trustedPhoneNumber.setText(jsonObject["trusted_phone_number"].asString)
+                val fallbackSMS = findViewById<SwitchMaterial>(R.id.fallback_sms_switch)
+                fallbackSMS.isChecked = jsonObject["fallback_sms"].asBoolean
+                if (trustedPhoneNumber.length() != 0) {
+                    fallbackSMS.visibility = View.VISIBLE
                 } else {
-                    fallback_sms.setVisibility(View.GONE);
-                    fallback_sms.setChecked(false);
+                    fallbackSMS.visibility = View.GONE
+                    fallbackSMS.isChecked = false
                 }
             }
         }
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
     }
 
-    @SuppressLint({"InflateParams", "NonConstantResourceId"})
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        LayoutInflater inflater = this.getLayoutInflater();
-        String fileName = null;
-        switch (item.getItemId()) {
-            case R.id.about_menu_item:
-                PackageManager packageManager = context.getPackageManager();
-                PackageInfo packageInfo;
-                String versionName = "";
+    @SuppressLint("InflateParams", "NonConstantResourceId")
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val inflater = this.layoutInflater
+        var fileName: String? = null
+        when (item.itemId) {
+            R.id.about_menu_item -> {
+                val packageManager = applicationContext.packageManager
+                val packageInfo: PackageInfo
+                var versionName = ""
                 try {
-                    packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-                    versionName = packageInfo.versionName;
-                } catch (PackageManager.NameNotFoundException e) {
-                    Log.e(TAG, "onOptionsItemSelected: ", e);
+                    packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
+                    versionName = packageInfo.versionName
+                } catch (e: PackageManager.NameNotFoundException) {
+                    Log.e(TAG, "onOptionsItemSelected: ", e)
                 }
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle(R.string.about_title);
-                builder.setMessage(getString(R.string.about_content) + versionName);
-                builder.setCancelable(false);
-                builder.setPositiveButton(R.string.ok_button, null);
-                builder.show();
-                return true;
-            case R.id.scan_menu_item:
-                ActivityCompat.requestPermissions(main_activity.this, new String[]{Manifest.permission.CAMERA}, 0);
-                return true;
-            case R.id.logcat_menu_item:
-                startActivity(new Intent(this, LogcatActivity.class));
-                return true;
-            case R.id.config_qrcode_menu_item:
+                val builder = AlertDialog.Builder(this)
+                builder.setTitle(R.string.about_title)
+                builder.setMessage(getString(R.string.about_content) + versionName)
+                builder.setCancelable(false)
+                builder.setPositiveButton(R.string.ok_button, null)
+                builder.show()
+                return true
+            }
+
+            R.id.scan_menu_item -> {
+                ActivityCompat.requestPermissions(
+                    this@MainActivity,
+                    arrayOf(Manifest.permission.CAMERA),
+                    0
+                )
+                return true
+            }
+
+            R.id.logcat_menu_item -> {
+                startActivity(Intent(this, LogcatActivity::class.java))
+                return true
+            }
+
+            R.id.config_qrcode_menu_item -> {
                 if (sharedPreferences.getBoolean("initialized", false)) {
-                    startActivity(new Intent(this, QRCodeShowActivity.class));
+                    startActivity(Intent(this, QRCodeShowActivity::class.java))
                 } else {
-                    Snackbar.make(findViewById(R.id.bot_token_editview), "Uninitialized.", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(
+                        findViewById(R.id.bot_token_editview),
+                        "Uninitialized.",
+                        Snackbar.LENGTH_LONG
+                    ).show()
                 }
-                return true;
-            case R.id.set_beacon_menu_item:
+                return true
+            }
+
+            R.id.set_beacon_menu_item -> {
                 if (ActivityCompat.checkSelfPermission(
                         this,
                         Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                    ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                         this,
                         Manifest.permission.ACCESS_COARSE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED) {
-                    android.util.Log.d(TAG, "No permissions.");
-                    Snackbar.make(findViewById(R.id.bot_token_editview), "No permission.", Snackbar.LENGTH_LONG).show();
-                    return false;
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    Log.d(TAG, "No permissions.")
+                    Snackbar.make(
+                        findViewById(R.id.bot_token_editview),
+                        "No permission.",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    return false
                 }
-                startActivity(new Intent(this, BeaconActivity.class));
-                return true;
-            case R.id.set_notify_menu_item:
-                if (!ServiceManage.isNotifyListener(context)) {
-                    Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                    set_permission_back = true;
-                    return false;
+                startActivity(Intent(this, BeaconActivity::class.java))
+                return true
+            }
+
+            R.id.set_notify_menu_item -> {
+                if (!isNotifyListener(applicationContext)) {
+                    val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    set_permission_back = true
+                    return false
                 }
-                startActivity(new Intent(this, notify_apps_list_activity.class));
-                return true;
-            case R.id.spam_sms_keyword_edittext:
-                startActivity(new Intent(this, SpamActivity.class));
-                return true;
-            case R.id.set_proxy_menu_item:
-                View proxy_dialog_view = inflater.inflate(R.layout.set_proxy_layout, null);
-                final SwitchMaterial dohSwitch = findViewById(R.id.doh_switch);
-                final SwitchMaterial proxyEnable = proxy_dialog_view.findViewById(R.id.proxy_enable_switch);
-                final SwitchMaterial proxyDohSocks5 = proxy_dialog_view.findViewById(R.id.doh_over_socks5_switch);
-                final EditText proxyHost = proxy_dialog_view.findViewById(R.id.proxy_host_editview);
-                final EditText proxyPort = proxy_dialog_view.findViewById(R.id.proxy_port_editview);
-                final EditText proxyUsername = proxy_dialog_view.findViewById(R.id.proxy_username_editview);
-                final EditText proxyPassword = proxy_dialog_view.findViewById(R.id.proxy_password_editview);
-                proxy proxyItem = Paper.book("system_config").read("proxy_config", new proxy());
-                proxyEnable.setChecked(Objects.requireNonNull(proxyItem).enable);
-                proxyDohSocks5.setChecked(proxyItem.dns_over_socks5);
-                proxyHost.setText(proxyItem.host);
-                proxyPort.setText(String.valueOf(proxyItem.port));
-                proxyUsername.setText(proxyItem.username);
-                proxyPassword.setText(proxyItem.password);
-                new AlertDialog.Builder(this).setTitle(R.string.proxy_dialog_title)
-                        .setView(proxy_dialog_view)
-                        .setPositiveButton(R.string.ok_button, (dialog, which) -> {
-                            if (!dohSwitch.isChecked()) {
-                                dohSwitch.setChecked(true);
+                startActivity(Intent(this, NotifyActivity::class.java))
+                return true
+            }
+
+            R.id.spam_sms_keyword_edittext -> {
+                startActivity(Intent(this, SpamActivity::class.java))
+                return true
+            }
+
+            R.id.set_proxy_menu_item -> {
+                val proxyDialogView = inflater.inflate(R.layout.set_proxy_layout, null)
+                val dohSwitch = findViewById<SwitchMaterial>(R.id.doh_switch)
+                val proxyEnable =
+                    proxyDialogView.findViewById<SwitchMaterial>(R.id.proxy_enable_switch)
+                val proxyDohSocks5 =
+                    proxyDialogView.findViewById<SwitchMaterial>(R.id.doh_over_socks5_switch)
+                val proxyHost = proxyDialogView.findViewById<EditText>(R.id.proxy_host_editview)
+                val proxyPort = proxyDialogView.findViewById<EditText>(R.id.proxy_port_editview)
+                val proxyUsername =
+                    proxyDialogView.findViewById<EditText>(R.id.proxy_username_editview)
+                val proxyPassword =
+                    proxyDialogView.findViewById<EditText>(R.id.proxy_password_editview)
+                val proxyItem = Paper.book("system_config").read("proxy_config", proxy())
+                proxyEnable.isChecked = proxyItem!!.enable
+                proxyDohSocks5.isChecked = proxyItem.dns_over_socks5
+                proxyHost.setText(proxyItem.host)
+                proxyPort.setText(proxyItem.port.toString())
+                proxyUsername.setText(proxyItem.username)
+                proxyPassword.setText(proxyItem.password)
+                AlertDialog.Builder(this).setTitle(R.string.proxy_dialog_title)
+                    .setView(proxyDialogView)
+                    .setPositiveButton(R.string.ok_button) { _: DialogInterface?, _: Int ->
+                        if (!dohSwitch.isChecked) {
+                            dohSwitch.isChecked = true
+                        }
+                        dohSwitch.isEnabled = !proxyEnable.isChecked
+                        proxyItem.enable = proxyEnable.isChecked
+                        proxyItem.dns_over_socks5 = proxyDohSocks5.isChecked
+                        proxyItem.host = proxyHost.text.toString()
+                        proxyItem.port = proxyPort.text.toString().toInt()
+                        proxyItem.username = proxyUsername.text.toString()
+                        proxyItem.password = proxyPassword.text.toString()
+                        Paper.book("system_config").write("proxy_config", proxyItem)
+                        Thread {
+                            KeepAliveJob.stopJob(applicationContext)
+                            stopAllService(applicationContext)
+                            if (sharedPreferences.getBoolean("initialized", false)) {
+                                startService(
+                                    applicationContext,
+                                    sharedPreferences.getBoolean(
+                                        "battery_monitoring_switch",
+                                        false
+                                    ),
+                                    sharedPreferences.getBoolean("chat_command", false)
+                                )
+                                startBeaconService(applicationContext)
+                                KeepAliveJob.startJob(applicationContext)
                             }
-                            dohSwitch.setEnabled(!proxyEnable.isChecked());
-                            proxyItem.enable = proxyEnable.isChecked();
-                            proxyItem.dns_over_socks5 = proxyDohSocks5.isChecked();
-                            proxyItem.host = proxyHost.getText().toString();
-                            proxyItem.port = Integer.parseInt(proxyPort.getText().toString());
-                            proxyItem.username = proxyUsername.getText().toString();
-                            proxyItem.password = proxyPassword.getText().toString();
-                            Paper.book("system_config").write("proxy_config", proxyItem);
-                            new Thread(() -> {
-                                KeepAliveJob.Companion.stopJob(context);
-                                ServiceManage.stopAllService(context);
-                                if (sharedPreferences.getBoolean("initialized", false)) {
-                                    ServiceManage.startService(context, sharedPreferences.getBoolean("battery_monitoring_switch", false), sharedPreferences.getBoolean("chat_command", false));
-                                    ServiceManage.startBeaconService(context);
-                                    KeepAliveJob.Companion.startJob(context);
-                                }
-                            }).start();
-                        })
-                        .show();
-                return true;
-            case R.id.user_manual_menu_item:
-                fileName = "/guide/" + context.getString(R.string.Lang) + "/user-manual";
-                break;
-            case R.id.privacy_policy_menu_item:
-                fileName = privacy_police;
-                break;
-            case R.id.question_and_answer_menu_item:
-                fileName = "/guide/" + context.getString(R.string.Lang) + "/Q&A";
-                break;
-            case R.id.donate_menu_item:
-                fileName = "/donate";
-                break;
+                        }.start()
+                    }
+                    .show()
+                return true
+            }
+
+            R.id.user_manual_menu_item -> fileName =
+                "/guide/" + applicationContext.getString(R.string.Lang) + "/user-manual"
+
+            R.id.privacy_policy_menu_item -> fileName = privacy_police
+            R.id.question_and_answer_menu_item -> fileName =
+                "/guide/" + applicationContext.getString(R.string.Lang) + "/Q&A"
+
+            R.id.donate_menu_item -> fileName = "/donate"
         }
-        assert fileName != null;
-        Uri uri = Uri.parse("https://get.telegram-sms.com" + fileName);
-        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-        CustomTabColorSchemeParams params = new CustomTabColorSchemeParams.Builder().setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary)).build();
-        builder.setDefaultColorSchemeParams(params);
-        CustomTabsIntent customTabsIntent = builder.build();
+        checkNotNull(fileName)
+        val uri = Uri.parse("https://get.telegram-sms.com$fileName")
+        val builder = CustomTabsIntent.Builder()
+        val params = CustomTabColorSchemeParams.Builder().setToolbarColor(
+            ContextCompat.getColor(
+                applicationContext, R.color.colorPrimary
+            )
+        ).build()
+        builder.setDefaultColorSchemeParams(params)
+        val customTabsIntent = builder.build()
         try {
-            customTabsIntent.launchUrl(this, uri);
-        } catch (ActivityNotFoundException e) {
-            Log.e(TAG, "onOptionsItemSelected: ", e);
-            Snackbar.make(findViewById(R.id.bot_token_editview), "Browser not found.", Snackbar.LENGTH_LONG).show();
+            customTabsIntent.launchUrl(this, uri)
+        } catch (e: ActivityNotFoundException) {
+            Log.e(TAG, "onOptionsItemSelected: ", e)
+            Snackbar.make(
+                findViewById(R.id.bot_token_editview),
+                "Browser not found.",
+                Snackbar.LENGTH_LONG
+            ).show()
         }
-        return true;
+        return true
     }
 
+    companion object {
+        private var set_permission_back = false
+        private var privacy_police: String? = null
+    }
 }
 
