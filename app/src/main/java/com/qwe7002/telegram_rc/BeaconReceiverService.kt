@@ -1,4 +1,4 @@
-@file:Suppress("DEPRECATION")
+@file:Suppress("DEPRECATION", "ClassName")
 
 package com.qwe7002.telegram_rc
 
@@ -57,6 +57,7 @@ import java.util.Objects
 
 
 class BeaconReceiverService : Service() {
+    @Suppress("PrivatePropertyName")
     private val TAG = "beacon_receviver"
     private lateinit var wifiManager: WifiManager
     private var notFoundCount = 0
