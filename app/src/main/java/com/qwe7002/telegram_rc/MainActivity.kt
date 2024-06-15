@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        privacy_police = "/guide/" + applicationContext.getString(R.string.Lang) + "/privacy-policy"
+        privacyPolice = "/guide/" + applicationContext.getString(R.string.Lang) + "/privacy-policy"
         val botTokenEditView = findViewById<EditText>(R.id.bot_token_editview)
         val chatIdEditView = findViewById<EditText>(R.id.chat_id_editview)
         val trustedPhoneNumberEditView = findViewById<EditText>(R.id.trusted_phone_number_editview)
@@ -554,8 +554,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val backStatus = set_permission_back
-        set_permission_back = false
+        val backStatus = setPermissionBack
+        setPermissionBack = false
         if (backStatus) {
             if (isNotifyListener(applicationContext)) {
                 startActivity(Intent(this@MainActivity, NotifyActivity::class.java))
@@ -576,7 +576,7 @@ class MainActivity : AppCompatActivity() {
         }
         builder.setNegativeButton(R.string.decline, null)
         builder.setNeutralButton(R.string.visit_page) { _: DialogInterface?, _: Int ->
-            val uri = Uri.parse("https://get.telegram-sms.com$privacy_police")
+            val uri = Uri.parse("https://get.telegram-sms.com$privacyPolice")
             val privacyBuilder = CustomTabsIntent.Builder()
             val customTabsIntent = privacyBuilder.build()
             customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -775,7 +775,7 @@ class MainActivity : AppCompatActivity() {
                     val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(intent)
-                    set_permission_back = true
+                    setPermissionBack = true
                     return false
                 }
                 startActivity(Intent(this, NotifyActivity::class.java))
@@ -845,7 +845,7 @@ class MainActivity : AppCompatActivity() {
             R.id.user_manual_menu_item -> fileName =
                 "/guide/" + applicationContext.getString(R.string.Lang) + "/user-manual"
 
-            R.id.privacy_policy_menu_item -> fileName = privacy_police
+            R.id.privacy_policy_menu_item -> fileName = privacyPolice
             R.id.question_and_answer_menu_item -> fileName =
                 "/guide/" + applicationContext.getString(R.string.Lang) + "/Q&A"
 
@@ -875,8 +875,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private var set_permission_back = false
-        private var privacy_police: String? = null
+        private var setPermissionBack = false
+        private lateinit var privacyPolice: String
     }
 }
 
