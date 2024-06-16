@@ -9,7 +9,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.qwe7002.telegram_rc.BatteryService
 import com.qwe7002.telegram_rc.BeaconReceiverService
 import com.qwe7002.telegram_rc.NotificationListenerService
-import com.qwe7002.telegram_rc.chat_command_service
+import com.qwe7002.telegram_rc.ChatService
 
 object ServiceManage {
     @JvmStatic
@@ -45,7 +45,7 @@ object ServiceManage {
             context.startForegroundService(batteryService)
         }
         if (chatCommandSwitch) {
-            val chatLongPollingService = Intent(context, chat_command_service::class.java)
+            val chatLongPollingService = Intent(context, ChatService::class.java)
             context.startForegroundService(chatLongPollingService)
         }
     }

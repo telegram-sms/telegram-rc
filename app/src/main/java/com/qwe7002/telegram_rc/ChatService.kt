@@ -1,999 +1,1285 @@
-package com.qwe7002.telegram_rc;
+package com.qwe7002.telegram_rc
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Notification;
-import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ServiceInfo;
-import android.net.ConnectivityManager;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
-import android.net.wifi.WifiManager;
-import android.os.BatteryManager;
-import android.os.Build;
-import android.os.IBinder;
-import android.os.PowerManager;
-import android.os.Process;
-import android.provider.Settings;
-import android.telephony.TelephonyManager;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-
-import com.fitc.wifihotspot.TetherManager;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.qwe7002.telegram_rc.data_structure.pollingJson;
-import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard;
-import com.qwe7002.telegram_rc.data_structure.requestMessage;
-import com.qwe7002.telegram_rc.data_structure.smsRequestInfo;
-import com.qwe7002.telegram_rc.root_kit.Radio;
-import com.qwe7002.telegram_rc.static_class.Const;
-import com.qwe7002.telegram_rc.static_class.LogManage;
-import com.qwe7002.telegram_rc.static_class.ServiceManage;
-import com.qwe7002.telegram_rc.static_class.Network;
-import com.qwe7002.telegram_rc.static_class.Notify;
-import com.qwe7002.telegram_rc.static_class.Other;
-import com.qwe7002.telegram_rc.static_class.RemoteControl;
-import com.qwe7002.telegram_rc.static_class.SMS;
-import com.qwe7002.telegram_rc.static_class.USSD;
-
-import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-
-import io.paperdb.Paper;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
+import android.net.ConnectivityManager
+import android.net.ConnectivityManager.NetworkCallback
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiManager.WifiLock
+import android.os.BatteryManager
+import android.os.Build
+import android.os.IBinder
+import android.os.PowerManager
+import android.os.PowerManager.WakeLock
+import android.os.Process
+import android.provider.Settings
+import android.telephony.TelephonyManager
+import android.util.Log
+import androidx.core.app.ActivityCompat
+import com.fitc.wifihotspot.TetherManager
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import com.qwe7002.telegram_rc.data_structure.pollingJson
+import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard
+import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard.InlineKeyboardButton
+import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard.keyboardMarkup
+import com.qwe7002.telegram_rc.data_structure.requestMessage
+import com.qwe7002.telegram_rc.data_structure.smsRequestInfo
+import com.qwe7002.telegram_rc.root_kit.ActivityManage.checkServiceIsRunning
+import com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice
+import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
+import com.qwe7002.telegram_rc.root_kit.Networks.setData
+import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
+import com.qwe7002.telegram_rc.root_kit.Radio.isLTECA
+import com.qwe7002.telegram_rc.root_kit.Radio.isNRConnected
+import com.qwe7002.telegram_rc.root_kit.Radio.isNRStandby
+import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.static_class.LogManage.readLog
+import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
+import com.qwe7002.telegram_rc.static_class.Network.checkNetworkStatus
+import com.qwe7002.telegram_rc.static_class.Network.getDataEnable
+import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
+import com.qwe7002.telegram_rc.static_class.Network.getUrl
+import com.qwe7002.telegram_rc.static_class.Notify
+import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
+import com.qwe7002.telegram_rc.static_class.Other.getDataSimId
+import com.qwe7002.telegram_rc.static_class.Other.getDualSimCardDisplay
+import com.qwe7002.telegram_rc.static_class.Other.getMessageId
+import com.qwe7002.telegram_rc.static_class.Other.getNotificationObj
+import com.qwe7002.telegram_rc.static_class.Other.getSendPhoneNumber
+import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
+import com.qwe7002.telegram_rc.static_class.Other.getSubId
+import com.qwe7002.telegram_rc.static_class.Other.isPhoneNumber
+import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
+import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
+import com.qwe7002.telegram_rc.static_class.RemoteControl.disableVPNHotspot
+import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
+import com.qwe7002.telegram_rc.static_class.RemoteControl.enableVPNHotspot
+import com.qwe7002.telegram_rc.static_class.RemoteControl.isHotspotActive
+import com.qwe7002.telegram_rc.static_class.RemoteControl.isVPNHotspotExist
+import com.qwe7002.telegram_rc.static_class.SMS.sendFallbackSMS
+import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
+import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
+import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
+import io.paperdb.Paper
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.io.IOException
+import java.util.Locale
+import java.util.Objects
+import java.util.concurrent.TimeUnit
 
 /**
  * @noinspection CallToPrintStackTrace
  */
-@SuppressWarnings({"BusyWait", "ConstantConditions"})
-public class chat_command_service extends Service {
-    private static final String TAG = "chat_command";
-    //Global counter
-    private static long offset = 0;
-    private static int send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
+@Suppress("DEPRECATION")
+class ChatService : Service() {
     // global object
-    private OkHttpClient okhttp_client;
-    private String message_thread_id;
-    private broadcast_receiver broadcast_receiver;
-    private PowerManager.WakeLock wakelock;
-    private WifiManager.WifiLock wifilock;
-    private Context context;
-    private SharedPreferences sharedPreferences;
-    private ConnectivityManager connectivity_manager;
-    private network_callback callback;
-    private static boolean first_request = true;
+    private lateinit var okhttpClient: OkHttpClient
+    private lateinit var messageThreadId: String
+    private lateinit var broadcastReceiver: broadcast_receiver
+    private lateinit var wakelock: WakeLock
+    private lateinit var wifilock: WifiLock
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var connectivityManager: ConnectivityManager
+    private lateinit var callback: network_callback
+    private lateinit var botUsername: String
+    private var privacyMode = false
+    private lateinit var chatId: String
+    private lateinit var botToken: String
 
 
-    private static String checkCellularNetworkType(int type, SharedPreferences sharedPreferences) {
-        String net_type = "Unknown";
-        switch (type) {
-            case TelephonyManager.NETWORK_TYPE_NR:
-                net_type = "NR";
-                break;
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                net_type = "LTE";
-                if (sharedPreferences.getBoolean("root", false)) {
-                    if (Radio.INSTANCE.isLTECA()) {
-                        net_type += "+";
-                    }
-                    if (Radio.INSTANCE.isNRConnected()) {
-                        net_type += " & NR";
-                        break;
-                    }
-                    if (Radio.INSTANCE.isNRStandby()) {
-                        net_type += " (NR Standby)";
-                    }
-                }
-                break;
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_EHRPD:
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_TD_SCDMA:
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-                net_type = "3G";
-                break;
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-            case TelephonyManager.NETWORK_TYPE_CDMA:
-            case TelephonyManager.NETWORK_TYPE_1xRTT:
-            case TelephonyManager.NETWORK_TYPE_IDEN:
-                net_type = "2G";
-                break;
-        }
-        return net_type;
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        startForegroundNotification()
+        return START_STICKY
     }
 
-
-    private String bot_username = "";
-    private boolean privacy_mode;
-    private static Thread thread_main;
-    private String chat_id;
-    private String bot_token;
-
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        startForegroundNotification();
-        return START_STICKY;
-    }
-
-    void startForegroundNotification() {
-        Notification.Builder notification = Other.getNotificationObj(context, getString(R.string.chat_command_service_name));
+    private fun startForegroundNotification() {
+        val notification = getNotificationObj(
+            applicationContext, getString(R.string.chat_command_service_name)
+        )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(Notify.CHAT_COMMAND, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
-        }else{
-            startForeground(Notify.CHAT_COMMAND, notification.build());
+            startForeground(
+                Notify.CHAT_COMMAND,
+                notification.build(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(Notify.CHAT_COMMAND, notification.build())
         }
     }
 
 
-    @Override
-    public void onDestroy() {
-        wifilock.release();
-        wakelock.release();
-        unregisterReceiver(broadcast_receiver);
-        connectivity_manager.unregisterNetworkCallback(callback);
-        stopForeground(true);
-        super.onDestroy();
+    override fun onDestroy() {
+        wifilock.release()
+        wakelock.release()
+        unregisterReceiver(broadcastReceiver)
+        connectivityManager.unregisterNetworkCallback(callback)
+        super.onDestroy()
     }
 
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
 
-    @NotNull
-    static String getBatteryInfo(@NotNull Context context) {
-        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-        assert batteryManager != null;
-        int batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-        if (batteryLevel > 100) {
-            android.util.Log.i("get_battery_info", "The previous battery is over 100%, and the correction is 100%.");
-            batteryLevel = 100;
-        }
-        IntentFilter intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = context.registerReceiver(null, intentfilter);
-        assert batteryStatus != null;
-        int charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        StringBuilder batteryStringBuilder = new StringBuilder().append(batteryLevel).append("%");
-        switch (charge_status) {
-            case BatteryManager.BATTERY_STATUS_CHARGING:
-            case BatteryManager.BATTERY_STATUS_FULL:
-                batteryStringBuilder.append(" (").append(context.getString(R.string.charging)).append(")");
-                break;
-            case BatteryManager.BATTERY_STATUS_DISCHARGING:
-            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                switch (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
-                    case BatteryManager.BATTERY_PLUGGED_AC:
-                    case BatteryManager.BATTERY_PLUGGED_USB:
-                    case BatteryManager.BATTERY_PLUGGED_WIRELESS:
-                        batteryStringBuilder.append(" (").append(context.getString(R.string.not_charging)).append(")");
-                        break;
-                }
-                break;
-        }
-        return batteryStringBuilder.toString();
-    }
-
-    private boolean getMe() {
-        OkHttpClient okhttpClientNew = okhttp_client;
-        String request_uri = Network.getUrl(bot_token, "getMe");
-        Request request = new Request.Builder().url(request_uri).build();
-        Call call = okhttpClientNew.newCall(request);
-        Response response;
-        try {
-            response = call.execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-            LogManage.writeLog(context, "Get username failed:" + e.getMessage());
-            return false;
-        }
-        if (response.code() == 200) {
-            String result;
+    private fun me(): Boolean{
+            val okhttpClientNew = okhttpClient
+            val url = getUrl(botToken, "getMe")
+            val request: Request = Request.Builder().url(url).build()
+            val call = okhttpClientNew.newCall(request)
+            val response: Response
             try {
-                result = Objects.requireNonNull(response.body()).string();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
+                response = call.execute()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                writeLog(applicationContext, "Get username failed:" + e.message)
+                return false
             }
-            JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-            if (result_obj.get("ok").getAsBoolean()) {
-                bot_username = result_obj.get("result").getAsJsonObject().get("username").getAsString();
-                LogManage.writeLog(context, "Get the bot username: " + bot_username);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    public static String getNetworkType(@NotNull Context context, SharedPreferences sharedPreferences) {
-        String net_type = "Unknown";
-        ConnectivityManager connect_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        assert connect_manager != null;
-        TelephonyManager telephonyManager = (TelephonyManager) context
-                .getSystemService(Context.TELEPHONY_SERVICE);
-        assert telephonyManager != null;
-        android.net.Network[] networks = connect_manager.getAllNetworks();
-        for (android.net.Network network : networks) {
-            NetworkCapabilities network_capabilities = connect_manager.getNetworkCapabilities(network);
-            assert network_capabilities != null;
-            if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    net_type = "WIFI";
-                    break;
-                }
-                if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                        android.util.Log.i("get_network_type", "No permission.");
-                        return net_type;
-                    }
-                    net_type = checkCellularNetworkType(telephonyManager.getDataNetworkType(), sharedPreferences);
-                }
-                if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
-                    net_type = "Bluetooth";
-                }
-                if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                    net_type = "Ethernet";
-                }
-            }
-        }
-
-        return net_type;
-    }
-
-    private void receiveHandle(@NotNull JsonObject result_obj, boolean get_id_only) {
-        long update_id = result_obj.get("update_id").getAsLong();
-        offset = update_id + 1;
-        if (get_id_only) {
-            android.util.Log.i(TAG, "receive_handle: get_id_only");
-            return;
-        }
-
-        String message_type = "";
-        final requestMessage request_body = new requestMessage();
-        request_body.chatId = chat_id;
-        request_body.messageThreadId = message_thread_id;
-        JsonObject message_obj = null;
-        String callback_data = null;
-        if (result_obj.has("message")) {
-            message_obj = result_obj.get("message").getAsJsonObject();
-            message_type = message_obj.get("chat").getAsJsonObject().get("type").getAsString();
-        }
-        if (result_obj.has("channel_post")) {
-            message_type = "channel";
-            message_obj = result_obj.get("channel_post").getAsJsonObject();
-        }
-        if (result_obj.has("callback_query")) {
-            message_type = "callback_query";
-            JsonObject callback_query = result_obj.get("callback_query").getAsJsonObject();
-            callback_data = callback_query.get("data").getAsString();
-        }
-        if (message_type.equals("callback_query") && send_sms_next_status != SEND_SMS_STATUS.STANDBY_STATUS) {
-            int slot = Paper.book("send_temp").read("slot", -1);
-            long message_id = Paper.book("send_temp").read("message_id", -1L);
-            String to = Paper.book("send_temp").read("to", "");
-            String content = Paper.book("send_temp").read("content", "");
-            assert callback_data != null;
-            if (!callback_data.equals(CALLBACK_DATA_VALUE.SEND)) {
-                set_sms_send_status_standby();
-                String request_uri = Network.getUrl(bot_token, "editMessageText");
-                String dual_sim = Other.getDualSimCardDisplay(context, slot, sharedPreferences.getBoolean("display_dual_sim_display_name", false));
-                String send_content = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]" + "\n" + context.getString(R.string.to) + to + "\n" + context.getString(R.string.content) + content;
-                request_body.text = send_content + "\n" + context.getString(R.string.status) + context.getString(R.string.cancel_button);
-                request_body.messageId = message_id;
-                request_body.messageThreadId = message_thread_id;
-                Gson gson = new Gson();
-                String request_body_raw = gson.toJson(request_body);
-                RequestBody body = RequestBody.create(request_body_raw, Const.JSON);
-                OkHttpClient okhttp_client = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
-                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-                Call call = okhttp_client.newCall(request);
+            if (response.code == 200) {
+                val result: String
                 try {
-                    Response response = call.execute();
-                    if (response.code() != 200 || response.body() == null) {
-                        throw new IOException(String.valueOf(response.code()));
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    LogManage.writeLog(context, "failed to send message:" + e.getMessage());
+                    result = Objects.requireNonNull(response.body).string()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    return false
                 }
-                return;
+                val resultObj = JsonParser.parseString(result).asJsonObject
+                if (resultObj["ok"].asBoolean) {
+                    botUsername = resultObj["result"].asJsonObject["username"].asString
+                    writeLog(applicationContext, "Get the bot username: $botUsername")
+                }
+                return true
             }
-            int sub_id = -1;
-            if (Other.getActiveCard(context) == 1) {
-                slot = -1;
+            return false
+        }
+
+    private fun receiveHandle(resultObj: JsonObject, getIdOnly: Boolean) {
+        val updateId = resultObj["update_id"].asLong
+        offset = updateId + 1
+        if (getIdOnly) {
+            Log.i(TAG, "receive_handle: get_id_only")
+            return
+        }
+
+        var messageType = ""
+        val requestBody = requestMessage()
+        requestBody.chatId = chatId
+        requestBody.messageThreadId = messageThreadId
+        lateinit var messageObj: JsonObject
+        lateinit var callbackData: String
+        if (resultObj.has("message")) {
+            messageObj = resultObj["message"].asJsonObject
+            messageType = messageObj["chat"].asJsonObject["type"].asString
+        }
+        if (resultObj.has("channel_post")) {
+            messageType = "channel"
+            messageObj = resultObj["channel_post"].asJsonObject
+        }
+        if (resultObj.has("callback_query")) {
+            messageType = "callback_query"
+            val callbackQuery = resultObj["callback_query"].asJsonObject
+            callbackData = callbackQuery["data"].asString
+        }
+        if (messageType == "callback_query" && send_sms_next_status != SEND_SMS_STATUS.STANDBY_STATUS) {
+            var slot = Paper.book("send_temp").read("slot", -1)!!
+            val messageId = Paper.book("send_temp").read("message_id", -1L)!!
+            val to = Paper.book("send_temp").read("to", "")
+            val content = Paper.book("send_temp").read("content", "")
+            if (callbackData != CALLBACK_DATA_VALUE.SEND) {
+                set_sms_send_status_standby()
+                val requestUri = getUrl(
+                    botToken, "editMessageText"
+                )
+                val dualSim = getDualSimCardDisplay(
+                    applicationContext,
+                    slot,
+                    sharedPreferences.getBoolean("display_dual_sim_display_name", false)
+                )
+                val sendContent = """
+                    [$dualSim${applicationContext.getString(R.string.send_sms_head)}]
+                    ${applicationContext.getString(R.string.to)}$to
+                    ${applicationContext.getString(R.string.content)}$content
+                    """.trimIndent()
+                requestBody.text = """
+                    $sendContent
+                    ${applicationContext.getString(R.string.status)}${applicationContext.getString(R.string.cancel_button)}
+                    """.trimIndent()
+                requestBody.messageId = messageId
+                requestBody.messageThreadId = messageThreadId
+                val gson = Gson()
+                val requestBodyRaw = gson.toJson(requestBody)
+                val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+                val okhttpClient1 = getOkhttpObj(
+                    sharedPreferences.getBoolean("doh_switch", true)
+                )
+                val request: Request =
+                    Request.Builder().url(requestUri).method("POST", body).build()
+                val call = okhttpClient1.newCall(request)
+                try {
+                    val response = call.execute()
+                    if (response.code != 200) {
+                        throw IOException(response.code.toString())
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    writeLog(applicationContext, "failed to send message:" + e.message)
+                }
+                return
+            }
+            var subId = -1
+            if (getActiveCard(applicationContext) == 1) {
+                slot = -1
             } else {
-                sub_id = Other.getSubId(context, slot);
+                subId = getSubId(applicationContext, slot)
             }
-            SMS.sendSMS(context, to, content, slot, sub_id, message_id);
-            set_sms_send_status_standby();
-            return;
-        }
-        if (message_obj == null) {
-            LogManage.writeLog(context, "Request type is not allowed by security policy.");
-            return;
+            sendSMS(applicationContext, to!!, content!!, slot, subId, messageId)
+            set_sms_send_status_standby()
+            return
         }
 
-        JsonObject from_obj = null;
-        String from_topic_id = "";
-        final boolean message_type_is_private = message_type.equals("private");
-        if (message_obj.has("from")) {
-            from_obj = message_obj.get("from").getAsJsonObject();
-            if (!message_type_is_private && from_obj.get("is_bot").getAsBoolean()) {
-                android.util.Log.i(TAG, "receive_handle: receive from bot.");
-                return;
+        lateinit var fromObj: JsonObject
+        var fromTopicId = ""
+        val messageTypeIsPrivate = messageType == "private"
+        if (messageObj.has("from")) {
+            fromObj = messageObj["from"].asJsonObject
+            if (!messageTypeIsPrivate && fromObj["is_bot"].asBoolean) {
+                Log.i(TAG, "receive_handle: receive from bot.")
+                return
             }
         }
-        if (!Objects.equals(message_thread_id, "")) {
-            if (message_obj.has("is_topic_message")) {
-                from_topic_id = message_obj.get("message_thread_id").getAsString();
+        if (messageThreadId != "") {
+            if (messageObj.has("is_topic_message")) {
+                fromTopicId = messageObj["message_thread_id"].asString
             }
-            if (!Objects.equals(message_thread_id, from_topic_id)) {
-                android.util.Log.i(TAG, "Topic ID[" + from_topic_id + "] not allow.");
-                return;
+            if (messageThreadId != fromTopicId) {
+                Log.i(TAG, "Topic ID[$fromTopicId] not allow.")
+                return
             }
         }
-        if (message_obj.has("chat")) {
-            from_obj = message_obj.get("chat").getAsJsonObject();
+        if (messageObj.has("chat")) {
+            fromObj = messageObj["chat"].asJsonObject
+        }
+        val from_id = fromObj["id"].asString
+        if (chatId != from_id) {
+            writeLog(applicationContext, "Chat ID[$from_id] not allow")
+            return
         }
 
-        assert from_obj != null;
-        String from_id = from_obj.get("id").getAsString();
-        if (!Objects.equals(chat_id, from_id)) {
-            LogManage.writeLog(context, "Chat ID[" + from_id + "] not allow");
-            return;
+        var command = ""
+        var command_bot_username = ""
+        var request_msg = ""
+        if (messageObj.has("text")) {
+            request_msg = messageObj["text"].asString
         }
-
-        String command = "";
-        String command_bot_username = "";
-        String request_msg = "";
-        if (message_obj.has("text")) {
-            request_msg = message_obj.get("text").getAsString();
-        }
-        if (message_obj.has("reply_to_message")) {
-            smsRequestInfo save_item = Paper.book().read(message_obj.get("reply_to_message").getAsJsonObject().get("message_id").getAsString(), null);
+        if (messageObj.has("reply_to_message")) {
+            val save_item = Paper.book().read<smsRequestInfo>(
+                messageObj["reply_to_message"].asJsonObject["message_id"].asString,
+                null
+            )
             if (save_item != null && !request_msg.isEmpty()) {
-                String phone_number = save_item.phone;
-                int card_slot = save_item.card;
-                send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;
-                Paper.book("send_temp").write("slot", card_slot);
-                Paper.book("send_temp").write("to", phone_number);
-                Paper.book("send_temp").write("content", request_msg);
+                val phone_number = save_item.phone
+                val card_slot = save_item.card
+                send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS
+                Paper.book("send_temp").write("slot", card_slot)
+                Paper.book("send_temp").write("to", phone_number)
+                Paper.book("send_temp").write("content", request_msg)
             }
         }
-        boolean has_command = false;
-        if (message_obj.has("entities")) {
-            String temp_command;
-            String temp_command_lowercase;
-            JsonArray entities_arr = message_obj.get("entities").getAsJsonArray();
-            JsonObject entities_obj_command = entities_arr.get(0).getAsJsonObject();
-            if (entities_obj_command.get("type").getAsString().equals("bot_command")) {
-                has_command = true;
-                int command_offset = entities_obj_command.get("offset").getAsInt();
-                int command_end_offset = command_offset + entities_obj_command.get("length").getAsInt();
-                temp_command = request_msg.substring(command_offset, command_end_offset).trim();
-                temp_command_lowercase = temp_command.toLowerCase().replace("_", "");
-                command = temp_command_lowercase;
+        var has_command = false
+        if (messageObj.has("entities")) {
+            val temp_command: String
+            val temp_command_lowercase: String
+            val entities_arr = messageObj["entities"].asJsonArray
+            val entities_obj_command = entities_arr[0].asJsonObject
+            if (entities_obj_command["type"].asString == "bot_command") {
+                has_command = true
+                val command_offset = entities_obj_command["offset"].asInt
+                val command_end_offset = command_offset + entities_obj_command["length"].asInt
+                temp_command =
+                    request_msg.substring(command_offset, command_end_offset).trim { it <= ' ' }
+                temp_command_lowercase =
+                    temp_command.lowercase(Locale.getDefault()).replace("_", "")
+                command = temp_command_lowercase
                 if (temp_command_lowercase.contains("@")) {
-                    int command_at_location = temp_command_lowercase.indexOf("@");
-                    command = temp_command_lowercase.substring(0, command_at_location);
-                    command_bot_username = temp_command.substring(command_at_location + 1);
+                    val command_at_location = temp_command_lowercase.indexOf("@")
+                    command = temp_command_lowercase.substring(0, command_at_location)
+                    command_bot_username = temp_command.substring(command_at_location + 1)
                 }
             }
         }
 
-        if (!message_type_is_private && privacy_mode && !command_bot_username.equals(bot_username)) {
-            android.util.Log.i(TAG, "receive_handle: Privacy mode, no username found.");
-            return;
+        if (!messageTypeIsPrivate && privacyMode && command_bot_username != botUsername) {
+            Log.i(TAG, "receive_handle: Privacy mode, no username found.")
+            return
         }
 
-        android.util.Log.d(TAG, "Command: " + command);
+        Log.d(TAG, "Command: $command")
 
-        switch (command) {
-            case "/help":
-            case "/start":
-            case "/commandlist":
-                String sms_command = "\n" + getString(R.string.sendsms);
-                if (Other.getActiveCard(context) == 2) {
-                    sms_command = "\n" + getString(R.string.sendsms_dual);
+        when (command) {
+            "/help", "/start", "/commandlist" -> {
+                var smsCommand = """
+                
+                ${getString(R.string.sendsms)}
+                """.trimIndent()
+                if (getActiveCard(applicationContext) == 2) {
+                    smsCommand = """
+                        
+                        ${getString(R.string.sendsms_dual)}
+                        """.trimIndent()
                 }
-                sms_command += "\n" + getString(R.string.get_spam_sms);
+                smsCommand += """
+                
+                ${getString(R.string.get_spam_sms)}
+                """.trimIndent()
 
-                String ussd_command = "";
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                    ussd_command = "\n" + getString(R.string.send_ussd_command);
-                    if (Other.getActiveCard(context) == 2) {
-                        ussd_command = "\n" + getString(R.string.send_ussd_dual_command);
+                var ussdCommand = ""
+                if (ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.CALL_PHONE
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    ussdCommand = """
+                        
+                        ${getString(R.string.send_ussd_command)}
+                        """.trimIndent()
+                    if (getActiveCard(applicationContext) == 2) {
+                        ussdCommand = """
+                            
+                            ${getString(R.string.send_ussd_dual_command)}
+                            """.trimIndent()
                     }
                 }
-                String switch_ap = "";
-                if (Settings.System.canWrite(context)) {
-                    switch_ap += "\n" + getString(R.string.switch_ap_message);
+                var switchAp = ""
+                if (Settings.System.canWrite(applicationContext)) {
+                    switchAp += """
+                        
+                        ${getString(R.string.switch_ap_message)}
+                        """.trimIndent()
                 }
                 if (sharedPreferences.getBoolean("root", false)) {
-                    if (RemoteControl.isVPNHotspotExist(context)) {
-                        switch_ap += "\n" + getString(R.string.switch_ap_message).replace("/hotspot", "/vpnhotspot");
-                    }
-                    switch_ap += "\n" + getString(R.string.switch_data_message);
-                }
-                if (command.equals("/commandlist")) {
-                    request_body.text = (getString(R.string.available_command) + sms_command + ussd_command + switch_ap).replace("/", "");
-                    break;
-                }
-
-                String result_string = getString(R.string.system_message_head) + "\n" + getString(R.string.available_command) + sms_command + ussd_command + switch_ap;
-                if (!message_type_is_private && privacy_mode && !bot_username.isEmpty()) {
-                    result_string = result_string.replace(" -", "@" + bot_username + " -");
-                }
-                request_body.text = result_string;
-                break;
-            case "/ping":
-            case "/getinfo":
-                String cardInfo = "";
-                TelephonyManager telephonyManager = (TelephonyManager) context
-                        .getSystemService(Context.TELEPHONY_SERVICE);
-                assert telephonyManager != null;
-                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    cardInfo = "\nSIM: " + Other.getSimDisplayName(context, 0);
-                    if (Other.getActiveCard(context) == 2) {
-                        cardInfo = "\n" + getString(R.string.current_data_card) + ": SIM" + Other.getDataSimId(context) + "\nSIM1: " + Other.getSimDisplayName(context, 0) + "\nSIM2: " + Other.getSimDisplayName(context, 1);
-                    }
-                }
-                String spamCount = "";
-                ArrayList<String> spam_list = Paper.book().read("spam_sms_list", new ArrayList<>());
-                assert spam_list != null;
-                if (!spam_list.isEmpty()) {
-                    spamCount = "\n" + getString(R.string.spam_count_title) + spam_list.size();
-                }
-                String isHotspotRunning = "";
-                if (Settings.System.canWrite(context)) {
-                    isHotspotRunning += "\n" + getString(R.string.hotspot_status);
-                    if (RemoteControl.isHotspotActive(context)) {
-                        isHotspotRunning += getString(R.string.enable);
-                    } else {
-                        isHotspotRunning += getString(R.string.disable);
-                    }
-                }
-                if (sharedPreferences.getBoolean("root", false) && RemoteControl.isVPNHotspotExist(context)) {
-                    isHotspotRunning += "\nVPN " + getString(R.string.hotspot_status);
-                    if (com.qwe7002.telegram_rc.root_kit.ActivityManage.checkServiceIsRunning("be.mygod.vpnhotspot", ".RepeaterService")) {
-                        isHotspotRunning += getString(R.string.enable);
-                    } else {
-                        isHotspotRunning += getString(R.string.disable);
-                    }
-                }
-                String beaconStatus = "\n" + getString(R.string.beacon_monitoring_status);
-                if (Boolean.FALSE.equals(Paper.book().read("disable_beacon", false))) {
-                    beaconStatus += getString(R.string.enable);
-                } else {
-                    beaconStatus += getString(R.string.disable);
-                }
-                request_body.text = getString(R.string.system_message_head) + "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context, sharedPreferences) + isHotspotRunning + beaconStatus + spamCount + cardInfo;
-                android.util.Log.d(TAG, "receive_handle: " + request_body.text);
-                break;
-            case "/log":
-                request_body.text = getString(R.string.system_message_head) + LogManage.readLog(context, 10);
-                break;
-            case "/wifi":
-                if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
-                }
-                WifiManager wifimanager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                assert wifimanager != null;
-                com.qwe7002.telegram_rc.root_kit.Networks.setWifi(!wifimanager.isWifiEnabled());
-                request_body.text = getString(R.string.system_message_head) + "\n" + "Done";
-                break;
-            case "/hotspot":
-                if (Settings.System.canWrite(context)) {
-                    boolean ap_status = RemoteControl.isHotspotActive(context);
-                    String result_ap;
-                    if (!ap_status) {
-                        result_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                        String[] command_list_data = request_msg.split(" ");
-                        int tether_mode = TetherManager.TetherMode.TETHERING_WIFI;
-                        if (command_list_data.length == 2) {
-                            tether_mode = switch (command_list_data[1].toLowerCase()) {
-                                case "bluetooth" -> TetherManager.TetherMode.TETHERING_BLUETOOTH;
-                                case "ncm" -> TetherManager.TetherMode.TETHERING_NCM;
-                                case "usb" -> TetherManager.TetherMode.TETHERING_USB;
-                                case "nic" -> TetherManager.TetherMode.TETHERING_ETHERNET;
-                                case "wigig" -> TetherManager.TetherMode.TETHERING_WIGIG;
-                                default -> tether_mode;
-                            };
+                    if (isVPNHotspotExist(applicationContext)) {
+                        switchAp += """
+                            
+                            ${
+                            getString(R.string.switch_ap_message).replace(
+                                "/hotspot",
+                                "/vpnhotspot"
+                            )
                         }
-                        Paper.book("temp").write("tether_mode", tether_mode);
-                        RemoteControl.enableHotspot(context, tether_mode);
-                    } else {
-                        Paper.book("temp").write("tether_open", false);
-                        result_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
+                            """.trimIndent()
                     }
-                    result_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context, sharedPreferences);
-                    request_body.text = getString(R.string.system_message_head) + "\n" + result_ap;
-                    break;
+                    switchAp += """
+                        
+                        ${getString(R.string.switch_data_message)}
+                        """.trimIndent()
+                }
+                if (command == "/commandlist") {
+                    requestBody.text =
+                        (getString(R.string.available_command) + smsCommand + ussdCommand + switchAp).replace(
+                            "/",
+                            ""
+                        )
                 } else {
-                    command = "/vpnhotspot";
+                    var resultString = """
+                ${getString(R.string.system_message_head)}
+                ${getString(R.string.available_command)}$smsCommand$ussdCommand$switchAp
+                """.trimIndent()
+                    if (!messageTypeIsPrivate && privacyMode && botUsername.isNotEmpty()) {
+                        resultString = resultString.replace(" -", "@$botUsername -")
+                    }
+                    requestBody.text = resultString
                 }
-            case "/vpnhotspot":
-                if (!sharedPreferences.getBoolean("root", false) || !RemoteControl.isVPNHotspotExist(context)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
-                }
-                WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-                assert wifiManager != null;
-                boolean wifi_open = Paper.book("temp").read("wifi_open", wifiManager.isWifiEnabled());
-                String result_vpn_ap;
-                if (!wifi_open) {
-                    result_vpn_ap = getString(R.string.enable_wifi) + context.getString(R.string.action_success);
-                    new Thread(() -> RemoteControl.enableVPNHotspot(wifiManager)).start();
-                } else {
-                    Paper.book("temp").write("wifi_open", false);
-                    result_vpn_ap = getString(R.string.disable_wifi) + context.getString(R.string.action_success);
-                }
-                result_vpn_ap += "\n" + context.getString(R.string.current_battery_level) + getBatteryInfo(context) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(context, sharedPreferences);
+            }
 
-                request_body.text = getString(R.string.system_message_head) + "\n" + result_vpn_ap;
-                break;
-            case "/mobiledata":
+            "/ping", "/getinfo" -> {
+                var cardInfo = ""
+                applicationContext
+                    .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+                if (ActivityCompat.checkSelfPermission(
+                        applicationContext,
+                        Manifest.permission.READ_PHONE_STATE
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    cardInfo = "\nSIM: " + getSimDisplayName(
+                        applicationContext, 0
+                    )
+                    if (getActiveCard(applicationContext) == 2) {
+                        cardInfo = """
+     
+     ${getString(R.string.current_data_card)}: SIM
+     """.trimIndent() + getDataSimId(
+                            applicationContext
+                        ) + "\nSIM1: " + getSimDisplayName(
+                            applicationContext, 0
+                        ) + "\nSIM2: " + getSimDisplayName(
+                            applicationContext, 1
+                        )
+                    }
+                }
+                var spamCount = ""
+                val spam_list = Paper.book().read("spam_sms_list", ArrayList<String>())!!
+                if (spam_list.isNotEmpty()) {
+                    spamCount = """
+                        
+                        ${getString(R.string.spam_count_title)}${spam_list.size}
+                        """.trimIndent()
+                }
+                var isHotspotRunning = ""
+                if (Settings.System.canWrite(applicationContext)) {
+                    isHotspotRunning += """
+                        
+                        ${getString(R.string.hotspot_status)}
+                        """.trimIndent()
+                    isHotspotRunning += if (isHotspotActive(applicationContext)) {
+                        getString(R.string.enable)
+                    } else {
+                        getString(R.string.disable)
+                    }
+                }
+                if (sharedPreferences.getBoolean("root", false) && isVPNHotspotExist(
+                        applicationContext
+                    )
+                ) {
+                    isHotspotRunning += """
+                        
+                        VPN ${getString(R.string.hotspot_status)}
+                        """.trimIndent()
+                    isHotspotRunning += if (checkServiceIsRunning(
+                            "be.mygod.vpnhotspot",
+                            ".RepeaterService"
+                        )
+                    ) {
+                        getString(R.string.enable)
+                    } else {
+                        getString(R.string.disable)
+                    }
+                }
+                var beaconStatus = """
+                    
+                    ${getString(R.string.beacon_monitoring_status)}
+                    """.trimIndent()
+                beaconStatus += if (java.lang.Boolean.FALSE == Paper.book()
+                        .read("disable_beacon", false)
+                ) {
+                    getString(R.string.enable)
+                } else {
+                    getString(R.string.disable)
+                }
+                requestBody.text = """
+     ${getString(R.string.system_message_head)}
+     ${applicationContext.getString(R.string.current_battery_level)}
+     """.trimIndent() + getBatteryInfo(
+                    applicationContext
+                ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
+                    applicationContext, sharedPreferences
+                ) + isHotspotRunning + beaconStatus + spamCount + cardInfo
+                Log.d(TAG, "receive_handle: " + requestBody.text)
+            }
+
+            "/log" -> requestBody.text = getString(R.string.system_message_head) + readLog(
+                applicationContext, 10
+            )
+
+            "/wifi" -> {
                 if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
+                    requestBody.text = """
+                        ${getString(R.string.system_message_head)}
+                        ${getString(R.string.no_permission)}
+                        """.trimIndent()
+                } else {
+                    val wifimanager =
+                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                    setWifi(!wifimanager.isWifiEnabled)
+                    requestBody.text = """
+                    ${getString(R.string.system_message_head)}
+                    Done
+                    """.trimIndent()
                 }
-                String result_data = context.getString(R.string.switch_data);
+            }
 
-                request_body.text = getString(R.string.system_message_head) + "\n" + result_data;
-                break;
-            case "/sendussd":
-            case "/sendussd1":
-            case "/sendussd2":
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-                    int sub_id = -1;
-                    if (Other.getActiveCard(context) == 2) {
-                        if (command.equals("/sendussd2")) {
-                            sub_id = Other.getSubId(context, 1);
+            "/hotspot" -> {
+                val ap_status = isHotspotActive(applicationContext)
+                var result_ap: String
+                if (!ap_status) {
+                    result_ap =
+                        getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
+                    val command_list_data =
+                        request_msg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
+                            .toTypedArray()
+                    var tether_mode = TetherManager.TetherMode.TETHERING_WIFI
+                    if (command_list_data.size == 2) {
+                        tether_mode =
+                            when (command_list_data[1].lowercase(Locale.getDefault())) {
+                                "bluetooth" -> TetherManager.TetherMode.TETHERING_BLUETOOTH
+                                "ncm" -> TetherManager.TetherMode.TETHERING_NCM
+                                "usb" -> TetherManager.TetherMode.TETHERING_USB
+                                "nic" -> TetherManager.TetherMode.TETHERING_ETHERNET
+                                "wigig" -> TetherManager.TetherMode.TETHERING_WIGIG
+                                else -> tether_mode
+                            }
+                    }
+                    Paper.book("temp").write("tether_mode", tether_mode)
+                    enableHotspot(applicationContext, tether_mode)
+                } else {
+                    Paper.book("temp").write("tether_open", false)
+                    result_ap =
+                        getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
+                }
+                result_ap += """
+     
+     ${applicationContext.getString(R.string.current_battery_level)}
+     """.trimIndent() + getBatteryInfo(
+                    applicationContext
+                ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
+                    applicationContext, sharedPreferences
+                )
+                requestBody.text = """
+                        ${getString(R.string.system_message_head)}
+                        $result_ap
+                        """.trimIndent()
+            }
+
+            "/vpnhotspot" -> {
+                if (!sharedPreferences.getBoolean("root", false) || !isVPNHotspotExist(
+                        applicationContext
+                    )
+                ) {
+                    requestBody.text = """
+                        ${getString(R.string.system_message_head)}
+                        ${getString(R.string.no_permission)}
+                        """.trimIndent()
+
+                } else {
+                    val wifiManager =
+                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                    checkNotNull(wifiManager)
+                    val wifi_open =
+                        Paper.book("temp").read("wifi_open", wifiManager.isWifiEnabled)!!
+                    var result_vpn_ap: String
+                    if (!wifi_open) {
+                        result_vpn_ap =
+                            getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
+                        Thread { enableVPNHotspot(wifiManager) }.start()
+                    } else {
+                        Paper.book("temp").write("wifi_open", false)
+                        result_vpn_ap =
+                            getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
+                    }
+                    result_vpn_ap += """
+     
+     ${applicationContext.getString(R.string.current_battery_level)}
+     """.trimIndent() + getBatteryInfo(
+                        applicationContext
+                    ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
+                        applicationContext, sharedPreferences
+                    )
+
+                    requestBody.text = """
+                    ${getString(R.string.system_message_head)}
+                    $result_vpn_ap
+                    """.trimIndent()
+                }
+            }
+
+            "/mobiledata" -> {
+                if (!sharedPreferences.getBoolean("root", false)) {
+                    requestBody.text = """
+                        ${getString(R.string.system_message_head)}
+                        ${getString(R.string.no_permission)}
+                        """.trimIndent()
+                } else {
+                    val result_data = applicationContext.getString(R.string.switch_data)
+
+                    requestBody.text = """
+                    ${getString(R.string.system_message_head)}
+                    $result_data
+                    """.trimIndent()
+                }
+            }
+
+            "/sendussd", "/sendussd1", "/sendussd2" -> {
+                if (ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.CALL_PHONE
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    var sub_id = -1
+                    if (getActiveCard(applicationContext) == 2) {
+                        if (command == "/sendussd2") {
+                            sub_id = getSubId(applicationContext, 1)
                         }
                     }
-                    String[] command_list = request_msg.split(" ");
-                    if (command_list.length == 2) {
-                        USSD.INSTANCE.sendUssd(context, command_list[1], sub_id);
-                        return;
+                    val command_list =
+                        request_msg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
+                            .toTypedArray()
+                    if (command_list.size == 2) {
+                        sendUssd(applicationContext, command_list[1], sub_id)
+                        return
                     } else {
-                        request_body.text = "Error";
+                        requestBody.text = "Error"
                     }
                 } else {
-                    android.util.Log.i(TAG, "send_ussd: No permission.");
+                    Log.i(TAG, "send_ussd: No permission.")
                 }
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
-                break;
-            case "/getspamsms":
-                ArrayList<String> spam_sms_list = Paper.book().read("spam_sms_list", new ArrayList<>());
+                requestBody.text = """
+                    ${applicationContext.getString(R.string.system_message_head)}
+                    ${getString(R.string.unknown_command)}
+                    """.trimIndent()
+            }
+
+            "/getspamsms" -> {
+                val spam_sms_list = Paper.book().read("spam_sms_list", ArrayList<String>())!!
                 if (spam_sms_list.isEmpty()) {
-                    request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.no_spam_history);
-                    break;
-                }
-                new Thread(() -> {
-                    if (Network.checkNetworkStatus(context)) {
-                        OkHttpClient okhttp_client = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
-                        for (String item : spam_sms_list) {
-                            requestMessage send_sms_request_body = new requestMessage();
-                            send_sms_request_body.chatId = chat_id;
-                            send_sms_request_body.text = item;
-                            String request_uri = Network.getUrl(bot_token, "sendMessage");
-                            String request_body_json = new Gson().toJson(send_sms_request_body);
-                            RequestBody body = RequestBody.create(request_body_json, Const.JSON);
-                            Request request_obj = new Request.Builder().url(request_uri).method("POST", body).build();
-                            Call call = okhttp_client.newCall(request_obj);
-                            call.enqueue(new Callback() {
-                                @Override
-                                public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                                    e.printStackTrace();
-                                }
-
-                                @Override
-                                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                                    android.util.Log.d(TAG, "onResponse: " + Objects.requireNonNull(response.body()).string());
-                                }
-                            });
-                            ArrayList<String> resend_list_local = Paper.book().read("spam_sms_list", new ArrayList<>());
-                            resend_list_local.remove(item);
-                            Paper.book().write("spam_sms_list", resend_list_local);
-                        }
-                    }
-                    LogManage.writeLog(context, "Send spam message is complete.");
-                }).start();
-                return;
-            case "/autoswitch":
-                boolean state = !Paper.book().read("disable_beacon", false);
-                Paper.book().write("disable_beacon", state);
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Beacon monitoring status: " + !state;
-                break;
-            case "/setdummy":
-                if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
-                }
-                String[] command_list = request_msg.split(" ");
-                if (command_list.length == 2) {
-                    Paper.book("system_config").write("dummy_ip_addr", command_list[1]);
-                    com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice(command_list[1]);
+                    requestBody.text = """
+                        ${applicationContext.getString(R.string.system_message_head)}
+                        ${getString(R.string.no_spam_history)}
+                        """.trimIndent()
                 } else {
-                    if (Paper.book("system_config").contains("dummy_ip_addr")) {
-                        String dummy_ip_addr = Paper.book("system_config").read("dummy_ip_addr");
-                        com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice(dummy_ip_addr);
-                    }
+                    Thread {
+                        if (checkNetworkStatus(applicationContext)) {
+                            val okhttp_client = getOkhttpObj(
+                                sharedPreferences.getBoolean("doh_switch", true)
+                            )
+                            for (item in spam_sms_list) {
+                                val send_sms_request_body = requestMessage()
+                                send_sms_request_body.chatId = chatId
+                                send_sms_request_body.text = item
+                                val request_uri = getUrl(
+                                    botToken, "sendMessage"
+                                )
+                                val request_body_json = Gson().toJson(send_sms_request_body)
+                                val body: RequestBody =
+                                    request_body_json.toRequestBody(Const.JSON)
+                                val request_obj: Request =
+                                    Request.Builder().url(request_uri).method("POST", body).build()
+                                val call = okhttp_client.newCall(request_obj)
+                                call.enqueue(object : Callback {
+                                    override fun onFailure(call: Call, e: IOException) {
+                                        e.printStackTrace()
+                                    }
+
+                                    @Throws(IOException::class)
+                                    override fun onResponse(call: Call, response: Response) {
+                                        Log.d(
+                                            TAG,
+                                            "onResponse: " + Objects.requireNonNull(response.body)
+                                                .string()
+                                        )
+                                    }
+                                })
+                                val resend_list_local =
+                                    Paper.book().read("spam_sms_list", ArrayList<String>())!!
+                                resend_list_local.remove(item)
+                                Paper.book().write("spam_sms_list", resend_list_local)
+                            }
+                        }
+                        writeLog(applicationContext, "Send spam message is complete.")
+                    }.start()
+                    return
                 }
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
-                break;
-            case "/deldummy":
+            }
+
+            "/autoswitch" -> {
+                val state = !Paper.book().read("disable_beacon", false)!!
+                Paper.book().write("disable_beacon", state)
+                requestBody.text = """
+                    ${applicationContext.getString(R.string.system_message_head)}
+                    Beacon monitoring status: ${!state}
+                    """.trimIndent()
+            }
+
+            "/setdummy" -> {
                 if (!sharedPreferences.getBoolean("root", false)) {
-                    request_body.text = getString(R.string.system_message_head) + "\n" + getString(R.string.no_permission);
-                    break;
+                    requestBody.text = """
+                        ${getString(R.string.system_message_head)}
+                        ${getString(R.string.no_permission)}
+                        """.trimIndent()
+                } else {
+                    val command_list =
+                        request_msg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
+                            .toTypedArray()
+                    if (command_list.size == 2) {
+                        Paper.book("system_config").write("dummy_ip_addr", command_list[1])
+                        addDummyDevice(command_list[1])
+                    } else {
+                        if (Paper.book("system_config").contains("dummy_ip_addr")) {
+                            val dummy_ip_addr =
+                                Paper.book("system_config").read<String>("dummy_ip_addr")
+                            addDummyDevice(dummy_ip_addr!!)
+                        }
+                    }
+                    requestBody.text = """
+                    ${applicationContext.getString(R.string.system_message_head)}
+                    Done
+                    """.trimIndent()
                 }
-                com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice();
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + "Done";
-                break;
-            case "/sendsms":
-            case "/sendsms1":
-            case "/sendsms2":
-                String[] msg_send_list = request_msg.split("\n");
-                if (msg_send_list.length > 2) {
-                    String msg_send_to = Other.getSendPhoneNumber(msg_send_list[1]);
-                    if (Other.isPhoneNumber(msg_send_to)) {
-                        StringBuilder msg_send_content = new StringBuilder();
-                        for (int i = 2; i < msg_send_list.length; ++i) {
-                            if (msg_send_list.length != 3 && i != 2) {
-                                msg_send_content.append("\n");
+            }
+
+            "/deldummy" -> {
+                if (!sharedPreferences.getBoolean("root", false)) {
+                    requestBody.text = """
+                        ${getString(R.string.system_message_head)}
+                        ${getString(R.string.no_permission)}
+                        """.trimIndent()
+                }else {
+                    delDummyDevice()
+                    requestBody.text = """
+                    ${applicationContext.getString(R.string.system_message_head)}
+                    Done
+                    """.trimIndent()
+                }
+            }
+
+            "/sendsms", "/sendsms1", "/sendsms2" -> {
+                val msg_send_list =
+                    request_msg.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                if (msg_send_list.size > 2) {
+                    val msg_send_to = getSendPhoneNumber(
+                        msg_send_list[1]
+                    )
+                    if (isPhoneNumber(msg_send_to)) {
+                        val msg_send_content = StringBuilder()
+                        var i = 2
+                        while (i < msg_send_list.size) {
+                            if (msg_send_list.size != 3 && i != 2) {
+                                msg_send_content.append("\n")
                             }
-                            msg_send_content.append(msg_send_list[i]);
+                            msg_send_content.append(msg_send_list[i])
+                            ++i
                         }
-                        if (Other.getActiveCard(context) == 1) {
-                            SMS.sendSMS(context, msg_send_to, msg_send_content.toString(), -1, -1);
-                            return;
+                        if (getActiveCard(applicationContext) == 1) {
+                            sendSMS(
+                                applicationContext,
+                                msg_send_to,
+                                msg_send_content.toString(),
+                                -1,
+                                -1
+                            )
+                            return
                         }
-                        int send_slot = -1;
-                        if (Other.getActiveCard(context) > 1) {
-                            send_slot = 0;
-                            if (command.equals("/sendsms2")) {
-                                send_slot = 1;
+                        var send_slot = -1
+                        if (getActiveCard(applicationContext) > 1) {
+                            send_slot = 0
+                            if (command == "/sendsms2") {
+                                send_slot = 1
                             }
                         }
-                        int sub_id = Other.getSubId(context, send_slot);
+                        val sub_id = getSubId(
+                            applicationContext, send_slot
+                        )
                         if (sub_id != -1) {
-                            SMS.sendSMS(context, msg_send_to, msg_send_content.toString(), send_slot, sub_id);
-                            return;
+                            sendSMS(
+                                applicationContext,
+                                msg_send_to,
+                                msg_send_content.toString(),
+                                send_slot,
+                                sub_id
+                            )
+                            return
                         }
                     }
                 } else {
-                    has_command = false;
-                    send_sms_next_status = SEND_SMS_STATUS.PHONE_INPUT_STATUS;
-                    int send_slot = -1;
-                    if (Other.getActiveCard(context) > 1) {
-                        send_slot = 0;
-                        if (command.equals("/sendsms2")) {
-                            send_slot = 1;
+                    has_command = false
+                    send_sms_next_status = SEND_SMS_STATUS.PHONE_INPUT_STATUS
+                    var send_slot = -1
+                    if (getActiveCard(applicationContext) > 1) {
+                        send_slot = 0
+                        if (command == "/sendsms2") {
+                            send_slot = 1
                         }
                     }
-                    Paper.book("send_temp").write("slot", send_slot);
+                    Paper.book("send_temp").write("slot", send_slot)
                 }
-                request_body.text = "[" + context.getString(R.string.send_sms_head) + "]" + "\n" + getString(R.string.failed_to_get_information);
-                break;
-            default:
-                if (!message_type_is_private && send_sms_next_status == -1) {
-                    if (!message_type.equals("supergroup") || message_thread_id.isEmpty()) {
-                        android.util.Log.i(TAG, "receive_handle: The conversation is not Private and does not prompt an error.");
-                        return;
+                requestBody.text = """
+                    [${applicationContext.getString(R.string.send_sms_head)}]
+                    ${getString(R.string.failed_to_get_information)}
+                    """.trimIndent()
+            }
+
+            else -> {
+                if (!messageTypeIsPrivate && send_sms_next_status == -1) {
+                    if (messageType != "supergroup" || messageThreadId.isEmpty()) {
+                        Log.i(
+                            TAG,
+                            "receive_handle: The conversation is not Private and does not prompt an error."
+                        )
+                        return
                     }
                 }
 
-                request_body.text = context.getString(R.string.system_message_head) + "\n" + getString(R.string.unknown_command);
-                break;
+                requestBody.text = """
+                    ${applicationContext.getString(R.string.system_message_head)}
+                    ${getString(R.string.unknown_command)}
+                    """.trimIndent()
+            }
         }
         if (has_command) {
-            set_sms_send_status_standby();
+            set_sms_send_status_standby()
         }
         if (!has_command && send_sms_next_status != -1) {
-            android.util.Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.");
-            String dual_sim = "";
-            int send_slot_temp = Paper.book("send_temp").read("slot", -1);
+            Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.")
+            var dual_sim = ""
+            val send_slot_temp = Paper.book("send_temp").read("slot", -1)!!
             if (send_slot_temp != -1) {
-                dual_sim = "SIM" + (send_slot_temp + 1) + " ";
+                dual_sim = "SIM" + (send_slot_temp + 1) + " "
             }
-            String head = "[" + dual_sim + context.getString(R.string.send_sms_head) + "]";
-            String result_send = getString(R.string.failed_to_get_information);
-            android.util.Log.d(TAG, "Sending mode status: " + send_sms_next_status);
+            val head = "[" + dual_sim + applicationContext.getString(R.string.send_sms_head) + "]"
+            var result_send = getString(R.string.failed_to_get_information)
+            Log.d(TAG, "Sending mode status: " + send_sms_next_status)
 
-            switch (send_sms_next_status) {
-                case SEND_SMS_STATUS.PHONE_INPUT_STATUS:
-                    send_sms_next_status = SEND_SMS_STATUS.MESSAGE_INPUT_STATUS;
-                    result_send = getString(R.string.enter_number);
-                    break;
-                case SEND_SMS_STATUS.MESSAGE_INPUT_STATUS:
-                    String temp_to = Other.getSendPhoneNumber(request_msg);
-                    if (Other.isPhoneNumber(temp_to)) {
-                        Paper.book("send_temp").write("to", temp_to);
-                        result_send = getString(R.string.enter_content);
-                        send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS;
+            when (send_sms_next_status) {
+                SEND_SMS_STATUS.PHONE_INPUT_STATUS -> {
+                    send_sms_next_status = SEND_SMS_STATUS.MESSAGE_INPUT_STATUS
+                    result_send = getString(R.string.enter_number)
+                }
+
+                SEND_SMS_STATUS.MESSAGE_INPUT_STATUS -> {
+                    val temp_to = getSendPhoneNumber(request_msg)
+                    if (isPhoneNumber(temp_to)) {
+                        Paper.book("send_temp").write("to", temp_to)
+                        result_send = getString(R.string.enter_content)
+                        send_sms_next_status = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS
                     } else {
-                        set_sms_send_status_standby();
-                        result_send = getString(R.string.unable_get_phone_number);
+                        set_sms_send_status_standby()
+                        result_send = getString(R.string.unable_get_phone_number)
                     }
-                    break;
-                case SEND_SMS_STATUS.WAITING_TO_SEND_STATUS:
-                    Paper.book("send_temp").write("content", request_msg);
-                    replyMarkupKeyboard.keyboardMarkup keyboardMarkup = new replyMarkupKeyboard.keyboardMarkup();
-                    ArrayList<ArrayList<replyMarkupKeyboard.InlineKeyboardButton>> inlineKeyboardButtons = new ArrayList<>();
-                    inlineKeyboardButtons.add(replyMarkupKeyboard.getInlineKeyboardObj(context.getString(R.string.send_button), CALLBACK_DATA_VALUE.SEND));
-                    inlineKeyboardButtons.add(replyMarkupKeyboard.getInlineKeyboardObj(context.getString(R.string.cancel_button), CALLBACK_DATA_VALUE.CANCEL));
-                    keyboardMarkup.inlineKeyboard = inlineKeyboardButtons;
-                    request_body.keyboardMarkup = keyboardMarkup;
-                    result_send = context.getString(R.string.to) + Paper.book("send_temp").read("to") + "\n" + context.getString(R.string.content) + Paper.book("send_temp").read("content", "");
-                    send_sms_next_status = SEND_SMS_STATUS.SEND_STATUS;
-                    break;
+                }
+
+                SEND_SMS_STATUS.WAITING_TO_SEND_STATUS -> {
+                    Paper.book("send_temp").write("content", request_msg)
+                    val keyboardMarkup = keyboardMarkup()
+                    val inlineKeyboardButtons = ArrayList<ArrayList<InlineKeyboardButton>>()
+                    inlineKeyboardButtons.add(
+                        replyMarkupKeyboard.getInlineKeyboardObj(
+                            applicationContext.getString(
+                                R.string.send_button
+                            ), CALLBACK_DATA_VALUE.SEND
+                        )
+                    )
+                    inlineKeyboardButtons.add(
+                        replyMarkupKeyboard.getInlineKeyboardObj(
+                            applicationContext.getString(
+                                R.string.cancel_button
+                            ), CALLBACK_DATA_VALUE.CANCEL
+                        )
+                    )
+                    keyboardMarkup.inlineKeyboard = inlineKeyboardButtons
+                    requestBody.keyboardMarkup = keyboardMarkup
+                    result_send = """
+                        ${applicationContext.getString(R.string.to)}${
+                        Paper.book("send_temp").read<Any>("to")
+                    }
+                        ${applicationContext.getString(R.string.content)}${
+                        Paper.book("send_temp").read("content", "")
+                    }
+                        """.trimIndent()
+                    send_sms_next_status = SEND_SMS_STATUS.SEND_STATUS
+                }
             }
-            request_body.text = head + "\n" + result_send;
+            requestBody.text = """
+                $head
+                $result_send
+                """.trimIndent()
         }
 
-        String request_uri = Network.getUrl(bot_token, "sendMessage");
-        RequestBody body = RequestBody.create(new Gson().toJson(request_body), Const.JSON);
-        android.util.Log.d(TAG, "receive_handle: " + new Gson().toJson(request_body));
-        Request send_request = new Request.Builder().url(request_uri).method("POST", body).build();
-        Call call = okhttp_client.newCall(send_request);
-        final String error_head = "Send reply failed:";
-        final boolean final_has_command = has_command;
-        final String final_command = command;
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                e.printStackTrace();
-                LogManage.writeLog(context, error_head + e.getMessage());
+        val request_uri = getUrl(botToken, "sendMessage")
+        val body: RequestBody = Gson().toJson(requestBody).toRequestBody(Const.JSON)
+        Log.d(TAG, "receive_handle: " + Gson().toJson(requestBody))
+        val send_request: Request = Request.Builder().url(request_uri).method("POST", body).build()
+        val call = okhttpClient.newCall(send_request)
+        val error_head = "Send reply failed:"
+        val final_has_command = has_command
+        val final_command = command
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+                writeLog(applicationContext, error_head + e.message)
             }
 
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                assert response.body() != null;
-                String response_string = Objects.requireNonNull(response.body()).string();
-                if (response.code() != 200) {
-                    LogManage.writeLog(context, error_head + response.code() + " " + response_string);
-                    return;
+            @Throws(IOException::class)
+            override fun onResponse(call: Call, response: Response) {
+                checkNotNull(response.body)
+                val response_string = Objects.requireNonNull(response.body).string()
+                if (response.code != 200) {
+                    writeLog(applicationContext, error_head + response.code + " " + response_string)
+                    return
                 }
-                String splite_command_value = final_command.replace("_", "");
+                val splite_command_value = final_command.replace("_", "")
                 if (!final_has_command && send_sms_next_status == SEND_SMS_STATUS.SEND_STATUS) {
-                    Paper.book("send_temp").write("message_id", Other.getMessageId(response_string));
+                    Paper.book("send_temp").write("message_id", getMessageId(response_string))
                 }
 
-                if (splite_command_value.equals("/hotspot") || splite_command_value.equals("/vpnhotspot")) {
-                    if (!Paper.book("temp").read("tether_open", false)) {
-                        RemoteControl.disableHotspot(context, Paper.book("temp").read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI));
-                        Paper.book("temp").delete("tether_mode");
+                if (splite_command_value == "/hotspot" || splite_command_value == "/vpnhotspot") {
+                    if (!Paper.book("temp").read("tether_open", false)!!) {
+                        disableHotspot(
+                            applicationContext,
+                            Paper.book("temp")
+                                .read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI)!!
+                        )
+                        Paper.book("temp").delete("tether_mode")
                     }
                 }
                 if (final_has_command && sharedPreferences.getBoolean("root", false)) {
-                    switch (splite_command_value) {
-                        case "/vpnhotspot":
-                            if (!Paper.book("temp").read("wifi_open", false)) {
-                                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                                assert wifiManager != null;
-                                RemoteControl.disableVPNHotspot(wifiManager);
-                            }
-                            break;
-                        case "/mobiledata":
-                            com.qwe7002.telegram_rc.root_kit.Networks.setData(!Network.getDataEnable(context));
-                            break;
+                    when (splite_command_value) {
+                        "/vpnhotspot" -> if (!Paper.book("temp").read("wifi_open", false)!!) {
+                            val wifiManager = checkNotNull(
+                                applicationContext.getSystemService(
+                                    WIFI_SERVICE
+                                ) as WifiManager
+                            )
+                            disableVPNHotspot(wifiManager)
+                        }
+
+                        "/mobiledata" -> setData(
+                            !getDataEnable(
+                                applicationContext
+                            )
+                        )
                     }
                 }
             }
-        });
+        })
     }
 
 
-    static class CALLBACK_DATA_VALUE {
-        final static String SEND = "send";
-        final static String CANCEL = "cancel";
+    internal object CALLBACK_DATA_VALUE {
+        const val SEND: String = "send"
+        const val CANCEL: String = "cancel"
     }
 
-    private void set_sms_send_status_standby() {
-        send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS;
-        Paper.book("send_temp").destroy();
+    private fun set_sms_send_status_standby() {
+        send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS
+        Paper.book("send_temp").destroy()
     }
 
-    @SuppressLint({"InvalidWakeLockTag", "WakelockTimeout", "UnspecifiedRegisterReceiverFlag"})
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        context = getApplicationContext();
-        connectivity_manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        Paper.init(context);
-        set_sms_send_status_standby();
-        sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE);
+    @SuppressLint("InvalidWakeLockTag", "WakelockTimeout", "UnspecifiedRegisterReceiverFlag")
+    override fun onCreate() {
+        super.onCreate()
+        connectivityManager =
+            applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        Paper.init(applicationContext)
+        set_sms_send_status_standby()
+        sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
 
-        chat_id = sharedPreferences.getString("chat_id", "");
-        bot_token = sharedPreferences.getString("bot_token", "");
-        message_thread_id = sharedPreferences.getString("message_thread_id", "");
-        okhttp_client = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true));
-        privacy_mode = sharedPreferences.getBoolean("privacy_mode", false);
-        wifilock = ((WifiManager) Objects.requireNonNull(context.getApplicationContext().getSystemService(Context.WIFI_SERVICE))).createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "bot_command_polling_wifi");
-        wakelock = ((PowerManager) Objects.requireNonNull(context.getSystemService(Context.POWER_SERVICE))).newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling");
-        wifilock.setReferenceCounted(false);
-        wakelock.setReferenceCounted(false);
+        chatId = sharedPreferences.getString("chat_id", "").toString()
+        botToken = sharedPreferences.getString("bot_token", "").toString()
+        messageThreadId = sharedPreferences.getString("message_thread_id", "").toString()
+        okhttpClient = getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        privacyMode = sharedPreferences.getBoolean("privacy_mode", false)
+        wifilock = (Objects.requireNonNull(
+            applicationContext.getSystemService(
+                WIFI_SERVICE
+            )
+        ) as WifiManager).createWifiLock(
+            WifiManager.WIFI_MODE_FULL_HIGH_PERF,
+            "bot_command_polling_wifi"
+        )
+        wakelock =
+            (Objects.requireNonNull(applicationContext.getSystemService(POWER_SERVICE)) as PowerManager).newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling"
+            )
+        wifilock.setReferenceCounted(false)
+        wakelock.setReferenceCounted(false)
         if (!wifilock.isHeld()) {
-            wifilock.acquire();
+            wifilock.acquire()
         }
         if (!wakelock.isHeld()) {
-            wakelock.acquire();
+            wakelock.acquire()
         }
-        thread_main = new Thread(new thread_main_runnable());
-        thread_main.start();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Const.BROADCAST_STOP_SERVICE);
-        NetworkRequest network_request = new NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                .build();
-        callback = new network_callback();
-        connectivity_manager.registerNetworkCallback(network_request, callback);
-        broadcast_receiver = new broadcast_receiver();
-        registerReceiver(broadcast_receiver, intentFilter);
+        thread_main = Thread(thread_main_runnable())
+        thread_main!!.start()
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(Const.BROADCAST_STOP_SERVICE)
+        val network_request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            .build()
+        callback = network_callback()
+        connectivityManager.registerNetworkCallback(network_request, callback)
+        broadcastReceiver = broadcast_receiver()
+        registerReceiver(broadcastReceiver, intentFilter)
     }
 
-    private void when_network_change() {
-        if (Network.checkNetworkStatus(context)) {
-            if (!thread_main.isAlive()) {
-                LogManage.writeLog(context, "Network connections has been restored.");
-                thread_main = new Thread(new thread_main_runnable());
-                thread_main.start();
+    private fun when_network_change() {
+        if (checkNetworkStatus(applicationContext)) {
+            if (!thread_main!!.isAlive) {
+                writeLog(applicationContext, "Network connections has been restored.")
+                thread_main = Thread(thread_main_runnable())
+                thread_main!!.start()
             }
         }
     }
 
-    private static class SEND_SMS_STATUS {
-        public static final int STANDBY_STATUS = -1;
-        public static final int PHONE_INPUT_STATUS = 0;
-        public static final int MESSAGE_INPUT_STATUS = 1;
-        public static final int WAITING_TO_SEND_STATUS = 2;
-        public static final int SEND_STATUS = 3;
+    private object SEND_SMS_STATUS {
+        const val STANDBY_STATUS: Int = -1
+        const val PHONE_INPUT_STATUS: Int = 0
+        const val MESSAGE_INPUT_STATUS: Int = 1
+        const val WAITING_TO_SEND_STATUS: Int = 2
+        const val SEND_STATUS: Int = 3
     }
 
-    private class broadcast_receiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, @NotNull Intent intent) {
-            android.util.Log.d(TAG, "onReceive: " + intent.getAction());
-            assert intent.getAction() != null;
-            if (Const.BROADCAST_STOP_SERVICE.equals(intent.getAction())) {
-                android.util.Log.i(TAG, "Received stop signal, quitting now...");
-                stopSelf();
-                Process.killProcess(Process.myPid());
+    private inner class broadcast_receiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            Log.d(TAG, "onReceive: " + intent.action)
+            checkNotNull(intent.action)
+            if (Const.BROADCAST_STOP_SERVICE == intent.action) {
+                Log.i(TAG, "Received stop signal, quitting now...")
+                stopSelf()
+                Process.killProcess(Process.myPid())
             }
         }
     }
 
-    private class network_callback extends ConnectivityManager.NetworkCallback {
-        @Override
-        public void onAvailable(@NotNull android.net.Network network) {
-            android.util.Log.d(TAG, "onAvailable");
-            when_network_change();
+    private inner class network_callback : NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            Log.d(TAG, "onAvailable")
+            when_network_change()
         }
     }
 
-    class thread_main_runnable implements Runnable {
-        @Override
-        public void run() {
-            android.util.Log.d(TAG, "run: thread main start");
-            if (Other.parseStringToLong(chat_id) < 0) {
-                bot_username = Paper.book().read("bot_username", null);
-                if (bot_username == null) {
-                    while (!getMe()) {
-                        LogManage.writeLog(context, "Failed to get bot Username, Wait 5 seconds and try again.");
+    internal inner class thread_main_runnable : Runnable {
+        override fun run() {
+            Log.d(TAG, "run: thread main start")
+            if (parseStringToLong(chatId) < 0) {
+                botUsername = Paper.book().read<String>("bot_username", "").toString()
+                if (botUsername.isEmpty()) {
+                    while (me()) {
+                        writeLog(
+                            applicationContext,
+                            "Failed to get bot Username, Wait 5 seconds and try again."
+                        )
                         try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            Thread.sleep(5000)
+                        } catch (e: InterruptedException) {
+                            e.printStackTrace()
                         }
                     }
                 }
-                android.util.Log.i(TAG, "run: The Bot Username is loaded. The Bot Username is: " + bot_username);
+                Log.i(TAG, "run: The Bot Username is loaded. The Bot Username is: $botUsername")
             }
             while (true) {
-                int timeout = 60;
-                int http_timeout = 65;
-                OkHttpClient okhttp_client_new = okhttp_client.newBuilder()
-                        .readTimeout(http_timeout, TimeUnit.SECONDS)
-                        .writeTimeout(http_timeout, TimeUnit.SECONDS)
-                        .build();
-                String request_uri = Network.getUrl(bot_token, "getUpdates");
-                pollingJson request_body = new pollingJson();
-                request_body.offset = offset;
-                request_body.timeout = timeout;
+                val timeout = 60
+                val http_timeout = 65
+                val okhttp_client_new = okhttpClient.newBuilder()
+                    .readTimeout(http_timeout.toLong(), TimeUnit.SECONDS)
+                    .writeTimeout(http_timeout.toLong(), TimeUnit.SECONDS)
+                    .build()
+                val request_uri = getUrl(
+                    botToken, "getUpdates"
+                )
+                val request_body = pollingJson()
+                request_body.offset = offset
+                request_body.timeout = timeout
                 if (first_request) {
-                    request_body.timeout = 0;
-                    android.util.Log.d(TAG, "run: first_request");
+                    request_body.timeout = 0
+                    Log.d(TAG, "run: first_request")
                 }
-                RequestBody body = RequestBody.create(new Gson().toJson(request_body), Const.JSON);
-                Request request = new Request.Builder().url(request_uri).method("POST", body).build();
-                Call call = okhttp_client_new.newCall(request);
-                Response response;
+                val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(request_body))
+                val request: Request =
+                    Request.Builder().url(request_uri).method("POST", body).build()
+                val call = okhttp_client_new.newCall(request)
+                var response: Response
                 try {
-                    response = call.execute();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    if (!Network.checkNetworkStatus(context)) {
-                        LogManage.writeLog(context, "No network connections available. ");
-                        break;
+                    response = call.execute()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    if (!checkNetworkStatus(applicationContext)) {
+                        writeLog(applicationContext, "No network connections available. ")
+                        break
                     }
-                    int sleep_time = 5;
-                    LogManage.writeLog(context, "Connection to the Telegram API service failed, try again after " + sleep_time + " seconds.");
+                    val sleep_time = 5
+                    writeLog(
+                        applicationContext,
+                        "Connection to the Telegram API service failed, try again after $sleep_time seconds."
+                    )
                     try {
-                        Thread.sleep(sleep_time * 1000L);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
+                        Thread.sleep(sleep_time * 1000L)
+                    } catch (e1: InterruptedException) {
+                        e1.printStackTrace()
                     }
-                    continue;
+                    continue
                 }
-                if (response.code() == 200) {
-                    assert response.body() != null;
-                    String result;
+                if (response.code == 200) {
+                    checkNotNull(response.body)
+                    var result: String
                     try {
-                        result = Objects.requireNonNull(response.body()).string();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        continue;
+                        result = Objects.requireNonNull(response.body).string()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                        continue
                     }
-                    android.util.Log.d(TAG, "run: " + result);
-                    JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                    if (result_obj.get("ok").getAsBoolean()) {
-                        JsonArray result_array = result_obj.get("result").getAsJsonArray();
-                        for (JsonElement item : result_array) {
-                            receiveHandle(item.getAsJsonObject(), first_request);
+                    Log.d(TAG, "run: $result")
+                    val result_obj = JsonParser.parseString(result).asJsonObject
+                    if (result_obj["ok"].asBoolean) {
+                        val result_array = result_obj["result"].asJsonArray
+                        for (item in result_array) {
+                            receiveHandle(item.asJsonObject, first_request)
                         }
-                        first_request = false;
+                        first_request = false
                     }
                 } else {
-                    LogManage.writeLog(context, "response code:" + response.code());
-                    if (response.code() == 401) {
-                        assert response.body() != null;
-                        String result;
+                    writeLog(applicationContext, "response code:" + response.code)
+                    if (response.code == 401) {
+                        checkNotNull(response.body)
+                        var result: String
                         try {
-                            result = Objects.requireNonNull(response.body()).string();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            continue;
+                            result = Objects.requireNonNull(response.body).string()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                            continue
                         }
-                        JsonObject result_obj = JsonParser.parseString(result).getAsJsonObject();
-                        String result_message = getString(R.string.system_message_head) + "\n" + getString(R.string.error_stop_message) + "\n" + getString(R.string.error_message_head) + result_obj.get("description").getAsString() + "\n" + "Code: " + response.code();
-                        SMS.sendFallbackSMS(context, result_message, -1);
-                        ServiceManage.stopAllService(context);
-                        break;
+                        val result_obj = JsonParser.parseString(result).asJsonObject
+                        val result_message = """
+                            ${getString(R.string.system_message_head)}
+                            ${getString(R.string.error_stop_message)}
+                            ${getString(R.string.error_message_head)}${result_obj["description"].asString}
+                            Code: ${response.code}
+                            """.trimIndent()
+                        sendFallbackSMS(applicationContext, result_message, -1)
+                        stopAllService(applicationContext)
+                        break
                     }
                 }
             }
         }
     }
 
+    companion object {
+        private const val TAG = "chat_command"
+
+        //Global counter
+        private var offset: Long = 0
+        private var send_sms_next_status = SEND_SMS_STATUS.STANDBY_STATUS
+        private var first_request = true
+
+
+        private fun checkCellularNetworkType(
+            type: Int,
+            sharedPreferences: SharedPreferences?
+        ): String {
+            var net_type = "Unknown"
+            when (type) {
+                TelephonyManager.NETWORK_TYPE_NR -> net_type = "NR"
+                TelephonyManager.NETWORK_TYPE_LTE -> {
+                    net_type = "LTE"
+                    if (sharedPreferences!!.getBoolean("root", false)) {
+                        if (isLTECA) {
+                            net_type += "+"
+                        }
+                        if (isNRConnected) {
+                            net_type += " & NR"
+                        }
+                        if (isNRStandby) {
+                            net_type += " (NR Standby)"
+                        }
+                    }
+                }
+
+                TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_TD_SCDMA, TelephonyManager.NETWORK_TYPE_UMTS -> net_type =
+                    "3G"
+
+                TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> net_type =
+                    "2G"
+            }
+            return net_type
+        }
+
+
+        private var thread_main: Thread? = null
+        fun getBatteryInfo(context: Context): String {
+            val batteryManager =
+                checkNotNull(context.getSystemService(BATTERY_SERVICE) as BatteryManager)
+            var batteryLevel =
+                batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            if (batteryLevel > 100) {
+                Log.i(
+                    "get_battery_info",
+                    "The previous battery is over 100%, and the correction is 100%."
+                )
+                batteryLevel = 100
+            }
+            val intentfilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            val batteryStatus = checkNotNull(context.registerReceiver(null, intentfilter))
+            val charge_status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            val batteryStringBuilder = StringBuilder().append(batteryLevel).append("%")
+            when (charge_status) {
+                BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> batteryStringBuilder.append(
+                    " ("
+                ).append(context.getString(R.string.charging)).append(")")
+
+                BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> when (batteryStatus.getIntExtra(
+                    BatteryManager.EXTRA_PLUGGED,
+                    -1
+                )) {
+                    BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> batteryStringBuilder.append(
+                        " ("
+                    ).append(context.getString(R.string.not_charging)).append(")")
+                }
+            }
+            return batteryStringBuilder.toString()
+        }
+
+        fun getNetworkType(context: Context, sharedPreferences: SharedPreferences?): String {
+            var net_type = "Unknown"
+            val connect_manager =
+                checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
+            val telephonyManager = checkNotNull(
+                context
+                    .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+            )
+            val networks = connect_manager.allNetworks
+            for (network in networks) {
+                val network_capabilities =
+                    checkNotNull(connect_manager.getNetworkCapabilities(network))
+                if (!network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                    if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        net_type = "WIFI"
+                        break
+                    }
+                    if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                        if (ActivityCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.READ_PHONE_STATE
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            Log.i("get_network_type", "No permission.")
+                            return net_type
+                        }
+                        net_type = checkCellularNetworkType(
+                            telephonyManager.dataNetworkType,
+                            sharedPreferences
+                        )
+                    }
+                    if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
+                        net_type = "Bluetooth"
+                    }
+                    if (network_capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                        net_type = "Ethernet"
+                    }
+                }
+            }
+
+            return net_type
+        }
+    }
 }
 

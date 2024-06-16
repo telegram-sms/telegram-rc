@@ -91,7 +91,7 @@
             </intent-filter>
         </service>
         <service
-            android:name=".chat_command_service"
+            android:name=".ChatService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="specialUse"
