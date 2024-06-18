@@ -86,7 +86,7 @@ class NotifyActivity : AppCompatActivity() {
         val TAG: String = "notify_activity"
         private var listenList: List<String>
         var appInfoList: List<applicationInfo> = ArrayList()
-        var viewAppInfoList: List<applicationInfo>? = ArrayList()
+        var viewAppInfoList: List<applicationInfo> = ArrayList()
         @Suppress("UNCHECKED_CAST")
         private val filter: Filter = object : Filter() {
             override fun performFiltering(constraint: CharSequence): FilterResults {
@@ -126,15 +126,15 @@ class NotifyActivity : AppCompatActivity() {
             }
 
         override fun getCount(): Int {
-            if (viewAppInfoList != null && viewAppInfoList!!.isNotEmpty()) {
-                return viewAppInfoList!!.size
+            if (viewAppInfoList.isNotEmpty()) {
+                return viewAppInfoList.size
             }
             return 0
         }
 
         override fun getItem(position: Int): Any {
-            if (viewAppInfoList != null && viewAppInfoList!!.isNotEmpty()) {
-                return viewAppInfoList!![position]
+            if (viewAppInfoList.isNotEmpty()) {
+                return viewAppInfoList[position]
             }
             return applicationInfo()
         }
@@ -146,7 +146,7 @@ class NotifyActivity : AppCompatActivity() {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
             var view = convertView
             val viewHolderObject: holder
-            val appInfo = viewAppInfoList!![position]
+            val appInfo = viewAppInfoList[position]
             if (view == null) {
                 viewHolderObject = holder()
                 view =
@@ -165,7 +165,7 @@ class NotifyActivity : AppCompatActivity() {
             viewHolderObject.packageName.text = appInfo.packageName
             viewHolderObject.appCheckbox.isChecked =
                 listenList.contains(appInfo.packageName)
-            viewHolderObject.appCheckbox.setOnClickListener { v: View? ->
+            viewHolderObject.appCheckbox.setOnClickListener {
                 val itemInfo = getItem(position) as applicationInfo
                 val packageName = itemInfo.packageName
                 val listenListTemp: MutableList<String> =
@@ -179,7 +179,7 @@ class NotifyActivity : AppCompatActivity() {
                 }
                 Log.d(TAG, "notify_listen_list: $listenListTemp")
                 Paper.book("system_config")
-                    .write<List<String?>>("notify_listen_list", listenListTemp)
+                    .write<List<String>>("notify_listen_list", listenListTemp)
                 listenList = listenListTemp
             }
             return view

@@ -116,7 +116,7 @@ class SMSReceiver : BroadcastReceiver() {
         var isVerificationCode = false
         if (sharedPreferences.getBoolean("verification_code", false) && !isTrustedPhone) {
             if (messageBody.length <= 140) {
-                val verification = CodeauxLibPortable.find(context,messageBody)
+                val verification = CodeauxLibPortable.find(context, messageBody)
                 if (verification != null) {
                     requestBody.parseMode = "html"
                     messageBodyHtml = messageBody
@@ -252,7 +252,7 @@ class SMSReceiver : BroadcastReceiver() {
         }
 
 
-        val body: RequestBody = RequestBody.create(Const.JSON,Gson().toJson(requestBody))
+        val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
         val okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)

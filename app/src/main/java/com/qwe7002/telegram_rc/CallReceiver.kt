@@ -92,7 +92,8 @@ class CallReceiver : BroadcastReceiver() {
                 val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
                 val okhttpClient =
                     Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
-                val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
+                val request: Request =
+                    Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClient.newCall(request)
                 val errorHead = "Send missed call error:"
                 call.enqueue(object : Callback {

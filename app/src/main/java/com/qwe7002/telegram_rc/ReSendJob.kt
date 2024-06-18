@@ -25,7 +25,8 @@ class ReSendJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Paper.init(applicationContext)
         val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
-        requestUri = Network.getUrl(sharedPreferences.getString("bot_token", "").toString(), "SendMessage")
+        requestUri =
+            Network.getUrl(sharedPreferences.getString("bot_token", "").toString(), "SendMessage")
         Thread {
             val sendList: java.util.ArrayList<String>? =
                 Paper.book().read(tableName, java.util.ArrayList())
@@ -39,7 +40,7 @@ class ReSendJob : JobService() {
                     sharedPreferences.getString("message_thread_id", "").toString()
                 )
             }
-            if (sendList.isNotEmpty()){
+            if (sendList.isNotEmpty()) {
                 LogManage.writeLog(applicationContext, "The resend failure message is complete.")
             }
             jobFinished(params, false)
@@ -76,10 +77,14 @@ class ReSendJob : JobService() {
                 Paper.book().write(tableName, resendListLocal)
             }
         } catch (e: IOException) {
-            LogManage.writeLog(applicationContext, "An error occurred while resending: " + e.message)
+            LogManage.writeLog(
+                applicationContext,
+                "An error occurred while resending: " + e.message
+            )
             e.printStackTrace()
         }
     }
+
     companion object {
         fun startJob(context: Context) {
             val jobScheduler =

@@ -8,7 +8,7 @@ import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.qwe7002.telegram_rc.BatteryService
 import com.qwe7002.telegram_rc.BeaconReceiverService
-import com.qwe7002.telegram_rc.NotificationListenerService
+import com.qwe7002.telegram_rc.NotifyListenerService
 import com.qwe7002.telegram_rc.ChatService
 
 object ServiceManage {
@@ -27,7 +27,7 @@ object ServiceManage {
     fun startService(context: Context, batterySwitch: Boolean, chatCommandSwitch: Boolean) {
         if (isNotifyListener(context)) {
             val thisComponentName =
-                ComponentName(context, NotificationListenerService::class.java)
+                ComponentName(context, NotifyListenerService::class.java)
             val packageManager = context.packageManager
             packageManager.setComponentEnabledSetting(
                 thisComponentName,

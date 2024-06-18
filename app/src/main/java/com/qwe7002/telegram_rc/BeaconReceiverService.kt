@@ -86,7 +86,7 @@ class BeaconReceiverService : Service() {
             Notify.BEACON_SERVICE, notification.build(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
         )
-        
+
     }
 
 

@@ -17,7 +17,7 @@ import com.qwe7002.telegram_rc.static_class.Const
 
 
 class ScannerActivity : Activity() {
-    private var mCodeScanner: CodeScanner? = null
+    private lateinit var mCodeScanner: CodeScanner
 
     public override fun onCreate(state: Bundle?) {
         super.onCreate(state)
@@ -28,40 +28,41 @@ class ScannerActivity : Activity() {
             init {
                 add(BarcodeFormat.QR_CODE)
             }
-        }.also { this.mCodeScanner!!.formats = it }
+        }.also { this.mCodeScanner.formats = it }
         DecodeCallback { result: Result ->
             runOnUiThread {
                 val TAG = "activity_scanner"
                 Log.d(TAG, "format: " + result.barcodeFormat + " content: " + result.text)
                 if (!jsonValidate(result.text)) {
                     Toast.makeText(this, "The QR code is not legal", Toast.LENGTH_SHORT).show()
-                    mCodeScanner!!.startPreview()
+                    mCodeScanner.startPreview()
                     return@runOnUiThread
                 }
                 val intent = Intent().putExtra("config_json", result.text)
                 setResult(Const.RESULT_CONFIG_JSON, intent)
                 finish()
             }
-        }.also { mCodeScanner!!.decodeCallback = it }
-        scannerView.setOnClickListener { mCodeScanner!!.startPreview() }
+        }.also { mCodeScanner.decodeCallback = it }
+        scannerView.setOnClickListener { mCodeScanner.startPreview() }
     }
 
 
     public override fun onResume() {
         super.onResume()
-        mCodeScanner!!.startPreview()
+        mCodeScanner.startPreview()
     }
 
     public override fun onPause() {
-        mCodeScanner!!.releaseResources()
+        mCodeScanner.releaseResources()
         super.onPause()
     }
 
-    fun jsonValidate(jsonStr: String?): Boolean {
+    private fun jsonValidate(jsonStr: String): Boolean {
         val jsonElement: JsonElement?
         try {
             jsonElement = JsonParser.parseString(jsonStr)
         } catch (e: Exception) {
+            Log.d("jsonValidate", "jsonValidate: $e")
             return false
         }
         return jsonElement != null

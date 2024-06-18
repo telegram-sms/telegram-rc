@@ -81,7 +81,8 @@ class SMSSendResultReceiver : BroadcastReceiver() {
             @Throws(IOException::class)
             override fun onResponse(call: Call, response: Response) {
                 if (response.code != 200) {
-                    writeLog(context,
+                    writeLog(
+                        context,
                         errorHead + response.code + " " + Objects.requireNonNull(response.body)
                             .string()
                     )

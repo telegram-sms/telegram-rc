@@ -86,9 +86,7 @@ import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.TimeUnit
 
-/**
- * @noinspection CallToPrintStackTrace
- */
+
 @Suppress("DEPRECATION", "ClassName")
 class ChatService : Service() {
     // global object

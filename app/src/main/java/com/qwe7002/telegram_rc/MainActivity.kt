@@ -484,7 +484,8 @@ class MainActivity : AppCompatActivity() {
                     editor.putString(
                         "message_thread_id",
                         messageThreadIdEditView.text.toString().trim { it <= ' ' })
-                    if (trustedPhoneNumberEditView.text.toString().trim { it <= ' ' }.isNotEmpty()) {
+                    if (trustedPhoneNumberEditView.text.toString().trim { it <= ' ' }
+                            .isNotEmpty()) {
                         editor.putString(
                             "trusted_phone_number",
                             trustedPhoneNumberEditView.text.toString().trim { it <= ' ' })

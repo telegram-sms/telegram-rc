@@ -28,9 +28,9 @@ import okhttp3.Response
 import java.io.IOException
 import java.util.Objects
 
-class NotificationListenerService : NotificationListenerService() {
+class NotifyListenerService : NotificationListenerService() {
     private val logTag: String = "notification_receiver"
-    lateinit var  sharedPreferences: SharedPreferences
+    lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate() {
         super.onCreate()
@@ -54,7 +54,7 @@ class NotificationListenerService : NotificationListenerService() {
                 Notify.NOTIFICATION_LISTENER_SERVICE, notification.build(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
-        }else{
+        } else {
             startForeground(
                 Notify.NOTIFICATION_LISTENER_SERVICE, notification.build()
             )
@@ -147,9 +147,9 @@ class NotificationListenerService : NotificationListenerService() {
 
 
     companion object {
-        var appNameList: MutableMap<String, String?> = HashMap()
-        var lastPackage: String? = null
-        var lastMessage: String? = null
+        var appNameList: MutableMap<String, String> = HashMap()
+        lateinit var lastPackage: String
+        lateinit var lastMessage: String
         var lastSendTime: Long = 0
     }
 }
