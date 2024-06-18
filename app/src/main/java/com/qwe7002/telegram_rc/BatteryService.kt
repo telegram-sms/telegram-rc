@@ -62,9 +62,9 @@ class BatteryService : Service() {
         super.onCreate()
         Paper.init(applicationContext)
         val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
-        chat_id = sharedPreferences.getString("chat_id", "").toString()
-        bot_token = sharedPreferences.getString("bot_token", "").toString()
-        doh_switch = sharedPreferences.getBoolean("doh_switch", true)
+        chatId = sharedPreferences.getString("chat_id", "").toString()
+        botToken = sharedPreferences.getString("bot_token", "").toString()
+        dohSwitch = sharedPreferences.getBoolean("doh_switch", true)
         message_thread_id = sharedPreferences.getString("message_thread_id", "").toString()
         val chargerStatus = sharedPreferences.getBoolean("charger_status", false)
         batteryReceiver = batteryBroadcastReceiver()
@@ -106,17 +106,17 @@ class BatteryService : Service() {
     private fun networkHandle(obj: sendObj) {
         val TAG = "network_handle"
         val requestBody = requestMessage()
-        requestBody.chatId = chat_id
+        requestBody.chatId = chatId
         requestBody.text = obj.content
         requestBody.messageThreadId = message_thread_id
-        var requestUri = Network.getUrl(bot_token, "sendMessage")
+        var requestUri = Network.getUrl(botToken, "sendMessage")
         if ((System.currentTimeMillis() - lastReceiveTime) <= 10000L && lastReceiveMessageId != -1L) {
-            requestUri = Network.getUrl(bot_token, "editMessageText")
+            requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = lastReceiveMessageId
             Log.d(TAG, "onReceive: edit_mode")
         }
         lastReceiveTime = System.currentTimeMillis()
-        val okhttpClient = Network.getOkhttpObj(doh_switch)
+        val okhttpClient = Network.getOkhttpObj(dohSwitch)
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
@@ -212,10 +212,10 @@ class BatteryService : Service() {
     }
 
     companion object {
-        private lateinit var bot_token: String
-        private lateinit var chat_id: String
+        private lateinit var botToken: String
+        private lateinit var chatId: String
         lateinit var message_thread_id: String
-        private var doh_switch = false
+        private var dohSwitch = false
         private var lastReceiveTime: Long = 0
         private var lastReceiveMessageId: Long = -1
         private lateinit var sendLoopList: ArrayList<sendObj>
