@@ -179,7 +179,7 @@ class BeaconActivity : AppCompatActivity() {
                     assert(listenListTemp != null)
                     listenListTemp!!.remove(address)
                 }
-                Log.d(TAG, "beacon_address: $listenListTemp")
+                Log.d("monitoring_activity", "beacon_address: $listenListTemp")
                 Paper.book("beacon").write("address", listenListTemp)
                 listenList = listenListTemp
             }
@@ -188,9 +188,8 @@ class BeaconActivity : AppCompatActivity() {
         }
     }
 
-    companion object {
-        private const val TAG: String = "monitoring_activity"
-    }
+
+
 }
 
 

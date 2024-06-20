@@ -32,6 +32,14 @@ import java.util.Objects
 
 class BatteryService : Service() {
     private lateinit var batteryReceiver: batteryBroadcastReceiver
+    private lateinit var botToken: String
+    private lateinit var chatId: String
+    lateinit var messageThreadId: String
+    private var dohSwitch = false
+    private var lastReceiveTime: Long = 0
+    private var lastReceiveMessageId: Long = -1
+    private lateinit var sendLoopList: ArrayList<sendObj>
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundNotification()
 
@@ -65,7 +73,7 @@ class BatteryService : Service() {
         chatId = sharedPreferences.getString("chat_id", "").toString()
         botToken = sharedPreferences.getString("bot_token", "").toString()
         dohSwitch = sharedPreferences.getBoolean("doh_switch", true)
-        message_thread_id = sharedPreferences.getString("message_thread_id", "").toString()
+        messageThreadId = sharedPreferences.getString("message_thread_id", "").toString()
         val chargerStatus = sharedPreferences.getBoolean("charger_status", false)
         batteryReceiver = batteryBroadcastReceiver()
         val filter = IntentFilter()
@@ -108,7 +116,7 @@ class BatteryService : Service() {
         val requestBody = requestMessage()
         requestBody.chatId = chatId
         requestBody.text = obj.content
-        requestBody.messageThreadId = message_thread_id
+        requestBody.messageThreadId = messageThreadId
         var requestUri = Network.getUrl(botToken, "sendMessage")
         if ((System.currentTimeMillis() - lastReceiveTime) <= 10000L && lastReceiveMessageId != -1L) {
             requestUri = Network.getUrl(botToken, "editMessageText")
@@ -152,14 +160,13 @@ class BatteryService : Service() {
     }
 
     private class sendObj {
-        var content: String? = null
-        var action: String? = null
+        lateinit var content: String
+        lateinit var action: String
     }
 
     internal inner class batteryBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val TAG = "battery_receiver"
-            assert(intent.action != null)
             Log.d(TAG, "Receive action: " + intent.action)
             if (intent.action == Const.BROADCAST_STOP_SERVICE) {
                 Log.i(TAG, "Received stop signal, quitting now...")
@@ -167,33 +174,33 @@ class BatteryService : Service() {
                 Process.killProcess(Process.myPid())
                 return
             }
-            val prebody = StringBuilder(context.getString(R.string.system_message_head) + "\n")
+            val builder = StringBuilder(context.getString(R.string.system_message_head) + "\n")
             val action = intent.action
             val batteryManager = context.getSystemService(BATTERY_SERVICE) as BatteryManager
             when (Objects.requireNonNull(action)) {
-                Intent.ACTION_BATTERY_OKAY -> prebody.append(context.getString(R.string.low_battery_status_end))
+                Intent.ACTION_BATTERY_OKAY -> builder.append(context.getString(R.string.low_battery_status_end))
                 Intent.ACTION_BATTERY_LOW -> {
-                    prebody.append(context.getString(R.string.battery_low))
+                    builder.append(context.getString(R.string.battery_low))
                     if (RemoteControl.isHotspotActive(context)) {
                         RemoteControl.disableHotspot(
                             context,
                             TetherManager.TetherMode.TETHERING_WIFI
                         )
-                        prebody.append("\n").append(getString(R.string.disable_wifi))
+                        builder.append("\n").append(getString(R.string.disable_wifi))
                             .append(context.getString(R.string.action_success))
                     }
                     if (Paper.book("temp").read("wifi_open", false)!!) {
                         val wifiManager =
                             (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
                         RemoteControl.disableVPNHotspot(wifiManager)
-                        prebody.append("\n").append(getString(R.string.disable_wifi))
+                        builder.append("\n").append(getString(R.string.disable_wifi))
                             .append(context.getString(R.string.action_success))
                     }
                 }
 
-                Intent.ACTION_POWER_CONNECTED -> prebody.append(context.getString(R.string.charger_connect))
+                Intent.ACTION_POWER_CONNECTED -> builder.append(context.getString(R.string.charger_connect))
 
-                Intent.ACTION_POWER_DISCONNECTED -> prebody.append(context.getString(R.string.charger_disconnect))
+                Intent.ACTION_POWER_DISCONNECTED -> builder.append(context.getString(R.string.charger_disconnect))
             }
             var batteryLevel =
                 batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
@@ -202,23 +209,18 @@ class BatteryService : Service() {
                 batteryLevel = 100
             }
             val result =
-                prebody.append("\n").append(context.getString(R.string.current_battery_level))
+                builder.append("\n").append(context.getString(R.string.current_battery_level))
                     .append(batteryLevel).append("%").toString()
             val obj = sendObj()
-            obj.action = action
-            obj.content = result
+            if (action != null) {
+                obj.action = action
+                obj.content = result
+            }
+
             sendLoopList.add(obj)
         }
     }
 
-    companion object {
-        private lateinit var botToken: String
-        private lateinit var chatId: String
-        lateinit var message_thread_id: String
-        private var dohSwitch = false
-        private var lastReceiveTime: Long = 0
-        private var lastReceiveMessageId: Long = -1
-        private lateinit var sendLoopList: ArrayList<sendObj>
-    }
+
 }
 

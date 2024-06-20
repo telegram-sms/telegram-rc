@@ -139,7 +139,7 @@ class ChatService : Service() {
     }
 
 
-    private fun me(): Boolean{
+    private fun getMe(): Boolean{
             val okhttpClientNew = okhttpClient
             val url = getUrl(botToken, "getMe")
             val request: Request = Request.Builder().url(url).build()
@@ -1050,7 +1050,7 @@ class ChatService : Service() {
             if (parseStringToLong(chatID) < 0) {
                 botUsername = Paper.book().read<String>("bot_username", "").toString()
                 if (botUsername.isEmpty()) {
-                    while (me()) {
+                    while (getMe()) {
                         writeLog(
                             applicationContext,
                             "Failed to get bot Username, Wait 5 seconds and try again."
