@@ -58,7 +58,7 @@ import java.util.Objects
 
 class BeaconReceiverService : Service() {
     @Suppress("PrivatePropertyName")
-    private val TAG = "beacon_receviver"
+    private val TAG = "beacon_receiver"
     private lateinit var wifiManager: WifiManager
     private var notFoundCount = 0
     private var detectCount = 0
