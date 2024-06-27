@@ -240,8 +240,8 @@ class BeaconReceiverService : Service() {
                 Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
                 return
             }
-            val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
-            if (!bluetoothAdapter!!.isEnabled) {
+            val bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            if (!bluetoothAdapter.isEnabled) {
                 notFoundCount = 0
                 detectCount = 0
                 Log.i(TAG, "Bluetooth has been turned off")
@@ -483,8 +483,8 @@ class BeaconReceiverService : Service() {
         var isCharging = false
     }
 
-    private fun networkType(): String? {
-        var netType: String? = "Unknown"
+    private fun networkType(): String {
+        var netType = "Unknown"
         val connectManager =
             (applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
         val telephonyManager = (applicationContext
