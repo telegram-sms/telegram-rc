@@ -537,10 +537,7 @@ class MainActivity : AppCompatActivity() {
         messageThreadIdView: TextInputLayout
     ) {
         if (!chatCommand.isChecked) {
-            messageThreadIdView.visibility = View.GONE
-            privacyModeSwitch.visibility = View.GONE
             privacyModeSwitch.isChecked = false
-            return
         }
         if (parseStringToLong(chatId) < 0) {
             messageThreadIdView.visibility = View.VISIBLE

@@ -18,7 +18,7 @@ import java.util.Locale
 
 object Other {
     fun getNineKeyMapConvert(input: String): String {
-        val nineKeyMap: HashMap<Char?, Int?> = object : HashMap<Char?, Int?>() {
+        val nineKeyMap: HashMap<Char, Int> = object : HashMap<Char, Int>() {
             init {
                 put('A', 2)
                 put('B', 2)

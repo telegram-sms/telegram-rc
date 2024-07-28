@@ -28,11 +28,11 @@ class ReSendJob : JobService() {
         requestUri =
             Network.getUrl(sharedPreferences.getString("bot_token", "").toString(), "SendMessage")
         Thread {
-            val sendList: java.util.ArrayList<String>? =
-                Paper.book().read(tableName, java.util.ArrayList())
+            val sendList: java.util.ArrayList<String> =
+                Paper.book().read(tableName, java.util.ArrayList())!!
             val okhttpClient =
                 Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
-            for (item in sendList!!) {
+            for (item in sendList) {
                 networkProgressHandle(
                     item,
                     sharedPreferences.getString("chat_id", "").toString(),
