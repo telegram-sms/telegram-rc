@@ -38,6 +38,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.qwe7002.telegram_rc.config.proxy
+import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.data_structure.pollingJson
 import com.qwe7002.telegram_rc.data_structure.requestMessage
 import com.qwe7002.telegram_rc.root_kit.Shell.checkRoot
@@ -200,7 +201,7 @@ class MainActivity : AppCompatActivity() {
             sharedPreferences.getBoolean("verification_code", false)
 
         dohSwitch.isChecked = sharedPreferences.getBoolean("doh_switch", true)
-        dohSwitch.isEnabled = Paper.book("system_config").read("proxy_config", proxy())!!.enable
+        dohSwitch.isEnabled = !Paper.book("system_config").read("proxy_config", proxy())!!.enable
         if (ContextCompat.checkSelfPermission(
                 applicationContext,
                 Manifest.permission.READ_PHONE_STATE
@@ -640,23 +641,19 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1) {
             if (resultCode == Const.RESULT_CONFIG_JSON) {
-                val jsonObject = JsonParser.parseString(
-                    data!!.getStringExtra("config_json")
-                ).asJsonObject
-                (findViewById<View>(R.id.bot_token_editview) as EditText).setText(
-                    jsonObject["bot_token"].asString
-                )
-                (findViewById<View>(R.id.chat_id_editview) as EditText).setText(
-                    jsonObject["chat_id"].asString
-                )
+                val gson = Gson()
+                val scannerJson =
+                    gson.fromJson(data?.getStringExtra("config_json"), ScannerJson::class.java)
+                (findViewById<View>(R.id.bot_token_editview) as EditText).setText(scannerJson.botToken)
+                (findViewById<View>(R.id.chat_id_editview) as EditText).setText(scannerJson.chatId)
                 (findViewById<View>(R.id.battery_monitoring_switch) as SwitchMaterial).isChecked =
-                    jsonObject["battery_monitoring_switch"].asBoolean
+                    scannerJson.batteryMonitoringSwitch
                 (findViewById<View>(R.id.verification_code_switch) as SwitchMaterial).isChecked =
-                    jsonObject["verification_code"].asBoolean
+                    scannerJson.verificationCode
 
                 val chargerStatus = findViewById<SwitchMaterial>(R.id.charger_status_switch)
-                if (jsonObject["battery_monitoring_switch"].asBoolean) {
-                    chargerStatus.isChecked = jsonObject["charger_status"].asBoolean
+                if (scannerJson.chargerStatus) {
+                    chargerStatus.isChecked = true
                     chargerStatus.visibility = View.VISIBLE
                 } else {
                     chargerStatus.isChecked = false
@@ -664,12 +661,12 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val chatCommand = findViewById<SwitchMaterial>(R.id.chat_command_switch)
-                chatCommand.isChecked = jsonObject["chat_command"].asBoolean
+                chatCommand.isChecked = scannerJson.chatCommand
                 val privacyModeSwitch = findViewById<SwitchMaterial>(R.id.privacy_switch)
-                privacyModeSwitch.isChecked = jsonObject["privacy_mode"].asBoolean
+                privacyModeSwitch.isChecked = scannerJson.privacyMode
                 val messageThreadIdView = findViewById<TextInputLayout>(R.id.message_thread_id_view)
                 setPrivacyModeCheckbox(
-                    jsonObject["chat_id"].asString,
+                    scannerJson.chatId,
                     chatCommand,
                     privacyModeSwitch,
                     messageThreadIdView
@@ -677,9 +674,9 @@ class MainActivity : AppCompatActivity() {
 
                 val trustedPhoneNumber =
                     findViewById<EditText>(R.id.trusted_phone_number_editview)
-                trustedPhoneNumber.setText(jsonObject["trusted_phone_number"].asString)
+                trustedPhoneNumber.setText(scannerJson.trustedPhoneNumber)
                 val fallbackSMS = findViewById<SwitchMaterial>(R.id.fallback_sms_switch)
-                fallbackSMS.isChecked = jsonObject["fallback_sms"].asBoolean
+                fallbackSMS.isChecked = scannerJson.fallbackSms
                 if (trustedPhoneNumber.length() != 0) {
                     fallbackSMS.visibility = View.VISIBLE
                 } else {
