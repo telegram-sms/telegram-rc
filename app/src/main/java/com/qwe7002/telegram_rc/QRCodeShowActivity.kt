@@ -7,6 +7,7 @@ import com.github.sumimakito.awesomeqrcode.AwesomeQrRenderer
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.qwe7002.telegram_rc.data_structure.ScannerJson
 
 class QRCodeShowActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,18 +15,17 @@ class QRCodeShowActivity : AppCompatActivity() {
         setContentView(R.layout.activity_qrcode)
         val context = applicationContext
         val sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE)
-        val config = config_list()
-        config.botToken = sharedPreferences.getString("bot_token", "").toString()
-        config.chatId = sharedPreferences.getString("chat_id", "").toString()
-        config.trustedPhoneNumber =
-            sharedPreferences.getString("trusted_phone_number", "").toString()
-        config.fallbackSms = sharedPreferences.getBoolean("fallback_sms", false)
-        config.chatCommand = sharedPreferences.getBoolean("chat_command", false)
-        config.batteryMonitoringSwitch =
-            sharedPreferences.getBoolean("battery_monitoring_switch", false)
-        config.chargerStatus = sharedPreferences.getBoolean("charger_status", false)
-        config.verificationCode = sharedPreferences.getBoolean("verification_code", false)
-        config.privacyMode = sharedPreferences.getBoolean("privacy_mode", false)
+        val config = ScannerJson(
+            botToken = sharedPreferences.getString("bot_token", "").toString(),
+            chatId = sharedPreferences.getString("chat_id", "").toString(),
+            trustedPhoneNumber = sharedPreferences.getString("trusted_phone_number", "").toString(),
+            fallbackSms = sharedPreferences.getBoolean("fallback_sms", false),
+            chatCommand = sharedPreferences.getBoolean("chat_command", false),
+            batteryMonitoringSwitch = sharedPreferences.getBoolean("battery_monitoring_switch", false),
+            chargerStatus = sharedPreferences.getBoolean("charger_status", false),
+            verificationCode = sharedPreferences.getBoolean("verification_code", false),
+            privacyMode = sharedPreferences.getBoolean("privacy_mode", false)
+        )
         val imageview = findViewById<ImageView>(R.id.qr_imageview)
         imageview.setImageBitmap(
             AwesomeQrRenderer().genQRcodeBitmap(
@@ -38,32 +38,5 @@ class QRCodeShowActivity : AppCompatActivity() {
     }
 
 
-    private class config_list {
-        @SerializedName(value = "bot_token")
-        lateinit var botToken: String
 
-        @SerializedName(value = "chat_id")
-        lateinit var chatId: String
-
-        @SerializedName(value = "trusted_phone_number")
-        lateinit var trustedPhoneNumber: String
-
-        @SerializedName(value = "fallback_sms")
-        var fallbackSms: Boolean = false
-
-        @SerializedName(value = "chat_command")
-        var chatCommand: Boolean = false
-
-        @SerializedName(value = "battery_monitoring_switch")
-        var batteryMonitoringSwitch: Boolean = false
-
-        @SerializedName(value = "charger_status")
-        var chargerStatus: Boolean = false
-
-        @SerializedName(value = "verification_code")
-        var verificationCode: Boolean = false
-
-        @SerializedName(value = "privacy_mode")
-        var privacyMode: Boolean = false
-    }
 }
