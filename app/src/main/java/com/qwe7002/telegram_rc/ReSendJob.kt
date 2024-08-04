@@ -24,20 +24,20 @@ class ReSendJob : JobService() {
     private val tableName: String = "resend_list"
     override fun onStartJob(params: JobParameters?): Boolean {
         Paper.init(applicationContext)
-        val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
+        val preferences = Paper.book("preferences")
         requestUri =
-            Network.getUrl(sharedPreferences.getString("bot_token", "").toString(), "SendMessage")
+            Network.getUrl(preferences.read("bot_token", "").toString(), "SendMessage")
         Thread {
             val sendList: java.util.ArrayList<String> =
                 Paper.book().read(tableName, java.util.ArrayList())!!
             val okhttpClient =
-                Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+                Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
             for (item in sendList) {
                 networkProgressHandle(
                     item,
-                    sharedPreferences.getString("chat_id", "").toString(),
+                    preferences.read("chat_id", "").toString(),
                     okhttpClient,
-                    sharedPreferences.getString("message_thread_id", "").toString()
+                    preferences.read("message_thread_id", "").toString()
                 )
             }
             if (sendList.isNotEmpty()) {

@@ -12,6 +12,7 @@ import com.google.gson.Gson
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.USSDCallBack
 import com.qwe7002.telegram_rc.data_structure.requestMessage
+import io.paperdb.Paper
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -28,9 +29,8 @@ object USSD {
         if (subId != -1) {
             tm = tm!!.createForSubscriptionId(subId)
         }
-
-        val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
-
+        Paper.init(context)
+        val preferences = Paper.book("preferences")
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.CALL_PHONE
@@ -39,8 +39,8 @@ object USSD {
             Log.i(TAG, "send_ussd: No permission.")
         }
 
-        val botToken = sharedPreferences.getString("bot_token", "").toString()
-        val chatId = sharedPreferences.getString("chat_id", "").toString()
+        val botToken = preferences.read("bot_token", "").toString()
+        val chatId = preferences.read("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = requestMessage()
         requestBody.chatId = chatId
@@ -50,7 +50,7 @@ object USSD {
              """.trimIndent()
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
-        val okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        val okhttpClient = Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val telephonyManager = tm
@@ -71,7 +71,7 @@ object USSD {
                 @Suppress("DEPRECATION")
                 telephonyManager!!.sendUssdRequest(
                     ussd,
-                    USSDCallBack(context, sharedPreferences, messageId),
+                    USSDCallBack(context, messageId),
                     Handler()
                 )
                 Looper.loop()

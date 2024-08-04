@@ -8,23 +8,25 @@ import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
+import io.paperdb.Paper
 
 class QRCodeShowActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_qrcode)
-        val context = applicationContext
-        val sharedPreferences = context.getSharedPreferences("data", MODE_PRIVATE)
+        Paper.init(applicationContext)
+        val preferences = Paper.book("preferences")
+
         val config = ScannerJson(
-            botToken = sharedPreferences.getString("bot_token", "").toString(),
-            chatId = sharedPreferences.getString("chat_id", "").toString(),
-            trustedPhoneNumber = sharedPreferences.getString("trusted_phone_number", "").toString(),
-            fallbackSms = sharedPreferences.getBoolean("fallback_sms", false),
-            chatCommand = sharedPreferences.getBoolean("chat_command", false),
-            batteryMonitoringSwitch = sharedPreferences.getBoolean("battery_monitoring_switch", false),
-            chargerStatus = sharedPreferences.getBoolean("charger_status", false),
-            verificationCode = sharedPreferences.getBoolean("verification_code", false),
-            privacyMode = sharedPreferences.getBoolean("privacy_mode", false)
+            botToken = preferences.read("bot_token", "").toString(),
+            chatId = preferences.read("chat_id", "").toString(),
+            trustedPhoneNumber = preferences.read("trusted_phone_number", "").toString(),
+            fallbackSms = preferences.read("fallback_sms", false)!!,
+            chatCommand = preferences.read("chat_command", false)!!,
+            batteryMonitoringSwitch = preferences.read("battery_monitoring_switch", false)!!,
+            chargerStatus = preferences.read("charger_status", false)!!,
+            verificationCode = preferences.read("verification_code", false)!!,
+            privacyMode = preferences.read("privacy_mode", false)!!
         )
         val imageview = findViewById<ImageView>(R.id.qr_imageview)
         imageview.setImageBitmap(

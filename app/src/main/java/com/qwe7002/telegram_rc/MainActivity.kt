@@ -65,7 +65,7 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "main_activity"
-    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var preferences:io.paperdb.Book
     private lateinit var writeSettingsButton: Button
 
 
@@ -94,8 +94,7 @@ class MainActivity : AppCompatActivity() {
         writeSettingsButton = findViewById(R.id.write_settings_button)
         //load config
         Paper.init(applicationContext)
-        sharedPreferences = getSharedPreferences("data", MODE_PRIVATE)
-
+        preferences = Paper.book("preferences")
         writeSettingsButton.setOnClickListener {
             val writeSystemIntent = Intent(
                 Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse(
@@ -104,23 +103,24 @@ class MainActivity : AppCompatActivity() {
             )
             startActivity(writeSystemIntent)
         }
-        if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
+        if(!preferences.read("privacy_dialog_agree", false)!!){
             showPrivacyDialog()
         }
-        val botTokenSave = sharedPreferences.getString("bot_token", "")
-        val chatIdSave = sharedPreferences.getString("chat_id", "")
-        val messageThreadIdSave = sharedPreferences.getString("message_thread_id", "")
+        val botTokenSave = preferences.read("bot_token", "")
+        val chatIdSave = preferences.read("chat_id", "")
+        val messageThreadIdSave = preferences.read("message_thread_id", "")
         if (parseStringToLong(chatIdSave!!) < 0) {
             privacyModeSwitch.visibility = View.VISIBLE
         } else {
             privacyModeSwitch.visibility = View.GONE
         }
-        privacyModeSwitch.isChecked = sharedPreferences.getBoolean("privacy_mode", false)
-        if (sharedPreferences.getBoolean("initialized", false)) {
+        privacyModeSwitch.isChecked = preferences.read("privacy_mode", false)!!
+
+        if (preferences.contains("initialized")) {
             startService(
                 applicationContext,
-                sharedPreferences.getBoolean("battery_monitoring_switch", false),
-                sharedPreferences.getBoolean("chat_command", false)
+                preferences.read("battery_monitoring_switch", false)!!,
+                preferences.read("chat_command", false)!!
             )
             startBeaconService(applicationContext)
             KeepAliveJob.startJob(applicationContext)
@@ -129,7 +129,7 @@ class MainActivity : AppCompatActivity() {
 
 
         var displayDualSimDisplayName =
-            sharedPreferences.getBoolean("display_dual_sim_display_name", false)
+        preferences.read("display_dual_sim_display_name", false)!!
         if (ContextCompat.checkSelfPermission(
                 applicationContext,
                 Manifest.permission.READ_PHONE_STATE
@@ -141,16 +141,16 @@ class MainActivity : AppCompatActivity() {
             }
             displayDualSimDisplayNameSwitch.isChecked = displayDualSimDisplayName
         }
-        rootSwitch.isChecked = sharedPreferences.getBoolean("root", false)
+        rootSwitch.isChecked = preferences.read("root", false)!!
 
         botTokenEditView.setText(botTokenSave)
         chatIdEditView.setText(chatIdSave)
         messageThreadIdEditView.setText(messageThreadIdSave)
-        trustedPhoneNumberEditView.setText(sharedPreferences.getString("trusted_phone_number", ""))
+        trustedPhoneNumberEditView.setText(preferences.read("trusted_phone_number", ""))
 
         batteryMonitoringSwitch.isChecked =
-            sharedPreferences.getBoolean("battery_monitoring_switch", false)
-        chargerStatusSwitch.isChecked = sharedPreferences.getBoolean("charger_status", false)
+            preferences.read("battery_monitoring_switch", false)!!
+        chargerStatusSwitch.isChecked = preferences.read("charger_status", false)!!
 
         if (!batteryMonitoringSwitch.isChecked) {
             chargerStatusSwitch.isChecked = false
@@ -166,7 +166,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        fallbackSmsSwitch.isChecked = sharedPreferences.getBoolean("fallback_sms", false)
+        fallbackSmsSwitch.isChecked = preferences.read("fallback_sms", false)!!
         if (trustedPhoneNumberEditView.length() == 0) {
             fallbackSmsSwitch.visibility = View.GONE
             fallbackSmsSwitch.isChecked = false
@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        chatCommandSwitch.isChecked = sharedPreferences.getBoolean("chat_command", false)
+        chatCommandSwitch.isChecked = preferences.read("chat_command", false)!!
         chatCommandSwitch.setOnClickListener {
             setPrivacyModeCheckbox(
                 chatIdEditView.text.toString(),
@@ -198,9 +198,9 @@ class MainActivity : AppCompatActivity() {
             )
         }
         verificationCodeSwitch.isChecked =
-            sharedPreferences.getBoolean("verification_code", false)
+            preferences.read("verification_code", false)!!
 
-        dohSwitch.isChecked = sharedPreferences.getBoolean("doh_switch", true)
+        dohSwitch.isChecked = preferences.read("doh_switch", true)!!
         dohSwitch.isEnabled = !Paper.book("system_config").read("proxy_config", proxy())!!.enable
         if (ContextCompat.checkSelfPermission(
                 applicationContext,
@@ -389,7 +389,7 @@ class MainActivity : AppCompatActivity() {
                 Snackbar.make(v!!, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show()
                 return@setOnClickListener
             }
-            if (!sharedPreferences.getBoolean("privacy_dialog_agree", false)) {
+            if (!preferences.read("privacy_dialog_agree", false)!!) {
                 showPrivacyDialog()
                 return@setOnClickListener
             }
@@ -479,7 +479,7 @@ class MainActivity : AppCompatActivity() {
                         Paper.book().destroy()
                     }
                     Paper.book("system_config").write("version", Const.SYSTEM_CONFIG_VERSION)
-                    val editor = sharedPreferences.edit().clear()
+                   /* val editor = sharedPreferences.edit().clear()
                     editor.putString("bot_token", newBotToken)
                     editor.putString("chat_id", chatIdEditView.text.toString().trim { it <= ' ' })
                     editor.putString(
@@ -508,7 +508,36 @@ class MainActivity : AppCompatActivity() {
                     editor.putBoolean("privacy_mode", privacyModeSwitch.isChecked)
                     editor.putBoolean("initialized", true)
                     editor.putBoolean("privacy_dialog_agree", true)
-                    editor.apply()
+                    editor.apply()*/
+                    preferences.destroy()
+                    preferences.write("bot_token", newBotToken)
+                    preferences.write("chat_id", chatIdEditView.text.toString().trim { it <= ' ' })
+                    preferences.write(
+                        "message_thread_id",
+                        messageThreadIdEditView.text.toString().trim { it <= ' ' })
+                    if (trustedPhoneNumberEditView.text.toString().trim { it <= ' ' }
+                            .isNotEmpty()) {
+                        preferences.write(
+                            "trusted_phone_number",
+                            trustedPhoneNumberEditView.text.toString().trim { it <= ' ' })
+                        preferences.write("fallback_sms", fallbackSmsSwitch.isChecked)
+                    }
+                    preferences.write("chat_command", chatCommandSwitch.isChecked)
+                    preferences.write(
+                        "battery_monitoring_switch",
+                        batteryMonitoringSwitch.isChecked
+                    )
+                    preferences.write("charger_status", chargerStatusSwitch.isChecked)
+                    preferences.write(
+                        "display_dual_sim_display_name",
+                        displayDualSimDisplayNameSwitch.isChecked
+                    )
+                    preferences.write("verification_code", verificationCodeSwitch.isChecked)
+                    preferences.write("root", rootSwitch.isChecked)
+                    preferences.write("doh_switch", dohSwitch.isChecked)
+                    preferences.write("privacy_mode", privacyModeSwitch.isChecked)
+                    preferences.write("initialized",true)
+                    preferences.write("privacy_dialog_agree", true)
                     Thread {
                         KeepAliveJob.stopJob(applicationContext)
                         ReSendJob.stopJob(applicationContext)
@@ -571,7 +600,7 @@ class MainActivity : AppCompatActivity() {
         builder.setMessage(R.string.privacy_reminder_information)
         builder.setCancelable(false)
         builder.setPositiveButton(R.string.agree) { _: DialogInterface?, _: Int ->
-            sharedPreferences.edit().putBoolean("privacy_dialog_agree", true).apply()
+            preferences.write("privacy_dialog_agree", true)
         }
         builder.setNegativeButton(R.string.decline, null)
         builder.setNeutralButton(R.string.visit_page) { _: DialogInterface?, _: Int ->
@@ -732,7 +761,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             R.id.config_qrcode_menu_item -> {
-                if (sharedPreferences.getBoolean("initialized", false)) {
+                if (preferences.contains("initialized")) {
                     startActivity(Intent(this, QRCodeShowActivity::class.java))
                 } else {
                     Snackbar.make(
@@ -761,7 +790,15 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                     return false
                 }
-                startActivity(Intent(this, BeaconActivity::class.java))
+                if (preferences.contains("initialized")) {
+                    startActivity(Intent(this, BeaconActivity::class.java))
+                } else {
+                    Snackbar.make(
+                        findViewById(R.id.bot_token_editview),
+                        "Uninitialized.",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
                 return true
             }
 
@@ -819,14 +856,11 @@ class MainActivity : AppCompatActivity() {
                         Thread {
                             KeepAliveJob.stopJob(applicationContext)
                             stopAllService(applicationContext)
-                            if (sharedPreferences.getBoolean("initialized", false)) {
+                            if (preferences.contains("initialized")) {
                                 startService(
                                     applicationContext,
-                                    sharedPreferences.getBoolean(
-                                        "battery_monitoring_switch",
-                                        false
-                                    ),
-                                    sharedPreferences.getBoolean("chat_command", false)
+                                    preferences.read("battery_monitoring_switch", false)!!,
+                                    preferences.read("chat_command", false)!!
                                 )
                                 startBeaconService(applicationContext)
                                 KeepAliveJob.startJob(applicationContext)

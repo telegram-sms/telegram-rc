@@ -24,7 +24,6 @@ import java.util.Objects
 
 class USSDCallBack(
     private val context: Context,
-    sharedPreferences: SharedPreferences,
     messageId: Long
 ) : UssdResponseCallback() {
     private val dohSwitch: Boolean
@@ -34,14 +33,12 @@ class USSDCallBack(
 
     init {
         Paper.init(context)
-        val chatId = sharedPreferences.getString("chat_id", "")
-        this.dohSwitch = sharedPreferences.getBoolean("doh_switch", true)
-        this.requestBody =
-            requestMessage()
-        requestBody.chatId = chatId
-        requestBody.messageThreadId =
-            sharedPreferences.getString("message_thread_id", "").toString()
-        val botToken = sharedPreferences.getString("bot_token", "").toString()
+        val preferences = Paper.book("preferences")
+        this.dohSwitch = preferences.read("doh_switch", true)!!
+        this.requestBody = requestMessage()
+        requestBody.chatId = preferences.read("chat_id", "")
+        requestBody.messageThreadId = preferences.read("message_thread_id", "").toString()
+        val botToken = preferences.read("bot_token", "").toString()
         this.requestUri = Network.getUrl(botToken, "SendMessage")
         if (messageId != -1L) {
             this.requestUri = Network.getUrl(botToken, "editMessageText")

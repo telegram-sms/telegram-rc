@@ -8,18 +8,20 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import com.qwe7002.telegram_rc.static_class.ServiceManage
+import io.paperdb.Paper
 import java.util.concurrent.TimeUnit
 
 
 class KeepAliveJob : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
-        val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
-        if (sharedPreferences.getBoolean("initialized", false)) {
+        Paper.init(applicationContext)
+        val preferences = Paper.book("preferences")
+        if (preferences.contains("initialized")) {
             ServiceManage.startService(
                 applicationContext,
-                sharedPreferences.getBoolean("battery_monitoring_switch", false),
-                sharedPreferences.getBoolean("chat_command", false)
+                preferences.read("battery_monitoring_switch", false)!!,
+                preferences.read("chat_command", false)!!
             )
             ServiceManage.startBeaconService(applicationContext)
         }

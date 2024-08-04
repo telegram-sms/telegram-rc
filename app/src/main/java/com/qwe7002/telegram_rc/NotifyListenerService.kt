@@ -30,16 +30,15 @@ import java.util.Objects
 
 class NotifyListenerService : NotificationListenerService() {
     private val logTag: String = "notification_receiver"
-    lateinit var sharedPreferences: SharedPreferences
+    lateinit var preferences: io.paperdb.Book
 
     override fun onCreate() {
         super.onCreate()
         Paper.init(applicationContext)
-        sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
+        preferences = Paper.book("preferences")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         startForegroundNotification()
         return START_STICKY
     }
@@ -65,7 +64,7 @@ class NotifyListenerService : NotificationListenerService() {
         val packageName = sbn.packageName
         Log.d(logTag, "onNotificationPosted: $packageName")
 
-        if (!sharedPreferences.getBoolean("initialized", false)) {
+        if (!preferences.contains("initialized")) {
             Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
             return
         }
@@ -96,8 +95,8 @@ class NotifyListenerService : NotificationListenerService() {
         if (title == "None" && content == "None") {
             return
         }
-        val botToken = sharedPreferences.getString("bot_token", "").toString()
-        val chatId = sharedPreferences.getString("chat_id", "").toString()
+        val botToken = preferences.read("bot_token", "").toString()
+        val chatId = preferences.read("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = requestMessage()
         if ((System.currentTimeMillis() - lastSendTime) <= 1000L && (lastPackage == packageName)) {
@@ -106,7 +105,7 @@ class NotifyListenerService : NotificationListenerService() {
             }
         }
         requestBody.chatId = chatId
-        requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
+        requestBody.messageThreadId = preferences.read("message_thread_id", "")
         requestBody.text = """
             ${getString(R.string.receive_notification_title)}
             ${getString(R.string.app_name_title)}$appName
@@ -115,7 +114,7 @@ class NotifyListenerService : NotificationListenerService() {
             """.trimIndent()
         val body: RequestBody = Gson().toJson(requestBody).toRequestBody(Const.JSON)
         val okhttpClient = Network.getOkhttpObj(
-            sharedPreferences.getBoolean("doh_switch", true)
+            preferences.read("doh_switch", true)!!
         )
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)

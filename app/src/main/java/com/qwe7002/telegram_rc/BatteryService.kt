@@ -69,12 +69,13 @@ class BatteryService : Service() {
     override fun onCreate() {
         super.onCreate()
         Paper.init(applicationContext)
-        val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
-        chatId = sharedPreferences.getString("chat_id", "").toString()
-        botToken = sharedPreferences.getString("bot_token", "").toString()
-        dohSwitch = sharedPreferences.getBoolean("doh_switch", true)
-        messageThreadId = sharedPreferences.getString("message_thread_id", "").toString()
-        val chargerStatus = sharedPreferences.getBoolean("charger_status", false)
+        val preferences = Paper.book("preferences")
+
+        chatId = preferences.read("chat_id", "")!!
+        botToken = preferences.read("bot_token", "")!!
+        dohSwitch = preferences.read("doh_switch", true)!!
+        messageThreadId = preferences.read("message_thread_id", "")!!
+        val chargerStatus = preferences.read("charger_status", false)!!
         batteryReceiver = batteryBroadcastReceiver()
         val filter = IntentFilter()
         filter.addAction(Intent.ACTION_BATTERY_OKAY)

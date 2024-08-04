@@ -109,7 +109,6 @@ class BeaconReceiverService : Service() {
         ) {
             Log.d(TAG, "onCreate: permission denied")
         }
-        Paper.init(applicationContext)
         wakelock =
             (Objects.requireNonNull(applicationContext.getSystemService(POWER_SERVICE)) as PowerManager).newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, "beacon_receive"
@@ -123,13 +122,14 @@ class BeaconReceiverService : Service() {
             reloadConfigReceiver,
             IntentFilter("reload_beacon_config")
         )
-        val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
+        Paper.init(applicationContext)
+        val preferences =Paper.book("preferences")
         requestUrl =
-            Network.getUrl(sharedPreferences.getString("bot_token", "").toString(), "SendMessage")
-        chatId = sharedPreferences.getString("chat_id", "")!!
-        messageThreadId = sharedPreferences.getString("message_thread_id", "")!!
-        okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
-        isRoot = sharedPreferences.getBoolean("root", false)
+            Network.getUrl(preferences.read("bot_token", "").toString(), "SendMessage")
+        chatId =preferences.read("chat_id", "")!!
+        messageThreadId = preferences.read("message_thread_id", "")!!
+        okhttpClient = Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
+        isRoot = preferences.read("root", false)!!
 
         val batchListener = IBeaconBatchListener { beacons ->
             val beacon = ArrayList<BeaconModel>()

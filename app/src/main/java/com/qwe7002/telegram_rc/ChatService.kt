@@ -95,7 +95,7 @@ class ChatService : Service() {
     private lateinit var broadcastReceiver: quitBroadcastReceiver
     private lateinit var wakeLock: WakeLock
     private lateinit var wifiLock: WifiLock
-    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var preferences:io.paperdb.Book
     private lateinit var connectivityManager: ConnectivityManager
     private lateinit var callback: networkCallBack
     private lateinit var botUsername: String
@@ -210,7 +210,7 @@ class ChatService : Service() {
                 val dualSim = getDualSimCardDisplay(
                     applicationContext,
                     slot,
-                    sharedPreferences.getBoolean("display_dual_sim_display_name", false)
+                    preferences.read("display_dual_sim_display_name", false)!!
                 )
                 val sendContent = """
                     [$dualSim${applicationContext.getString(R.string.send_sms_head)}]
@@ -370,7 +370,7 @@ class ChatService : Service() {
                         ${getString(R.string.switch_ap_message)}
                         """.trimIndent()
                 }
-                if (sharedPreferences.getBoolean("root", false)) {
+                if (preferences.read("root", false)!!) {
                     if (isVPNHotspotExist(applicationContext)) {
                         switchAp += """
                             
@@ -450,7 +450,7 @@ class ChatService : Service() {
                         getString(R.string.disable)
                     }
                 }
-                if (sharedPreferences.getBoolean("root", false) && isVPNHotspotExist(
+                if (preferences.read("root", false)!! && isVPNHotspotExist(
                         applicationContext
                     )
                 ) {
@@ -485,7 +485,7 @@ class ChatService : Service() {
      """.trimIndent() + getBatteryInfo(
                     applicationContext
                 ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
-                    applicationContext, sharedPreferences
+                    applicationContext, preferences
                 ) + isHotspotRunning + beaconStatus + spamCount + cardInfo
                 Log.d(TAG, "receive_handle: " + requestBody.text)
             }
@@ -495,7 +495,7 @@ class ChatService : Service() {
             )
 
             "/wifi" -> {
-                if (!sharedPreferences.getBoolean("root", false)) {
+                if (!preferences.read("root", false)!!) {
                     requestBody.text = """
                         ${getString(R.string.system_message_head)}
                         ${getString(R.string.no_permission)}
@@ -545,7 +545,7 @@ class ChatService : Service() {
      """.trimIndent() + getBatteryInfo(
                     applicationContext
                 ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
-                    applicationContext, sharedPreferences
+                    applicationContext, preferences
                 )
                 requestBody.text = """
                         ${getString(R.string.system_message_head)}
@@ -554,7 +554,7 @@ class ChatService : Service() {
             }
 
             "/vpnhotspot" -> {
-                if (!sharedPreferences.getBoolean("root", false) || !isVPNHotspotExist(
+                if (!preferences.read("root", false)!! || !isVPNHotspotExist(
                         applicationContext
                     )
                 ) {
@@ -584,7 +584,7 @@ class ChatService : Service() {
      """.trimIndent() + getBatteryInfo(
                         applicationContext
                     ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
-                        applicationContext, sharedPreferences
+                        applicationContext, preferences
                     )
 
                     requestBody.text = """
@@ -595,7 +595,7 @@ class ChatService : Service() {
             }
 
             "/mobiledata" -> {
-                if (!sharedPreferences.getBoolean("root", false)) {
+                if (!preferences.read("root", false)!!) {
                     requestBody.text = """
                         ${getString(R.string.system_message_head)}
                         ${getString(R.string.no_permission)}
@@ -699,7 +699,7 @@ class ChatService : Service() {
             }
 
             "/setdummy" -> {
-                if (!sharedPreferences.getBoolean("root", false)) {
+                if (!preferences.read("root", false)!!) {
                     requestBody.text = """
                         ${getString(R.string.system_message_head)}
                         ${getString(R.string.no_permission)}
@@ -726,7 +726,7 @@ class ChatService : Service() {
             }
 
             "/deldummy" -> {
-                if (!sharedPreferences.getBoolean("root", false)) {
+                if (!preferences.read("root", false)!!) {
                     requestBody.text = """
                         ${getString(R.string.system_message_head)}
                         ${getString(R.string.no_permission)}
@@ -926,7 +926,7 @@ class ChatService : Service() {
                         Paper.book("temp").delete("tether_mode")
                     }
                 }
-                if (hasCommand && sharedPreferences.getBoolean("root", false)) {
+                if (hasCommand && preferences.read("root", false)!!) {
                     when (commandValue) {
                         "/vpnhotspot" -> if (!Paper.book("temp").read("wifi_open", false)!!) {
                             val wifiManager = checkNotNull(
@@ -966,13 +966,13 @@ class ChatService : Service() {
             applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         Paper.init(applicationContext)
         setSmsSendStatusStandby()
-        sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
+        preferences = Paper.book("preferences")
 
-        chatID = sharedPreferences.getString("chat_id", "").toString()
-        botToken = sharedPreferences.getString("bot_token", "").toString()
-        messageThreadId = sharedPreferences.getString("message_thread_id", "").toString()
-        okhttpClient = getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
-        privacyMode = sharedPreferences.getBoolean("privacy_mode", false)
+        chatID = preferences.read("chat_id", "").toString()
+        botToken = preferences.read("bot_token", "").toString()
+        messageThreadId = preferences.read("message_thread_id", "").toString()
+        okhttpClient = getOkhttpObj(preferences.read("doh_switch", true)!!)
+        privacyMode = preferences.read("privacy_mode", false)!!
         wifiLock = (Objects.requireNonNull(
             applicationContext.getSystemService(
                 WIFI_SERVICE
@@ -1158,16 +1158,13 @@ class ChatService : Service() {
         private var firstRequest = true
 
 
-        private fun checkCellularNetworkType(
-            type: Int,
-            sharedPreferences: SharedPreferences?
-        ): String {
+        private fun checkCellularNetworkType(type: Int, preferences: io.paperdb.Book): String {
             var netType = "Unknown"
             when (type) {
                 TelephonyManager.NETWORK_TYPE_NR -> netType = "NR"
                 TelephonyManager.NETWORK_TYPE_LTE -> {
                     netType = "LTE"
-                    if (sharedPreferences!!.getBoolean("root", false)) {
+                    if (preferences.read("root", false)!!) {
                         if (isLTECA) {
                             netType += "+"
                         }
@@ -1224,7 +1221,7 @@ class ChatService : Service() {
             return batteryStringBuilder.toString()
         }
 
-        fun getNetworkType(context: Context, sharedPreferences: SharedPreferences): String {
+        fun getNetworkType(context: Context, preferences: io.paperdb.Book): String {
             var netType = "Unknown"
             val connectManager =
                 checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
@@ -1252,7 +1249,7 @@ class ChatService : Service() {
                         }
                         netType = checkCellularNetworkType(
                             telephonyManager.dataNetworkType,
-                            sharedPreferences
+                            preferences
                         )
                     }
                     if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {

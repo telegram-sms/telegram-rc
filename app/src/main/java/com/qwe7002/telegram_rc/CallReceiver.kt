@@ -65,23 +65,23 @@ class CallReceiver : BroadcastReceiver() {
             if (lastStatus == TelephonyManager.CALL_STATE_RINGING
                 && nowState == TelephonyManager.CALL_STATE_IDLE
             ) {
-                val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
-                if (!sharedPreferences.getBoolean("initialized", false)) {
+                val preferences = Paper.book("preferences")
+                if (!preferences.contains("initialized")) {
                     Log.i("call_status_listener", "Uninitialized, Phone receiver is deactivated.")
                     return
                 }
-                val botToken = sharedPreferences.getString("bot_token", "").toString()
-                val chatId = sharedPreferences.getString("chat_id", "").toString()
+                val botToken = preferences.read("bot_token", "").toString()
+                val chatId = preferences.read("chat_id", "").toString()
                 val requestUri = Network.getUrl(botToken, "sendMessage")
                 val requestBody =
                     requestMessage()
                 requestBody.chatId = chatId
                 requestBody.messageThreadId =
-                    sharedPreferences.getString("message_thread_id", "")
+                    preferences.read("message_thread_id", "")
                 val dualSim = Other.getDualSimCardDisplay(
                     context,
                     slot,
-                    sharedPreferences.getBoolean("display_dual_sim_display_name", false)
+                    preferences.read("display_dual_sim_display_name", false)!!
                 )
                 requestBody.text = """
                     [$dualSim${context.getString(R.string.missed_call_head)}]
@@ -91,7 +91,7 @@ class CallReceiver : BroadcastReceiver() {
                 val requestBodyRaw = Gson().toJson(requestBody)
                 val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
                 val okhttpClient =
-                    Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+                    Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
                 val request: Request =
                     Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClient.newCall(request)

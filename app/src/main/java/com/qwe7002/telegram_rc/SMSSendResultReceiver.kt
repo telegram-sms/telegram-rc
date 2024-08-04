@@ -24,6 +24,7 @@ import java.io.IOException
 import java.util.Objects
 
 class SMSSendResultReceiver : BroadcastReceiver() {
+    private lateinit var preferences: io.paperdb.Book
     override fun onReceive(context: Context, intent: Intent) {
         Paper.init(context)
         val logTag = "sms_send_receiver"
@@ -31,16 +32,16 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         val extras = intent.extras!!
         val sub = extras.getInt("sub_id")
         context.unregisterReceiver(this)
-        val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
-        if (!sharedPreferences.getBoolean("initialized", false)) {
-            Log.i(logTag, "Uninitialized, SMS send receiver is deactivated.")
+        preferences = Paper.book("preferences")
+        if (!preferences.contains("initialized")) {
+            Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
             return
         }
-        val botToken = sharedPreferences.getString("bot_token", "").toString()
-        val chatId = sharedPreferences.getString("chat_id", "").toString()
+        val botToken = preferences.read("bot_token", "").toString()
+        val chatId = preferences.read("chat_id", "").toString()
         val requestBody = requestMessage()
         requestBody.chatId = chatId
-        requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
+        requestBody.messageThreadId =preferences.read("message_thread_id", "")
         var requestUri = Network.getUrl(botToken, "sendMessage")
         val messageId = extras.getLong("message_id")
         if (messageId != -1L) {
@@ -66,7 +67,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
             """.trimIndent()
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
-        val okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        val okhttpClient = Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS status failed:"

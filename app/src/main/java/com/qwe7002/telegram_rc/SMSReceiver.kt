@@ -1,6 +1,7 @@
 package com.qwe7002.telegram_rc
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -37,18 +38,19 @@ import java.util.Objects
 
 @Suppress("DEPRECATION")
 class SMSReceiver : BroadcastReceiver() {
+    private lateinit var preferences: io.paperdb.Book
+    @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
         Paper.init(context)
         val logTag = "sms_receiver"
-        Log.d(logTag, "Receive action: " + intent.action)
         val extras = intent.extras!!
-        val sharedPreferences = context.getSharedPreferences("data", Context.MODE_PRIVATE)
-        if (!sharedPreferences.getBoolean("initialized", false)) {
+        preferences = Paper.book("preferences")
+        if (!preferences.contains("initialized")) {
             Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
             return
         }
-        val botToken = sharedPreferences.getString("bot_token", "").toString()
-        val chatId = sharedPreferences.getString("chat_id", "").toString()
+        val botToken = preferences.read("bot_token", "").toString()
+        val chatId = preferences.read("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
 
         var intentSlot = extras.getInt("slot", -1)
@@ -68,7 +70,7 @@ class SMSReceiver : BroadcastReceiver() {
         val dualSim = Other.getDualSimCardDisplay(
             context,
             intentSlot,
-            sharedPreferences.getBoolean("display_dual_sim_display_name", false)
+            preferences.read("display_dual_sim_display_name", false)!!
         )
 
         val pdus = (extras["pdus"] as Array<*>?)!!
@@ -93,15 +95,15 @@ class SMSReceiver : BroadcastReceiver() {
 
         val messageBody = messageBodyBuilder.toString()
         val messageAddress = messages[0]!!.originatingAddress!!
-        val trustedPhoneNumber = sharedPreferences.getString("trusted_phone_number", null)
+        val trustedPhoneNumber = preferences.read("trusted_phone_number", "")!!
         var isTrustedPhone = false
-        if (!trustedPhoneNumber.isNullOrEmpty()) {
+        if (trustedPhoneNumber.isNotEmpty()) {
             isTrustedPhone = messageAddress.contains(trustedPhoneNumber)
         }
         Log.d(logTag, "onReceive: $isTrustedPhone")
         val requestBody = requestMessage()
         requestBody.chatId = chatId
-        requestBody.messageThreadId = sharedPreferences.getString("message_thread_id", "")
+        requestBody.messageThreadId = preferences.read("message_thread_id", "")
         var messageBodyHtml = messageBody
         var flashSmsString = ""
         if (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0) {
@@ -114,7 +116,7 @@ class SMSReceiver : BroadcastReceiver() {
             """.trimIndent()
         var rawRequestBodyText: String = messageHead + messageBody
         var isVerificationCode = false
-        if (sharedPreferences.getBoolean("verification_code", false) && !isTrustedPhone) {
+        if (preferences.read("verification_code", false)!! && !isTrustedPhone) {
             if (messageBody.length <= 140) {
                 val verification = CodeauxLibPortable.find(context, messageBody)
                 if (verification != null) {
@@ -145,8 +147,8 @@ class SMSReceiver : BroadcastReceiver() {
                             ServiceManage.stopAllService(context)
                             ServiceManage.startService(
                                 context,
-                                sharedPreferences.getBoolean("battery_monitoring_switch", false),
-                                sharedPreferences.getBoolean("chat_command", false)
+                                preferences.read("battery_monitoring_switch", false)!!,
+                                preferences.read("chat_command", false)!!
                             )
                         }.start()
                         rawRequestBodyText = """
@@ -253,7 +255,7 @@ class SMSReceiver : BroadcastReceiver() {
 
 
         val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
-        val okhttpClient = Network.getOkhttpObj(sharedPreferences.getBoolean("doh_switch", true))
+        val okhttpClient = Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS forward failed:"
@@ -265,7 +267,7 @@ class SMSReceiver : BroadcastReceiver() {
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 addResendLoop(requestBody.text)
-                commandHandle(sharedPreferences, messageBody, dataEnable)
+                commandHandle( messageBody, dataEnable)
             }
 
             @Throws(IOException::class)
@@ -284,17 +286,16 @@ class SMSReceiver : BroadcastReceiver() {
                     }
                     Other.addMessageList(Other.getMessageId(result), messageAddress, slot)
                 }
-                commandHandle(sharedPreferences, messageBody, dataEnable)
+                commandHandle(messageBody, dataEnable)
             }
         })
     }
 
     private fun commandHandle(
-        sharedPreferences: SharedPreferences,
         messageBody: String,
         dataEnable: Boolean
     ) {
-        if (sharedPreferences.getBoolean("root", false)) {
+        if (preferences.read("root", false)!!) {
             if (messageBody.lowercase(Locale.getDefault()).replace("_", "") == "/data") {
                 if (dataEnable) {
                     setData(false)
