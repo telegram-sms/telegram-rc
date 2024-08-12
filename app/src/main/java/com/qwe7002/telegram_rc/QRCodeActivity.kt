@@ -5,12 +5,11 @@ import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.github.sumimakito.awesomeqrcode.AwesomeQrRenderer
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import io.paperdb.Paper
 
-class QRCodeShowActivity : AppCompatActivity() {
+class QRCodeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_qrcode)
@@ -26,7 +25,8 @@ class QRCodeShowActivity : AppCompatActivity() {
             batteryMonitoringSwitch = preferences.read("battery_monitoring_switch", false)!!,
             chargerStatus = preferences.read("charger_status", false)!!,
             verificationCode = preferences.read("verification_code", false)!!,
-            privacyMode = preferences.read("privacy_mode", false)!!
+            privacyMode = preferences.read("privacy_mode", false)!!,
+            topicID = preferences.read("message_thread_id","")!!
         )
         val imageview = findViewById<ImageView>(R.id.qr_imageview)
         imageview.setImageBitmap(

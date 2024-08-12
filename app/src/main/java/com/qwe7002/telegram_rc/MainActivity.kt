@@ -8,7 +8,6 @@ import android.app.ProgressDialog
 import android.content.ActivityNotFoundException
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -479,36 +478,6 @@ class MainActivity : AppCompatActivity() {
                         Paper.book().destroy()
                     }
                     Paper.book("system_config").write("version", Const.SYSTEM_CONFIG_VERSION)
-                   /* val editor = sharedPreferences.edit().clear()
-                    editor.putString("bot_token", newBotToken)
-                    editor.putString("chat_id", chatIdEditView.text.toString().trim { it <= ' ' })
-                    editor.putString(
-                        "message_thread_id",
-                        messageThreadIdEditView.text.toString().trim { it <= ' ' })
-                    if (trustedPhoneNumberEditView.text.toString().trim { it <= ' ' }
-                            .isNotEmpty()) {
-                        editor.putString(
-                            "trusted_phone_number",
-                            trustedPhoneNumberEditView.text.toString().trim { it <= ' ' })
-                        editor.putBoolean("fallback_sms", fallbackSmsSwitch.isChecked)
-                    }
-                    editor.putBoolean("chat_command", chatCommandSwitch.isChecked)
-                    editor.putBoolean(
-                        "battery_monitoring_switch",
-                        batteryMonitoringSwitch.isChecked
-                    )
-                    editor.putBoolean("charger_status", chargerStatusSwitch.isChecked)
-                    editor.putBoolean(
-                        "display_dual_sim_display_name",
-                        displayDualSimDisplayNameSwitch.isChecked
-                    )
-                    editor.putBoolean("verification_code", verificationCodeSwitch.isChecked)
-                    editor.putBoolean("root", rootSwitch.isChecked)
-                    editor.putBoolean("doh_switch", dohSwitch.isChecked)
-                    editor.putBoolean("privacy_mode", privacyModeSwitch.isChecked)
-                    editor.putBoolean("initialized", true)
-                    editor.putBoolean("privacy_dialog_agree", true)
-                    editor.apply()*/
                     preferences.destroy()
                     preferences.write("bot_token", newBotToken)
                     preferences.write("chat_id", chatIdEditView.text.toString().trim { it <= ' ' })
@@ -712,6 +681,8 @@ class MainActivity : AppCompatActivity() {
                     fallbackSMS.visibility = View.GONE
                     fallbackSMS.isChecked = false
                 }
+                val topicIDView = findViewById<EditText>(R.id.message_thread_id_editview)
+                topicIDView.setText(scannerJson.topicID)
             }
         }
     }
@@ -762,7 +733,7 @@ class MainActivity : AppCompatActivity() {
 
             R.id.config_qrcode_menu_item -> {
                 if (preferences.contains("initialized")) {
-                    startActivity(Intent(this, QRCodeShowActivity::class.java))
+                    startActivity(Intent(this, QRCodeActivity::class.java))
                 } else {
                     Snackbar.make(
                         findViewById(R.id.bot_token_editview),

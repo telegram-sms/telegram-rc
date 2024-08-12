@@ -134,7 +134,7 @@
         </receiver>
 
         <activity
-            android:name=".QRCodeShowActivity"
+            android:name=".QRCodeActivity"
             android:label="@string/transfer_configuration" />
         <activity android:name=".ScannerActivity" />
         <activity
