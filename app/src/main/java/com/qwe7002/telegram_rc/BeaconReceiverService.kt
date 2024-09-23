@@ -199,9 +199,27 @@ class BeaconReceiverService : Service() {
             }
         }
     }
+    private fun isConnectData(context: Context): Boolean {
+        val result: Boolean
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities = connectivityManager.activeNetwork ?: return false
+        val actNw =
+            connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
+        result = when {
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            else -> false
+        }
 
+        return result
+    }
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            if (!isConnectData(context)){
+                Log.i("flushReceiver","No active network link, detection paused")
+                return
+            }
             val wifiIsEnableStatus: Boolean
             if (config.useVpnHotspot) {
                 if (!RemoteControl.isVPNHotspotExist(context) && Settings.System.canWrite(
