@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
@@ -848,7 +847,11 @@ class ChatService : Service() {
                     if (isPhoneNumber(tempTo)) {
                         Paper.book("send_temp").write("to", tempTo)
                         resultSend = getString(R.string.enter_content)
-                        sendSmsNextStatus = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS
+                        if (messageType == "private") {
+                            sendSmsNextStatus = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS
+                        } else {
+                            sendSmsNextStatus = SEND_SMS_STATUS.SEND_STATUS
+                        }
                     } else {
                         setSmsSendStatusStandby()
                         resultSend = getString(R.string.unable_get_phone_number)
