@@ -150,7 +150,7 @@ object SMS {
         intent.putExtra("sub_id", smsManager.subscriptionId)
         val sentIntent = PendingIntent.getBroadcast(
             context,
-            0,
+            privateMessageId.toInt(),
             intent,
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
