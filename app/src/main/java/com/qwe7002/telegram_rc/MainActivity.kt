@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.os.PowerManager
@@ -59,12 +60,13 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
+import java.util.Arrays
 import java.util.Objects
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "main_activity"
-    private lateinit var preferences:io.paperdb.Book
+    private lateinit var preferences: io.paperdb.Book
     private lateinit var writeSettingsButton: Button
 
 
@@ -102,7 +104,7 @@ class MainActivity : AppCompatActivity() {
             )
             startActivity(writeSystemIntent)
         }
-        if(!preferences.read("privacy_dialog_agree", false)!!){
+        if (!preferences.read("privacy_dialog_agree", false)!!) {
             showPrivacyDialog()
         }
         val botTokenSave = preferences.read("bot_token", "")
@@ -128,7 +130,7 @@ class MainActivity : AppCompatActivity() {
 
 
         var displayDualSimDisplayName =
-        preferences.read("display_dual_sim_display_name", false)!!
+            preferences.read("display_dual_sim_display_name", false)!!
         if (ContextCompat.checkSelfPermission(
                 applicationContext,
                 Manifest.permission.READ_PHONE_STATE
@@ -392,17 +394,23 @@ class MainActivity : AppCompatActivity() {
                 showPrivacyDialog()
                 return@setOnClickListener
             }
-
+            var permissionList = arrayOf(
+                Manifest.permission.READ_SMS,
+                Manifest.permission.SEND_SMS,
+                Manifest.permission.RECEIVE_SMS,
+                Manifest.permission.CALL_PHONE,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.READ_CALL_LOG
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val permissionArrayList =
+                    java.util.ArrayList(listOf(*permissionList))
+                permissionArrayList.add(Manifest.permission.POST_NOTIFICATIONS)
+                permissionList = permissionArrayList.toTypedArray<String>()
+            }
             ActivityCompat.requestPermissions(
                 this@MainActivity,
-                arrayOf(
-                    Manifest.permission.READ_SMS,
-                    Manifest.permission.SEND_SMS,
-                    Manifest.permission.RECEIVE_SMS,
-                    Manifest.permission.CALL_PHONE,
-                    Manifest.permission.READ_PHONE_STATE,
-                    Manifest.permission.READ_CALL_LOG
-                ),
+                permissionList,
                 1
             )
             val powerManager = checkNotNull(getSystemService(POWER_SERVICE) as PowerManager)
@@ -505,7 +513,7 @@ class MainActivity : AppCompatActivity() {
                     preferences.write("root", rootSwitch.isChecked)
                     preferences.write("doh_switch", dohSwitch.isChecked)
                     preferences.write("privacy_mode", privacyModeSwitch.isChecked)
-                    preferences.write("initialized",true)
+                    preferences.write("initialized", true)
                     preferences.write("privacy_dialog_agree", true)
                     Thread {
                         KeepAliveJob.stopJob(applicationContext)
