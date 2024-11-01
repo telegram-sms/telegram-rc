@@ -1,5 +1,3 @@
-@file:Suppress("ClassName")
-
 package com.qwe7002.telegram_rc
 
 import android.content.Context
