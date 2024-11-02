@@ -234,7 +234,7 @@ object Other {
     }
 
 
-    fun addMessageList(messageId: Long, phone: String?, slot: Int) {
+    fun addMessageList(messageId: Long, phone: String, slot: Int) {
         val item = SMSRequestInfo()
         item.phone = phone
         item.card = slot

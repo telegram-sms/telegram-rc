@@ -36,7 +36,7 @@ class USSDCallBack(
         this.dohSwitch = preferences.read("doh_switch", true)!!
         this.requestBody =
             RequestMessage()
-        requestBody.chatId = preferences.read("chat_id", "")
+        requestBody.chatId = preferences.read("chat_id", "").toString()
         requestBody.messageThreadId = preferences.read("message_thread_id", "").toString()
         val botToken = preferences.read("bot_token", "").toString()
         this.requestUri = Network.getUrl(botToken, "SendMessage")
