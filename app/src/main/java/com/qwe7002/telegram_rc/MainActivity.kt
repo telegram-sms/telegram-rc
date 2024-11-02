@@ -712,7 +712,7 @@ class MainActivity : AppCompatActivity() {
                 var versionName = ""
                 try {
                     packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
-                    versionName = packageInfo.versionName
+                    versionName = packageInfo.versionName.toString()
                 } catch (e: PackageManager.NameNotFoundException) {
                     Log.e(TAG, "onOptionsItemSelected: ", e)
                 }

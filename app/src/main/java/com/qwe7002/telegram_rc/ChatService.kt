@@ -1008,7 +1008,11 @@ class ChatService : Service() {
         callback = networkCallBack()
         connectivityManager.registerNetworkCallback(networkRequest, callback)
         broadcastReceiver = quitBroadcastReceiver()
-        registerReceiver(broadcastReceiver, intentFilter)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(broadcastReceiver, intentFilter,Context.RECEIVER_EXPORTED)
+        }else{
+            registerReceiver(broadcastReceiver, intentFilter)
+        }
     }
 
     private fun whenNetworkChange() {

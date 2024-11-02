@@ -35,11 +35,11 @@ class NotifyActivity : AppCompatActivity() {
                     continue
                 }
                 appInfo.packageName = packageInfo.packageName
-                appInfo.appName = packageInfo.applicationInfo.loadLabel(packageManager).toString()
-                if (packageInfo.applicationInfo.loadIcon(packageManager) == null) {
+                appInfo.appName = packageInfo.applicationInfo!!.loadLabel(packageManager).toString()
+                if (packageInfo.applicationInfo!!.loadIcon(packageManager) == null) {
                     continue
                 }
-                appInfo.appIcon = packageInfo.applicationInfo.loadIcon(packageManager)
+                appInfo.appIcon = packageInfo.applicationInfo!!.loadIcon(packageManager)
                 appInfoList.add(appInfo)
             }
         } catch (e: Exception) {

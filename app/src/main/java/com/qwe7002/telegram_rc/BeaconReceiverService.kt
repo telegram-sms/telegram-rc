@@ -119,10 +119,18 @@ class BeaconReceiverService : Service() {
         }
         Paper.init(applicationContext)
         config = Paper.book("beacon").read("config", beacon())!!
-        registerReceiver(
-            reloadConfigReceiver,
-            IntentFilter("reload_beacon_config")
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                reloadConfigReceiver,
+                IntentFilter("reload_beacon_config"),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        }else{
+            registerReceiver(
+                reloadConfigReceiver,
+                IntentFilter("reload_beacon_config")
+            )
+        }
         Paper.init(applicationContext)
         val preferences =Paper.book("preferences")
         requestUrl =
