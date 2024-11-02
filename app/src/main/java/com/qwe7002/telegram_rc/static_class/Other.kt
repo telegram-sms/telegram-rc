@@ -12,7 +12,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.google.gson.JsonParser
 import com.qwe7002.telegram_rc.R
-import com.qwe7002.telegram_rc.data_structure.smsRequestInfo
+import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import io.paperdb.Paper
 import java.util.Locale
 
@@ -235,7 +235,7 @@ object Other {
 
 
     fun addMessageList(messageId: Long, phone: String?, slot: Int) {
-        val item = smsRequestInfo()
+        val item = SMSRequestInfo()
         item.phone = phone
         item.card = slot
         Paper.book().write(messageId.toString(), item)

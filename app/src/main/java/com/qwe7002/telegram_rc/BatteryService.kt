@@ -15,7 +15,7 @@ import android.os.Process
 import android.util.Log
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.requestMessage
+import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
@@ -114,7 +114,7 @@ class BatteryService : Service() {
 
     private fun networkHandle(obj: sendObj) {
         val TAG = "network_handle"
-        val requestBody = requestMessage()
+        val requestBody = RequestMessage()
         requestBody.chatId = chatId
         requestBody.text = obj.content
         requestBody.messageThreadId = messageThreadId

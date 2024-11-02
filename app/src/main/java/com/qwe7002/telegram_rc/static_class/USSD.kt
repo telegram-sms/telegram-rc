@@ -11,7 +11,7 @@ import androidx.core.app.ActivityCompat
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.USSDCallBack
-import com.qwe7002.telegram_rc.data_structure.requestMessage
+import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import io.paperdb.Paper
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -42,7 +42,7 @@ object USSD {
         val botToken = preferences.read("bot_token", "").toString()
         val chatId = preferences.read("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
-        val requestBody = requestMessage()
+        val requestBody = RequestMessage()
         requestBody.chatId = chatId
         requestBody.text = """
              ${context.getString(R.string.send_ussd_head)}

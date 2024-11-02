@@ -1,12 +1,11 @@
 package com.qwe7002.telegram_rc
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.telephony.TelephonyManager
 import android.telephony.TelephonyManager.UssdResponseCallback
 import android.util.Log
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.requestMessage
+import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.LogManage
@@ -29,13 +28,14 @@ class USSDCallBack(
     private val dohSwitch: Boolean
     private var requestUri: String
     private val messageHeader: String
-    private val requestBody: requestMessage
+    private val requestBody: RequestMessage
 
     init {
         Paper.init(context)
         val preferences = Paper.book("preferences")
         this.dohSwitch = preferences.read("doh_switch", true)!!
-        this.requestBody = requestMessage()
+        this.requestBody =
+            RequestMessage()
         requestBody.chatId = preferences.read("chat_id", "")
         requestBody.messageThreadId = preferences.read("message_thread_id", "").toString()
         val botToken = preferences.read("bot_token", "").toString()

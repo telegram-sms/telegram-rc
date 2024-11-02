@@ -39,8 +39,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.qwe7002.telegram_rc.config.proxy
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
-import com.qwe7002.telegram_rc.data_structure.pollingJson
-import com.qwe7002.telegram_rc.data_structure.requestMessage
+import com.qwe7002.telegram_rc.data_structure.PollingJson
+import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.root_kit.Shell.checkRoot
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
@@ -60,7 +60,6 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
-import java.util.Arrays
 import java.util.Objects
 import java.util.concurrent.TimeUnit
 
@@ -275,7 +274,7 @@ class MainActivity : AppCompatActivity() {
             okhttpClient = okhttpClient.newBuilder()
                 .readTimeout(60, TimeUnit.SECONDS)
                 .build()
-            val requestBody = pollingJson()
+            val requestBody = PollingJson()
             requestBody.timeout = 60
             val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
             val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
@@ -437,7 +436,8 @@ class MainActivity : AppCompatActivity() {
 
             val requestUri =
                 getUrl(botTokenEditView.text.toString().trim { it <= ' ' }, "sendMessage")
-            val requestBody = requestMessage()
+            val requestBody =
+                RequestMessage()
             requestBody.chatId = chatIdEditView.text.toString().trim { it <= ' ' }
             requestBody.messageThreadId =
                 messageThreadIdEditView.text.toString().trim { it <= ' ' }

@@ -3,7 +3,7 @@ package com.qwe7002.telegram_rc.data_structure
 import com.google.gson.annotations.SerializedName
 
 @Suppress("unused")
-object replyMarkupKeyboard {
+object ReplyMarkupKeyboard {
     fun getInlineKeyboardObj(
         text: String?,
         callbackData: String?
@@ -16,7 +16,7 @@ object replyMarkupKeyboard {
         return buttonArraylist
     }
 
-    class keyboardMarkup {
+    class KeyboardMarkup {
         @SerializedName(value = "inline_keyboard")
         var inlineKeyboard: ArrayList<ArrayList<InlineKeyboardButton>>? = null
 

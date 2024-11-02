@@ -30,12 +30,12 @@ import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.qwe7002.telegram_rc.data_structure.pollingJson
-import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard
-import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard.InlineKeyboardButton
-import com.qwe7002.telegram_rc.data_structure.replyMarkupKeyboard.keyboardMarkup
-import com.qwe7002.telegram_rc.data_structure.requestMessage
-import com.qwe7002.telegram_rc.data_structure.smsRequestInfo
+import com.qwe7002.telegram_rc.data_structure.PollingJson
+import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard
+import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.InlineKeyboardButton
+import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.KeyboardMarkup
+import com.qwe7002.telegram_rc.data_structure.RequestMessage
+import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.checkServiceIsRunning
 import com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
@@ -178,7 +178,7 @@ class ChatService : Service() {
         }
 
         var messageType = ""
-        val requestBody = requestMessage()
+        val requestBody = RequestMessage()
         requestBody.chatId = chatID
         requestBody.messageThreadId = messageThreadId
         lateinit var messageObj: JsonObject
@@ -285,7 +285,7 @@ class ChatService : Service() {
             requestMsg = messageObj["text"].asString
         }
         if (messageObj.has("reply_to_message")) {
-            val saveItem = Paper.book().read<smsRequestInfo>(
+            val saveItem = Paper.book().read<SMSRequestInfo>(
                 messageObj["reply_to_message"].asJsonObject["message_id"].asString,
                 null
             )
@@ -650,7 +650,8 @@ class ChatService : Service() {
                     Thread {
                         if (checkNetworkStatus(applicationContext)) {
                             for (item in spamSmsList) {
-                                val sendSmsRequestBody = requestMessage()
+                                val sendSmsRequestBody =
+                                    RequestMessage()
                                 sendSmsRequestBody.chatId = chatID
                                 sendSmsRequestBody.text = item
                                 val requestUri = getUrl(
@@ -860,17 +861,17 @@ class ChatService : Service() {
 
                 SEND_SMS_STATUS.WAITING_TO_SEND_STATUS -> {
                     Paper.book("send_temp").write("content", requestMsg)
-                    val keyboardMarkup = keyboardMarkup()
+                    val keyboardMarkup = KeyboardMarkup()
                     val inlineKeyboardButtons = ArrayList<ArrayList<InlineKeyboardButton>>()
                     inlineKeyboardButtons.add(
-                        replyMarkupKeyboard.getInlineKeyboardObj(
+                        ReplyMarkupKeyboard.getInlineKeyboardObj(
                             applicationContext.getString(
                                 R.string.send_button
                             ), CALLBACK_DATA_VALUE.SEND
                         )
                     )
                     inlineKeyboardButtons.add(
-                        replyMarkupKeyboard.getInlineKeyboardObj(
+                        ReplyMarkupKeyboard.getInlineKeyboardObj(
                             applicationContext.getString(
                                 R.string.cancel_button
                             ), CALLBACK_DATA_VALUE.CANCEL
@@ -1077,7 +1078,7 @@ class ChatService : Service() {
                 val requestUri = getUrl(
                     botToken, "getUpdates"
                 )
-                val requestBody = pollingJson()
+                val requestBody = PollingJson()
                 requestBody.offset = offset
                 requestBody.timeout = timeout
                 if (firstRequest) {

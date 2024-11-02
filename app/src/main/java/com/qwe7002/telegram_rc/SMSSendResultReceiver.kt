@@ -7,7 +7,7 @@ import android.content.Intent
 import android.telephony.SmsManager
 import android.util.Log
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.requestMessage
+import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
@@ -39,7 +39,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         }
         val botToken = preferences.read("bot_token", "").toString()
         val chatId = preferences.read("chat_id", "").toString()
-        val requestBody = requestMessage()
+        val requestBody = RequestMessage()
         requestBody.chatId = chatId
         requestBody.messageThreadId =preferences.read("message_thread_id", "")
         var requestUri = Network.getUrl(botToken, "sendMessage")
