@@ -117,6 +117,7 @@ class BeaconReceiverService : Service() {
         if (!this.wakelock.isHeld) {
             this.wakelock.acquire()
         }
+        Paper.init(applicationContext)
         config = Paper.book("beacon").read("config", beacon())!!
         registerReceiver(
             reloadConfigReceiver,
@@ -153,8 +154,8 @@ class BeaconReceiverService : Service() {
             }
             val intents = Intent("flush_beacons_list")
             val gson = Gson()
-
             intents.putExtra("beaconList", gson.toJson(beacon))
+
             applicationContext.sendBroadcast(intents)
         }
         val beaconLayout =
@@ -199,27 +200,9 @@ class BeaconReceiverService : Service() {
             }
         }
     }
-    private fun isConnectData(context: Context): Boolean {
-        val result: Boolean
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkCapabilities = connectivityManager.activeNetwork ?: return false
-        val actNw =
-            connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
-        result = when {
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-            else -> false
-        }
-
-        return result
-    }
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (!isConnectData(context)){
-                Log.i("flushReceiver","No active network link, detection paused")
-                return
-            }
+
             val wifiIsEnableStatus: Boolean
             if (config.useVpnHotspot) {
                 if (!RemoteControl.isVPNHotspotExist(context) && Settings.System.canWrite(

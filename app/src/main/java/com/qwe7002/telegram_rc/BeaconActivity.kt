@@ -82,7 +82,7 @@ class BeaconActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(flushReceiver)
+        unregisterReceiver(flushReceiver)
         super.onDestroy()
     }
 
@@ -150,7 +150,7 @@ class BeaconActivity : AppCompatActivity() {
         }
 
         @SuppressLint("SetTextI18n")
-        override fun getView(position: Int, convertView: View, parent: ViewGroup): View {
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val inflater = LayoutInflater.from(context)
             @SuppressLint("ViewHolder", "InflateParams") val view =
                 inflater.inflate(R.layout.item_beacon, null)
