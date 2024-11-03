@@ -181,10 +181,18 @@ class BeaconReceiverService : Service() {
             .setBeaconBatchListener(batchListener)
             .build()
 
-        registerReceiver(
-            flushReceiver,
-            IntentFilter("flush_beacons_list")
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                flushReceiver,
+                IntentFilter("flush_beacons_list"),
+                Context.RECEIVER_EXPORTED
+            )
+        }else{
+            registerReceiver(
+                flushReceiver,
+                IntentFilter("flush_beacons_list")
+            )
+        }
         val intentFilter = IntentFilter()
         intentFilter.addAction(Const.BROADCAST_STOP_SERVICE)
         val broadcastReceiver = broadcastReceiver()
