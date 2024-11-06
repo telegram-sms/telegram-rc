@@ -101,9 +101,6 @@ object Network {
         }
         if (doh) {
             val dohHttpClient: OkHttpClient.Builder =OkHttpClient. Builder().retryOnConnectionFailure(true)
-            if (proxyConfig.enable && proxyConfig.dns_over_socks5) {
-                dohHttpClient.proxy(proxy)
-            }
             okhttp.dns(
                 DnsOverHttps.Builder().client(dohHttpClient.build())
                     .url(DNS_OVER_HTTP.toHttpUrl())

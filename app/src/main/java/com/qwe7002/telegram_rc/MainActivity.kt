@@ -701,7 +701,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    @SuppressLint("InflateParams", "NonConstantResourceId")
+    @SuppressLint("InflateParams", "NonConstantResourceId", "SetTextI18n")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val inflater = this.layoutInflater
         var fileName: String? = null

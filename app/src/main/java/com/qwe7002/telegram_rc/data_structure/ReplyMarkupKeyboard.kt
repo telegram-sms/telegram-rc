@@ -5,8 +5,8 @@ import com.google.gson.annotations.SerializedName
 @Suppress("unused")
 object ReplyMarkupKeyboard {
     fun getInlineKeyboardObj(
-        text: String?,
-        callbackData: String?
+        text: String,
+        callbackData: String
     ): ArrayList<InlineKeyboardButton> {
         val button = InlineKeyboardButton()
         button.text = text
@@ -18,16 +18,16 @@ object ReplyMarkupKeyboard {
 
     class KeyboardMarkup {
         @SerializedName(value = "inline_keyboard")
-        var inlineKeyboard: ArrayList<ArrayList<InlineKeyboardButton>>? = null
+        lateinit var inlineKeyboard: ArrayList<ArrayList<InlineKeyboardButton>>
 
         val oneTimeKeyboard: Boolean = true
     }
 
     class InlineKeyboardButton {
-        var text: String? = null
+        lateinit var text: String
 
         @SerializedName(value = "callback_data")
-        var callbackData: String? = null
+        lateinit var callbackData: String
     }
 }
 
