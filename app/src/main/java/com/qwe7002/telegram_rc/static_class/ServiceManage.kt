@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.qwe7002.telegram_rc.BatteryService
@@ -52,8 +53,26 @@ object ServiceManage {
 
     @JvmStatic
     fun startBeaconService(context: Context) {
-        val beaconService = Intent(context, BeaconReceiverService::class.java)
-        context.startForegroundService(beaconService)
+        if (hasLocationPermissions(context)) {
+            val beaconService = Intent(context, BeaconReceiverService::class.java)
+            context.startForegroundService(beaconService)
+        }
+    }
+
+    private fun hasLocationPermissions(context: Context): Boolean {
+        val fineLocationPermission =
+            context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarseLocationPermission =
+            context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        val foregroundServiceLocationPermission =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                context.checkSelfPermission(android.Manifest.permission.FOREGROUND_SERVICE_LOCATION)
+            } else {
+                PackageManager.PERMISSION_GRANTED
+            }
+        return fineLocationPermission == PackageManager.PERMISSION_GRANTED &&
+                coarseLocationPermission == PackageManager.PERMISSION_GRANTED &&
+                foregroundServiceLocationPermission == PackageManager.PERMISSION_GRANTED
     }
 
     @JvmStatic

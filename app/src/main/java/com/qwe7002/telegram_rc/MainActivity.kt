@@ -399,8 +399,17 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.RECEIVE_SMS,
                 Manifest.permission.CALL_PHONE,
                 Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.READ_CALL_LOG
+                Manifest.permission.READ_CALL_LOG,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val permissionArrayList =
+                    java.util.ArrayList(listOf(*permissionList))
+                permissionArrayList.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
+                permissionList = permissionArrayList.toTypedArray<String>()
+
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val permissionArrayList =
                     java.util.ArrayList(listOf(*permissionList))
