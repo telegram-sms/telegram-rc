@@ -109,11 +109,9 @@ class SMSReceiver : BroadcastReceiver() {
         if (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0) {
             flashSmsString = "\nType: Class 0"
         }
-        val messageHead = """
-            [$dualSim${context.getString(R.string.receive_sms_head)}]$flashSmsString
-            ${context.getString(R.string.from)}$messageAddress
-            ${context.getString(R.string.content)}
-            """.trimIndent()
+        val messageHead = "[" + dualSim + context.getString(R.string.receive_sms_head) + "]\n" +
+                context.getString(R.string.from) + messageAddress + "\n" +
+                context.getString(R.string.content)
         var rawRequestBodyText: String = messageHead + messageBody
         var isVerificationCode = false
         if (preferences.read("verification_code", false)!! && !isTrustedPhone) {
@@ -147,10 +145,9 @@ class SMSReceiver : BroadcastReceiver() {
                                 preferences.read("chat_command", false)!!
                             )
                         }.start()
-                        rawRequestBodyText = """
-                        ${context.getString(R.string.system_message_head)}
-                        ${context.getString(R.string.restart_service)}
-                        """.trimIndent()
+                        rawRequestBodyText =
+                            context.getString(R.string.system_message_head) + "\n" +
+                                    context.getString(R.string.restart_service)
                         requestBody.text = rawRequestBodyText
                     }
 
@@ -158,10 +155,13 @@ class SMSReceiver : BroadcastReceiver() {
                         if (!dataEnable) {
                             openData(context)
                         }
-                        rawRequestBodyText = """
+/*                        rawRequestBodyText = """
                             ${context.getString(R.string.system_message_head)}
                             ${context.getString(R.string.switch_data)}
-                            """.trimIndent()
+                            """.trimIndent()*/
+                        rawRequestBodyText =
+                            context.getString(R.string.system_message_head) + "\n" +
+                                    context.getString(R.string.switch_data)
                         requestBody.text = rawRequestBodyText
                     }
 
