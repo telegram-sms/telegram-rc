@@ -38,6 +38,7 @@ import java.util.Objects
 @Suppress("DEPRECATION")
 class SMSReceiver : BroadcastReceiver() {
     private lateinit var preferences: io.paperdb.Book
+
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
         Paper.init(context)
@@ -116,19 +117,15 @@ class SMSReceiver : BroadcastReceiver() {
         var rawRequestBodyText: String = messageHead + messageBody
         var isVerificationCode = false
         if (preferences.read("verification_code", false)!! && !isTrustedPhone) {
-            if (messageBody.length <= 140) {
-                val verification = CodeauxLibPortable.find(context, messageBody)
-                if (verification != null) {
-                    requestBody.parseMode = "html"
-                    messageBodyHtml = messageBody
-                        .replace("<", "&lt;")
-                        .replace(">", "&gt;")
-                        .replace("&", "&amp;")
-                        .replace(verification, "<code>$verification</code>")
-                    isVerificationCode = true
-                }
-            } else {
-                writeLog(context, "SMS exceeds 140 characters, no verification code is recognized.")
+            val verification = CodeauxLibPortable.find(context, messageBody)
+            if (verification != null) {
+                requestBody.parseMode = "html"
+                messageBodyHtml = messageBody
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("&", "&amp;")
+                    .replace(verification, "<code>$verification</code>")
+                isVerificationCode = true
             }
         }
         requestBody.text = messageHead + messageBodyHtml
@@ -266,7 +263,7 @@ class SMSReceiver : BroadcastReceiver() {
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 addResendLoop(requestBody.text)
-                commandHandle( messageBody, dataEnable)
+                commandHandle(messageBody, dataEnable)
             }
 
             @Throws(IOException::class)
