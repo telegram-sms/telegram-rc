@@ -125,7 +125,7 @@ class NotifyListenerService : NotificationListenerService() {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 LogManage.writeLog(applicationContext, errorHead + e.message)
-                Resend.addResendLoop(requestBody.text)
+                Resend.addResendLoop(applicationContext, requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -133,7 +133,7 @@ class NotifyListenerService : NotificationListenerService() {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
                     LogManage.writeLog(applicationContext, errorHead + response.code + " " + result)
-                    Resend.addResendLoop(requestBody.text)
+                    Resend.addResendLoop(applicationContext, requestBody.text)
                 }
             }
         })

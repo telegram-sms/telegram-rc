@@ -88,7 +88,7 @@ class USSDCallBack(
                 Log.d("ussdRequest", "onFailure: $e")
                 LogManage.writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, -1)
-                addResendLoop(requestBody.text)
+                addResendLoop(context,requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -100,7 +100,7 @@ class USSDCallBack(
                             .string()
                     )
                     SMS.sendFallbackSMS(context, requestBody.text, -1)
-                    addResendLoop(requestBody.text)
+                    addResendLoop(context,requestBody.text)
                 }
             }
         })

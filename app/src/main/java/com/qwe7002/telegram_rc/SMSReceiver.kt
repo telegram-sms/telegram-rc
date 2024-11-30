@@ -224,10 +224,11 @@ class SMSReceiver : BroadcastReceiver() {
                 if (messageBody.contains(blockListItem)) {
                     val simpleDateFormat =
                         SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)
-                    val writeMessage = """
+/*                    val writeMessage = """
                         ${requestBody.text}
                         ${context.getString(R.string.time)}${simpleDateFormat.format(Date(System.currentTimeMillis()))}
-                        """.trimIndent()
+                        """.trimIndent()*/
+                    val writeMessage = requestBody.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(Date(System.currentTimeMillis()))
                     Paper.init(context)
                     val spamSmsList = Paper.book().read("spam_sms_list", ArrayList<String>())!!
                     if (spamSmsList.size >= 5) {
@@ -254,7 +255,7 @@ class SMSReceiver : BroadcastReceiver() {
                 Log.d(logTag, e.toString())
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
-                addResendLoop(requestBody.text)
+                addResendLoop(context,requestBody.text)
                 commandHandle(messageBody, dataEnable)
             }
 
@@ -266,7 +267,7 @@ class SMSReceiver : BroadcastReceiver() {
                     if (!finalIsFlash) {
                         SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                     }
-                    addResendLoop(requestBody.text)
+                    addResendLoop(context,requestBody.text)
                 } else {
                     if (!Other.isPhoneNumber(messageAddress)) {
                         writeLog(context, "[$messageAddress] Not a regular phone number.")

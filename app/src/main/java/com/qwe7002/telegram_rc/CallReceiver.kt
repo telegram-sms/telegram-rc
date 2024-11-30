@@ -83,10 +83,13 @@ class CallReceiver : BroadcastReceiver() {
                     slot,
                     preferences.read("display_dual_sim_display_name", false)!!
                 )
+/*
                 requestBody.text = """
                     [$dualSim${context.getString(R.string.missed_call_head)}]
                     ${context.getString(R.string.Incoming_number)}$incomingNumber
                     """.trimIndent()
+*/
+                requestBody.text = "[" + dualSim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + incomingNumber
 
                 val requestBodyRaw = Gson().toJson(requestBody)
                 val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
@@ -105,7 +108,7 @@ class CallReceiver : BroadcastReceiver() {
                             requestBody.text,
                             Other.getSubId(context, slot)
                         )
-                        Resend.addResendLoop(requestBody.text)
+                        Resend.addResendLoop(context,requestBody.text)
                     }
 
                     @Throws(IOException::class)
@@ -116,7 +119,7 @@ class CallReceiver : BroadcastReceiver() {
                                 errorHead + response.code + " " + Objects.requireNonNull(response.body)
                                     .string()
                             )
-                            Resend.addResendLoop(requestBody.text)
+                            Resend.addResendLoop(context,requestBody.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!Other.isPhoneNumber(incomingNumber)) {

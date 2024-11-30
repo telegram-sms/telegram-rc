@@ -76,7 +76,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
                 e.printStackTrace()
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, sub)
-                addResendLoop(requestBody.text)
+                addResendLoop(context,requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -87,7 +87,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
                         errorHead + response.code + " " + Objects.requireNonNull(response.body)
                             .string()
                     )
-                    addResendLoop(requestBody.text)
+                    addResendLoop(context,requestBody.text)
                 }
             }
         })
