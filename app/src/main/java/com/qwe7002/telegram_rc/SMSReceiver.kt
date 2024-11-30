@@ -105,10 +105,6 @@ class SMSReceiver : BroadcastReceiver() {
         requestBody.chatId = chatId
         requestBody.messageThreadId = preferences.read("message_thread_id", "")
         var messageBodyHtml = messageBody
-        var flashSmsString = ""
-        if (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0) {
-            flashSmsString = "\nType: Class 0"
-        }
         val messageHead = "[" + dualSim + context.getString(R.string.receive_sms_head) + "]\n" +
                 context.getString(R.string.from) + messageAddress + "\n" +
                 context.getString(R.string.content)
@@ -155,10 +151,6 @@ class SMSReceiver : BroadcastReceiver() {
                         if (!dataEnable) {
                             openData(context)
                         }
-/*                        rawRequestBodyText = """
-                            ${context.getString(R.string.system_message_head)}
-                            ${context.getString(R.string.switch_data)}
-                            """.trimIndent()*/
                         rawRequestBodyText =
                             context.getString(R.string.system_message_head) + "\n" +
                                     context.getString(R.string.switch_data)
