@@ -3,13 +3,12 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdk 35
-
-    //noinspection GrDeprecatedAPIUsage
     //noinspection GrDeprecatedAPIUsage
     buildToolsVersion '34.0.0'
     defaultConfig {
         applicationId "com.qwe7002.telegram_rc"
         minSdkVersion 29
+        //noinspection OldTargetApi
         targetSdkVersion 34
         versionCode System.getenv("VERSION_CODE") == null ? 1 : System.getenv("VERSION_CODE").toInteger()
         versionName System.getenv("VERSION_NAME") == null ? "debug-do_not_leak" : System.getenv("VERSION_NAME")
