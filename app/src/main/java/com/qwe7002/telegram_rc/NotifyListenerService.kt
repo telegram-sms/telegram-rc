@@ -37,7 +37,7 @@ class NotifyListenerService : NotificationListenerService() {
         preferences = Paper.book("preferences")
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    /*override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundNotification()
         return START_STICKY
     }
@@ -57,7 +57,7 @@ class NotifyListenerService : NotificationListenerService() {
                 Notify.NOTIFICATION_LISTENER_SERVICE, notification.build()
             )
         }
-    }
+    }*/
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
