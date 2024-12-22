@@ -377,7 +377,7 @@ class BeaconReceiverService : Service() {
                 }
             }
 
-            var message: String? = null
+            lateinit var message: String
             when (switchStatus) {
                 ENABLE_AP -> message =
                     "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
@@ -389,7 +389,9 @@ class BeaconReceiverService : Service() {
                         getString(R.string.action_success)
                     }$beaconStatus"
             }
-            message?.let { networkHandle(it, chatId, okhttpClient) }
+
+            CcSendJob.startJob(context, "Beacon Scan Service", message)
+            networkHandle(message, chatId, okhttpClient)
 
         }
     }

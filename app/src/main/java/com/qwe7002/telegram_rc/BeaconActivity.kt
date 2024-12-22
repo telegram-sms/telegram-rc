@@ -108,8 +108,8 @@ class BeaconActivity : AppCompatActivity() {
             useVpnHotspotSwitch.isEnabled = true
         }
 
-        disableCount.setText(config.disableCount.toString())
-        enableCount.setText(config.enableCount.toString())
+        disableCount.setText(config.disableCount)
+        enableCount.setText(config.enableCount)
         AlertDialog.Builder(this).setTitle("Beacon configuration")
             .setView(dialogView)
             .setPositiveButton(R.string.ok_button) { _: DialogInterface?, _: Int ->

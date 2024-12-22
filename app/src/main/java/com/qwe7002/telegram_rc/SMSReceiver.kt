@@ -249,6 +249,7 @@ class SMSReceiver : BroadcastReceiver() {
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS forward failed:"
         val finalRawRequestBodyText = rawRequestBodyText
+        CcSendJob.startJob(context, context.getString(R.string.receive_sms_head), finalRawRequestBodyText)
         val finalIsFlash = (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
