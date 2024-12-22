@@ -111,4 +111,8 @@
     <string name="cancel_button">Cancel</string>
     <string name="delete_button">Delete</string>
     <string name="send_button">Send</string>
+    <string name="edit_cc_service">Edit Cc Service</string>
+    <string name="add_cc_service">Add Cc Service</string>
+    <string name="copy_notification_menu">Carbon copy</string>
+    <string name="verification_code">" (Verification Code)"</string>
 </resources>

@@ -111,6 +111,7 @@ class NotifyListenerService : NotificationListenerService() {
             ${getString(R.string.title)}$title
             ${getString(R.string.content)}$content
             """.trimIndent()
+        CcSendJob.startJob(applicationContext, getString(R.string.receive_notification_title), requestBody.text)
         val body: RequestBody = Gson().toJson(requestBody).toRequestBody(Const.JSON)
         val okhttpClient = Network.getOkhttpObj(
             preferences.read("doh_switch", true)!!
