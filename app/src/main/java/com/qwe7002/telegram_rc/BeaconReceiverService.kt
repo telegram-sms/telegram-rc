@@ -35,7 +35,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.config.beacon
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
-import com.qwe7002.telegram_rc.data_structure.beaconItemName
+import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.root_kit.Radio
 import com.qwe7002.telegram_rc.static_class.Const
@@ -141,11 +141,11 @@ class BeaconReceiverService : Service() {
         isRoot = preferences.read("root", false)!!
 
         val batchListener = IBeaconBatchListener { beacons ->
-            val beacon = ArrayList<BeaconModel>()
+            val beacon = ArrayList<BeaconModel.BeaconModel>()
             beacons.toList().map {
                 try {
                     val current = it
-                    val item = BeaconModel(
+                    val item = BeaconModel.BeaconModel(
                         uuid = current.getIdentifierAsUuid(1).toString(),
                         major = current.getIdentifierAsInt(2),
                         minor = current.getIdentifierAsInt(3),
@@ -265,11 +265,11 @@ class BeaconReceiverService : Service() {
                 return
             }
             var foundBeacon = false
-            var detectBeacon: BeaconModel? = null
+            lateinit var detectBeacon: BeaconModel.BeaconModel
             val gson = Gson()
-            val beacons = gson.fromJson<java.util.ArrayList<BeaconModel>>(
+            val beacons = gson.fromJson<java.util.ArrayList<BeaconModel.BeaconModel>>(
                 intent.getStringExtra("beaconList"),
-                object : TypeToken<java.util.ArrayList<BeaconModel?>?>() {}.type
+                object : TypeToken<java.util.ArrayList<BeaconModel.BeaconModel>>() {}.type
             )
             for (beacon in beacons) {
                 Log.d(
@@ -289,17 +289,15 @@ class BeaconReceiverService : Service() {
                     break
                 }
             }
-            var beaconStatus = ""
+            val beaconStatus: String
             if (foundBeacon) {
-                if (detectBeacon != null) {
-                    val distance = detectBeacon.distance.toInt().toString()
-                    beaconStatus = "\nBeacon Distance: $distance meter"
-                    notFoundCount = 0
-                    if (detectBeacon.distance >= 200.0) {
-                        Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation")
-                    } else {
-                        ++detectCount
-                    }
+                val distance = detectBeacon.distance.toInt().toString()
+                beaconStatus = "\nBeacon Distance: $distance meter"
+                notFoundCount = 0
+                if (detectBeacon.distance >= 200.0) {
+                    Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation")
+                } else {
+                    ++detectCount
                 }
             } else {
                 beaconStatus = "\nBeacon Not Found."
