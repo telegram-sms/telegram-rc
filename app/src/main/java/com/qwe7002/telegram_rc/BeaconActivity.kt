@@ -28,7 +28,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.config.beacon
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
-import com.qwe7002.telegram_rc.data_structure.beaconItemName
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isVPNHotspotExist
 import io.paperdb.Paper
 
@@ -36,18 +35,18 @@ class BeaconActivity : AppCompatActivity() {
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val gson = Gson()
-            val arrayList = gson.fromJson<ArrayList<BeaconModel>>(
+            val arrayList = gson.fromJson<ArrayList<BeaconModel.BeaconModel>>(
                 intent.getStringExtra("beaconList"),
-                object : TypeToken<ArrayList<BeaconModel>>() {}.type
+                object : TypeToken<ArrayList<BeaconModel.BeaconModel>>() {}.type
             )!!
             flushListView(arrayList)
         }
     }
 
-    fun flushListView(arrayList: ArrayList<BeaconModel>) {
+    fun flushListView(arrayList: ArrayList<BeaconModel.BeaconModel>) {
         val beaconListview = findViewById<ListView>(R.id.beacon_listview)
         if (arrayList.isNotEmpty()) {
-            val list = ArrayList<BeaconModel>()
+            val list = ArrayList<BeaconModel.BeaconModel>()
             for (beacon in arrayList) {
                 if (beacon.distance < 200.0) {
                     list.add(beacon)
@@ -129,7 +128,7 @@ class BeaconActivity : AppCompatActivity() {
         return true
     }
 
-    internal class CustomBeaconAdapter(var list: ArrayList<BeaconModel>, var context: Context) :
+    internal class CustomBeaconAdapter(var list: ArrayList<BeaconModel.BeaconModel>, var context: Context) :
         BaseAdapter() {
         private var listenList: ArrayList<String>?
 
@@ -164,11 +163,11 @@ class BeaconActivity : AppCompatActivity() {
             addressView.text =
                 "Major: " + beacon.major + " Minor: " + beacon.minor + " Rssi: " + beacon.rssi + " dBm"
             infoView.text = "Distance: " + beacon.distance.toInt() + " meters"
-            if (listenList!!.contains(beaconItemName(beacon.uuid, beacon.major, beacon.minor))) {
+            if (listenList!!.contains(BeaconModel.beaconItemName(beacon.uuid, beacon.major, beacon.minor))) {
                 checkBoxView.isChecked = true
             }
             checkBoxView.setOnClickListener {
-                val address = beaconItemName(beacon.uuid, beacon.major, beacon.minor)
+                val address = BeaconModel.beaconItemName(beacon.uuid, beacon.major, beacon.minor)
                 val listenListTemp = Paper.book("beacon").read("address", ArrayList<String>())
                 if (checkBoxView.isChecked) {
                     assert(listenListTemp != null)
