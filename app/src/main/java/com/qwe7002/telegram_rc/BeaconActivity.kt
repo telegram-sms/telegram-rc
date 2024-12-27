@@ -96,16 +96,10 @@ class BeaconActivity : AppCompatActivity() {
         val disableCount = dialogView.findViewById<EditText>(R.id.beacon_disable_count_editview)
         val enableCount = dialogView.findViewById<EditText>(R.id.beacon_enable_count_editview)
         val config = Paper.book("beacon").read("config", beacon())!!
-        useVpnHotspotSwitch.isChecked = config.useVpnHotspot
-        if (!isVPNHotspotExist(context)) {
-            useVpnHotspotSwitch.isChecked = false
-        }
-        if (!Settings.System.canWrite(context) && isVPNHotspotExist(context)) {
-            useVpnHotspotSwitch.isChecked = true
-        }
-        if (Settings.System.canWrite(context) && isVPNHotspotExist(context)) {
-            useVpnHotspotSwitch.isEnabled = true
-        }
+
+        useVpnHotspotSwitch.isChecked = config.useVpnHotspot && isVPNHotspotExist(context)
+        useVpnHotspotSwitch.isEnabled =
+            Settings.System.canWrite(context) && isVPNHotspotExist(context)
 
         disableCount.setText(config.disableCount)
         enableCount.setText(config.enableCount)
@@ -128,12 +122,15 @@ class BeaconActivity : AppCompatActivity() {
         return true
     }
 
-    internal class CustomBeaconAdapter(var list: ArrayList<BeaconModel.BeaconModel>, var context: Context) :
+    internal class CustomBeaconAdapter(
+        var list: ArrayList<BeaconModel.BeaconModel>,
+        var context: Context
+    ) :
         BaseAdapter() {
-        private var listenList: ArrayList<String>?
+        private var listenList: ArrayList<String>
 
         init {
-            listenList = Paper.book("beacon").read("address", ArrayList())
+            listenList = Paper.book("beacon").read("address", ArrayList())!!
         }
 
         override fun getCount(): Int {
@@ -163,7 +160,14 @@ class BeaconActivity : AppCompatActivity() {
             addressView.text =
                 "Major: " + beacon.major + " Minor: " + beacon.minor + " Rssi: " + beacon.rssi + " dBm"
             infoView.text = "Distance: " + beacon.distance.toInt() + " meters"
-            if (listenList!!.contains(BeaconModel.beaconItemName(beacon.uuid, beacon.major, beacon.minor))) {
+            if (listenList.contains(
+                    BeaconModel.beaconItemName(
+                        beacon.uuid,
+                        beacon.major,
+                        beacon.minor
+                    )
+                )
+            ) {
                 checkBoxView.isChecked = true
             }
             checkBoxView.setOnClickListener {
@@ -186,7 +190,6 @@ class BeaconActivity : AppCompatActivity() {
             return view
         }
     }
-
 
 
 }
