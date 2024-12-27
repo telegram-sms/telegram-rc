@@ -55,7 +55,6 @@ class CcSendJob : JobService() {
                     header = gson.fromJson(item.header, type)
                 }
                 when (item.method) {
-
                     // 0: GET, 1: POST
                     0 -> {
                         networkProgressHandle(
