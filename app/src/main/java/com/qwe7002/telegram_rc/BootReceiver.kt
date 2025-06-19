@@ -37,7 +37,8 @@ class BootReceiver : BroadcastReceiver() {
                 }
             }
         }
-        Paper.book("temp").destroy()
+        MMKV.mmkvWithID("status").clear()
+        Log.d(logTag, "BootReceiver finished processing.")
     }
 }
 

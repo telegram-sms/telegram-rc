@@ -10,12 +10,12 @@ import com.qwe7002.telegram_rc.MdnsService
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.forceStopService
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.startForegroundService
 import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
-import io.paperdb.Paper
+import com.tencent.mmkv.MMKV
 
 object RemoteControl {
     @JvmStatic
     fun disableVPNHotspot(wifiManager: WifiManager) {
-        Paper.book("temp").write("wifi_open", false)
+        MMKV.mmkvWithID("status").putBoolean("VPNHotspot", false)
         forceStopService("be.mygod.vpnhotspot")
         setWifi(false)
         try {
@@ -42,7 +42,7 @@ object RemoteControl {
         if (wifiManager.isWifiEnabled) {
             disableVPNHotspot(wifiManager)
         }
-        Paper.book("temp").write("wifi_open", true)
+        MMKV.mmkvWithID("status").putBoolean("VPNHotspot", true)
         setWifi(true)
         try {
             while (wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
@@ -59,7 +59,7 @@ object RemoteControl {
 
     @JvmStatic
     fun enableHotspot(context: Context, mode: Int) {
-        Paper.book("temp").write("tether_open", true)
+        MMKV.mmkvWithID("status").putBoolean("tether", true)
         val manager = TetherManager(context)
         manager.startTethering(mode, null)
         val intent = Intent(context, MdnsService::class.java)
@@ -68,7 +68,7 @@ object RemoteControl {
 
     @JvmStatic
     fun disableHotspot(context: Context, mode: Int) {
-        Paper.book("temp").write("tether_open", false)
+        MMKV.mmkvWithID("status").putBoolean("tether", false)
         val manager = TetherManager(context)
         manager.stopTethering(mode)
         val intent = Intent(context, MdnsService::class.java)
@@ -78,10 +78,13 @@ object RemoteControl {
     @JvmStatic
     fun isHotspotActive(context: Context): Boolean {
         val manager = TetherManager(context)
-        Paper.book("temp").write("tether_open", manager.isTetherActive)
+        MMKV.mmkvWithID("status").putBoolean("tether", manager.isTetherActive)
         return manager.isTetherActive
     }
-
+    @JvmStatic
+    fun isVPNHotspotActive(): Boolean {
+        return MMKV.mmkvWithID("status").getBoolean("VPNHotspot", false)
+    }
 
     @JvmStatic
     fun isVPNHotspotExist(context: Context): Boolean {

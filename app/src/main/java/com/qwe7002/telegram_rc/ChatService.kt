@@ -10,21 +10,16 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.WifiLock
-import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.os.Process
 import android.provider.Settings
-import android.telephony.CellInfoLte
-import android.telephony.CellInfoNr
 import android.telephony.TelephonyManager
 import android.util.Log
-import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
@@ -60,7 +55,6 @@ import com.qwe7002.telegram_rc.static_class.Other.getSendPhoneNumber
 import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Other.isPhoneNumber
-import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
 import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.disableVPNHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
@@ -98,6 +92,7 @@ class ChatService : Service() {
     private lateinit var connectivityManager: ConnectivityManager
     private lateinit var chatID: String
     private lateinit var botToken: String
+    private lateinit var statusMMKV: MMKV
 
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -433,10 +428,10 @@ class ChatService : Service() {
                                 else -> TetherManager.TetherMode.TETHERING_WIFI
                             }
                     }
-                    Paper.book("temp").write("tether_mode", tetherMode)
+                    statusMMKV.putInt("tether_mode", tetherMode)
                     enableHotspot(applicationContext, tetherMode)
                 } else {
-                    Paper.book("temp").write("tether_open", false)
+                    statusMMKV.putBoolean("tether", false)
                     resultAp =
                         getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
                 }
@@ -459,15 +454,14 @@ class ChatService : Service() {
                 } else {
                     val wifiManager =
                         applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                    val wifiOpen =
-                        Paper.book("temp").read("wifi_open", wifiManager.isWifiEnabled)!!
+                    val wifiOpen = statusMMKV.getBoolean("VPNHotspot", false)
                     var resultVpnAp: String
                     if (!wifiOpen) {
                         resultVpnAp =
                             getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
                         Thread { enableVPNHotspot(wifiManager) }.start()
                     } else {
-                        Paper.book("temp").write("wifi_open", false)
+                        statusMMKV.putBoolean("VPNHotspot", false)
                         resultVpnAp =
                             getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
                     }
@@ -780,19 +774,20 @@ class ChatService : Service() {
                     Paper.book("send_temp").write("message_id", getMessageId(responseString))
                 }
 
-                if (commandValue == "/hotspot" || commandValue == "/vpnhotspot") {
-                    if (!Paper.book("temp").read("tether_open", false)!!) {
-                        disableHotspot(
-                            applicationContext,
-                            Paper.book("temp")
-                                .read("tether_mode", TetherManager.TetherMode.TETHERING_WIFI)!!
+                if (commandValue == "/hotspot" && !statusMMKV.getBoolean("tether", false)) {
+                    disableHotspot(
+                        applicationContext,
+                        statusMMKV.getInt(
+                            "tether_mode",
+                            TetherManager.TetherMode.TETHERING_WIFI
                         )
-                        Paper.book("temp").delete("tether_mode")
-                    }
+                    )
+                    statusMMKV.remove("tether_mode")
+
                 }
                 if (hasCommand && preferences.getBoolean("root", false)) {
                     when (commandValue) {
-                        "/vpnhotspot" -> if (!Paper.book("temp").read("wifi_open", false)!!) {
+                        "/vpnhotspot" -> if (!statusMMKV.getBoolean("VPNHotspot", false)) {
                             val wifiManager = checkNotNull(
                                 applicationContext.getSystemService(
                                     WIFI_SERVICE
