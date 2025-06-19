@@ -38,6 +38,7 @@ import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.root_kit.Radio
+import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Notify
@@ -126,17 +127,17 @@ class BeaconReceiverService : Service() {
                 IntentFilter("reload_beacon_config"),
                 RECEIVER_NOT_EXPORTED
             )
-        }else{
+        } else {
             registerReceiver(
                 reloadConfigReceiver,
                 IntentFilter("reload_beacon_config")
             )
         }
         Paper.init(applicationContext)
-        val preferences =MMKV.defaultMMKV()
+        val preferences = MMKV.defaultMMKV()
         requestUrl =
             Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
-        chatId =preferences.getString("chat_id", "")!!
+        chatId = preferences.getString("chat_id", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
         okhttpClient = Network.getOkhttpObj()
         isRoot = preferences.getBoolean("root", false)
@@ -186,9 +187,9 @@ class BeaconReceiverService : Service() {
             registerReceiver(
                 flushReceiver,
                 IntentFilter("flush_beacons_list"),
-                Context.RECEIVER_EXPORTED
+                RECEIVER_EXPORTED
             )
-        }else{
+        } else {
             registerReceiver(
                 flushReceiver,
                 IntentFilter("flush_beacons_list")
@@ -217,6 +218,7 @@ class BeaconReceiverService : Service() {
             }
         }
     }
+
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
 
@@ -252,7 +254,7 @@ class BeaconReceiverService : Service() {
             }
             val listenBeaconList =
                 Paper.book("beacon").read("address", ArrayList<String>())!!
-            if (listenBeaconList.size == 0) {
+            if (listenBeaconList.isEmpty()) {
                 notFoundCount = 0
                 detectCount = 0
                 Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
@@ -422,9 +424,11 @@ class BeaconReceiverService : Service() {
         requestBody.chatId = chatId1
         requestBody.messageThreadId = messageThreadId
         requestBody.text =
-            message + "\n" + getString(R.string.current_battery_level) + getBatteryInfoMsg() + "\n" + getString(
+            message + "\n" + getString(R.string.current_battery_level) + Battery.getBatteryInfo(
+                applicationContext
+            ) + "\n" + getString(
                 R.string.current_network_connection_status
-            ) + networkType()
+            ) + Network.getNetworkType(applicationContext)
         val requestBodyJson = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
         val requestObj: Request = Request.Builder().url(requestUrl).method("POST", body).build()
@@ -432,7 +436,7 @@ class BeaconReceiverService : Service() {
         call.enqueue(object : Callback {
 
             override fun onFailure(call: Call, e: IOException) {
-                Resend.addResendLoop(applicationContext,requestBody.text)
+                Resend.addResendLoop(applicationContext, requestBody.text)
                 e.printStackTrace()
             }
 
@@ -442,37 +446,6 @@ class BeaconReceiverService : Service() {
         })
     }
 
-    private fun getBatteryInfoMsg(): String {
-        val batteryManager =
-            (applicationContext.getSystemService(BATTERY_SERVICE) as BatteryManager)
-        var batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        if (batteryLevel > 100) {
-            Log.i(
-                "get_battery_info",
-                "The previous battery is over 100%, and the correction is 100%."
-            )
-            batteryLevel = 100
-        }
-        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus = applicationContext.registerReceiver(null, filter)!!
-        val chargeStatus = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        val batteryStringBuilder = StringBuilder().append(batteryLevel).append("%")
-        when (chargeStatus) {
-            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> batteryStringBuilder.append(
-                " ("
-            ).append(applicationContext.getString(R.string.charging)).append(")")
-
-            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> when (batteryStatus.getIntExtra(
-                BatteryManager.EXTRA_PLUGGED,
-                -1
-            )) {
-                BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> batteryStringBuilder.append(
-                    " ("
-                ).append(applicationContext.getString(R.string.not_charging)).append(")")
-            }
-        }
-        return batteryStringBuilder.toString()
-    }
 
     private fun getBatteryInfo(): BatteryInfo {
         val info = BatteryInfo()
@@ -501,68 +474,5 @@ class BeaconReceiverService : Service() {
         var isCharging = false
     }
 
-    private fun networkType(): String {
-        var netType = "Unknown"
-        val connectManager =
-            (applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
-        val telephonyManager = (applicationContext
-            .getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
-        val networks = connectManager.allNetworks
-        for (network in networks) {
-            val networkCapabilities = connectManager.getNetworkCapabilities(network)!!
-            if (!networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    netType = "WIFI"
-                    break
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    if (ActivityCompat.checkSelfPermission(
-                            applicationContext,
-                            Manifest.permission.READ_PHONE_STATE
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        Log.i("get_network_type", "No permission.")
-                        return netType
-                    }
-                    netType = checkCellularNetworkType(telephonyManager.dataNetworkType)
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
-                    netType = "Bluetooth"
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                    netType = "Ethernet"
-                }
-            }
-        }
-        return netType
-    }
-
-    private fun checkCellularNetworkType(type: Int): String {
-        var netType = "Unknown"
-        when (type) {
-            TelephonyManager.NETWORK_TYPE_NR -> netType = "NR"
-            TelephonyManager.NETWORK_TYPE_LTE -> {
-                netType = "LTE"
-                if (isRoot) {
-                    if (Radio.isLTECA) {
-                        netType += "+"
-                    }
-                    if (Radio.isNRConnected) {
-                        netType += " & NR"
-                    }
-                    if (Radio.isNRStandby) {
-                        netType += " (NR Standby)"
-                    }
-                }
-            }
-
-            TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_TD_SCDMA, TelephonyManager.NETWORK_TYPE_UMTS -> netType =
-                "3G"
-
-            TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
-                "2G"
-        }
-        return netType
-    }
 }
 
