@@ -24,7 +24,6 @@ import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -35,7 +34,7 @@ class BatteryService : Service() {
     private lateinit var batteryReceiver: batteryBroadcastReceiver
     private lateinit var botToken: String
     private lateinit var chatId: String
-    lateinit var messageThreadId: String
+    private lateinit var messageThreadId: String
     private var lastReceiveTime: Long = 0
     private var lastReceiveMessageId: Long = -1
     private lateinit var sendLoopList: ArrayList<sendObj>
@@ -65,7 +64,6 @@ class BatteryService : Service() {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
-        Paper.init(applicationContext)
         MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()
 
@@ -187,7 +185,7 @@ class BatteryService : Service() {
                         builder.append("\n").append(getString(R.string.disable_wifi))
                             .append(context.getString(R.string.action_success))
                     }
-                    if (Paper.book("temp").read("wifi_open", false)!!) {
+                    if (RemoteControl.isVPNHotspotActive()) {
                         val wifiManager =
                             (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
                         RemoteControl.disableVPNHotspot(wifiManager)

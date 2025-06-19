@@ -230,7 +230,7 @@ class BeaconReceiverService : Service() {
                 ) {
                     config.useVpnHotspot = false
                 }
-                wifiIsEnableStatus = Paper.book("temp").read("wifi_open", false)!!
+                wifiIsEnableStatus = RemoteControl.isVPNHotspotActive()
             } else {
                 if (!Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(
                         context

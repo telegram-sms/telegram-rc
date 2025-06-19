@@ -17,7 +17,6 @@ import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -29,15 +28,12 @@ import java.util.Objects
 
 class CallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Paper.init(context)
         Log.d("call_receiver", "Receive action: " + intent.action)
+        stateMMKV = MMKV.mmkvWithID("status")
         when (Objects.requireNonNull(intent.action)) {
             "android.intent.action.PHONE_STATE" -> {
                 if (intent.getStringExtra("incoming_number") != null) {
-                    Paper.book("temp").write(
-                        "incoming_number",
-                        intent.getStringExtra("incoming_number")!!
-                    )
+                    stateMMKV.putString("incoming_number", intent.getStringExtra("incoming_number"))
                 }
                 val telephony = context
                     .getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -48,24 +44,20 @@ class CallReceiver : BroadcastReceiver() {
             "android.intent.action.SUBSCRIPTION_PHONE_STATE" -> {
                 val slot = intent.getIntExtra("slot", -1)
                 if (slot != -1) {
-                    Paper.book("temp").write("incoming_slot", slot)
+                    stateMMKV.putInt("incoming_slot", slot)
                 }
             }
         }
     }
 
     internal class CallStatusListener(private val context: Context) : PhoneStateListener() {
-        private val slot = Paper.book("temp").read<Int>("incoming_slot")!!
-
-        init {
-            incomingNumber = Paper.book("temp").read<String>("incoming_number").toString()
-        }
 
         @Deprecated("Deprecated in Java")
         override fun onCallStateChanged(nowState: Int, nowIncomingNumber: String) {
-            if (lastStatus == TelephonyManager.CALL_STATE_RINGING
+            if (stateMMKV.getInt("incoming_last_status",TelephonyManager.CALL_STATE_IDLE) == TelephonyManager.CALL_STATE_RINGING
                 && nowState == TelephonyManager.CALL_STATE_IDLE
             ) {
+                val incomingNumber = stateMMKV.getString("incoming_number", "").toString()
                 val preferences =MMKV.defaultMMKV()
                 if (!preferences.contains("initialized")) {
                     Log.i("call_status_listener", "Uninitialized, Phone receiver is deactivated.")
@@ -81,7 +73,7 @@ class CallReceiver : BroadcastReceiver() {
                     preferences.getString("message_thread_id", "")
                 val dualSim = Other.getDualSimCardDisplay(
                     context,
-                    slot,
+                    stateMMKV.getInt("incoming_slot", -1),
                     preferences.getBoolean("display_dual_sim_display_name", false)
                 )
                 requestBody.text = "[" + dualSim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + incomingNumber
@@ -101,7 +93,7 @@ class CallReceiver : BroadcastReceiver() {
                         SMS.sendFallbackSMS(
                             context,
                             requestBody.text,
-                            Other.getSubId(context, slot)
+                            Other.getSubId(context, stateMMKV.getInt("incoming_slot", -1))
                         )
                         Resend.addResendLoop(context,requestBody.text)
                     }
@@ -124,19 +116,17 @@ class CallReceiver : BroadcastReceiver() {
                                 )
                                 return
                             }
-                            Other.addMessageList(Other.getMessageId(result), incomingNumber, slot)
+                            Other.addMessageList(Other.getMessageId(result), incomingNumber, stateMMKV.getInt("incoming_slot", -1))
                         }
                     }
                 })
             }
-
-            lastStatus = nowState
+            stateMMKV.putInt("incoming_last_status", nowState)
         }
 
-        companion object {
-            private var lastStatus = TelephonyManager.CALL_STATE_IDLE
-            private lateinit var incomingNumber: String
-        }
+    }
+    companion object{
+        private lateinit var stateMMKV: MMKV
     }
 }
 
