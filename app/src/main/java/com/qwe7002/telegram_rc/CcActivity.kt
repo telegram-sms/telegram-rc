@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -325,11 +324,11 @@ class CcActivity : AppCompatActivity() {
         return try {
             JSONObject(json)
             true
-        } catch (ex: Exception) {
+        } catch (_: Exception) {
             try {
                 JSONArray(json)
                 true
-            } catch (ex1: Exception) {
+            } catch (_: Exception) {
                 false
             }
         }

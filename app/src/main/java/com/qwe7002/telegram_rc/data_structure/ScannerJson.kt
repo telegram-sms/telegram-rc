@@ -25,9 +25,6 @@ data class ScannerJson(
     @SerializedName("fallback_sms")
     val fallbackSms: Boolean,
 
-    @SerializedName("privacy_mode")
-    val privacyMode: Boolean,
-
     @SerializedName("verification_code")
     val verificationCode: Boolean,
 

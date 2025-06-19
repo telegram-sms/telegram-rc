@@ -11,6 +11,7 @@ import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -32,13 +33,13 @@ class USSDCallBack(
 
     init {
         Paper.init(context)
-        val preferences = Paper.book("preferences")
-        this.dohSwitch = preferences.read("doh_switch", true)!!
+        val preferences = MMKV.defaultMMKV()
+        this.dohSwitch = preferences.getBoolean("doh_switch", true)
         this.requestBody =
             RequestMessage()
-        requestBody.chatId = preferences.read("chat_id", "").toString()
-        requestBody.messageThreadId = preferences.read("message_thread_id", "").toString()
-        val botToken = preferences.read("bot_token", "").toString()
+        requestBody.chatId = preferences.getString("chat_id", "").toString()
+        requestBody.messageThreadId = preferences.getString("message_thread_id", "").toString()
+        val botToken = preferences.getString("bot_token", "").toString()
         this.requestUri = Network.getUrl(botToken, "SendMessage")
         if (messageId != -1L) {
             this.requestUri = Network.getUrl(botToken, "editMessageText")
@@ -53,11 +54,7 @@ class USSDCallBack(
         response: CharSequence
     ) {
         super.onReceiveUssdResponse(telephonyManager, request, response)
-        val message = """
-            $messageHeader
-            ${context.getString(R.string.request)}$request
-            ${context.getString(R.string.content)}$response
-            """.trimIndent()
+        val message = "$messageHeader\n${context.getString(R.string.request)}$request\n${context.getString(R.string.content)}$response"
         networkHandle(message)
     }
 
@@ -67,11 +64,7 @@ class USSDCallBack(
         failureCode: Int
     ) {
         super.onReceiveUssdResponseFailed(telephonyManager, request, failureCode)
-        val message = """
-            $messageHeader
-            ${context.getString(R.string.request)}$request
-            ${context.getString(R.string.error_message)}${getErrorCodeString(failureCode)}
-            """.trimIndent()
+        val message = "$messageHeader\n${context.getString(R.string.request)}$request\n${context.getString(R.string.error_message)}${getErrorCodeString(failureCode)}"
         networkHandle(message)
     }
 
@@ -79,7 +72,7 @@ class USSDCallBack(
         requestBody.text = message
         val requestBodyJson = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
-        val okhttpClient = Network.getOkhttpObj(dohSwitch)
+        val okhttpClient = Network.getOkhttpObj()
         val requestObj: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(requestObj)
         val errorHead = "Send USSD failed:"

@@ -69,6 +69,7 @@ import com.qwe7002.telegram_rc.static_class.SMS.sendFallbackSMS
 import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -91,10 +92,8 @@ class ChatService : Service() {
     private lateinit var broadcastReceiver: quitBroadcastReceiver
     private lateinit var wakeLock: WakeLock
     private lateinit var wifiLock: WifiLock
-    private lateinit var preferences: io.paperdb.Book
+    private lateinit var preferences: MMKV
     private lateinit var connectivityManager: ConnectivityManager
-    private lateinit var botUsername: String
-    private var privacyMode = false
     private lateinit var chatID: String
     private lateinit var botToken: String
 
@@ -116,7 +115,6 @@ class ChatService : Service() {
     }
 
 
-
     override fun onDestroy() {
         wifiLock.release()
         wakeLock.release()
@@ -129,37 +127,6 @@ class ChatService : Service() {
         return null
     }
 
-
-    private fun getMe(): Boolean {
-        val okhttpClientNew = okhttpClient
-        val url = getUrl(botToken, "getMe")
-        val request: Request = Request.Builder().url(url).build()
-        val call = okhttpClientNew.newCall(request)
-        val response: Response
-        try {
-            response = call.execute()
-        } catch (e: IOException) {
-            e.printStackTrace()
-            writeLog(applicationContext, "Get username failed:" + e.message)
-            return false
-        }
-        if (response.code == 200) {
-            val result: String
-            try {
-                result = Objects.requireNonNull(response.body).string()
-            } catch (e: IOException) {
-                e.printStackTrace()
-                return false
-            }
-            val resultObj = JsonParser.parseString(result).asJsonObject
-            if (resultObj["ok"].asBoolean) {
-                botUsername = resultObj["result"].asJsonObject["username"].asString
-                writeLog(applicationContext, "Get the bot username: $botUsername")
-            }
-            return true
-        }
-        return false
-    }
 
     private fun receiveHandle(resultObj: JsonObject, getIdOnly: Boolean) {
         val updateId = resultObj["update_id"].asLong
@@ -201,7 +168,7 @@ class ChatService : Service() {
                 val dualSim = getDualSimCardDisplay(
                     applicationContext,
                     slot,
-                    preferences.read("display_dual_sim_display_name", false)!!
+                    preferences.getBoolean("display_dual_sim_display_name", false)!!
                 )
                 val sendContent =
                     "[$dualSim${applicationContext.getString(R.string.send_sms_head)}]\n${
@@ -310,12 +277,6 @@ class ChatService : Service() {
                 }
             }
         }
-
-        if (!messageTypeIsPrivate && privacyMode && commandBotUsername != botUsername) {
-            Log.i(TAG, "receive_handle: Privacy mode, no username found.")
-            return
-        }
-
         Log.d(TAG, "Command: $command")
 
         when (command) {
@@ -341,7 +302,7 @@ class ChatService : Service() {
                 if (Settings.System.canWrite(applicationContext)) {
                     switchAp += "\n${getString(R.string.switch_ap_message)}"
                 }
-                if (preferences.read("root", false)!!) {
+                if (preferences.getBoolean("root", false)) {
                     if (isVPNHotspotExist(applicationContext)) {
                         switchAp += "\n${
                             getString(R.string.switch_ap_message).replace(
@@ -361,9 +322,6 @@ class ChatService : Service() {
                 } else {
                     var resultString =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.available_command)}$smsCommand$ussdCommand$switchAp"
-                    if (!messageTypeIsPrivate && privacyMode && botUsername.isNotEmpty()) {
-                        resultString = resultString.replace(" -", "@$botUsername -")
-                    }
                     requestBody.text = resultString
                 }
             }
@@ -404,7 +362,7 @@ class ChatService : Service() {
                         getString(R.string.disable)
                     }
                 }
-                if (preferences.read("root", false)!! && isVPNHotspotExist(
+                if (preferences.getBoolean("root", false) && isVPNHotspotExist(
                         applicationContext
                     )
                 ) {
@@ -441,7 +399,7 @@ class ChatService : Service() {
             )
 
             "/wifi" -> {
-                if (!preferences.read("root", false)!!) {
+                if (!preferences.getBoolean("root", false)) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
@@ -489,7 +447,7 @@ class ChatService : Service() {
             }
 
             "/vpnhotspot" -> {
-                if (!preferences.read("root", false)!! || !isVPNHotspotExist(
+                if (!preferences.getBoolean("root", false) || !isVPNHotspotExist(
                         applicationContext
                     )
                 ) {
@@ -522,8 +480,9 @@ class ChatService : Service() {
             }
 
             "/mobiledata" -> {
-                if (!preferences.read("root", false)!!) {
-                    requestBody.text = "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
+                if (!preferences.getBoolean("root", false)) {
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
                     val resultData = applicationContext.getString(R.string.switch_data)
                     requestBody.text = "${getString(R.string.system_message_head)}\n$resultData"
@@ -554,13 +513,17 @@ class ChatService : Service() {
                 } else {
                     Log.i(TAG, "send_ussd: No permission.")
                 }
-                requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.unknown_command)}"
+                requestBody.text =
+                    "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.unknown_command)}"
             }
 
             "/getspamsms" -> {
                 val spamSmsList = Paper.book().read("spam_sms_list", ArrayList<String>())!!
                 if (spamSmsList.isEmpty()) {
-                    requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.no_spam_history)}"
+                    requestBody.text =
+                        "${applicationContext.getString(R.string.system_message_head)}\n${
+                            getString(R.string.no_spam_history)
+                        }"
                 } else {
                     Thread {
                         if (checkNetworkStatus(applicationContext)) {
@@ -607,12 +570,14 @@ class ChatService : Service() {
             "/autoswitch" -> {
                 val state = !Paper.book().read("disable_beacon", false)!!
                 Paper.book().write("disable_beacon", state)
-                requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
+                requestBody.text =
+                    "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
             }
 
             "/setdummy" -> {
-                if (!preferences.read("root", false)!!) {
-                    requestBody.text = "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
+                if (!preferences.getBoolean("root", false)) {
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
                     val commandList =
                         requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
@@ -627,16 +592,19 @@ class ChatService : Service() {
                             addDummyDevice(dummyIp!!)
                         }
                     }
-                    requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\nDone"
+                    requestBody.text =
+                        "${applicationContext.getString(R.string.system_message_head)}\nDone"
                 }
             }
 
             "/deldummy" -> {
-                if (!preferences.read("root", false)!!) {
-                    requestBody.text = "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
+                if (!preferences.getBoolean("root", false)) {
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
                     delDummyDevice()
-                    requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\nDone"
+                    requestBody.text =
+                        "${applicationContext.getString(R.string.system_message_head)}\nDone"
                 }
             }
 
@@ -700,7 +668,8 @@ class ChatService : Service() {
                     }
                     Paper.book("send_temp").write("slot", sendSlot)
                 }
-                requestBody.text = "[${applicationContext.getString(R.string.send_sms_head)}]\n${getString(R.string.failed_to_get_information)}"
+                requestBody.text =
+                    "[${applicationContext.getString(R.string.send_sms_head)}]\n${getString(R.string.failed_to_get_information)}"
             }
 
             else -> {
@@ -714,7 +683,8 @@ class ChatService : Service() {
                     }
                 }
 
-                requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.unknown_command)}"
+                requestBody.text =
+                    "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.unknown_command)}"
             }
         }
         if (hasCommand) {
@@ -773,7 +743,11 @@ class ChatService : Service() {
                     )
                     keyboardMarkup.inlineKeyboard = inlineKeyboardButtons
                     requestBody.keyboardMarkup = keyboardMarkup
-                    resultSend = "${applicationContext.getString(R.string.to)}${Paper.book("send_temp").read<Any>("to")}\n${applicationContext.getString(R.string.content)}${Paper.book("send_temp").read("content", "")}"
+                    resultSend = "${applicationContext.getString(R.string.to)}${
+                        Paper.book("send_temp").read<Any>("to")
+                    }\n${applicationContext.getString(R.string.content)}${
+                        Paper.book("send_temp").read("content", "")
+                    }"
                     sendSmsNextStatus = SEND_SMS_STATUS.SEND_STATUS
                 }
             }
@@ -814,7 +788,7 @@ class ChatService : Service() {
                         Paper.book("temp").delete("tether_mode")
                     }
                 }
-                if (hasCommand && preferences.read("root", false)!!) {
+                if (hasCommand && preferences.getBoolean("root", false)) {
                     when (commandValue) {
                         "/vpnhotspot" -> if (!Paper.book("temp").read("wifi_open", false)!!) {
                             val wifiManager = checkNotNull(
@@ -854,13 +828,13 @@ class ChatService : Service() {
             applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         Paper.init(applicationContext)
         setSmsSendStatusStandby()
-        preferences = Paper.book("preferences")
+        MMKV.initialize(applicationContext)
+        preferences = MMKV.defaultMMKV()
 
-        chatID = preferences.read("chat_id", "").toString()
-        botToken = preferences.read("bot_token", "").toString()
-        messageThreadId = preferences.read("message_thread_id", "").toString()
-        okhttpClient = getOkhttpObj(preferences.read("doh_switch", true)!!)
-        privacyMode = preferences.read("privacy_mode", false)!!
+        chatID = preferences.getString("chat_id", "").toString()
+        botToken = preferences.getString("bot_token", "").toString()
+        messageThreadId = preferences.getString("message_thread_id", "").toString()
+        okhttpClient = getOkhttpObj()
         wifiLock = (Objects.requireNonNull(
             applicationContext.getSystemService(
                 WIFI_SERVICE
@@ -917,23 +891,6 @@ class ChatService : Service() {
     internal inner class threadMainRunnable : Runnable {
         override fun run() {
             Log.d(TAG, "run: thread main start")
-            if (parseStringToLong(chatID) < 0) {
-                botUsername = Paper.book().read<String>("bot_username", "").toString()
-                if (botUsername.isEmpty()) {
-                    while (getMe()) {
-                        writeLog(
-                            applicationContext,
-                            "Failed to get bot Username, Wait 5 seconds and try again."
-                        )
-                        try {
-                            Thread.sleep(5000)
-                        } catch (e: InterruptedException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-                Log.i(TAG, "run: The Bot Username is loaded. The Bot Username is: $botUsername")
-            }
             while (true) {
                 val timeout = 60
                 val httpTimeout = 65
@@ -960,17 +917,12 @@ class ChatService : Service() {
                     response = call.execute()
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    if (!checkNetworkStatus(applicationContext)) {
-                        writeLog(applicationContext, "No network connections available. ")
-                        break
-                    }
-                    val sleepTime = 5
                     writeLog(
                         applicationContext,
-                        "Connection to the Telegram API service failed, try again after $sleepTime seconds."
+                        "Connection to the Telegram API service failed"
                     )
                     try {
-                        Thread.sleep(sleepTime * 1000L)
+                        Thread.sleep(1000L)
                     } catch (e1: InterruptedException) {
                         e1.printStackTrace()
                     }
@@ -984,7 +936,6 @@ class ChatService : Service() {
                         e.printStackTrace()
                         continue
                     }
-                    Log.d(TAG, "run: $result")
                     val resultObj = JsonParser.parseString(result).asJsonObject
                     if (resultObj["ok"].asBoolean) {
                         val resultArray = resultObj["result"].asJsonArray
@@ -1004,12 +955,10 @@ class ChatService : Service() {
                             continue
                         }
                         val resultObj = JsonParser.parseString(result).asJsonObject
-                        val resultMessage = """
-                            ${getString(R.string.system_message_head)}
-                            ${getString(R.string.error_stop_message)}
-                            ${getString(R.string.error_message_head)}${resultObj["description"].asString}
-                            Code: ${response.code}
-                            """.trimIndent()
+                        val resultMessage =
+                            "${getString(R.string.system_message_head)}\n${getString(R.string.error_stop_message)}\n${
+                                getString(R.string.error_message_head)
+                            }${resultObj["description"].asString}\nCode: ${response.code}"
                         sendFallbackSMS(applicationContext, resultMessage, -1)
                         stopAllService(applicationContext)
                         break
@@ -1094,6 +1043,7 @@ class ChatService : Service() {
             return "LTE"
         }
     }
+
     fun getBatteryInfo(context: Context): String {
         val batteryManager =
             checkNotNull(context.getSystemService(BATTERY_SERVICE) as BatteryManager)

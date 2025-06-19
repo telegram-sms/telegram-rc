@@ -7,6 +7,7 @@ import android.util.Log
 import com.qwe7002.telegram_rc.root_kit.Networks
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.ServiceManage
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import kotlin.String
 
@@ -15,7 +16,7 @@ class BootReceiver : BroadcastReceiver() {
         val logTag = "boot_receiver"
         Log.d(logTag, "Receive action: " + intent.action)
         Paper.init(context)
-        val preferences = Paper.book("preferences")
+        val preferences = MMKV.defaultMMKV()
         if (preferences.contains("initialized")) {
             LogManage.writeLog(
                 context,
@@ -23,13 +24,13 @@ class BootReceiver : BroadcastReceiver() {
             )
             ServiceManage.startService(
                 context,
-                preferences.read("battery_monitoring_switch", false)!!,
-                preferences.read("chat_command", false)!!
+                preferences.getBoolean("battery_monitoring_switch", false),
+                preferences.getBoolean("chat_command", false)
             )
             ServiceManage.startBeaconService(context)
             KeepAliveJob.startJob(context)
             ReSendJob.startJob(context)
-            if (preferences.read("root", false)!!) {
+            if (preferences.getBoolean("root", false)) {
                 if (Paper.book("system_config").contains("dummy_ip_addr")) {
                     val dummyIp = Paper.book("system_config").read<String>("dummy_ip_addr")
                     Networks.addDummyDevice(dummyIp.toString())

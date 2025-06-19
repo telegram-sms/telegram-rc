@@ -8,8 +8,7 @@ import android.net.NetworkCapabilities
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.util.Log
-import com.qwe7002.telegram_rc.config.proxy
-import io.paperdb.Paper
+import com.tencent.mmkv.MMKV
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
@@ -69,27 +68,28 @@ object Network {
     }
 
     @JvmStatic
-    fun getOkhttpObj(dohSwitch: Boolean): OkHttpClient {
-        var doh = dohSwitch
-        val proxyConfig = Paper.book("system_config").read("proxy_config", proxy())
+    fun getOkhttpObj(): OkHttpClient {
+        var doh = MMKV.defaultMMKV().getBoolean("doh_switch", true)
+
+        val proxyConfig = MMKV.mmkvWithID("proxy")
         val okhttp: OkHttpClient.Builder = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
         lateinit var proxy: Proxy
-        if (proxyConfig!!.enable) {
+        if (proxyConfig.getBoolean("enabled", false)) {
             val policy = ThreadPolicy.Builder().permitAll().build()
             StrictMode.setThreadPolicy(policy)
-            val inetSocketAddress = InetSocketAddress(proxyConfig.host, proxyConfig.port)
+            val inetSocketAddress = InetSocketAddress(proxyConfig.getString("host",""), proxyConfig.getInt("port", 1080))
             proxy = Proxy(Proxy.Type.SOCKS, inetSocketAddress)
             Authenticator.setDefault(object : Authenticator() {
                 override fun getPasswordAuthentication(): PasswordAuthentication? {
-                    if (requestingHost.equals(proxyConfig.host, ignoreCase = true)) {
-                        if (proxyConfig.port == requestingPort) {
+                    if (requestingHost.equals(proxyConfig.getString("host",""), ignoreCase = true)) {
+                        if (proxyConfig.getInt("port", 1080) == requestingPort) {
                             return PasswordAuthentication(
-                                proxyConfig.username,
-                                proxyConfig.password.toCharArray()
+                                proxyConfig.getString("username",""),
+                                proxyConfig.getString("password","").toString().toCharArray()
                             )
                         }
                     }

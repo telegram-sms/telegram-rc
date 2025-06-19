@@ -23,6 +23,7 @@ import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -37,20 +38,20 @@ import java.util.Objects
 
 @Suppress("DEPRECATION")
 class SMSReceiver : BroadcastReceiver() {
-    private lateinit var preferences: io.paperdb.Book
+    private lateinit var preferences: MMKV
 
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
         Paper.init(context)
         val logTag = "sms_receiver"
         val extras = intent.extras!!
-        preferences = Paper.book("preferences")
+        preferences = MMKV.defaultMMKV()
         if (!preferences.contains("initialized")) {
             Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
             return
         }
-        val botToken = preferences.read("bot_token", "").toString()
-        val chatId = preferences.read("chat_id", "").toString()
+        val botToken = preferences.getString("bot_token", "").toString()
+        val chatId = preferences.getString("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
 
         var intentSlot = extras.getInt("slot", -1)
@@ -70,7 +71,7 @@ class SMSReceiver : BroadcastReceiver() {
         val dualSim = Other.getDualSimCardDisplay(
             context,
             intentSlot,
-            preferences.read("display_dual_sim_display_name", false)!!
+            preferences.getBoolean("display_dual_sim_display_name", false)
         )
 
         val pdus = (extras["pdus"] as Array<*>?)!!
@@ -95,7 +96,7 @@ class SMSReceiver : BroadcastReceiver() {
 
         val messageBody = messageBodyBuilder.toString()
         val messageAddress = messages[0]!!.originatingAddress!!
-        val trustedPhoneNumber = preferences.read("trusted_phone_number", "")!!
+        val trustedPhoneNumber = preferences.getString("trusted_phone_number", "")!!
         var isTrustedPhone = false
         if (trustedPhoneNumber.isNotEmpty()) {
             isTrustedPhone = messageAddress.contains(trustedPhoneNumber)
@@ -103,14 +104,14 @@ class SMSReceiver : BroadcastReceiver() {
         Log.d(logTag, "onReceive: $isTrustedPhone")
         val requestBody = RequestMessage()
         requestBody.chatId = chatId
-        requestBody.messageThreadId = preferences.read("message_thread_id", "")
+        requestBody.messageThreadId = preferences.getString("message_thread_id", "")
         var messageBodyHtml = messageBody
         val messageHead = "[" + dualSim + context.getString(R.string.receive_sms_head) + "]\n" +
                 context.getString(R.string.from) + messageAddress + "\n" +
                 context.getString(R.string.content)
         var rawRequestBodyText: String = messageHead + messageBody
         var isVerificationCode = false
-        if (preferences.read("verification_code", false)!! && !isTrustedPhone) {
+        if (preferences.getBoolean("verification_code", false) && !isTrustedPhone) {
             val verification = CodeauxLibPortable.find(context, messageBody)
             if (verification != null) {
                 requestBody.parseMode = "html"
@@ -137,8 +138,8 @@ class SMSReceiver : BroadcastReceiver() {
                             ServiceManage.stopAllService(context)
                             ServiceManage.startService(
                                 context,
-                                preferences.read("battery_monitoring_switch", false)!!,
-                                preferences.read("chat_command", false)!!
+                                preferences.getBoolean("battery_monitoring_switch", false),
+                                preferences.getBoolean("chat_command", false)
                             )
                         }.start()
                         rawRequestBodyText =
@@ -240,7 +241,7 @@ class SMSReceiver : BroadcastReceiver() {
 
 
         val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
-        val okhttpClient = Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
+        val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS forward failed:"
@@ -281,7 +282,7 @@ class SMSReceiver : BroadcastReceiver() {
         messageBody: String,
         dataEnable: Boolean
     ) {
-        if (preferences.read("root", false)!!) {
+        if (preferences.getBoolean("root", false)) {
             if (messageBody.lowercase(Locale.getDefault()).replace("_", "") == "/data") {
                 if (dataEnable) {
                     setData(false)
