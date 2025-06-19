@@ -41,9 +41,11 @@ import com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.setData
 import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
+import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.readLog
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
+import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Network.checkNetworkStatus
 import com.qwe7002.telegram_rc.static_class.Network.getDataEnable
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
@@ -168,7 +170,7 @@ class ChatService : Service() {
                 val dualSim = getDualSimCardDisplay(
                     applicationContext,
                     slot,
-                    preferences.getBoolean("display_dual_sim_display_name", false)!!
+                    preferences.getBoolean("display_dual_sim_display_name", false)
                 )
                 val sendContent =
                     "[$dualSim${applicationContext.getString(R.string.send_sms_head)}]\n${
@@ -386,9 +388,9 @@ class ChatService : Service() {
                     getString(R.string.disable)
                 }
                 requestBody.text =
-                    "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + getBatteryInfo(
+                    "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
-                    ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
+                    ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
                         applicationContext
                     ) + isHotspotRunning + beaconStatus + spamCount + cardInfo
                 Log.d(TAG, "receive_handle: " + requestBody.text)
@@ -438,9 +440,9 @@ class ChatService : Service() {
                     resultAp =
                         getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
                 }
-                resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + getBatteryInfo(
+                resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                     applicationContext
-                ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
+                ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
                     applicationContext
                 )
                 requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
@@ -469,9 +471,9 @@ class ChatService : Service() {
                         resultVpnAp =
                             getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
                     }
-                    resultVpnAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + getBatteryInfo(
+                    resultVpnAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
-                    ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
+                    ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
                         applicationContext
                     )
 
@@ -976,148 +978,6 @@ class ChatService : Service() {
         private var sendSmsNextStatus = SEND_SMS_STATUS.STANDBY_STATUS
         private var firstRequest = true
 
-
-        @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
-        private fun checkCellularNetworkType(
-            context: Context,
-            telephony: TelephonyManager
-        ): String {
-            var netType = "Unknown"
-            when (telephony.dataNetworkType) {
-                TelephonyManager.NETWORK_TYPE_NR,
-                TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> {
-                    if (ActivityCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        netType = check5GState(telephony)
-                    } else {
-                        netType =
-                            if (telephony.dataNetworkType == TelephonyManager.NETWORK_TYPE_NR) {
-                                "5G"
-                            } else {
-                                "4G"
-                            }
-                    }
-                }
-
-                TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_TD_SCDMA, TelephonyManager.NETWORK_TYPE_UMTS -> netType =
-                    "3G"
-
-                TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
-                    "2G"
-
-                TelephonyManager.NETWORK_TYPE_GSM -> {
-                    "2G"
-                }
-
-                TelephonyManager.NETWORK_TYPE_UNKNOWN -> {
-                    "Unknown"
-                }
-            }
-            return netType
-        }
-
-        @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-        private fun check5GState(telephonyManager: TelephonyManager): String {
-            val cellInfoList = telephonyManager.getAllCellInfo()
-            var hasLte = false
-            var hasNr = false
-
-            for (cellInfo in cellInfoList) {
-                if (cellInfo.isRegistered) {
-                    if (cellInfo is CellInfoLte) {
-                        hasLte = true
-                    } else if (cellInfo is CellInfoNr) {
-                        hasNr = true
-                    }
-                }
-            }
-
-            if (hasLte && hasNr) {
-                return "NSA NR"
-            } else if (hasNr) {
-                return "SA 5G"
-            }
-            return "LTE"
-        }
-    }
-
-    fun getBatteryInfo(context: Context): String {
-        val batteryManager =
-            checkNotNull(context.getSystemService(BATTERY_SERVICE) as BatteryManager)
-        var batteryLevel =
-            batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        if (batteryLevel > 100) {
-            Log.i(
-                "get_battery_info",
-                "The previous battery is over 100%, and the correction is 100%."
-            )
-            batteryLevel = 100
-        }
-        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus = checkNotNull(context.registerReceiver(null, intentFilter))
-        val chargeStatus = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-        val batteryStringBuilder = StringBuilder().append(batteryLevel).append("%")
-        when (chargeStatus) {
-            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> batteryStringBuilder.append(
-                " ("
-            ).append(context.getString(R.string.charging)).append(")")
-
-            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> when (batteryStatus.getIntExtra(
-                BatteryManager.EXTRA_PLUGGED,
-                -1
-            )) {
-                BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> batteryStringBuilder.append(
-                    " ("
-                ).append(context.getString(R.string.not_charging)).append(")")
-            }
-        }
-        return batteryStringBuilder.toString()
-    }
-
-    fun getNetworkType(context: Context): String {
-        var netType = "Unknown"
-        val connectManager =
-            checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
-        val telephonyManager = checkNotNull(
-            context
-                .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-        )
-        val networks = connectManager.allNetworks
-        for (network in networks) {
-            val networkCapabilities =
-                checkNotNull(connectManager.getNetworkCapabilities(network))
-            if (!networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    netType = "WIFI"
-                    break
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    if (ActivityCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_PHONE_STATE
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        Log.i("get_network_type", "No permission.")
-                        return netType
-                    }
-                    netType = checkCellularNetworkType(
-                        context,
-                        telephonyManager
-                    )
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
-                    netType = "Bluetooth"
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                    netType = "Ethernet"
-                }
-            }
-        }
-
-        return netType
     }
 }
 

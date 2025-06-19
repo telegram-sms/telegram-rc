@@ -2,12 +2,21 @@
 
 package com.qwe7002.telegram_rc.static_class
 
+import android.Manifest
 import android.content.Context
+import android.content.Context.CONNECTIVITY_SERVICE
+import android.content.Context.TELEPHONY_SERVICE
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
+import android.telephony.CellInfoLte
+import android.telephony.CellInfoNr
+import android.telephony.TelephonyManager
 import android.util.Log
+import androidx.annotation.RequiresPermission
+import androidx.core.app.ActivityCompat
 import com.tencent.mmkv.MMKV
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -124,5 +133,113 @@ object Network {
             e.printStackTrace()
             throw RuntimeException(e)
         }
+    }
+
+    @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
+    private fun checkCellularNetworkType(
+        context: Context,
+        telephony: TelephonyManager
+    ): String {
+        var netType = "Unknown"
+        when (telephony.dataNetworkType) {
+            TelephonyManager.NETWORK_TYPE_NR,
+            TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> {
+                if (ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    netType = check5GState(telephony)
+                } else {
+                    netType =
+                        if (telephony.dataNetworkType == TelephonyManager.NETWORK_TYPE_NR) {
+                            "5G"
+                        } else {
+                            "4G"
+                        }
+                }
+            }
+
+            TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_TD_SCDMA, TelephonyManager.NETWORK_TYPE_UMTS -> netType =
+                "3G"
+
+            TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
+                "2G"
+
+            TelephonyManager.NETWORK_TYPE_GSM -> {
+                "2G"
+            }
+
+            TelephonyManager.NETWORK_TYPE_UNKNOWN -> {
+                "Unknown"
+            }
+        }
+        return netType
+    }
+
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+    private fun check5GState(telephonyManager: TelephonyManager): String {
+        val cellInfoList = telephonyManager.getAllCellInfo()
+        var hasLte = false
+        var hasNr = false
+
+        for (cellInfo in cellInfoList) {
+            if (cellInfo.isRegistered) {
+                if (cellInfo is CellInfoLte) {
+                    hasLte = true
+                } else if (cellInfo is CellInfoNr) {
+                    hasNr = true
+                }
+            }
+        }
+
+        if (hasLte && hasNr) {
+            return "NSA NR"
+        } else if (hasNr) {
+            return "SA 5G"
+        }
+        return "LTE"
+    }
+    public fun getNetworkType(context: Context): String {
+        var netType = "Unknown"
+        val connectManager =
+            checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
+        val telephonyManager = checkNotNull(
+            context
+                .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+        )
+        val networks = connectManager.allNetworks
+        for (network in networks) {
+            val networkCapabilities =
+                checkNotNull(connectManager.getNetworkCapabilities(network))
+            if (!networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    netType = "WIFI"
+                    break
+                }
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.READ_PHONE_STATE
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        Log.i("get_network_type", "No permission.")
+                        return netType
+                    }
+                    netType = checkCellularNetworkType(
+                        context,
+                        telephonyManager
+                    )
+                }
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
+                    netType = "Bluetooth"
+                }
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    netType = "Ethernet"
+                }
+            }
+        }
+
+        return netType
     }
 }
