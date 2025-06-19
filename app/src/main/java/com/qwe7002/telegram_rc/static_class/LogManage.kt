@@ -3,6 +3,7 @@ package com.qwe7002.telegram_rc.static_class
 import android.content.Context
 import android.util.Log
 import com.qwe7002.telegram_rc.R
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -14,83 +15,54 @@ import java.util.Date
 import java.util.Locale
 
 object LogManage {
+    private const val LOG_MAX_SIZE = 2000
+    private const val MMKV_LOG_ID = "log"
+
     @JvmStatic
     fun writeLog(context: Context, log: String) {
         Log.i("write_log", log)
-        val newFileMode = Context.MODE_APPEND
-        val simpleDateFormat = SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)
-        val writeString = """
-${simpleDateFormat.format(Date(System.currentTimeMillis()))} $log"""
-        var logCount = Paper.book("system_config").read("log_count", 0)!!
-        if (logCount >= 50000) {
-            resetLogFile(context)
-        }
-        Paper.book("system_config").write("log_count", ++logCount)
 
-        writeLogFile(context, writeString, newFileMode)
+        val kv = MMKV.mmkvWithID(MMKV_LOG_ID)
+
+        val simpleDateFormat = SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)
+        val timeStamp = simpleDateFormat.format(Date(System.currentTimeMillis()))
+        val logEntry = "\n$timeStamp $log"
+
+        var existingLog = kv.getString("logs", "") ?: ""
+
+        existingLog = existingLog + logEntry
+
+        if (existingLog.length > LOG_MAX_SIZE) {
+            existingLog = existingLog.substring(existingLog.length - LOG_MAX_SIZE)
+            val firstNewLine = existingLog.indexOf('\n')
+            if (firstNewLine != -1) {
+                existingLog = existingLog.substring(firstNewLine)
+            }
+        }
+        kv.putString("logs", existingLog)
     }
 
     @JvmStatic
     fun readLog(context: Context, line: Int): String {
         val result = context.getString(R.string.no_logs)
-        val TAG = "read_log"
-        val builder = StringBuilder()
-        var fileInputStream: FileInputStream? = null
-        var channel: FileChannel? = null
-        try {
-            fileInputStream = context.openFileInput("error.log")
-            channel = fileInputStream.channel
-            val buffer: ByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
-            buffer.position(channel.size().toInt())
-            var count = 0
-            for (i in channel.size() - 1 downTo 0) {
-                val c = Char(buffer[i.toInt()].toUShort())
-                builder.insert(0, c)
-                if (c == '\n') {
-                    if (count == (line - 1)) {
-                        break
-                    }
-                    ++count
-                }
-            }
-            return builder.toString().ifEmpty {
-                result
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Log.d(TAG, "Unable to read the file.")
+
+        val kv = MMKV.mmkvWithID(MMKV_LOG_ID)
+
+        val logs = kv.getString("logs", "") ?: ""
+        if (logs.isEmpty()) {
             return result
-        } finally {
-            try {
-                fileInputStream?.close()
-                channel?.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
         }
+
+        val logLines = logs.split('\n').filter { it.isNotEmpty() }
+
+        if (line >= logLines.size) {
+            return logs
+        }
+
+        return logLines.takeLast(line).joinToString("\n")
     }
 
-    fun resetLogFile(context: Context) {
-        Paper.book("system_config").delete("log_count")
-        writeLogFile(context, "", Context.MODE_PRIVATE)
-    }
-
-    private fun writeLogFile(context: Context, writeString: String, mode: Int) {
-        var fileStream: FileOutputStream? = null
-        try {
-            fileStream = context.openFileOutput("error.log", mode)
-            val bytes = writeString.toByteArray()
-            fileStream.write(bytes)
-        } catch (e: IOException) {
-            e.printStackTrace()
-        } finally {
-            if (fileStream != null) {
-                try {
-                    fileStream.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-            }
-        }
+    fun resetLogFile() {
+        MMKV.mmkvWithID(MMKV_LOG_ID).clear()
     }
 }

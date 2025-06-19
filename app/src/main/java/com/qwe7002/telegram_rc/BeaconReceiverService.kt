@@ -44,6 +44,7 @@ import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.Resend
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -123,7 +124,7 @@ class BeaconReceiverService : Service() {
             registerReceiver(
                 reloadConfigReceiver,
                 IntentFilter("reload_beacon_config"),
-                Context.RECEIVER_NOT_EXPORTED
+                RECEIVER_NOT_EXPORTED
             )
         }else{
             registerReceiver(
@@ -132,13 +133,13 @@ class BeaconReceiverService : Service() {
             )
         }
         Paper.init(applicationContext)
-        val preferences =Paper.book("preferences")
+        val preferences =MMKV.defaultMMKV()
         requestUrl =
-            Network.getUrl(preferences.read("bot_token", "").toString(), "SendMessage")
-        chatId =preferences.read("chat_id", "")!!
-        messageThreadId = preferences.read("message_thread_id", "")!!
-        okhttpClient = Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
-        isRoot = preferences.read("root", false)!!
+            Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
+        chatId =preferences.getString("chat_id", "")!!
+        messageThreadId = preferences.getString("message_thread_id", "")!!
+        okhttpClient = Network.getOkhttpObj()
+        isRoot = preferences.getBoolean("root", false)
 
         val batchListener = IBeaconBatchListener { beacons ->
             val beacon = ArrayList<BeaconModel.BeaconModel>()

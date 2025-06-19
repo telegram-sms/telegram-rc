@@ -23,6 +23,7 @@ import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -35,18 +36,11 @@ class BatteryService : Service() {
     private lateinit var botToken: String
     private lateinit var chatId: String
     lateinit var messageThreadId: String
-    private var dohSwitch = false
     private var lastReceiveTime: Long = 0
     private var lastReceiveMessageId: Long = -1
     private lateinit var sendLoopList: ArrayList<sendObj>
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForegroundNotification()
-
-        return START_STICKY
-    }
-
-    private fun startForegroundNotification() {
         val notification =
             Other.getNotificationObj(
                 applicationContext,
@@ -63,19 +57,22 @@ class BatteryService : Service() {
                 Notify.BATTERY, notification.build()
             )
         }
+
+        return START_STICKY
     }
+
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
         Paper.init(applicationContext)
-        val preferences = Paper.book("preferences")
+        MMKV.initialize(applicationContext)
+        val preferences = MMKV.defaultMMKV()
 
-        chatId = preferences.read("chat_id", "")!!
-        botToken = preferences.read("bot_token", "")!!
-        dohSwitch = preferences.read("doh_switch", true)!!
-        messageThreadId = preferences.read("message_thread_id", "")!!
-        val chargerStatus = preferences.read("charger_status", false)!!
+        chatId = preferences.getString("chat_id", "")!!
+        botToken = preferences.getString("bot_token", "")!!
+        messageThreadId = preferences.getString("message_thread_id", "")!!
+        val chargerStatus = preferences.getBoolean("charger_status", false)
         batteryReceiver = batteryBroadcastReceiver()
         val filter = IntentFilter()
         filter.addAction(Intent.ACTION_BATTERY_OKAY)
@@ -100,7 +97,7 @@ class BatteryService : Service() {
                 }
                 sendLoopList.removeAll(needRemove.toSet())
                 needRemove.clear()
-                if (sendLoopList.size == 0) {
+                if (sendLoopList.isEmpty()) {
                     //Only enter sleep mode when there are no messages
                     try {
                         Thread.sleep(1000)
@@ -125,7 +122,7 @@ class BatteryService : Service() {
             Log.d(TAG, "onReceive: edit_mode")
         }
         lastReceiveTime = System.currentTimeMillis()
-        val okhttpClient = Network.getOkhttpObj(dohSwitch)
+        val okhttpClient = Network.getOkhttpObj()
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()

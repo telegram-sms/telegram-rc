@@ -13,6 +13,7 @@ import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -24,7 +25,7 @@ import java.io.IOException
 import java.util.Objects
 
 class SMSSendResultReceiver : BroadcastReceiver() {
-    private lateinit var preferences: io.paperdb.Book
+    private lateinit var preferences: MMKV
     override fun onReceive(context: Context, intent: Intent) {
         Paper.init(context)
         val logTag = "sms_send_receiver"
@@ -32,16 +33,16 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         val extras = intent.extras!!
         val sub = extras.getInt("sub_id")
         context.unregisterReceiver(this)
-        preferences = Paper.book("preferences")
+        preferences = MMKV.defaultMMKV()
         if (!preferences.contains("initialized")) {
             Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
             return
         }
-        val botToken = preferences.read("bot_token", "").toString()
-        val chatId = preferences.read("chat_id", "").toString()
+        val botToken = preferences.getString("bot_token", "").toString()
+        val chatId = preferences.getString("chat_id", "").toString()
         val requestBody = RequestMessage()
         requestBody.chatId = chatId
-        requestBody.messageThreadId =preferences.read("message_thread_id", "")
+        requestBody.messageThreadId =preferences.getString("message_thread_id", "")
         var requestUri = Network.getUrl(botToken, "sendMessage")
         val messageId = extras.getLong("message_id")
         if (messageId != -1L) {
@@ -61,13 +62,10 @@ class SMSSendResultReceiver : BroadcastReceiver() {
             SmsManager.RESULT_ERROR_NO_SERVICE -> resultStatus =
                 context.getString(R.string.no_network)
         }
-        requestBody.text = """
-            ${extras.getString("message_text")}
-            ${context.getString(R.string.status)}$resultStatus
-            """.trimIndent()
+        requestBody.text = "${extras.getString("message_text")}\n${context.getString(R.string.status)}$resultStatus"
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
-        val okhttpClient = Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
+        val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS status failed:"

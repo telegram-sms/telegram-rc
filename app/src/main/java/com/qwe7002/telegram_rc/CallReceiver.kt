@@ -16,6 +16,7 @@ import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -65,30 +66,30 @@ class CallReceiver : BroadcastReceiver() {
             if (lastStatus == TelephonyManager.CALL_STATE_RINGING
                 && nowState == TelephonyManager.CALL_STATE_IDLE
             ) {
-                val preferences = Paper.book("preferences")
+                val preferences =MMKV.defaultMMKV()
                 if (!preferences.contains("initialized")) {
                     Log.i("call_status_listener", "Uninitialized, Phone receiver is deactivated.")
                     return
                 }
-                val botToken = preferences.read("bot_token", "").toString()
-                val chatId = preferences.read("chat_id", "").toString()
+                val botToken = preferences.getString("bot_token", "").toString()
+                val chatId = preferences.getString("chat_id", "").toString()
                 val requestUri = Network.getUrl(botToken, "sendMessage")
                 val requestBody =
                     RequestMessage()
                 requestBody.chatId = chatId
                 requestBody.messageThreadId =
-                    preferences.read("message_thread_id", "")
+                    preferences.getString("message_thread_id", "")
                 val dualSim = Other.getDualSimCardDisplay(
                     context,
                     slot,
-                    preferences.read("display_dual_sim_display_name", false)!!
+                    preferences.getBoolean("display_dual_sim_display_name", false)
                 )
                 requestBody.text = "[" + dualSim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + incomingNumber
                 CcSendJob.startJob(context, context.getString(R.string.missed_call_head), requestBody.text)
                 val requestBodyRaw = Gson().toJson(requestBody)
                 val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
                 val okhttpClient =
-                    Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
+                    Network.getOkhttpObj()
                 val request: Request =
                     Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClient.newCall(request)

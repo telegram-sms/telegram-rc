@@ -11,6 +11,7 @@ import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -24,20 +25,19 @@ class ReSendJob : JobService() {
     private val tableName: String = "resend_list"
     override fun onStartJob(params: JobParameters?): Boolean {
         Paper.init(applicationContext)
-        val preferences = Paper.book("preferences")
+        val preferences = MMKV.defaultMMKV()
         requestUri =
-            Network.getUrl(preferences.read("bot_token", "").toString(), "SendMessage")
+            Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
         Thread {
             val sendList: java.util.ArrayList<String> =
                 Paper.book().read(tableName, java.util.ArrayList())!!
-            val okhttpClient =
-                Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
+            val okhttpClient = Network.getOkhttpObj()
             for (item in sendList) {
                 networkProgressHandle(
                     item,
-                    preferences.read("chat_id", "").toString(),
+                    preferences.getString("chat_id", "").toString(),
                     okhttpClient,
-                    preferences.read("message_thread_id", "").toString()
+                    preferences.getString("message_thread_id", "").toString()
                 )
             }
             if (sendList.isNotEmpty()) {

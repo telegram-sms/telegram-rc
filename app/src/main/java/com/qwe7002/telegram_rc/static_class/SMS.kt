@@ -18,7 +18,7 @@ import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.SMSSendResultReceiver
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
-import io.paperdb.Paper
+import com.tencent.mmkv.MMKV
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -37,14 +37,13 @@ object SMS {
             Log.d(TAG, ": No permission.")
             return
         }
-        Paper.init(context)
-        val preferences = Paper.book("preferences")
-        val trustNumber = preferences.read("trusted_phone_number", "")!!
+        val preferences = MMKV.defaultMMKV()
+        val trustNumber = preferences.getString("trusted_phone_number", "")!!
         if (trustNumber.isEmpty()) {
             Log.i(TAG, "The trusted number is empty.")
             return
         }
-        if (!preferences.read("fallback_sms", false)!!) {
+        if (!preferences.getBoolean("fallback_sms", false)) {
             Log.i(TAG, "Did not open the SMS to fall back.")
             return
         }
@@ -85,10 +84,9 @@ object SMS {
             writeLog(context, "[$sendTo] is an illegal phone number")
             return
         }
-        Paper.init(context)
-        val preferences = Paper.book("preferences")
-        val botToken = preferences.read("bot_token", "").toString()
-        val chatId = preferences.read("chat_id", "").toString()
+        val preferences = MMKV.defaultMMKV()
+        val botToken = preferences.getString("bot_token", "").toString()
+        val chatId = preferences.getString("chat_id", "").toString()
         var requestUri = Network.getUrl(botToken, "sendMessage")
         if (privateMessageId != -1L) {
             Log.d("send_sms", "Find the message_id and switch to edit mode.")
@@ -104,22 +102,15 @@ object SMS {
         val dualSim = Other.getDualSimCardDisplay(
             context,
             slot,
-            preferences.read("display_dual_sim_display_name", false)!!
+            preferences.getBoolean("display_dual_sim_display_name", false)
         )
-        val sendContent = """
-            [$dualSim${context.getString(R.string.send_sms_head)}]
-            ${context.getString(R.string.to)}$sendTo
-            ${context.getString(R.string.content)}$content
-            """.trimIndent()
-        requestBody.text = """
-            $sendContent
-            ${context.getString(R.string.status)}${context.getString(R.string.sending)}
-            """.trimIndent()
+        val sendContent = "[$dualSim${context.getString(R.string.send_sms_head)}]\n${context.getString(R.string.to)}$sendTo\n${context.getString(R.string.content)}$content"
+        requestBody.text = "$sendContent\n${context.getString(R.string.status)}${context.getString(R.string.sending)}"
         requestBody.messageId = privateMessageId
         val gson = Gson()
         val requestBodyRaw = gson.toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
-        val okhttpClient = Network.getOkhttpObj(preferences.read("doh_switch", true)!!)
+        val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         try {

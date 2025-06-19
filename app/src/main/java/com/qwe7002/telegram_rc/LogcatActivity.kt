@@ -9,10 +9,10 @@ import android.view.MenuItem
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.qwe7002.telegram_rc.static_class.LogManage
+import kotlin.concurrent.thread
 
 @Suppress("DEPRECATION")
 class LogcatActivity : AppCompatActivity() {
-    private lateinit var observer: fileObserver
     private lateinit var logcatTextview: TextView
     private val line = 100
 
@@ -22,19 +22,24 @@ class LogcatActivity : AppCompatActivity() {
         logcatTextview = findViewById(R.id.logcat_textview)
         this.setTitle(R.string.logcat)
         logcatTextview.text = LogManage.readLog(applicationContext, line)
-        observer = fileObserver(applicationContext, logcatTextview)
         logcatTextview.setGravity(Gravity.BOTTOM)
+        thread {
+            while (true) {
+                runOnUiThread {
+                    logcatTextview.text = LogManage.readLog(applicationContext, line)
+                }
+                Thread.sleep(500)
+            }
+        }
     }
 
     public override fun onPause() {
         super.onPause()
-        observer.stopWatching()
     }
 
     public override fun onResume() {
         super.onResume()
         logcatTextview.text = LogManage.readLog(applicationContext, line)
-        observer.startWatching()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -43,20 +48,10 @@ class LogcatActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        LogManage.resetLogFile(applicationContext)
+        LogManage.resetLogFile()
         return true
     }
 
-    internal inner class fileObserver(private val context: Context, private val logcat: TextView?) :
-        FileObserver(
-            context.filesDir.absolutePath
-        ) {
-        override fun onEvent(event: Int, path: String?) {
-            if (event == MODIFY && path!!.contains("error.log")) {
-                runOnUiThread { logcat!!.text = LogManage.readLog(context, line) }
-            }
-        }
-    }
 }
 
 

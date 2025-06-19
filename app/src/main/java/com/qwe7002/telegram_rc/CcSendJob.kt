@@ -16,6 +16,7 @@ import com.qwe7002.telegram_rc.static_class.CcSend
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -27,7 +28,6 @@ class CcSendJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("CCSend", "startJob: Trying to send message.")
         Paper.init(applicationContext)
-        val sharedPreferences = applicationContext.getSharedPreferences("data", MODE_PRIVATE)
         val message: String = params?.extras?.getString("message", "") ?: ""
         var title: String = params?.extras?.getString("title", getString(R.string.app_name))
             ?: getString(R.string.app_name)
@@ -44,9 +44,7 @@ class CcSendJob : JobService() {
             var type = object : TypeToken<ArrayList<CcSendService>>() {}.type
             val sendList: ArrayList<CcSendService> = gson.fromJson(serviceListJson, type)
             val okhttpClient =
-                Network.getOkhttpObj(
-                    sharedPreferences.getBoolean("doh_switch", true)
-                )
+                Network.getOkhttpObj()
             for (item in sendList) {
                 if(item.enabled.not()) continue
                 var header: Map<String, String> = mapOf()

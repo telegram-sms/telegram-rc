@@ -8,6 +8,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import com.qwe7002.telegram_rc.static_class.ServiceManage
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import java.util.concurrent.TimeUnit
 
@@ -15,13 +16,12 @@ import java.util.concurrent.TimeUnit
 class KeepAliveJob : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
-        Paper.init(applicationContext)
-        val preferences = Paper.book("preferences")
+        val preferences = MMKV.defaultMMKV()
         if (preferences.contains("initialized")) {
             ServiceManage.startService(
                 applicationContext,
-                preferences.read("battery_monitoring_switch", false)!!,
-                preferences.read("chat_command", false)!!
+                preferences.getBoolean("battery_monitoring_switch", false),
+                preferences.getBoolean("chat_command", false)
             )
             ServiceManage.startBeaconService(applicationContext)
         }

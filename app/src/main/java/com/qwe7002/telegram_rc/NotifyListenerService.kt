@@ -17,6 +17,7 @@ import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Resend
+import com.tencent.mmkv.MMKV
 import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
@@ -29,35 +30,13 @@ import java.util.Objects
 
 class NotifyListenerService : NotificationListenerService() {
     private val logTag: String = "notification_receiver"
-    lateinit var preferences: io.paperdb.Book
+    lateinit var preferences: MMKV
 
     override fun onCreate() {
         super.onCreate()
         Paper.init(applicationContext)
-        preferences = Paper.book("preferences")
+        preferences = MMKV.defaultMMKV()
     }
-
-    /*override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForegroundNotification()
-        return START_STICKY
-    }
-
-    private fun startForegroundNotification() {
-        val notification: Notification.Builder = Other.getNotificationObj(
-            applicationContext,
-            getString(R.string.Notification_Listener_title)
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                Notify.NOTIFICATION_LISTENER_SERVICE, notification.build(),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
-        } else {
-            startForeground(
-                Notify.NOTIFICATION_LISTENER_SERVICE, notification.build()
-            )
-        }
-    }*/
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
@@ -94,8 +73,8 @@ class NotifyListenerService : NotificationListenerService() {
         if (title == "None" && content == "None") {
             return
         }
-        val botToken = preferences.read("bot_token", "").toString()
-        val chatId = preferences.read("chat_id", "").toString()
+        val botToken = preferences.getString("bot_token", "").toString()
+        val chatId = preferences.getString("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = RequestMessage()
         if ((System.currentTimeMillis() - lastSendTime) <= 1000L && (lastPackage == packageName)) {
@@ -104,18 +83,11 @@ class NotifyListenerService : NotificationListenerService() {
             }
         }
         requestBody.chatId = chatId
-        requestBody.messageThreadId = preferences.read("message_thread_id", "")
-        requestBody.text = """
-            ${getString(R.string.receive_notification_title)}
-            ${getString(R.string.app_name_title)}$appName
-            ${getString(R.string.title)}$title
-            ${getString(R.string.content)}$content
-            """.trimIndent()
+        requestBody.messageThreadId = preferences.getString("message_thread_id", "")
+        requestBody.text = "${getString(R.string.receive_notification_title)}\n${getString(R.string.app_name_title)}$appName\n${getString(R.string.title)}$title\n${getString(R.string.content)}$content"
         CcSendJob.startJob(applicationContext, getString(R.string.receive_notification_title), requestBody.text)
         val body: RequestBody = Gson().toJson(requestBody).toRequestBody(Const.JSON)
-        val okhttpClient = Network.getOkhttpObj(
-            preferences.read("doh_switch", true)!!
-        )
+        val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         lastPackage = packageName
