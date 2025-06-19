@@ -147,11 +147,8 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-            </intent-filter>
         </activity>
+        <service android:name=".MdnsService"/>
 
         <service
             android:name=".KeepAliveJob"

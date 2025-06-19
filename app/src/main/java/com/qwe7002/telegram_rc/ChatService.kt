@@ -10,10 +10,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
-import android.net.ConnectivityManager.NetworkCallback
-import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.WifiLock
 import android.os.BatteryManager
@@ -23,8 +20,11 @@ import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.os.Process
 import android.provider.Settings
+import android.telephony.CellInfoLte
+import android.telephony.CellInfoNr
 import android.telephony.TelephonyManager
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
@@ -41,9 +41,6 @@ import com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.setData
 import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
-import com.qwe7002.telegram_rc.root_kit.Radio.isLTECA
-import com.qwe7002.telegram_rc.root_kit.Radio.isNRConnected
-import com.qwe7002.telegram_rc.root_kit.Radio.isNRStandby
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.readLog
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
@@ -94,9 +91,8 @@ class ChatService : Service() {
     private lateinit var broadcastReceiver: quitBroadcastReceiver
     private lateinit var wakeLock: WakeLock
     private lateinit var wifiLock: WifiLock
-    private lateinit var preferences:io.paperdb.Book
+    private lateinit var preferences: io.paperdb.Book
     private lateinit var connectivityManager: ConnectivityManager
-    private lateinit var callback: networkCallBack
     private lateinit var botUsername: String
     private var privacyMode = false
     private lateinit var chatID: String
@@ -104,11 +100,6 @@ class ChatService : Service() {
 
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        startForegroundNotification()
-        return START_STICKY
-    }
-
-    private fun startForegroundNotification() {
         val notification = getNotificationObj(
             applicationContext, getString(R.string.chat_command_service_name)
         )
@@ -121,14 +112,15 @@ class ChatService : Service() {
         } else {
             startForeground(Notify.CHAT_COMMAND, notification.build())
         }
+        return START_STICKY
     }
+
 
 
     override fun onDestroy() {
         wifiLock.release()
         wakeLock.release()
         unregisterReceiver(broadcastReceiver)
-        connectivityManager.unregisterNetworkCallback(callback)
         super.onDestroy()
     }
 
@@ -138,36 +130,36 @@ class ChatService : Service() {
     }
 
 
-    private fun getMe(): Boolean{
-            val okhttpClientNew = okhttpClient
-            val url = getUrl(botToken, "getMe")
-            val request: Request = Request.Builder().url(url).build()
-            val call = okhttpClientNew.newCall(request)
-            val response: Response
-            try {
-                response = call.execute()
-            } catch (e: IOException) {
-                e.printStackTrace()
-                writeLog(applicationContext, "Get username failed:" + e.message)
-                return false
-            }
-            if (response.code == 200) {
-                val result: String
-                try {
-                    result = Objects.requireNonNull(response.body).string()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                    return false
-                }
-                val resultObj = JsonParser.parseString(result).asJsonObject
-                if (resultObj["ok"].asBoolean) {
-                    botUsername = resultObj["result"].asJsonObject["username"].asString
-                    writeLog(applicationContext, "Get the bot username: $botUsername")
-                }
-                return true
-            }
+    private fun getMe(): Boolean {
+        val okhttpClientNew = okhttpClient
+        val url = getUrl(botToken, "getMe")
+        val request: Request = Request.Builder().url(url).build()
+        val call = okhttpClientNew.newCall(request)
+        val response: Response
+        try {
+            response = call.execute()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            writeLog(applicationContext, "Get username failed:" + e.message)
             return false
         }
+        if (response.code == 200) {
+            val result: String
+            try {
+                result = Objects.requireNonNull(response.body).string()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                return false
+            }
+            val resultObj = JsonParser.parseString(result).asJsonObject
+            if (resultObj["ok"].asBoolean) {
+                botUsername = resultObj["result"].asJsonObject["username"].asString
+                writeLog(applicationContext, "Get the bot username: $botUsername")
+            }
+            return true
+        }
+        return false
+    }
 
     private fun receiveHandle(resultObj: JsonObject, getIdOnly: Boolean) {
         val updateId = resultObj["update_id"].asLong
@@ -211,15 +203,13 @@ class ChatService : Service() {
                     slot,
                     preferences.read("display_dual_sim_display_name", false)!!
                 )
-                val sendContent = """
-                    [$dualSim${applicationContext.getString(R.string.send_sms_head)}]
-                    ${applicationContext.getString(R.string.to)}$to
-                    ${applicationContext.getString(R.string.content)}$content
-                    """.trimIndent()
-                requestBody.text = """
-                    $sendContent
-                    ${applicationContext.getString(R.string.status)}${applicationContext.getString(R.string.cancel_button)}
-                    """.trimIndent()
+                val sendContent =
+                    "[$dualSim${applicationContext.getString(R.string.send_sms_head)}]\n${
+                        applicationContext.getString(R.string.to)
+                    }$to\n${applicationContext.getString(R.string.content)}$content"
+                requestBody.text = "$sendContent\n${applicationContext.getString(R.string.status)}${
+                    applicationContext.getString(R.string.cancel_button)
+                }"
                 requestBody.messageId = messageId
                 requestBody.messageThreadId = messageThreadId
                 val gson = Gson()
@@ -330,20 +320,11 @@ class ChatService : Service() {
 
         when (command) {
             "/help", "/start", "/commandlist" -> {
-                var smsCommand = """
-                
-                ${getString(R.string.sendsms)}
-                """.trimIndent()
+                var smsCommand = "\n${getString(R.string.sendsms)}"
                 if (getActiveCard(applicationContext) == 2) {
-                    smsCommand = """
-                        
-                        ${getString(R.string.sendsms_dual)}
-                        """.trimIndent()
+                    smsCommand = "\n${getString(R.string.sendsms_dual)}"
                 }
-                smsCommand += """
-                
-                ${getString(R.string.get_spam_sms)}
-                """.trimIndent()
+                smsCommand += "\n${getString(R.string.get_spam_sms)}"
 
                 var ussdCommand = ""
                 if (ActivityCompat.checkSelfPermission(
@@ -351,40 +332,25 @@ class ChatService : Service() {
                         Manifest.permission.CALL_PHONE
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
-                    ussdCommand = """
-                        
-                        ${getString(R.string.send_ussd_command)}
-                        """.trimIndent()
+                    ussdCommand = "\n${getString(R.string.send_ussd_command)}"
                     if (getActiveCard(applicationContext) == 2) {
-                        ussdCommand = """
-                            
-                            ${getString(R.string.send_ussd_dual_command)}
-                            """.trimIndent()
+                        ussdCommand = "\n${getString(R.string.send_ussd_dual_command)}"
                     }
                 }
                 var switchAp = ""
                 if (Settings.System.canWrite(applicationContext)) {
-                    switchAp += """
-                        
-                        ${getString(R.string.switch_ap_message)}
-                        """.trimIndent()
+                    switchAp += "\n${getString(R.string.switch_ap_message)}"
                 }
                 if (preferences.read("root", false)!!) {
                     if (isVPNHotspotExist(applicationContext)) {
-                        switchAp += """
-                            
-                            ${
+                        switchAp += "\n${
                             getString(R.string.switch_ap_message).replace(
                                 "/hotspot",
                                 "/vpnhotspot"
                             )
-                        }
-                            """.trimIndent()
+                        }"
                     }
-                    switchAp += """
-                        
-                        ${getString(R.string.switch_data_message)}
-                        """.trimIndent()
+                    switchAp += "\n${getString(R.string.switch_data_message)}"
                 }
                 if (command == "/commandlist") {
                     requestBody.text =
@@ -393,10 +359,8 @@ class ChatService : Service() {
                             ""
                         )
                 } else {
-                    var resultString = """
-                ${getString(R.string.system_message_head)}
-                ${getString(R.string.available_command)}$smsCommand$ussdCommand$switchAp
-                """.trimIndent()
+                    var resultString =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.available_command)}$smsCommand$ussdCommand$switchAp"
                     if (!messageTypeIsPrivate && privacyMode && botUsername.isNotEmpty()) {
                         resultString = resultString.replace(" -", "@$botUsername -")
                     }
@@ -417,10 +381,7 @@ class ChatService : Service() {
                         applicationContext, 0
                     )
                     if (getActiveCard(applicationContext) == 2) {
-                        cardInfo = """
-     
-     ${getString(R.string.current_data_card)}: SIM
-     """.trimIndent() + getDataSimId(
+                        cardInfo = "\n${getString(R.string.current_data_card)}: SIM" + getDataSimId(
                             applicationContext
                         ) + "\nSIM1: " + getSimDisplayName(
                             applicationContext, 0
@@ -432,17 +393,11 @@ class ChatService : Service() {
                 var spamCount = ""
                 val spamList = Paper.book().read("spam_sms_list", ArrayList<String>())!!
                 if (spamList.isNotEmpty()) {
-                    spamCount = """
-                        
-                        ${getString(R.string.spam_count_title)}${spamList.size}
-                        """.trimIndent()
+                    spamCount = "\n${getString(R.string.spam_count_title)}${spamList.size}"
                 }
                 var isHotspotRunning = ""
                 if (Settings.System.canWrite(applicationContext)) {
-                    isHotspotRunning += """
-                        
-                        ${getString(R.string.hotspot_status)}
-                        """.trimIndent()
+                    isHotspotRunning += "\n${getString(R.string.hotspot_status)}"
                     isHotspotRunning += if (isHotspotActive(applicationContext)) {
                         getString(R.string.enable)
                     } else {
@@ -453,10 +408,7 @@ class ChatService : Service() {
                         applicationContext
                     )
                 ) {
-                    isHotspotRunning += """
-                        
-                        VPN ${getString(R.string.hotspot_status)}
-                        """.trimIndent()
+                    isHotspotRunning += "\nVPN ${getString(R.string.hotspot_status)}"
                     isHotspotRunning += if (checkServiceIsRunning(
                             "be.mygod.vpnhotspot",
                             ".RepeaterService"
@@ -467,10 +419,7 @@ class ChatService : Service() {
                         getString(R.string.disable)
                     }
                 }
-                var beaconStatus = """
-                    
-                    ${getString(R.string.beacon_monitoring_status)}
-                    """.trimIndent()
+                var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
                 beaconStatus += if (java.lang.Boolean.FALSE == Paper.book()
                         .read("disable_beacon", false)
                 ) {
@@ -478,14 +427,12 @@ class ChatService : Service() {
                 } else {
                     getString(R.string.disable)
                 }
-                requestBody.text = """
-     ${getString(R.string.system_message_head)}
-     ${applicationContext.getString(R.string.current_battery_level)}
-     """.trimIndent() + getBatteryInfo(
-                    applicationContext
-                ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
-                    applicationContext, preferences
-                ) + isHotspotRunning + beaconStatus + spamCount + cardInfo
+                requestBody.text =
+                    "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + getBatteryInfo(
+                        applicationContext
+                    ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
+                        applicationContext
+                    ) + isHotspotRunning + beaconStatus + spamCount + cardInfo
                 Log.d(TAG, "receive_handle: " + requestBody.text)
             }
 
@@ -495,18 +442,13 @@ class ChatService : Service() {
 
             "/wifi" -> {
                 if (!preferences.read("root", false)!!) {
-                    requestBody.text = """
-                        ${getString(R.string.system_message_head)}
-                        ${getString(R.string.no_permission)}
-                        """.trimIndent()
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
                     val wifimanager =
                         applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
                     setWifi(!wifimanager.isWifiEnabled)
-                    requestBody.text = """
-                    ${getString(R.string.system_message_head)}
-                    Done
-                    """.trimIndent()
+                    requestBody.text = "${getString(R.string.system_message_head)}\nDone"
                 }
             }
 
@@ -538,18 +480,12 @@ class ChatService : Service() {
                     resultAp =
                         getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
                 }
-                resultAp += """
-     
-     ${applicationContext.getString(R.string.current_battery_level)}
-     """.trimIndent() + getBatteryInfo(
+                resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + getBatteryInfo(
                     applicationContext
                 ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
-                    applicationContext, preferences
+                    applicationContext
                 )
-                requestBody.text = """
-                        ${getString(R.string.system_message_head)}
-                        $resultAp
-                        """.trimIndent()
+                requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
             }
 
             "/vpnhotspot" -> {
@@ -557,10 +493,8 @@ class ChatService : Service() {
                         applicationContext
                     )
                 ) {
-                    requestBody.text = """
-                        ${getString(R.string.system_message_head)}
-                        ${getString(R.string.no_permission)}
-                        """.trimIndent()
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
 
                 } else {
                     val wifiManager =
@@ -577,35 +511,22 @@ class ChatService : Service() {
                         resultVpnAp =
                             getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
                     }
-                    resultVpnAp += """
-     
-     ${applicationContext.getString(R.string.current_battery_level)}
-     """.trimIndent() + getBatteryInfo(
+                    resultVpnAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + getBatteryInfo(
                         applicationContext
                     ) + "\n" + getString(R.string.current_network_connection_status) + getNetworkType(
-                        applicationContext, preferences
+                        applicationContext
                     )
 
-                    requestBody.text = """
-                    ${getString(R.string.system_message_head)}
-                    $resultVpnAp
-                    """.trimIndent()
+                    requestBody.text = "${getString(R.string.system_message_head)}\n$resultVpnAp"
                 }
             }
 
             "/mobiledata" -> {
                 if (!preferences.read("root", false)!!) {
-                    requestBody.text = """
-                        ${getString(R.string.system_message_head)}
-                        ${getString(R.string.no_permission)}
-                        """.trimIndent()
+                    requestBody.text = "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
                     val resultData = applicationContext.getString(R.string.switch_data)
-
-                    requestBody.text = """
-                    ${getString(R.string.system_message_head)}
-                    $resultData
-                    """.trimIndent()
+                    requestBody.text = "${getString(R.string.system_message_head)}\n$resultData"
                 }
             }
 
@@ -633,19 +554,13 @@ class ChatService : Service() {
                 } else {
                     Log.i(TAG, "send_ussd: No permission.")
                 }
-                requestBody.text = """
-                    ${applicationContext.getString(R.string.system_message_head)}
-                    ${getString(R.string.unknown_command)}
-                    """.trimIndent()
+                requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.unknown_command)}"
             }
 
             "/getspamsms" -> {
                 val spamSmsList = Paper.book().read("spam_sms_list", ArrayList<String>())!!
                 if (spamSmsList.isEmpty()) {
-                    requestBody.text = """
-                        ${applicationContext.getString(R.string.system_message_head)}
-                        ${getString(R.string.no_spam_history)}
-                        """.trimIndent()
+                    requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.no_spam_history)}"
                 } else {
                     Thread {
                         if (checkNetworkStatus(applicationContext)) {
@@ -692,18 +607,12 @@ class ChatService : Service() {
             "/autoswitch" -> {
                 val state = !Paper.book().read("disable_beacon", false)!!
                 Paper.book().write("disable_beacon", state)
-                requestBody.text = """
-                    ${applicationContext.getString(R.string.system_message_head)}
-                    Beacon monitoring status: ${!state}
-                    """.trimIndent()
+                requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
             }
 
             "/setdummy" -> {
                 if (!preferences.read("root", false)!!) {
-                    requestBody.text = """
-                        ${getString(R.string.system_message_head)}
-                        ${getString(R.string.no_permission)}
-                        """.trimIndent()
+                    requestBody.text = "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
                     val commandList =
                         requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
@@ -718,25 +627,16 @@ class ChatService : Service() {
                             addDummyDevice(dummyIp!!)
                         }
                     }
-                    requestBody.text = """
-                    ${applicationContext.getString(R.string.system_message_head)}
-                    Done
-                    """.trimIndent()
+                    requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\nDone"
                 }
             }
 
             "/deldummy" -> {
                 if (!preferences.read("root", false)!!) {
-                    requestBody.text = """
-                        ${getString(R.string.system_message_head)}
-                        ${getString(R.string.no_permission)}
-                        """.trimIndent()
-                }else {
+                    requestBody.text = "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
+                } else {
                     delDummyDevice()
-                    requestBody.text = """
-                    ${applicationContext.getString(R.string.system_message_head)}
-                    Done
-                    """.trimIndent()
+                    requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\nDone"
                 }
             }
 
@@ -800,10 +700,7 @@ class ChatService : Service() {
                     }
                     Paper.book("send_temp").write("slot", sendSlot)
                 }
-                requestBody.text = """
-                    [${applicationContext.getString(R.string.send_sms_head)}]
-                    ${getString(R.string.failed_to_get_information)}
-                    """.trimIndent()
+                requestBody.text = "[${applicationContext.getString(R.string.send_sms_head)}]\n${getString(R.string.failed_to_get_information)}"
             }
 
             else -> {
@@ -817,10 +714,7 @@ class ChatService : Service() {
                     }
                 }
 
-                requestBody.text = """
-                    ${applicationContext.getString(R.string.system_message_head)}
-                    ${getString(R.string.unknown_command)}
-                    """.trimIndent()
+                requestBody.text = "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.unknown_command)}"
             }
         }
         if (hasCommand) {
@@ -879,21 +773,11 @@ class ChatService : Service() {
                     )
                     keyboardMarkup.inlineKeyboard = inlineKeyboardButtons
                     requestBody.keyboardMarkup = keyboardMarkup
-                    resultSend = """
-                        ${applicationContext.getString(R.string.to)}${
-                        Paper.book("send_temp").read<Any>("to")
-                    }
-                        ${applicationContext.getString(R.string.content)}${
-                        Paper.book("send_temp").read("content", "")
-                    }
-                        """.trimIndent()
+                    resultSend = "${applicationContext.getString(R.string.to)}${Paper.book("send_temp").read<Any>("to")}\n${applicationContext.getString(R.string.content)}${Paper.book("send_temp").read("content", "")}"
                     sendSmsNextStatus = SEND_SMS_STATUS.SEND_STATUS
                 }
             }
-            requestBody.text = """
-                $head
-                $resultSend
-                """.trimIndent()
+            requestBody.text = "$head\n$resultSend"
         }
 
         val requestUri = getUrl(botToken, "sendMessage")
@@ -997,33 +881,17 @@ class ChatService : Service() {
         if (!wakeLock.isHeld) {
             wakeLock.acquire()
         }
-        thread_main = Thread(threadMainRunnable())
-        thread_main!!.start()
+        Thread(threadMainRunnable()).start()
         val intentFilter = IntentFilter()
         intentFilter.addAction(Const.BROADCAST_STOP_SERVICE)
-        val networkRequest = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-            .build()
-        callback = networkCallBack()
-        connectivityManager.registerNetworkCallback(networkRequest, callback)
         broadcastReceiver = quitBroadcastReceiver()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(broadcastReceiver, intentFilter,Context.RECEIVER_EXPORTED)
-        }else{
+            registerReceiver(broadcastReceiver, intentFilter, RECEIVER_EXPORTED)
+        } else {
             registerReceiver(broadcastReceiver, intentFilter)
         }
     }
 
-    private fun whenNetworkChange() {
-        if (checkNetworkStatus(applicationContext)) {
-            if (!thread_main!!.isAlive) {
-                writeLog(applicationContext, "Network connections has been restored.")
-                thread_main = Thread(threadMainRunnable())
-                thread_main!!.start()
-            }
-        }
-    }
 
     private object SEND_SMS_STATUS {
         const val STANDBY_STATUS: Int = -1
@@ -1045,12 +913,6 @@ class ChatService : Service() {
         }
     }
 
-    private inner class networkCallBack : NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            Log.d(TAG, "onAvailable")
-            whenNetworkChange()
-        }
-    }
 
     internal inner class threadMainRunnable : Runnable {
         override fun run() {
@@ -1166,22 +1028,28 @@ class ChatService : Service() {
         private var firstRequest = true
 
 
-        private fun checkCellularNetworkType(type: Int, preferences: io.paperdb.Book): String {
+        @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
+        private fun checkCellularNetworkType(
+            context: Context,
+            telephony: TelephonyManager
+        ): String {
             var netType = "Unknown"
-            when (type) {
-                TelephonyManager.NETWORK_TYPE_NR -> netType = "NR"
-                TelephonyManager.NETWORK_TYPE_LTE -> {
-                    netType = "LTE"
-                    if (preferences.read("root", false)!!) {
-                        if (isLTECA) {
-                            netType += "+"
-                        }
-                        if (isNRConnected) {
-                            netType += " & NR"
-                        }
-                        if (isNRStandby) {
-                            netType += " (NR Standby)"
-                        }
+            when (telephony.dataNetworkType) {
+                TelephonyManager.NETWORK_TYPE_NR,
+                TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> {
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        netType = check5GState(telephony)
+                    } else {
+                        netType =
+                            if (telephony.dataNetworkType == TelephonyManager.NETWORK_TYPE_NR) {
+                                "5G"
+                            } else {
+                                "4G"
+                            }
                     }
                 }
 
@@ -1190,87 +1058,117 @@ class ChatService : Service() {
 
                 TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
                     "2G"
+
+                TelephonyManager.NETWORK_TYPE_GSM -> {
+                    "2G"
+                }
+
+                TelephonyManager.NETWORK_TYPE_UNKNOWN -> {
+                    "Unknown"
+                }
             }
             return netType
         }
 
+        @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        private fun check5GState(telephonyManager: TelephonyManager): String {
+            val cellInfoList = telephonyManager.getAllCellInfo()
+            var hasLte = false
+            var hasNr = false
 
-        private var thread_main: Thread? = null
-        fun getBatteryInfo(context: Context): String {
-            val batteryManager =
-                checkNotNull(context.getSystemService(BATTERY_SERVICE) as BatteryManager)
-            var batteryLevel =
-                batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-            if (batteryLevel > 100) {
-                Log.i(
-                    "get_battery_info",
-                    "The previous battery is over 100%, and the correction is 100%."
-                )
-                batteryLevel = 100
-            }
-            val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            val batteryStatus = checkNotNull(context.registerReceiver(null, intentFilter))
-            val chargeStatus = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            val batteryStringBuilder = StringBuilder().append(batteryLevel).append("%")
-            when (chargeStatus) {
-                BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> batteryStringBuilder.append(
-                    " ("
-                ).append(context.getString(R.string.charging)).append(")")
-
-                BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> when (batteryStatus.getIntExtra(
-                    BatteryManager.EXTRA_PLUGGED,
-                    -1
-                )) {
-                    BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> batteryStringBuilder.append(
-                        " ("
-                    ).append(context.getString(R.string.not_charging)).append(")")
-                }
-            }
-            return batteryStringBuilder.toString()
-        }
-
-        fun getNetworkType(context: Context, preferences: io.paperdb.Book): String {
-            var netType = "Unknown"
-            val connectManager =
-                checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
-            val telephonyManager = checkNotNull(
-                context
-                    .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-            )
-            val networks = connectManager.allNetworks
-            for (network in networks) {
-                val networkCapabilities =
-                    checkNotNull(connectManager.getNetworkCapabilities(network))
-                if (!networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                    if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                        netType = "WIFI"
-                        break
-                    }
-                    if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        if (ActivityCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.READ_PHONE_STATE
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            Log.i("get_network_type", "No permission.")
-                            return netType
-                        }
-                        netType = checkCellularNetworkType(
-                            telephonyManager.dataNetworkType,
-                            preferences
-                        )
-                    }
-                    if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
-                        netType = "Bluetooth"
-                    }
-                    if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                        netType = "Ethernet"
+            for (cellInfo in cellInfoList) {
+                if (cellInfo.isRegistered) {
+                    if (cellInfo is CellInfoLte) {
+                        hasLte = true
+                    } else if (cellInfo is CellInfoNr) {
+                        hasNr = true
                     }
                 }
             }
 
-            return netType
+            if (hasLte && hasNr) {
+                return "NSA NR"
+            } else if (hasNr) {
+                return "SA 5G"
+            }
+            return "LTE"
         }
     }
+    fun getBatteryInfo(context: Context): String {
+        val batteryManager =
+            checkNotNull(context.getSystemService(BATTERY_SERVICE) as BatteryManager)
+        var batteryLevel =
+            batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        if (batteryLevel > 100) {
+            Log.i(
+                "get_battery_info",
+                "The previous battery is over 100%, and the correction is 100%."
+            )
+            batteryLevel = 100
+        }
+        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = checkNotNull(context.registerReceiver(null, intentFilter))
+        val chargeStatus = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val batteryStringBuilder = StringBuilder().append(batteryLevel).append("%")
+        when (chargeStatus) {
+            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> batteryStringBuilder.append(
+                " ("
+            ).append(context.getString(R.string.charging)).append(")")
+
+            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> when (batteryStatus.getIntExtra(
+                BatteryManager.EXTRA_PLUGGED,
+                -1
+            )) {
+                BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> batteryStringBuilder.append(
+                    " ("
+                ).append(context.getString(R.string.not_charging)).append(")")
+            }
+        }
+        return batteryStringBuilder.toString()
+    }
+
+    fun getNetworkType(context: Context): String {
+        var netType = "Unknown"
+        val connectManager =
+            checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
+        val telephonyManager = checkNotNull(
+            context
+                .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+        )
+        val networks = connectManager.allNetworks
+        for (network in networks) {
+            val networkCapabilities =
+                checkNotNull(connectManager.getNetworkCapabilities(network))
+            if (!networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    netType = "WIFI"
+                    break
+                }
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.READ_PHONE_STATE
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        Log.i("get_network_type", "No permission.")
+                        return netType
+                    }
+                    netType = checkCellularNetworkType(
+                        context,
+                        telephonyManager
+                    )
+                }
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
+                    netType = "Bluetooth"
+                }
+                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    netType = "Ethernet"
+                }
+            }
+        }
+
+        return netType
+    }
 }
+
 
