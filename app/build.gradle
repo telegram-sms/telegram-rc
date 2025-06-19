@@ -40,6 +40,10 @@ android {
         }
         debug {
             minifyEnabled false
+            ndk {
+                //noinspection ChromeOsAbiSupport
+                abiFilters "arm64-v8a"
+            }
         }
     }
     namespace 'com.qwe7002.telegram_rc'
