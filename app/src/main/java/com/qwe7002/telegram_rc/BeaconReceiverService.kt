@@ -208,184 +208,194 @@ class BeaconReceiverService : Service() {
         }
     }
 
+    // Add a mutex lock object to protect flushReceiver
+    private val flushReceiverLock = Object()
+
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         private val config: MMKV = MMKV.mmkvWithID("beacon")
         override fun onReceive(context: Context, intent: Intent) {
-            val wifiIsEnableStatus: Boolean
-            if (config.getBoolean("useVpnHotspot", false) == true) {
-                if (!RemoteControl.isVPNHotspotExist(context) && Settings.System.canWrite(
-                        context
-                    )
-                ) {
-                    config.putBoolean("useVpnHotspot", false)
+            // Use synchronized block to prevent concurrent execution
+            synchronized(flushReceiverLock) {
+                val wifiIsEnableStatus: Boolean
+                if (config.getBoolean("useVpnHotspot", false) == true) {
+                    if (!RemoteControl.isVPNHotspotExist(context) && Settings.System.canWrite(
+                            context
+                        )
+                    ) {
+                        config.putBoolean("useVpnHotspot", false)
+                    }
+                    wifiIsEnableStatus = RemoteControl.isVPNHotspotActive()
+                } else {
+                    if (!Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(
+                            context
+                        )
+                    ) {
+                        config.putBoolean("useVpnHotspot", true)
+                    }
+                    wifiIsEnableStatus = RemoteControl.isHotspotActive(context)
                 }
-                wifiIsEnableStatus = RemoteControl.isVPNHotspotActive()
-            } else {
-                if (!Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(
-                        context
-                    )
-                ) {
-                    config.putBoolean("useVpnHotspot", true)
-                }
-                wifiIsEnableStatus = RemoteControl.isHotspotActive(context)
-            }
-            if (config.getBoolean("beacon_enable", false) != true) {
-                notFoundCount = 0
-                detectCount = 0
-                return
-            }
-            val info = getBatteryInfo()
-            if (!info.isCharging && info.batteryLevel < 25 && !wifiIsEnableStatus && !config.getBoolean("opposite",false)) {
-                notFoundCount = 0
-                detectCount = 0
-                Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation")
-                return
-            }
-            //val listenBeaconList =
-                //Paper.book("beacon").read("address", ArrayList<String>())!!
-            val listenBeaconList = config.decodeStringSet("address", emptySet())
-            if (listenBeaconList != null) {
-                if (listenBeaconList.isEmpty()) {
+                if (config.getBoolean("beacon_enable", false) != true) {
                     notFoundCount = 0
                     detectCount = 0
-                    Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
                     return
                 }
-            }
-            val bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-            if (!bluetoothAdapter.isEnabled) {
-                notFoundCount = 0
-                detectCount = 0
-                Log.i(TAG, "Bluetooth has been turned off")
-                return
-            }
-            var foundBeacon = false
-            lateinit var detectBeacon: BeaconModel.BeaconModel
-            val gson = Gson()
-            val beacons = gson.fromJson<java.util.ArrayList<BeaconModel.BeaconModel>>(
-                intent.getStringExtra("beaconList"),
-                object : TypeToken<java.util.ArrayList<BeaconModel.BeaconModel>>() {}.type
-            )
-            for (beacon in beacons) {
-                Log.d(
-                    TAG,
-                    "UUID: " + beacon.uuid + " Rssi: " + beacon.rssi
+                val info = getBatteryInfo()
+                if (!info.isCharging && info.batteryLevel < 25 && !wifiIsEnableStatus && !config.getBoolean(
+                        "opposite",
+                        false
+                    )
+                ) {
+                    notFoundCount = 0
+                    detectCount = 0
+                    Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation")
+                    return
+                }
+                //val listenBeaconList =
+                //Paper.book("beacon").read("address", ArrayList<String>())!!
+                val listenBeaconList = config.decodeStringSet("address", emptySet())
+                if (listenBeaconList != null) {
+                    if (listenBeaconList.isEmpty()) {
+                        notFoundCount = 0
+                        detectCount = 0
+                        Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
+                        return
+                    }
+                }
+                val bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+                if (!bluetoothAdapter.isEnabled) {
+                    notFoundCount = 0
+                    detectCount = 0
+                    Log.i(TAG, "Bluetooth has been turned off")
+                    return
+                }
+                var foundBeacon = false
+                lateinit var detectBeacon: BeaconModel.BeaconModel
+                val gson = Gson()
+                val beacons = gson.fromJson<java.util.ArrayList<BeaconModel.BeaconModel>>(
+                    intent.getStringExtra("beaconList"),
+                    object : TypeToken<java.util.ArrayList<BeaconModel.BeaconModel>>() {}.type
                 )
-                for (beaconAddress in listenBeaconList!!) {
+                for (beacon in beacons) {
+                    Log.d(
+                        TAG,
+                        "UUID: " + beacon.uuid + " Rssi: " + beacon.rssi
+                    )
+                    for (beaconAddress in listenBeaconList!!) {
 
-                    if (beaconItemName(beacon.uuid, beacon.major, beacon.minor) == beaconAddress
-                    ) {
-                        foundBeacon = true
+                        if (beaconItemName(beacon.uuid, beacon.major, beacon.minor) == beaconAddress
+                        ) {
+                            foundBeacon = true
+                            break
+                        }
+                    }
+                    if (foundBeacon) {
+                        detectBeacon = beacon
                         break
                     }
                 }
+                val beaconStatus: String
                 if (foundBeacon) {
-                    detectBeacon = beacon
-                    break
-                }
-            }
-            val beaconStatus: String
-            if (foundBeacon) {
-                val distance = detectBeacon.distance.toInt().toString()
-                beaconStatus = "\nBeacon Distance: $distance meter"
-                notFoundCount = 0
-                if (detectBeacon.distance >= 200.0) {
-                    Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation")
-                } else {
-                    ++detectCount
-                }
-            } else {
-                beaconStatus = "\nBeacon Not Found."
-                if (notFoundCount >= 5) {
-                    detectCount = 0
-                }
-                ++notFoundCount
-            }
-            val STANDBY = -1
-            val ENABLE_AP = 0
-            val DISABLE_AP = 1
-            var switchStatus = STANDBY
-            Log.d(TAG, "detect_singal_count: $detectCount")
-            Log.d(TAG, "not_found_count: $notFoundCount")
-            if (wifiIsEnableStatus && foundBeacon) {
-                if (!config.getBoolean("opposite", false)) {
-                    if (detectCount >= config.getInt("disableCount", 10)) {
-                        detectCount = 0
-                        notFoundCount = 0
-                        if (config.getBoolean("useVpnHotspot", false)) {
-                            RemoteControl.disableVPNHotspot(wifiManager)
-                        } else {
-                            RemoteControl.disableHotspot(
-                                context,
-                                TetherManager.TetherMode.TETHERING_WIFI
-                            )
-                        }
-                        switchStatus = DISABLE_AP
+                    val distance = detectBeacon.distance.toInt().toString()
+                    beaconStatus = "\nBeacon Distance: $distance meter"
+                    notFoundCount = 0
+                    if (detectBeacon.distance >= 200.0) {
+                        Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation")
+                    } else {
+                        ++detectCount
                     }
                 } else {
-                    if (detectCount >= config.getInt("enableCount", 10)) {
+                    beaconStatus = "\nBeacon Not Found."
+                    if (notFoundCount >= 5) {
                         detectCount = 0
-                        notFoundCount = 0
-                        if (config.getBoolean("useVpnHotspot", false)) {
-                            RemoteControl.enableVPNHotspot(wifiManager)
-                        } else {
-                            RemoteControl.enableHotspot(
-                                context,
-                                TetherManager.TetherMode.TETHERING_WIFI
-                            )
+                    }
+                    ++notFoundCount
+                }
+                val STANDBY = -1
+                val ENABLE_AP = 0
+                val DISABLE_AP = 1
+                var switchStatus = STANDBY
+                Log.d(TAG, "detect_singal_count: $detectCount")
+                Log.d(TAG, "not_found_count: $notFoundCount")
+                if (wifiIsEnableStatus && foundBeacon) {
+                    if (!config.getBoolean("opposite", false)) {
+                        if (detectCount >= config.getInt("disableCount", 10)) {
+                            detectCount = 0
+                            notFoundCount = 0
+                            if (config.getBoolean("useVpnHotspot", false)) {
+                                RemoteControl.disableVPNHotspot(wifiManager)
+                            } else {
+                                RemoteControl.disableHotspot(
+                                    context,
+                                    TetherManager.TetherMode.TETHERING_WIFI
+                                )
+                            }
+                            switchStatus = DISABLE_AP
                         }
-                        switchStatus = ENABLE_AP
+                    } else {
+                        if (detectCount >= config.getInt("enableCount", 10)) {
+                            detectCount = 0
+                            notFoundCount = 0
+                            if (config.getBoolean("useVpnHotspot", false)) {
+                                RemoteControl.enableVPNHotspot(wifiManager)
+                            } else {
+                                RemoteControl.enableHotspot(
+                                    context,
+                                    TetherManager.TetherMode.TETHERING_WIFI
+                                )
+                            }
+                            switchStatus = ENABLE_AP
+                        }
                     }
                 }
-            }
-            if (!wifiIsEnableStatus && !foundBeacon) {
-                if (!config.getBoolean("opposite", false)) {
-                    if (notFoundCount >= config.getInt("enableCount", 10)) {
-                        detectCount = 0
-                        notFoundCount = 0
-                        if (config.getBoolean("useVpnHotspot", false)) {
-                            RemoteControl.enableVPNHotspot(wifiManager)
-                        } else {
-                            RemoteControl.enableHotspot(
-                                context,
-                                TetherManager.TetherMode.TETHERING_WIFI
-                            )
+                if (!wifiIsEnableStatus && !foundBeacon) {
+                    if (!config.getBoolean("opposite", false)) {
+                        if (notFoundCount >= config.getInt("enableCount", 10)) {
+                            detectCount = 0
+                            notFoundCount = 0
+                            if (config.getBoolean("useVpnHotspot", false)) {
+                                RemoteControl.enableVPNHotspot(wifiManager)
+                            } else {
+                                RemoteControl.enableHotspot(
+                                    context,
+                                    TetherManager.TetherMode.TETHERING_WIFI
+                                )
+                            }
+                            switchStatus = ENABLE_AP
                         }
-                        switchStatus = ENABLE_AP
-                    }
-                } else {
-                    if (notFoundCount >= config.getInt("disableCount", 10)) {
-                        detectCount = 0
-                        notFoundCount = 0
-                        if (config.getBoolean("useVpnHotspot", false)) {
-                            RemoteControl.disableVPNHotspot(wifiManager)
-                        } else {
-                            RemoteControl.disableHotspot(
-                                context,
-                                TetherManager.TetherMode.TETHERING_WIFI
-                            )
+                    } else {
+                        if (notFoundCount >= config.getInt("disableCount", 10)) {
+                            detectCount = 0
+                            notFoundCount = 0
+                            if (config.getBoolean("useVpnHotspot", false)) {
+                                RemoteControl.disableVPNHotspot(wifiManager)
+                            } else {
+                                RemoteControl.disableHotspot(
+                                    context,
+                                    TetherManager.TetherMode.TETHERING_WIFI
+                                )
+                            }
+                            switchStatus = DISABLE_AP
                         }
-                        switchStatus = DISABLE_AP
                     }
                 }
+
+                lateinit var message: String
+                when (switchStatus) {
+                    ENABLE_AP -> message =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
+                            getString(R.string.action_success)
+                        }$beaconStatus"
+
+                    DISABLE_AP -> message =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
+                            getString(R.string.action_success)
+                        }$beaconStatus"
+                }
+
+                CcSendJob.startJob(context, "Beacon Scan Service", message)
+                networkHandle(message, chatId, okhttpClient)
+
             }
-
-            lateinit var message: String
-            when (switchStatus) {
-                ENABLE_AP -> message =
-                    "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
-                        getString(R.string.action_success)
-                    }$beaconStatus"
-
-                DISABLE_AP -> message =
-                    "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
-                        getString(R.string.action_success)
-                    }$beaconStatus"
-            }
-
-            CcSendJob.startJob(context, "Beacon Scan Service", message)
-            networkHandle(message, chatId, okhttpClient)
-
         }
     }
 
@@ -416,11 +426,15 @@ class BeaconReceiverService : Service() {
         requestBody.chatId = chatId1
         requestBody.messageThreadId = messageThreadId
         requestBody.text =
-            message + "\n" + getString(R.string.current_battery_level) + Battery.getBatteryInfo(
-                applicationContext
-            ) + "\n" + getString(
-                R.string.current_network_connection_status
-            ) + Network.getNetworkType(applicationContext)
+            message + "\n${getString(R.string.current_battery_level)}${
+                Battery.getBatteryInfo(
+                    applicationContext
+                )
+            }\n${
+                getString(
+                    R.string.current_network_connection_status
+                )
+            }${Network.getNetworkType(applicationContext)}"
         val requestBodyJson = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
         val requestObj: Request = Request.Builder().url(requestUrl).method("POST", body).build()
@@ -467,4 +481,3 @@ class BeaconReceiverService : Service() {
     }
 
 }
-
