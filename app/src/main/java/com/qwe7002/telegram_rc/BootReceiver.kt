@@ -8,14 +8,13 @@ import com.qwe7002.telegram_rc.root_kit.Networks
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import kotlin.String
+import kotlin.time.Duration
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val logTag = "boot_receiver"
-        Log.d(logTag, "Receive action: " + intent.action)
-        Paper.init(context)
+//        Log.d(logTag, "Receive action: " + intent.action)
         val preferences = MMKV.defaultMMKV()
         if (preferences.contains("initialized")) {
             LogManage.writeLog(
@@ -31,9 +30,12 @@ class BootReceiver : BroadcastReceiver() {
             KeepAliveJob.startJob(context)
             ReSendJob.startJob(context)
             if (preferences.getBoolean("root", false)) {
-                if (Paper.book("system_config").contains("dummy_ip_addr")) {
-                    val dummyIp = Paper.book("system_config").read<String>("dummy_ip_addr")
-                    Networks.addDummyDevice(dummyIp.toString())
+                val rootMMKV = MMKV.mmkvWithID("root")
+                if (rootMMKV.contains("dummy_ip_addr")) {
+                    val dummyIp = rootMMKV.getString("dummy_ip_addr", "")
+                    if(dummyIp?.isNotEmpty() == true) {
+                        Networks.addDummyDevice(dummyIp.toString())
+                    }
                 }
             }
         }

@@ -3,8 +3,6 @@ package com.qwe7002.telegram_rc
 import android.app.Notification
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.pm.ServiceInfo
-import android.os.Build
 import android.os.IBinder
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -14,11 +12,8 @@ import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
-import com.qwe7002.telegram_rc.static_class.Notify
-import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -30,13 +25,7 @@ import java.util.Objects
 
 class NotifyListenerService : NotificationListenerService() {
     private val logTag: String = "notification_receiver"
-    lateinit var preferences: MMKV
-
-    override fun onCreate() {
-        super.onCreate()
-        Paper.init(applicationContext)
-        preferences = MMKV.defaultMMKV()
-    }
+    private val preferences: MMKV = MMKV.defaultMMKV()
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
@@ -47,8 +36,9 @@ class NotifyListenerService : NotificationListenerService() {
             return
         }
 
-        val listenList: List<String> =
-            Paper.book("system_config").read("notify_listen_list", ArrayList())!!
+/*        val listenList: List<String> =
+            Paper.book("system_config").read("notify_listen_list", ArrayList())!!*/
+        val listenList: List<String> = MMKV.defaultMMKV().decodeStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
         if (!listenList.contains(packageName)) {
             Log.i(logTag, "[$packageName] Not in the list of listening packages.")
             return

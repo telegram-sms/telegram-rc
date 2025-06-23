@@ -32,13 +32,14 @@ import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
 import com.qwe7002.telegram_rc.static_class.CcSend
 import com.qwe7002.telegram_rc.static_class.Const
-import io.paperdb.Paper
+import com.tencent.mmkv.MMKV
 import org.json.JSONArray
 import org.json.JSONObject
 
 class CcActivity : AppCompatActivity() {
     private lateinit var listAdapter: ArrayAdapter<CcSendService>
     private lateinit var serviceList: ArrayList<CcSendService>
+    private lateinit var  preferences: MMKV
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cc)
@@ -47,12 +48,11 @@ class CcActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        preferences = MMKV.defaultMMKV()
         val inflater = this.layoutInflater
         val fab = findViewById<FloatingActionButton>(R.id.cc_fab)
         val ccList = findViewById<ListView>(R.id.cc_list)
-
-        val serviceListJson =
-            Paper.book("system_config").read("CC_service_list", "[]").toString()
+        val serviceListJson = preferences.getString("cc_service_list", "[]")
         val gson = Gson()
         val type = object : TypeToken<ArrayList<CcSendService>>() {}.type
         serviceList = gson.fromJson(serviceListJson, type)
@@ -339,7 +339,7 @@ class CcActivity : AppCompatActivity() {
         listAdapter: ArrayAdapter<CcSendService>
     ) {
         Log.d("save_and_flush", serviceList.toString())
-        Paper.book("system_config").write("CC_service_list", Gson().toJson(serviceList))
+        preferences.putString("cc_service_list", Gson().toJson(serviceList))
         listAdapter.notifyDataSetChanged()
     }
 
@@ -368,8 +368,8 @@ class CcActivity : AppCompatActivity() {
                 CcSendJob.startJob(
                     applicationContext,
                     getString(R.string.app_name),
-                   getString(R.string.system_message_head)+"\n Test message.",
-                    getString(R.string.system_message_head)+"\n Test message."
+                    getString(R.string.system_message_head) + "\n Test message.",
+                    getString(R.string.system_message_head) + "\n Test message."
                 )
                 Snackbar.make(
                     findViewById(R.id.send_test_menu_item),

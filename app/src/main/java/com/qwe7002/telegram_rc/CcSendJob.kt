@@ -17,7 +17,6 @@ import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -27,7 +26,6 @@ import java.io.IOException
 class CcSendJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("CCSend", "startJob: Trying to send message.")
-        Paper.init(applicationContext)
         val message: String = params?.extras?.getString("message", "") ?: ""
         var title: String = params?.extras?.getString("title", getString(R.string.app_name))
             ?: getString(R.string.app_name)
@@ -38,8 +36,9 @@ class CcSendJob : JobService() {
             title += getString(R.string.verification_code)
         }
         Thread {
-            val serviceListJson =
-                Paper.book("system_config").read("CC_service_list", "[]").toString()
+/*            val serviceListJson =
+                Paper.book("system_config").read("CC_service_list", "[]").toString()*/
+           val serviceListJson = MMKV.defaultMMKV().getString("CC_service_list", "[]")
             val gson = Gson()
             var type = object : TypeToken<ArrayList<CcSendService>>() {}.type
             val sendList: ArrayList<CcSendService> = gson.fromJson(serviceListJson, type)

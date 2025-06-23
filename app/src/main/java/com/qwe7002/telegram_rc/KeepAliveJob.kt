@@ -9,7 +9,6 @@ import android.content.Context
 import android.util.Log
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import java.util.concurrent.TimeUnit
 
 

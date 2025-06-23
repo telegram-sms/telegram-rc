@@ -26,12 +26,12 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.qwe7002.telegram_rc.config.beacon
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isVPNHotspotExist
-import io.paperdb.Paper
+import com.tencent.mmkv.MMKV
 
 class BeaconActivity : AppCompatActivity() {
+    private lateinit var beaconMMKV: MMKV
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val gson = Gson()
@@ -63,8 +63,7 @@ class BeaconActivity : AppCompatActivity() {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val context = applicationContext
-        Paper.init(context)
+        beaconMMKV = MMKV.mmkvWithID("beacon")
         setContentView(R.layout.activity_beacon)
         flushListView(ArrayList())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -95,22 +94,20 @@ class BeaconActivity : AppCompatActivity() {
             dialogView.findViewById<SwitchMaterial>(R.id.beacon_use_vpn_hotspot_switch)
         val disableCount = dialogView.findViewById<EditText>(R.id.beacon_disable_count_editview)
         val enableCount = dialogView.findViewById<EditText>(R.id.beacon_enable_count_editview)
-        val config = Paper.book("beacon").read("config", beacon())!!
-
-        useVpnHotspotSwitch.isChecked = config.useVpnHotspot && isVPNHotspotExist(context)
+        useVpnHotspotSwitch.isChecked = beaconMMKV.getBoolean("useVpnHotspot", false) &&
+                isVPNHotspotExist(context)
         useVpnHotspotSwitch.isEnabled =
             Settings.System.canWrite(context) && isVPNHotspotExist(context)
 
-        disableCount.setText(config.disableCount)
-        enableCount.setText(config.enableCount)
+        disableCount.setText(beaconMMKV.getInt("disableCount", 10).toString())
+        enableCount.setText(beaconMMKV.getInt("enableCount", 10).toString())
         AlertDialog.Builder(this).setTitle("Beacon configuration")
             .setView(dialogView)
             .setPositiveButton(R.string.ok_button) { _: DialogInterface?, _: Int ->
-                config.opposite = enable.isChecked
-                config.useVpnHotspot = useVpnHotspotSwitch.isChecked
-                config.disableCount = disableCount.text.toString().toInt()
-                config.enableCount = enableCount.text.toString().toInt()
-                Paper.book("beacon").write("config", config)
+                beaconMMKV.putBoolean("useVpnHotspot", useVpnHotspotSwitch.isChecked)
+                beaconMMKV.putInt("disableCount", disableCount.text.toString().toInt())
+                beaconMMKV.putInt("enableCount", enableCount.text.toString().toInt())
+                beaconMMKV.putBoolean("opposite", enable.isChecked)
                 LocalBroadcastManager.getInstance(this)
                     .sendBroadcast(Intent("reload_beacon_config"))
             }.show()
@@ -127,11 +124,9 @@ class BeaconActivity : AppCompatActivity() {
         var context: Context
     ) :
         BaseAdapter() {
-        private var listenList: ArrayList<String>
-
-        init {
-            listenList = Paper.book("beacon").read("address", ArrayList())!!
-        }
+        private var beaconMMKV: MMKV = MMKV.mmkvWithID("beacon")
+        private var listenList: ArrayList<String> =
+            beaconMMKV.decodeStringSet("address", setOf()).orEmpty().toCollection(ArrayList())
 
         override fun getCount(): Int {
             return list.size
@@ -172,19 +167,20 @@ class BeaconActivity : AppCompatActivity() {
             }
             checkBoxView.setOnClickListener {
                 val address = BeaconModel.beaconItemName(beacon.uuid, beacon.major, beacon.minor)
-                val listenListTemp = Paper.book("beacon").read("address", ArrayList<String>())
+                //val listenListTemp = Paper.book("beacon").read("address", ArrayList<String>())
+                val listenListTemp =
+                    beaconMMKV.decodeStringSet("address", setOf()).orEmpty().toMutableList()
                 if (checkBoxView.isChecked) {
-                    assert(listenListTemp != null)
-                    if (!listenListTemp!!.contains(address)) {
+                    if (!listenListTemp.contains(address)) {
                         listenListTemp.add(address)
                     }
                 } else {
-                    assert(listenListTemp != null)
-                    listenListTemp!!.remove(address)
+                    listenListTemp.remove(address)
                 }
                 Log.d("monitoring_activity", "beacon_address: $listenListTemp")
-                Paper.book("beacon").write("address", listenListTemp)
-                listenList = listenListTemp
+                //Paper.book("beacon").write("address", listenListTemp)
+                beaconMMKV.encode("address", listenListTemp.toSet())
+                listenList = listenListTemp as ArrayList<String>
             }
 
             return view

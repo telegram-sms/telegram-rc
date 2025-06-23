@@ -17,8 +17,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
@@ -27,17 +25,14 @@ import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.os.Process
 import android.provider.Settings
-import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.qwe7002.telegram_rc.config.beacon
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
-import com.qwe7002.telegram_rc.root_kit.Radio
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.Network
@@ -46,7 +41,6 @@ import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -69,7 +63,6 @@ class BeaconReceiverService : Service() {
     private lateinit var requestUrl: String
     private lateinit var messageThreadId: String
     private lateinit var scanner: IScanner
-    private lateinit var config: beacon
     private lateinit var wakelock: WakeLock
     private var isRoot = false
     override fun onBind(intent: Intent): IBinder {
@@ -94,7 +87,6 @@ class BeaconReceiverService : Service() {
 
     private val reloadConfigReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            config = Paper.book("beacon").read("config", beacon())!!
         }
     }
 
@@ -119,8 +111,6 @@ class BeaconReceiverService : Service() {
         if (!this.wakelock.isHeld) {
             this.wakelock.acquire()
         }
-        Paper.init(applicationContext)
-        config = Paper.book("beacon").read("config", beacon())!!
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(
                 reloadConfigReceiver,
@@ -133,7 +123,6 @@ class BeaconReceiverService : Service() {
                 IntentFilter("reload_beacon_config")
             )
         }
-        Paper.init(applicationContext)
         val preferences = MMKV.defaultMMKV()
         requestUrl =
             Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
@@ -220,15 +209,15 @@ class BeaconReceiverService : Service() {
     }
 
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        private val config: MMKV = MMKV.mmkvWithID("beacon")
         override fun onReceive(context: Context, intent: Intent) {
-
             val wifiIsEnableStatus: Boolean
-            if (config.useVpnHotspot) {
+            if (config.getBoolean("useVpnHotspot", false) == true) {
                 if (!RemoteControl.isVPNHotspotExist(context) && Settings.System.canWrite(
                         context
                     )
                 ) {
-                    config.useVpnHotspot = false
+                    config.putBoolean("useVpnHotspot", false)
                 }
                 wifiIsEnableStatus = RemoteControl.isVPNHotspotActive()
             } else {
@@ -236,29 +225,32 @@ class BeaconReceiverService : Service() {
                         context
                     )
                 ) {
-                    config.useVpnHotspot = true
+                    config.putBoolean("useVpnHotspot", true)
                 }
                 wifiIsEnableStatus = RemoteControl.isHotspotActive(context)
             }
-            if (Paper.book().read("disable_beacon", false)!!) {
+            if (config.getBoolean("beacon_enable", false) != true) {
                 notFoundCount = 0
                 detectCount = 0
                 return
             }
             val info = getBatteryInfo()
-            if (!info.isCharging && info.batteryLevel < 25 && !wifiIsEnableStatus && !config.opposite) {
+            if (!info.isCharging && info.batteryLevel < 25 && !wifiIsEnableStatus && !config.getBoolean("opposite",false)) {
                 notFoundCount = 0
                 detectCount = 0
                 Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation")
                 return
             }
-            val listenBeaconList =
-                Paper.book("beacon").read("address", ArrayList<String>())!!
-            if (listenBeaconList.isEmpty()) {
-                notFoundCount = 0
-                detectCount = 0
-                Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
-                return
+            //val listenBeaconList =
+                //Paper.book("beacon").read("address", ArrayList<String>())!!
+            val listenBeaconList = config.decodeStringSet("address", emptySet())
+            if (listenBeaconList != null) {
+                if (listenBeaconList.isEmpty()) {
+                    notFoundCount = 0
+                    detectCount = 0
+                    Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
+                    return
+                }
             }
             val bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
             if (!bluetoothAdapter.isEnabled) {
@@ -279,7 +271,7 @@ class BeaconReceiverService : Service() {
                     TAG,
                     "UUID: " + beacon.uuid + " Rssi: " + beacon.rssi
                 )
-                for (beaconAddress in listenBeaconList) {
+                for (beaconAddress in listenBeaconList!!) {
 
                     if (beaconItemName(beacon.uuid, beacon.major, beacon.minor) == beaconAddress
                     ) {
@@ -316,11 +308,11 @@ class BeaconReceiverService : Service() {
             Log.d(TAG, "detect_singal_count: $detectCount")
             Log.d(TAG, "not_found_count: $notFoundCount")
             if (wifiIsEnableStatus && foundBeacon) {
-                if (!config.opposite) {
-                    if (detectCount >= config.disableCount) {
+                if (!config.getBoolean("opposite", false)) {
+                    if (detectCount >= config.getInt("disableCount", 10)) {
                         detectCount = 0
                         notFoundCount = 0
-                        if (config.useVpnHotspot) {
+                        if (config.getBoolean("useVpnHotspot", false)) {
                             RemoteControl.disableVPNHotspot(wifiManager)
                         } else {
                             RemoteControl.disableHotspot(
@@ -331,10 +323,10 @@ class BeaconReceiverService : Service() {
                         switchStatus = DISABLE_AP
                     }
                 } else {
-                    if (detectCount >= config.enableCount) {
+                    if (detectCount >= config.getInt("enableCount", 10)) {
                         detectCount = 0
                         notFoundCount = 0
-                        if (config.useVpnHotspot) {
+                        if (config.getBoolean("useVpnHotspot", false)) {
                             RemoteControl.enableVPNHotspot(wifiManager)
                         } else {
                             RemoteControl.enableHotspot(
@@ -347,11 +339,11 @@ class BeaconReceiverService : Service() {
                 }
             }
             if (!wifiIsEnableStatus && !foundBeacon) {
-                if (!config.opposite) {
-                    if (notFoundCount >= config.enableCount) {
+                if (!config.getBoolean("opposite", false)) {
+                    if (notFoundCount >= config.getInt("enableCount", 10)) {
                         detectCount = 0
                         notFoundCount = 0
-                        if (config.useVpnHotspot) {
+                        if (config.getBoolean("useVpnHotspot", false)) {
                             RemoteControl.enableVPNHotspot(wifiManager)
                         } else {
                             RemoteControl.enableHotspot(
@@ -362,10 +354,10 @@ class BeaconReceiverService : Service() {
                         switchStatus = ENABLE_AP
                     }
                 } else {
-                    if (notFoundCount >= config.disableCount) {
+                    if (notFoundCount >= config.getInt("disableCount", 10)) {
                         detectCount = 0
                         notFoundCount = 0
-                        if (config.useVpnHotspot) {
+                        if (config.getBoolean("useVpnHotspot", false)) {
                             RemoteControl.disableVPNHotspot(wifiManager)
                         } else {
                             RemoteControl.disableHotspot(
