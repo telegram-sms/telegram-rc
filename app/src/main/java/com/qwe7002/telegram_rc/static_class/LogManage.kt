@@ -4,12 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.qwe7002.telegram_rc.R
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
