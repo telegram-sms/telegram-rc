@@ -66,7 +66,6 @@ import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -93,6 +92,8 @@ class ChatService : Service() {
     private lateinit var chatID: String
     private lateinit var botToken: String
     private lateinit var statusMMKV: MMKV
+    private lateinit var chatInfoMMKV: MMKV
+    private lateinit var sendStatusMMKV: MMKV
 
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -127,7 +128,7 @@ class ChatService : Service() {
 
     private fun receiveHandle(resultObj: JsonObject, getIdOnly: Boolean) {
         val updateId = resultObj["update_id"].asLong
-        offset = updateId + 1
+        chatInfoMMKV.putLong("offset", updateId + 1)
         if (getIdOnly) {
             Log.i(TAG, "receive_handle: get_id_only")
             return
@@ -152,11 +153,15 @@ class ChatService : Service() {
             val callbackQuery = resultObj["callback_query"].asJsonObject
             callbackData = callbackQuery["data"].asString
         }
-        if (messageType == "callback_query" && sendSmsNextStatus != SEND_SMS_STATUS.STANDBY_STATUS) {
-            var slot = Paper.book("send_temp").read("slot", -1)!!
-            val messageId = Paper.book("send_temp").read("message_id", -1L)!!
-            val to = Paper.book("send_temp").read("to", "")
-            val content = Paper.book("send_temp").read("content", "")
+        if (messageType == "callback_query" && sendStatusMMKV.getInt(
+                "status",
+                SEND_SMS_STATUS.STANDBY_STATUS
+            ) != SEND_SMS_STATUS.STANDBY_STATUS
+        ) {
+            val slot = sendStatusMMKV.getInt("slot", -1)
+            val messageId = sendStatusMMKV.getLong("message_id", -1L)
+            val to = sendStatusMMKV.getString("to", "")
+            val content = sendStatusMMKV.getString("content", "")
             if (callbackData != CALLBACK_DATA_VALUE.SEND) {
                 setSmsSendStatusStandby()
                 val requestUri = getUrl(
@@ -195,7 +200,7 @@ class ChatService : Service() {
             }
             var subId = -1
             if (getActiveCard(applicationContext) == 1) {
-                slot = -1
+                sendStatusMMKV.putInt("slot", -1)
             } else {
                 subId = getSubId(applicationContext, slot)
             }
@@ -239,17 +244,20 @@ class ChatService : Service() {
             requestMsg = messageObj["text"].asString
         }
         if (messageObj.has("reply_to_message")) {
-            val saveItem = Paper.book().read<SMSRequestInfo>(
+            val saveItemString = chatInfoMMKV.getString(
                 messageObj["reply_to_message"].asJsonObject["message_id"].asString,
                 null
             )
+            val saveItem =
+                Gson().fromJson<SMSRequestInfo>(saveItemString, SMSRequestInfo::class.java)
+
             if (saveItem != null && requestMsg.isNotEmpty()) {
                 val phoneNumber = saveItem.phone
                 val cardSlot = saveItem.card
-                sendSmsNextStatus = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS
-                Paper.book("send_temp").write("slot", cardSlot)
-                Paper.book("send_temp").write("to", phoneNumber)
-                Paper.book("send_temp").write("content", requestMsg)
+                sendStatusMMKV.putInt("status", SEND_SMS_STATUS.WAITING_TO_SEND_STATUS)
+                sendStatusMMKV.putInt("slot", cardSlot)
+                sendStatusMMKV.putString("to", phoneNumber)
+                sendStatusMMKV.putString("content", requestMsg)
             }
         }
         var hasCommand = false
@@ -346,7 +354,8 @@ class ChatService : Service() {
                     }
                 }
                 var spamCount = ""
-                val spamList = Paper.book().read("spam_sms_list", ArrayList<String>())!!
+                val spamList =
+                    MMKV.mmkvWithID("spam").decodeStringSet("sms", setOf())?.toList() ?: ArrayList()
                 if (spamList.isNotEmpty()) {
                     spamCount = "\n${getString(R.string.spam_count_title)}${spamList.size}"
                 }
@@ -375,9 +384,7 @@ class ChatService : Service() {
                     }
                 }
                 var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
-                beaconStatus += if (java.lang.Boolean.FALSE == Paper.book()
-                        .read("disable_beacon", false)
-                ) {
+                beaconStatus += if (preferences.getBoolean("beacon_enable", false)) {
                     getString(R.string.enable)
                 } else {
                     getString(R.string.disable)
@@ -514,7 +521,9 @@ class ChatService : Service() {
             }
 
             "/getspamsms" -> {
-                val spamSmsList = Paper.book().read("spam_sms_list", ArrayList<String>())!!
+                val spamSmsList =
+                    MMKV.mmkvWithID("spam").getStringSet("sms", setOf())?.toMutableSet()
+                        ?: mutableSetOf()
                 if (spamSmsList.isEmpty()) {
                     requestBody.text =
                         "${applicationContext.getString(R.string.system_message_head)}\n${
@@ -551,10 +560,11 @@ class ChatService : Service() {
                                         )
                                     }
                                 })
-                                val resendListLocal =
-                                    Paper.book().read("spam_sms_list", ArrayList<String>())!!
-                                resendListLocal.remove(item)
-                                Paper.book().write("spam_sms_list", resendListLocal)
+                                val reSendListLocal =
+                                    MMKV.mmkvWithID("spam").getStringSet("sms", setOf())
+                                        ?.toMutableSet() ?: mutableSetOf()
+                                reSendListLocal.remove(item)
+                                MMKV.mmkvWithID("spam").putStringSet("sms", reSendListLocal)
                             }
                         }
                         writeLog(applicationContext, "Send spam message is complete.")
@@ -564,8 +574,10 @@ class ChatService : Service() {
             }
 
             "/autoswitch" -> {
-                val state = !Paper.book().read("disable_beacon", false)!!
-                Paper.book().write("disable_beacon", state)
+                /*val state = !Paper.book().read("disable_beacon", false)!!
+                Paper.book().write("disable_beacon", state)*/
+                val state = preferences.getBoolean("beacon_enable", false)
+                preferences.putBoolean("beacon_enable", !state)
                 requestBody.text =
                     "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
             }
@@ -579,13 +591,14 @@ class ChatService : Service() {
                         requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
                             .toTypedArray()
                     if (commandList.size == 2) {
-                        Paper.book("system_config").write("dummy_ip_addr", commandList[1])
+                        MMKV.mmkvWithID("root").putString("dummy_ip_addr", commandList[1])
                         addDummyDevice(commandList[1])
                     } else {
-                        if (Paper.book("system_config").contains("dummy_ip_addr")) {
-                            val dummyIp =
-                                Paper.book("system_config").read<String>("dummy_ip_addr")
-                            addDummyDevice(dummyIp!!)
+                        if (MMKV.mmkvWithID("root").containsKey("dummy_ip_addr")) {
+                            val dummyIp = MMKV.mmkvWithID("root").getString("dummy_ip_addr", "")
+                            if (dummyIp != null) {
+                                addDummyDevice(dummyIp)
+                            }
                         }
                     }
                     requestBody.text =
@@ -654,7 +667,7 @@ class ChatService : Service() {
                     }
                 } else {
                     hasCommand = false
-                    sendSmsNextStatus = SEND_SMS_STATUS.PHONE_INPUT_STATUS
+                    sendStatusMMKV.putInt("status", SEND_SMS_STATUS.PHONE_INPUT_STATUS)
                     var sendSlot = -1
                     if (getActiveCard(applicationContext) > 1) {
                         sendSlot = 0
@@ -662,14 +675,14 @@ class ChatService : Service() {
                             sendSlot = 1
                         }
                     }
-                    Paper.book("send_temp").write("slot", sendSlot)
+                    sendStatusMMKV.putInt("slot", sendSlot)
                 }
                 requestBody.text =
                     "[${applicationContext.getString(R.string.send_sms_head)}]\n${getString(R.string.failed_to_get_information)}"
             }
 
             else -> {
-                if (!messageTypeIsPrivate && sendSmsNextStatus == -1) {
+                if (!messageTypeIsPrivate && sendStatusMMKV.getInt("status", -1) == -1) {
                     if (messageType != "supergroup" || messageThreadId.isEmpty()) {
                         Log.i(
                             TAG,
@@ -686,33 +699,29 @@ class ChatService : Service() {
         if (hasCommand) {
             setSmsSendStatusStandby()
         }
-        if (!hasCommand && sendSmsNextStatus != -1) {
+        if (!hasCommand && sendStatusMMKV.getInt("status", -1) != -1) {
             Log.i(TAG, "receive_handle: Enter the interactive SMS sending mode.")
             var dualSim = ""
-            val sendSlotTemp = Paper.book("send_temp").read("slot", -1)!!
+            val sendSlotTemp = sendStatusMMKV.getInt("slot", -1)
             if (sendSlotTemp != -1) {
                 dualSim = "SIM" + (sendSlotTemp + 1) + " "
             }
             val head = "[" + dualSim + applicationContext.getString(R.string.send_sms_head) + "]"
             var resultSend = getString(R.string.failed_to_get_information)
-            Log.d(TAG, "Sending mode status: $sendSmsNextStatus")
+            Log.d(TAG, "Sending mode status: ${sendStatusMMKV.getInt("status", -1)}")
 
-            when (sendSmsNextStatus) {
+            when (sendStatusMMKV.getInt("status", -1)) {
                 SEND_SMS_STATUS.PHONE_INPUT_STATUS -> {
-                    sendSmsNextStatus = SEND_SMS_STATUS.MESSAGE_INPUT_STATUS
+                    sendStatusMMKV.putInt("status", SEND_SMS_STATUS.MESSAGE_INPUT_STATUS)
                     resultSend = getString(R.string.enter_number)
                 }
 
                 SEND_SMS_STATUS.MESSAGE_INPUT_STATUS -> {
                     val tempTo = getSendPhoneNumber(requestMsg)
                     if (isPhoneNumber(tempTo)) {
-                        Paper.book("send_temp").write("to", tempTo)
+                        sendStatusMMKV.putString("to", tempTo)
                         resultSend = getString(R.string.enter_content)
-                        if (messageType == "private") {
-                            sendSmsNextStatus = SEND_SMS_STATUS.WAITING_TO_SEND_STATUS
-                        } else {
-                            sendSmsNextStatus = SEND_SMS_STATUS.SEND_STATUS
-                        }
+                        sendStatusMMKV.getInt("status", SEND_SMS_STATUS.WAITING_TO_SEND_STATUS)
                     } else {
                         setSmsSendStatusStandby()
                         resultSend = getString(R.string.unable_get_phone_number)
@@ -720,7 +729,7 @@ class ChatService : Service() {
                 }
 
                 SEND_SMS_STATUS.WAITING_TO_SEND_STATUS -> {
-                    Paper.book("send_temp").write("content", requestMsg)
+                    sendStatusMMKV.putString("content", requestMsg)
                     val keyboardMarkup = KeyboardMarkup()
                     val inlineKeyboardButtons = ArrayList<ArrayList<InlineKeyboardButton>>()
                     inlineKeyboardButtons.add(
@@ -740,11 +749,11 @@ class ChatService : Service() {
                     keyboardMarkup.inlineKeyboard = inlineKeyboardButtons
                     requestBody.keyboardMarkup = keyboardMarkup
                     resultSend = "${applicationContext.getString(R.string.to)}${
-                        Paper.book("send_temp").read<Any>("to")
+                        sendStatusMMKV.getString("to", "")
                     }\n${applicationContext.getString(R.string.content)}${
-                        Paper.book("send_temp").read("content", "")
+                        sendStatusMMKV.getString("content", "")
                     }"
-                    sendSmsNextStatus = SEND_SMS_STATUS.SEND_STATUS
+                    sendStatusMMKV.putInt("status", SEND_SMS_STATUS.SEND_STATUS)
                 }
             }
             requestBody.text = "$head\n$resultSend"
@@ -770,8 +779,12 @@ class ChatService : Service() {
                     return
                 }
                 val commandValue = command.replace("_", "")
-                if (!hasCommand && sendSmsNextStatus == SEND_SMS_STATUS.SEND_STATUS) {
-                    Paper.book("send_temp").write("message_id", getMessageId(responseString))
+                if (!hasCommand && sendStatusMMKV.getInt(
+                        "status",
+                        SEND_SMS_STATUS.STANDBY_STATUS
+                    ) == SEND_SMS_STATUS.SEND_STATUS
+                ) {
+                    sendStatusMMKV.putLong("message_id", getMessageId(responseString))
                 }
 
                 if (commandValue == "/hotspot" && !statusMMKV.getBoolean("tether", false)) {
@@ -814,8 +827,7 @@ class ChatService : Service() {
     }
 
     private fun setSmsSendStatusStandby() {
-        sendSmsNextStatus = SEND_SMS_STATUS.STANDBY_STATUS
-        Paper.book("send_temp").destroy()
+        sendStatusMMKV.clear()
     }
 
     @SuppressLint("InvalidWakeLockTag", "WakelockTimeout", "UnspecifiedRegisterReceiverFlag")
@@ -823,11 +835,11 @@ class ChatService : Service() {
         super.onCreate()
         connectivityManager =
             applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        Paper.init(applicationContext)
         setSmsSendStatusStandby()
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
-
+        sendStatusMMKV = MMKV.mmkvWithID("send_status")
+        chatInfoMMKV = MMKV.mmkvWithID("chat_info")
         chatID = preferences.getString("chat_id", "").toString()
         botToken = preferences.getString("bot_token", "").toString()
         messageThreadId = preferences.getString("message_thread_id", "").toString()
@@ -899,7 +911,7 @@ class ChatService : Service() {
                     botToken, "getUpdates"
                 )
                 val requestBody = PollingJson()
-                requestBody.offset = offset
+                requestBody.offset = chatInfoMMKV.getLong("offset", 0L)
                 requestBody.timeout = timeout
                 if (firstRequest) {
                     requestBody.timeout = 0
@@ -968,9 +980,6 @@ class ChatService : Service() {
     companion object {
         private const val TAG = "chat_command"
 
-        //Global counter
-        private var offset: Long = 0
-        private var sendSmsNextStatus = SEND_SMS_STATUS.STANDBY_STATUS
         private var firstRequest = true
 
     }

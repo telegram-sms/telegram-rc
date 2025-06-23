@@ -14,7 +14,6 @@ import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -25,15 +24,13 @@ import java.io.IOException
 import java.util.Objects
 
 class SMSSendResultReceiver : BroadcastReceiver() {
-    private lateinit var preferences: MMKV
+    private var preferences = MMKV.defaultMMKV()
     override fun onReceive(context: Context, intent: Intent) {
-        Paper.init(context)
         val logTag = "sms_send_receiver"
         Log.d(logTag, "Receive action: " + intent.action)
         val extras = intent.extras!!
         val sub = extras.getInt("sub_id")
         context.unregisterReceiver(this)
-        preferences = MMKV.defaultMMKV()
         if (!preferences.contains("initialized")) {
             Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
             return

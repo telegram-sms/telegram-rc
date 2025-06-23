@@ -50,7 +50,6 @@ import com.qwe7002.telegram_rc.static_class.ServiceManage.isNotifyListener
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
-import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -94,7 +93,6 @@ class MainActivity : AppCompatActivity() {
         writeSettingsButton = findViewById(R.id.write_settings_button)
         //load config
         MMKV.initialize(applicationContext)
-        Paper.init(applicationContext)
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID("proxy")
         writeSettingsButton.setOnClickListener {
@@ -496,12 +494,18 @@ class MainActivity : AppCompatActivity() {
                             TAG,
                             "onResponse: The current bot token does not match the saved bot token, clearing the message database."
                         )
-                        Paper.book().destroy()
+                        MMKV.mmkvWithID("chat_info").clear()
                     }
-                    Paper.book("system_config").write("version", Const.SYSTEM_CONFIG_VERSION)
+                    //Paper.book("system_config").write("version", Const.SYSTEM_CONFIG_VERSION)
+                    MMKV.mmkvWithID("upgrade").putInt(
+                        "version",
+                        Const.SYSTEM_CONFIG_VERSION
+                    )
                     preferences.clear()
                     preferences.putString("bot_token", newBotToken)
-                    preferences.putString("chat_id", chatIdEditView.text.toString().trim { it <= ' ' })
+                    preferences.putString(
+                        "chat_id",
+                        chatIdEditView.text.toString().trim { it <= ' ' })
                     preferences.putString(
                         "message_thread_id",
                         messageThreadIdEditView.text.toString().trim { it <= ' ' })

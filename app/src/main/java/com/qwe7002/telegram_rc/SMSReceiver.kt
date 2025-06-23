@@ -24,7 +24,6 @@ import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -42,7 +41,6 @@ class SMSReceiver : BroadcastReceiver() {
 
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
-        Paper.init(context)
         val logTag = "sms_receiver"
         val extras = intent.extras!!
         preferences = MMKV.defaultMMKV()
@@ -215,9 +213,8 @@ class SMSReceiver : BroadcastReceiver() {
         }
         Log.d(logTag, "onReceive: $isVerificationCode")
         if (!isVerificationCode && !isTrustedPhone) {
-            Log.d(logTag, "onReceive: ")
-            val blackListArray =
-                Paper.book("system_config").read("block_keyword_list", ArrayList<String>())!!
+            val blackListArray = preferences.getStringSet("block_keyword_list", setOf())?.toMutableList()
+                ?: mutableListOf()
             for (blockListItem in blackListArray) {
                 if (blockListItem.isEmpty()) {
                     continue
@@ -226,13 +223,12 @@ class SMSReceiver : BroadcastReceiver() {
                     val simpleDateFormat =
                         SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)
                     val writeMessage = requestBody.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(Date(System.currentTimeMillis()))
-                    Paper.init(context)
-                    val spamSmsList = Paper.book().read("spam_sms_list", ArrayList<String>())!!
-                    if (spamSmsList.size >= 5) {
-                        spamSmsList.removeAt(0)
-                    }
+                    val spamMMKV = MMKV.mmkvWithID("spam")
+                    val spamSmsList =
+                        spamMMKV.getStringSet("sms", setOf())?.toMutableSet()
+                            ?: mutableSetOf()
                     spamSmsList.add(writeMessage)
-                    Paper.book().write("spam_sms_list", spamSmsList)
+                    spamMMKV.putStringSet("sms", spamSmsList)
                     Log.i(logTag, "Detected message contains blacklist keywords, add spam list")
                     return
                 }

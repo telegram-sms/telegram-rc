@@ -59,7 +59,6 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.0.0-alpha.14"
     implementation 'org.conscrypt:conscrypt-android:2.5.3'
     implementation 'com.google.code.gson:gson:2.11.0'
-    implementation 'io.github.pilgr:paperdb:2.7.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
     implementation 'aga.android:luch:0.4'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.3'

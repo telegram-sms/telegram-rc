@@ -12,7 +12,6 @@ import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -32,7 +31,6 @@ class USSDCallBack(
     private val requestBody: RequestMessage
 
     init {
-        Paper.init(context)
         val preferences = MMKV.defaultMMKV()
         this.dohSwitch = preferences.getBoolean("doh_switch", true)
         this.requestBody =

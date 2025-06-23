@@ -10,10 +10,11 @@ import android.os.Build
 import android.telephony.SubscriptionManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
-import io.paperdb.Paper
+import com.tencent.mmkv.MMKV
 import java.util.Locale
 
 object Other {
@@ -238,7 +239,7 @@ object Other {
         val item = SMSRequestInfo()
         item.phone = phone
         item.card = slot
-        Paper.book().write(messageId.toString(), item)
+        MMKV.mmkvWithID("chat_info").putString(messageId.toString(), Gson().toJson(item))
         Log.d("add_message_list", "add_message_list: $messageId")
     }
 }

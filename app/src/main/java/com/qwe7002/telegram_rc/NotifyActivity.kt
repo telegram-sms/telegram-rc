@@ -18,7 +18,7 @@ import android.widget.ProgressBar
 import android.widget.SearchView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import io.paperdb.Paper
+import com.tencent.mmkv.MMKV
 import java.util.Locale
 
 class NotifyActivity : AppCompatActivity() {
@@ -50,7 +50,6 @@ class NotifyActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Paper.init(applicationContext)
         this.title = getString(R.string.app_list)
         setContentView(R.layout.activity_notify_apps_list)
         val appList = findViewById<ListView>(R.id.app_listview)
@@ -112,7 +111,9 @@ class NotifyActivity : AppCompatActivity() {
         }
 
         init {
-            this.listenList = Paper.book("system_config").read("notify_listen_list", ArrayList())!!
+            //this.listenList = Paper.book("system_config").read("notify_listen_list", ArrayList())!!
+            this.listenList = MMKV.defaultMMKV()
+                .getStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
         }
 
         var data: List<applicationInfo>
@@ -166,8 +167,10 @@ class NotifyActivity : AppCompatActivity() {
             viewHolderObject.appCheckbox.setOnClickListener {
                 val itemInfo = getItem(position) as applicationInfo
                 val packageName = itemInfo.packageName
-                val listenListTemp: MutableList<String> =
-                    Paper.book("system_config").read("notify_listen_list", ArrayList())!!
+                /*val listenListTemp: MutableList<String> =
+                    Paper.book("system_config").read("notify_listen_list", ArrayList())!!*/
+                val listenListTemp: MutableList<String> = MMKV.defaultMMKV()
+                    .getStringSet("notify_listen_list", setOf())?.toMutableList() ?: mutableListOf()
                 if (viewHolderObject.appCheckbox.isChecked) {
                     if (!listenListTemp.contains(packageName)) {
                         listenListTemp.add(packageName)
@@ -176,8 +179,7 @@ class NotifyActivity : AppCompatActivity() {
                     listenListTemp.remove(packageName)
                 }
                 Log.d(TAG, "notify_listen_list: $listenListTemp")
-                Paper.book("system_config")
-                    .write<List<String>>("notify_listen_list", listenListTemp)
+                MMKV.defaultMMKV().encode("notify_listen_list", listenListTemp.toSet())
                 listenList = listenListTemp
             }
             return view

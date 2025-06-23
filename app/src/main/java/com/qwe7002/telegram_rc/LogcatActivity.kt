@@ -1,8 +1,6 @@
 package com.qwe7002.telegram_rc
 
-import android.content.Context
 import android.os.Bundle
-import android.os.FileObserver
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem

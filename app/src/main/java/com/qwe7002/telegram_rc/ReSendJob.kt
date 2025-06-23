@@ -12,7 +12,6 @@ import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.tencent.mmkv.MMKV
-import io.paperdb.Paper
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -23,14 +22,13 @@ import java.util.concurrent.TimeUnit
 class ReSendJob : JobService() {
     private lateinit var requestUri: String
     private val tableName: String = "resend_list"
+    private val resendMMKV= MMKV.mmkvWithID("resend")
+    private val preferences = MMKV.defaultMMKV()
     override fun onStartJob(params: JobParameters?): Boolean {
-        Paper.init(applicationContext)
-        val preferences = MMKV.defaultMMKV()
         requestUri =
             Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
         Thread {
-            val sendList: java.util.ArrayList<String> =
-                Paper.book().read(tableName, java.util.ArrayList())!!
+            val sendList = resendMMKV.decodeStringSet(tableName, setOf())?.toList() ?: listOf()
             val okhttpClient = Network.getOkhttpObj()
             for (item in sendList) {
                 networkProgressHandle(
@@ -72,9 +70,11 @@ class ReSendJob : JobService() {
         try {
             val response = call.execute()
             if (response.code == 200) {
-                val resendListLocal = Paper.book().read(tableName, ArrayList<String>())!!
+               // val resendListLocal = Paper.book().read(tableName, ArrayList<String>())!!
+                val resendListLocal = resendMMKV.decodeStringSet(tableName, setOf())?.toMutableList() ?: mutableListOf()
                 resendListLocal.remove(message)
-                Paper.book().write(tableName, resendListLocal)
+                //Paper.book().write(tableName, resendListLocal)
+                resendMMKV.encode(tableName, resendListLocal.toSet())
             }
         } catch (e: IOException) {
             LogManage.writeLog(
