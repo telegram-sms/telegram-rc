@@ -238,7 +238,6 @@ class ChatService : Service() {
         }
 
         var command = ""
-        var commandBotUsername = ""
         var requestMsg = ""
         if (messageObj.has("text")) {
             requestMsg = messageObj["text"].asString
@@ -278,7 +277,6 @@ class ChatService : Service() {
                 if (tempCommandLowercase.contains("@")) {
                     val commandAtLocation = tempCommandLowercase.indexOf("@")
                     command = tempCommandLowercase.substring(0, commandAtLocation)
-                    commandBotUsername = tempCommand.substring(commandAtLocation + 1)
                 }
             }
         }
