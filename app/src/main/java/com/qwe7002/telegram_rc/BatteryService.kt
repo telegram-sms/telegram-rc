@@ -35,9 +35,8 @@ class BatteryService : Service() {
     private lateinit var botToken: String
     private lateinit var chatId: String
     private lateinit var messageThreadId: String
-    private var lastReceiveTime: Long = 0
-    private var lastReceiveMessageId: Long = -1
     private lateinit var sendLoopList: ArrayList<sendObj>
+    private lateinit var chatInfoMMKV:MMKV
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification =
@@ -66,7 +65,7 @@ class BatteryService : Service() {
         super.onCreate()
         MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()
-
+        chatInfoMMKV = MMKV.mmkvWithID("chat_info")
         chatId = preferences.getString("chat_id", "")!!
         botToken = preferences.getString("bot_token", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
@@ -114,12 +113,12 @@ class BatteryService : Service() {
         requestBody.text = obj.content
         requestBody.messageThreadId = messageThreadId
         var requestUri = Network.getUrl(botToken, "sendMessage")
-        if ((System.currentTimeMillis() - lastReceiveTime) <= 10000L && lastReceiveMessageId != -1L) {
+        if ((System.currentTimeMillis() - chatInfoMMKV.getLong("batteryLastReceiveTime",0L)) <= 10000L && chatInfoMMKV.getLong("batteryLastReceiveMessageId",-1L) != -1L) {
             requestUri = Network.getUrl(botToken, "editMessageText")
-            requestBody.messageId = lastReceiveMessageId
+            requestBody.messageId = chatInfoMMKV.getLong("batteryLastReceiveMessageId",0L)
             Log.d(TAG, "onReceive: edit_mode")
         }
-        lastReceiveTime = System.currentTimeMillis()
+        chatInfoMMKV.putLong("batteryLastReceiveTime",System.currentTimeMillis())
         val okhttpClient = Network.getOkhttpObj()
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
@@ -129,10 +128,9 @@ class BatteryService : Service() {
         try {
             val response = call.execute()
             if (response.code == 200) {
-                lastReceiveMessageId =
-                    Other.getMessageId(Objects.requireNonNull(response.body).string())
+                    chatInfoMMKV.putLong("batteryLastReceiveMessageId", Other.getMessageId(Objects.requireNonNull(response.body).string()))
             } else {
-                lastReceiveMessageId = -1
+                chatInfoMMKV.remove("batteryLastReceiveMessageId")
                 if (obj.action == Intent.ACTION_BATTERY_LOW) {
                     SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                 }
@@ -215,7 +213,6 @@ class BatteryService : Service() {
                 obj.action = action
                 obj.content = result
             }
-
             sendLoopList.add(obj)
         }
     }
