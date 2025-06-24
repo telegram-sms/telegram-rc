@@ -86,7 +86,6 @@ class BeaconActivity : AppCompatActivity() {
 
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val context = applicationContext
         val inflater = this.layoutInflater
         val dialogView = inflater.inflate(R.layout.set_beacon_layout, null)
         val enable = dialogView.findViewById<SwitchMaterial>(R.id.beacon_enable_switch)
@@ -95,9 +94,9 @@ class BeaconActivity : AppCompatActivity() {
         val disableCount = dialogView.findViewById<EditText>(R.id.beacon_disable_count_editview)
         val enableCount = dialogView.findViewById<EditText>(R.id.beacon_enable_count_editview)
         useVpnHotspotSwitch.isChecked = beaconMMKV.getBoolean("useVpnHotspot", false) &&
-                isVPNHotspotExist(context)
+                isVPNHotspotExist(applicationContext)
         useVpnHotspotSwitch.isEnabled =
-            Settings.System.canWrite(context) && isVPNHotspotExist(context)
+            Settings.System.canWrite(applicationContext) && isVPNHotspotExist(applicationContext)
 
         disableCount.setText(beaconMMKV.getInt("disableCount", 10).toString())
         enableCount.setText(beaconMMKV.getInt("enableCount", 10).toString())
