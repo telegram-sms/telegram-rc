@@ -65,8 +65,8 @@ class BeaconReceiverService : Service() {
     private lateinit var scanner: IScanner
     private lateinit var wakelock: WakeLock
     private var isRoot = false
-    override fun onBind(intent: Intent): IBinder {
-        TODO("Return the communication channel to the service.")
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

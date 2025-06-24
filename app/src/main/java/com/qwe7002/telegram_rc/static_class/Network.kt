@@ -154,7 +154,7 @@ object Network {
                     if (telephony.dataNetworkType == TelephonyManager.NETWORK_TYPE_NR) {
                         "5G"
                     } else {
-                        "4G"
+                        "LTE"
                     }
                 }
             }
