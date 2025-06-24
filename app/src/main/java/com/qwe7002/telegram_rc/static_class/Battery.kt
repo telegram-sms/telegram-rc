@@ -9,7 +9,7 @@ import android.util.Log
 import com.qwe7002.telegram_rc.R
 
 object Battery {
-    public fun getBatteryInfo(context: Context): String {
+    fun getBatteryInfo(context: Context): String {
         val batteryManager =
             checkNotNull(context.getSystemService(BATTERY_SERVICE) as BatteryManager)
         var batteryLevel =
