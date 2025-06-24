@@ -28,6 +28,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.gson.Gson
+import com.google.gson.JsonParser
+import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
 import com.qwe7002.telegram_rc.static_class.CcSend
@@ -39,7 +41,7 @@ import org.json.JSONObject
 class CcActivity : AppCompatActivity() {
     private lateinit var listAdapter: ArrayAdapter<CcSendService>
     private lateinit var serviceList: ArrayList<CcSendService>
-    private lateinit var  preferences: MMKV
+    private lateinit var preferences: MMKV
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cc)
@@ -320,17 +322,13 @@ class CcActivity : AppCompatActivity() {
         return url.startsWith("https://")
     }
 
-    private fun isValidJson(json: String): Boolean {
+    fun isValidJson(json: String): Boolean {
         return try {
-            JSONObject(json)
+            JsonParser.parseString(json)
             true
-        } catch (_: Exception) {
-            try {
-                JSONArray(json)
-                true
-            } catch (_: Exception) {
-                false
-            }
+        } catch (e: JsonSyntaxException) {
+            Log.e("isValidJson", "isValidJson: " + e.message)
+            false
         }
     }
 

@@ -18,48 +18,21 @@ import com.tencent.mmkv.MMKV
 import java.util.Locale
 
 object Other {
-    fun getNineKeyMapConvert(input: String): String {
-        val nineKeyMap: HashMap<Char, Int> = object : HashMap<Char, Int>() {
-            init {
-                put('A', 2)
-                put('B', 2)
-                put('C', 2)
-                put('D', 3)
-                put('E', 3)
-                put('F', 3)
-                put('G', 4)
-                put('H', 4)
-                put('I', 4)
-                put('J', 5)
-                put('K', 5)
-                put('L', 5)
-                put('M', 6)
-                put('N', 6)
-                put('O', 6)
-                put('P', 7)
-                put('Q', 7)
-                put('R', 7)
-                put('S', 7)
-                put('T', 8)
-                put('U', 8)
-                put('V', 8)
-                put('W', 9)
-                put('X', 9)
-                put('Y', 9)
-                put('Z', 9)
-            }
-        }
-        val builder = StringBuilder()
-        val ussdCharArray = input.uppercase(Locale.getDefault()).toCharArray()
-        for (c in ussdCharArray) {
-            if (Character.isUpperCase(c)) {
-                builder.append(nineKeyMap[c])
-            } else {
-                builder.append(c)
-            }
-        }
-        return builder.toString()
-    }
+fun getNineKeyMapConvert(input: String): String {
+    val nineKeyMap = mapOf(
+        'A' to '2', 'B' to '2', 'C' to '2',
+        'D' to '3', 'E' to '3', 'F' to '3',
+        'G' to '4', 'H' to '4', 'I' to '4',
+        'J' to '5', 'K' to '5', 'L' to '5',
+        'M' to '6', 'N' to '6', 'O' to '6',
+        'P' to '7', 'Q' to '7', 'R' to '7', 'S' to '7',
+        'T' to '8', 'U' to '8', 'V' to '8',
+        'W' to '9', 'X' to '9', 'Y' to '9', 'Z' to '9'
+    )
+    return input.uppercase(Locale.getDefault()).map { c ->
+        nineKeyMap[c] ?: c
+    }.joinToString("")
+}
 
     @JvmStatic
     fun parseStringToLong(intStr: String): Long {

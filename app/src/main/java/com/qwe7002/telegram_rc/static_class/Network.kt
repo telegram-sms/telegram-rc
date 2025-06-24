@@ -37,7 +37,7 @@ object Network {
     @JvmStatic
     fun getDataEnable(context: Context): Boolean {
         val connectivityManager = (context.getSystemService(
-            Context.CONNECTIVITY_SERVICE
+            CONNECTIVITY_SERVICE
         ) as ConnectivityManager)
         var networkStatus = false
         val networks = connectivityManager.allNetworks
@@ -55,7 +55,7 @@ object Network {
     @JvmStatic
     fun checkNetworkStatus(context: Context): Boolean {
         val manager = context.getSystemService(
-            Context.CONNECTIVITY_SERVICE
+            CONNECTIVITY_SERVICE
         ) as ConnectivityManager
         var networkStatus = false
         val networks = manager.allNetworks
@@ -144,19 +144,18 @@ object Network {
         when (telephony.dataNetworkType) {
             TelephonyManager.NETWORK_TYPE_NR,
             TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> {
-                if (ActivityCompat.checkSelfPermission(
+                netType = if (ActivityCompat.checkSelfPermission(
                         context,
                         Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
-                    netType = check5GState(telephony)
+                    check5GState(telephony)
                 } else {
-                    netType =
-                        if (telephony.dataNetworkType == TelephonyManager.NETWORK_TYPE_NR) {
-                            "5G"
-                        } else {
-                            "4G"
-                        }
+                    if (telephony.dataNetworkType == TelephonyManager.NETWORK_TYPE_NR) {
+                        "5G"
+                    } else {
+                        "4G"
+                    }
                 }
             }
 
@@ -200,7 +199,7 @@ object Network {
         }
         return "LTE"
     }
-    public fun getNetworkType(context: Context): String {
+    fun getNetworkType(context: Context): String {
         var netType = "Unknown"
         val connectManager =
             checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
