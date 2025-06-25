@@ -166,7 +166,6 @@ class BeaconActivity : AppCompatActivity() {
             }
             checkBoxView.setOnClickListener {
                 val address = BeaconModel.beaconItemName(beacon.uuid, beacon.major, beacon.minor)
-                //val listenListTemp = Paper.book("beacon").read("address", ArrayList<String>())
                 val listenListTemp =
                     beaconMMKV.decodeStringSet("address", setOf()).orEmpty().toMutableList()
                 if (checkBoxView.isChecked) {
@@ -177,7 +176,6 @@ class BeaconActivity : AppCompatActivity() {
                     listenListTemp.remove(address)
                 }
                 Log.d("monitoring_activity", "beacon_address: $listenListTemp")
-                //Paper.book("beacon").write("address", listenListTemp)
                 beaconMMKV.encode("address", listenListTemp.toSet())
                 listenList = listenListTemp as ArrayList<String>
             }
