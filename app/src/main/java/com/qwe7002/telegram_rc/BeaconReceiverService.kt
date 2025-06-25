@@ -146,9 +146,9 @@ class BeaconReceiverService : Service() {
                     )
                     beacon.add(item)
                 } catch (e: ConcurrentModificationException) {
-                    Log.d(TAG, "onCreate: $e")
+                    Log.d(TAG, "ConcurrentModificationException: $e")
                 } catch (e: NullPointerException) {
-                    Log.d(TAG, "onCreate: $e")
+                    Log.d(TAG, "NullPointerException: $e")
                 }
             }
             val intents = Intent("flush_beacons_list")

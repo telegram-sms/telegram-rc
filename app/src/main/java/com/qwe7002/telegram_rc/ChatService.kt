@@ -323,7 +323,7 @@ class ChatService : Service() {
                             ""
                         )
                 } else {
-                    var resultString =
+                    val resultString =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.available_command)}$smsCommand$ussdCommand$switchAp"
                     requestBody.text = resultString
                 }
