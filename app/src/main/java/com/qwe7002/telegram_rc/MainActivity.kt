@@ -249,7 +249,7 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             Thread { stopAllService(applicationContext) }.start()
-            val progressDialog = ProgressDialog(this@MainActivity)
+            val progressDialog = ProgressDialog(this)
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
             progressDialog.setTitle(getString(R.string.get_recent_chat_title))
             progressDialog.setMessage(getString(R.string.get_recent_chat_message))
@@ -410,7 +410,6 @@ class MainActivity : AppCompatActivity() {
                     java.util.ArrayList(listOf(*permissionList))
                 permissionArrayList.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
                 permissionList = permissionArrayList.toTypedArray<String>()
-
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val permissionArrayList =
@@ -419,7 +418,7 @@ class MainActivity : AppCompatActivity() {
                 permissionList = permissionArrayList.toTypedArray<String>()
             }
             ActivityCompat.requestPermissions(
-                this@MainActivity,
+                this,
                 permissionList,
                 1
             )
@@ -437,7 +436,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            val progressDialog = ProgressDialog(this@MainActivity)
+            val progressDialog = ProgressDialog(this)
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
             progressDialog.setTitle(getString(R.string.connect_wait_title))
             progressDialog.setMessage(getString(R.string.connect_wait_message))
@@ -452,10 +451,7 @@ class MainActivity : AppCompatActivity() {
             requestBody.chatId = chatIdEditView.text.toString().trim { it <= ' ' }
             requestBody.messageThreadId =
                 messageThreadIdEditView.text.toString().trim { it <= ' ' }
-            requestBody.text = """
-                ${getString(R.string.system_message_head)}
-                ${getString(R.string.success_connect)}
-                """.trimIndent()
+            requestBody.text = "${getString(R.string.system_message_head)}\n${getString(R.string.success_connect)}"
             val gson = Gson()
             val requestBodyRaw = gson.toJson(requestBody)
             val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
@@ -496,7 +492,6 @@ class MainActivity : AppCompatActivity() {
                         )
                         MMKV.mmkvWithID("chat_info").clear()
                     }
-                    //Paper.book("system_config").write("version", Const.SYSTEM_CONFIG_VERSION)
                     MMKV.mmkvWithID("upgrade").putInt(
                         "version",
                         Const.SYSTEM_CONFIG_VERSION
