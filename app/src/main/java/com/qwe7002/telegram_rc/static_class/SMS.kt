@@ -27,7 +27,7 @@ import java.util.Objects
 
 object SMS {
     @JvmStatic
-    fun sendFallbackSMS(context: Context, content: String?, sub_id: Int) {
+    fun sendFallbackSMS(context: Context, content: String?, subId: Int) {
         val TAG = "send_fallback_sms"
         if (PermissionChecker.checkSelfPermission(
                 context,
@@ -47,10 +47,10 @@ object SMS {
             Log.i(TAG, "Did not open the SMS to fall back.")
             return
         }
-        val smsManager = if (sub_id == -1) {
+        val smsManager = if (subId == -1) {
             SmsManager.getDefault()
         } else {
-            SmsManager.getSmsManagerForSubscriptionId(sub_id)
+            SmsManager.getSmsManagerForSubscriptionId(subId)
         }
         val divideContents = smsManager.divideMessage(content)
         smsManager.sendMultipartTextMessage(trustNumber, null, divideContents, null, null)
