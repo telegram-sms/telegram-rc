@@ -181,7 +181,6 @@ object Network {
         val cellInfoList = telephonyManager.getAllCellInfo()
         var hasLte = false
         var hasNr = false
-
         for (cellInfo in cellInfoList) {
             if (cellInfo.isRegistered) {
                 if (cellInfo is CellInfoLte) {
@@ -207,8 +206,7 @@ object Network {
             context
                 .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
         )
-        val networks = connectManager.allNetworks
-        for (network in networks) {
+        for (network in connectManager.allNetworks) {
             val networkCapabilities =
                 checkNotNull(connectManager.getNetworkCapabilities(network))
             if (!networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
