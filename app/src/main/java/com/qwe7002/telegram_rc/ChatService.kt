@@ -833,11 +833,11 @@ class ChatService : Service() {
         super.onCreate()
         connectivityManager =
             applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        setSmsSendStatusStandby()
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
         sendStatusMMKV = MMKV.mmkvWithID("send_status")
         chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
+        setSmsSendStatusStandby()
         chatID = preferences.getString("chat_id", "").toString()
         botToken = preferences.getString("bot_token", "").toString()
         messageThreadId = preferences.getString("message_thread_id", "").toString()

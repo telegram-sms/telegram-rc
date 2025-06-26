@@ -60,6 +60,7 @@ class BeaconReceiverService : Service() {
     private lateinit var messageThreadId: String
     private lateinit var scanner: IScanner
     private lateinit var wakelock: PowerManager.WakeLock
+    private lateinit var config: MMKV
     private var isRoot = false
     private val flushReceiverLock = ReentrantLock()
 
@@ -80,6 +81,7 @@ class BeaconReceiverService : Service() {
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onCreate() {
         super.onCreate()
+        MMKV.initialize(applicationContext)
         if (!hasLocationPermissions()) {
             Log.d(TAG, "onCreate: permission denied")
             return
@@ -127,6 +129,7 @@ class BeaconReceiverService : Service() {
 
     private fun loadPreferences() {
         val preferences = MMKV.defaultMMKV()
+        config = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         requestUrl = Network.getUrl(preferences.getString("bot_token", "")!!, "SendMessage")
         chatId = preferences.getString("chat_id", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
@@ -198,7 +201,6 @@ class BeaconReceiverService : Service() {
     }
 
     private val flushReceiver = object : BroadcastReceiver() {
-        private val config = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
 
         override fun onReceive(context: Context, intent: Intent) {
             flushReceiverLock.lock()

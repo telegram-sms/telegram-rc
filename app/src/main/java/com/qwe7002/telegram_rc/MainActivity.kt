@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Build.VERSION_CODES.Q
 import android.os.Bundle
 import android.os.Looper
 import android.os.PowerManager
@@ -191,7 +192,7 @@ class MainActivity : AppCompatActivity() {
             preferences.getBoolean("verification_code", false)
 
         dohSwitch.isChecked = preferences.getBoolean("doh_switch", true)
-        dohSwitch.isEnabled = proxyMMKV.getBoolean("enabled", false)
+        dohSwitch.isEnabled = !proxyMMKV.getBoolean("enabled", false)
         if (ContextCompat.checkSelfPermission(
                 applicationContext,
                 Manifest.permission.READ_PHONE_STATE
@@ -245,7 +246,8 @@ class MainActivity : AppCompatActivity() {
         }
         getIdButton.setOnClickListener { v: View ->
             if (botTokenEditView.text.toString().isEmpty()) {
-                Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show()
+/*                Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show()*/
+                showErrorDialog(applicationContext.getString(R.string.token_not_configure))
                 return@setOnClickListener
             }
             Thread { stopAllService(applicationContext) }.start()
@@ -281,7 +283,8 @@ class MainActivity : AppCompatActivity() {
                     val errorMessage = errorHead + e.message
                     writeLog(applicationContext, errorMessage)
                     Looper.prepare()
-                    Snackbar.make(v, errorMessage, Snackbar.LENGTH_LONG).show()
+                    showErrorDialog(errorMessage)
+                    //Snackbar.make(v, errorMessage, Snackbar.LENGTH_LONG).show()
                     Looper.loop()
                 }
 
@@ -294,7 +297,8 @@ class MainActivity : AppCompatActivity() {
                         val errorMessage = errorHead + resultObj["description"].asString
                         writeLog(applicationContext, errorMessage)
                         Looper.prepare()
-                        Snackbar.make(v, errorMessage, Snackbar.LENGTH_LONG).show()
+                        showErrorDialog(errorMessage)
+                        //Snackbar.make(v, errorMessage, Snackbar.LENGTH_LONG).show()
                         Looper.loop()
                         return
                     }
@@ -303,7 +307,8 @@ class MainActivity : AppCompatActivity() {
                     val chatList = resultObj.getAsJsonArray("result")
                     if (chatList.isEmpty) {
                         Looper.prepare()
-                        Snackbar.make(v, R.string.unable_get_recent, Snackbar.LENGTH_LONG).show()
+                        showErrorDialog(applicationContext.getString(R.string.unable_get_recent))
+                        //Snackbar.make(v, R.string.unable_get_recent, Snackbar.LENGTH_LONG).show()
                         Looper.loop()
                         return
                     }
@@ -367,14 +372,16 @@ class MainActivity : AppCompatActivity() {
             if (botTokenEditView.text.toString().isEmpty() || chatIdEditView.text.toString()
                     .isEmpty()
             ) {
-                Snackbar.make(v!!, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG)
-                    .show()
+/*                Snackbar.make(v!!, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG)
+                    .show()*/
+                showErrorDialog(applicationContext.getString(R.string.chat_id_or_token_not_config))
                 return@setOnClickListener
             }
             if (fallbackSmsSwitch.isChecked && trustedPhoneNumberEditView.text.toString()
                     .isEmpty()
             ) {
-                Snackbar.make(v!!, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show()
+                showErrorDialog(applicationContext.getString(R.string.trusted_phone_number_empty))
+               /* Snackbar.make(v!!, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show()*/
                 return@setOnClickListener
             }
             if (!preferences.getBoolean("privacy_dialog_agree", false)) {
@@ -405,6 +412,10 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             }
+            val permissionArrayList =
+                java.util.ArrayList(listOf(*permissionList))
+            permissionArrayList.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
+            permissionList = permissionArrayList.toTypedArray<String>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 val permissionArrayList =
                     java.util.ArrayList(listOf(*permissionList))
@@ -466,8 +477,9 @@ class MainActivity : AppCompatActivity() {
                     val errorMessage = errorHead + e.message
                     writeLog(applicationContext, errorMessage)
                     Looper.prepare()
-                    Snackbar.make(v!!, errorMessage, Snackbar.LENGTH_LONG)
-                        .show()
+/*                    Snackbar.make(v!!, errorMessage, Snackbar.LENGTH_LONG)
+                        .show()*/
+                    showErrorDialog(errorMessage)
                     Looper.loop()
                 }
 
@@ -481,7 +493,8 @@ class MainActivity : AppCompatActivity() {
                         val errorMessage = errorHead + resultObj["description"]
                         writeLog(applicationContext, errorMessage)
                         Looper.prepare()
-                        Snackbar.make(v!!, errorMessage, Snackbar.LENGTH_LONG).show()
+                        //Snackbar.make(v!!, errorMessage, Snackbar.LENGTH_LONG).show()
+                        showErrorDialog(errorMessage)
                         Looper.loop()
                         return
                     }
@@ -592,11 +605,7 @@ class MainActivity : AppCompatActivity() {
                 customTabsIntent.launchUrl(applicationContext, uri)
             } catch (e: ActivityNotFoundException) {
                 Log.e(TAG, "show_privacy_dialog: ", e)
-                Snackbar.make(
-                    findViewById(R.id.bot_token_editview),
-                    "Browser not found.",
-                    Snackbar.LENGTH_LONG
-                ).show()
+                showErrorDialog("Browser not found.")
             }
         }
         val dialog = builder.create()
@@ -616,11 +625,12 @@ class MainActivity : AppCompatActivity() {
             0 -> {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "No camera permissions.")
-                    Snackbar.make(
+/*                    Snackbar.make(
                         findViewById(R.id.bot_token_editview),
                         R.string.no_camera_permission,
                         Snackbar.LENGTH_LONG
-                    ).show()
+                    ).show()*/
+                    showErrorDialog(applicationContext.getString(R.string.no_camera_permission))
                     return
                 }
                 val intent = Intent(applicationContext, ScannerActivity::class.java)
@@ -742,11 +752,12 @@ class MainActivity : AppCompatActivity() {
                 if (preferences.contains("initialized")) {
                     startActivity(Intent(this, QRCodeActivity::class.java))
                 } else {
-                    Snackbar.make(
+/*                    Snackbar.make(
                         findViewById(R.id.bot_token_editview),
                         "Uninitialized.",
                         Snackbar.LENGTH_LONG
-                    ).show()
+                    ).show()*/
+                    showErrorDialog("Uninitialized.")
                 }
                 return true
             }
@@ -761,21 +772,13 @@ class MainActivity : AppCompatActivity() {
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
                     Log.d(TAG, "No permissions.")
-                    Snackbar.make(
-                        findViewById(R.id.bot_token_editview),
-                        "No permission.",
-                        Snackbar.LENGTH_LONG
-                    ).show()
+                    showErrorDialog("No permission.")
                     return false
                 }
                 if (preferences.contains("initialized")) {
                     startActivity(Intent(this, BeaconActivity::class.java))
                 } else {
-                    Snackbar.make(
-                        findViewById(R.id.bot_token_editview),
-                        "Uninitialized.",
-                        Snackbar.LENGTH_LONG
-                    ).show()
+                    showErrorDialog("Uninitialized.")
                 }
                 return true
             }
@@ -867,13 +870,16 @@ class MainActivity : AppCompatActivity() {
             customTabsIntent.launchUrl(this, uri)
         } catch (e: ActivityNotFoundException) {
             Log.e(TAG, "onOptionsItemSelected: ", e)
-            Snackbar.make(
-                findViewById(R.id.bot_token_editview),
-                "Browser not found.",
-                Snackbar.LENGTH_LONG
-            ).show()
+            showErrorDialog("Browser not found.")
         }
         return true
+    }
+    fun showErrorDialog(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Error")
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     companion object {
