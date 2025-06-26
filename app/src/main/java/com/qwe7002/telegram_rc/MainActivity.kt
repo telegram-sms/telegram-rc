@@ -13,7 +13,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Build.VERSION_CODES.Q
 import android.os.Bundle
-import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.telephony.TelephonyManager
@@ -246,7 +245,7 @@ class MainActivity : AppCompatActivity() {
         }
         getIdButton.setOnClickListener { v: View ->
             if (botTokenEditView.text.toString().isEmpty()) {
-/*                Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show()*/
+                /*                Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show()*/
                 showErrorDialog(applicationContext.getString(R.string.token_not_configure))
                 return@setOnClickListener
             }
@@ -282,10 +281,7 @@ class MainActivity : AppCompatActivity() {
                     progressDialog.cancel()
                     val errorMessage = errorHead + e.message
                     writeLog(applicationContext, errorMessage)
-                    Looper.prepare()
-                    showErrorDialog(errorMessage)
-                    //Snackbar.make(v, errorMessage, Snackbar.LENGTH_LONG).show()
-                    Looper.loop()
+                    runOnUiThread { showErrorDialog(errorMessage) }
                 }
 
                 @Throws(IOException::class)
@@ -296,20 +292,14 @@ class MainActivity : AppCompatActivity() {
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage = errorHead + resultObj["description"].asString
                         writeLog(applicationContext, errorMessage)
-                        Looper.prepare()
-                        showErrorDialog(errorMessage)
-                        //Snackbar.make(v, errorMessage, Snackbar.LENGTH_LONG).show()
-                        Looper.loop()
+                        runOnUiThread { showErrorDialog(errorMessage) }
                         return
                     }
                     val result = Objects.requireNonNull(response.body).string()
                     val resultObj = JsonParser.parseString(result).asJsonObject
                     val chatList = resultObj.getAsJsonArray("result")
                     if (chatList.isEmpty) {
-                        Looper.prepare()
-                        showErrorDialog(applicationContext.getString(R.string.unable_get_recent))
-                        //Snackbar.make(v, R.string.unable_get_recent, Snackbar.LENGTH_LONG).show()
-                        Looper.loop()
+                        runOnUiThread { showErrorDialog(applicationContext.getString(R.string.unable_get_recent)) }
                         return
                     }
                     val chatNameList = ArrayList<String>()
@@ -372,8 +362,8 @@ class MainActivity : AppCompatActivity() {
             if (botTokenEditView.text.toString().isEmpty() || chatIdEditView.text.toString()
                     .isEmpty()
             ) {
-/*                Snackbar.make(v!!, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG)
-                    .show()*/
+                /*                Snackbar.make(v!!, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG)
+                                    .show()*/
                 showErrorDialog(applicationContext.getString(R.string.chat_id_or_token_not_config))
                 return@setOnClickListener
             }
@@ -381,7 +371,7 @@ class MainActivity : AppCompatActivity() {
                     .isEmpty()
             ) {
                 showErrorDialog(applicationContext.getString(R.string.trusted_phone_number_empty))
-               /* Snackbar.make(v!!, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show()*/
+                /* Snackbar.make(v!!, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show()*/
                 return@setOnClickListener
             }
             if (!preferences.getBoolean("privacy_dialog_agree", false)) {
@@ -462,7 +452,8 @@ class MainActivity : AppCompatActivity() {
             requestBody.chatId = chatIdEditView.text.toString().trim { it <= ' ' }
             requestBody.messageThreadId =
                 messageThreadIdEditView.text.toString().trim { it <= ' ' }
-            requestBody.text = "${getString(R.string.system_message_head)}\n${getString(R.string.success_connect)}"
+            requestBody.text =
+                "${getString(R.string.system_message_head)}\n${getString(R.string.success_connect)}"
             val gson = Gson()
             val requestBodyRaw = gson.toJson(requestBody)
             val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
@@ -476,11 +467,7 @@ class MainActivity : AppCompatActivity() {
                     progressDialog.cancel()
                     val errorMessage = errorHead + e.message
                     writeLog(applicationContext, errorMessage)
-                    Looper.prepare()
-/*                    Snackbar.make(v!!, errorMessage, Snackbar.LENGTH_LONG)
-                        .show()*/
-                    showErrorDialog(errorMessage)
-                    Looper.loop()
+                    runOnUiThread { showErrorDialog(errorMessage) }
                 }
 
                 @Throws(IOException::class)
@@ -492,10 +479,7 @@ class MainActivity : AppCompatActivity() {
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage = errorHead + resultObj["description"]
                         writeLog(applicationContext, errorMessage)
-                        Looper.prepare()
-                        //Snackbar.make(v!!, errorMessage, Snackbar.LENGTH_LONG).show()
-                        showErrorDialog(errorMessage)
-                        Looper.loop()
+                        runOnUiThread { showErrorDialog(errorMessage) }
                         return
                     }
                     if (newBotToken != botTokenSave) {
@@ -551,10 +535,10 @@ class MainActivity : AppCompatActivity() {
                         KeepAliveJob.startJob(applicationContext)
                         ReSendJob.startJob(applicationContext)
                     }.start()
-                    Looper.prepare()
-                    Snackbar.make(v!!, R.string.success, Snackbar.LENGTH_LONG)
-                        .show()
-                    Looper.loop()
+                    runOnUiThread {
+                        Snackbar.make(v!!, R.string.success, Snackbar.LENGTH_LONG)
+                            .show()
+                    }
                 }
             })
         }
@@ -625,11 +609,11 @@ class MainActivity : AppCompatActivity() {
             0 -> {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "No camera permissions.")
-/*                    Snackbar.make(
-                        findViewById(R.id.bot_token_editview),
-                        R.string.no_camera_permission,
-                        Snackbar.LENGTH_LONG
-                    ).show()*/
+                    /*                    Snackbar.make(
+                                            findViewById(R.id.bot_token_editview),
+                                            R.string.no_camera_permission,
+                                            Snackbar.LENGTH_LONG
+                                        ).show()*/
                     showErrorDialog(applicationContext.getString(R.string.no_camera_permission))
                     return
                 }
@@ -752,11 +736,11 @@ class MainActivity : AppCompatActivity() {
                 if (preferences.contains("initialized")) {
                     startActivity(Intent(this, QRCodeActivity::class.java))
                 } else {
-/*                    Snackbar.make(
-                        findViewById(R.id.bot_token_editview),
-                        "Uninitialized.",
-                        Snackbar.LENGTH_LONG
-                    ).show()*/
+                    /*                    Snackbar.make(
+                                            findViewById(R.id.bot_token_editview),
+                                            "Uninitialized.",
+                                            Snackbar.LENGTH_LONG
+                                        ).show()*/
                     showErrorDialog("Uninitialized.")
                 }
                 return true
@@ -874,6 +858,7 @@ class MainActivity : AppCompatActivity() {
         }
         return true
     }
+
     fun showErrorDialog(message: String) {
         AlertDialog.Builder(this)
             .setTitle("Error")
