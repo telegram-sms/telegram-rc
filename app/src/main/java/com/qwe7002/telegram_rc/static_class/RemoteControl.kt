@@ -1,12 +1,10 @@
 package com.qwe7002.telegram_rc.static_class
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import com.fitc.wifihotspot.TetherManager
-import com.qwe7002.telegram_rc.MdnsService
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.forceStopService
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.startForegroundService
 import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
@@ -62,8 +60,6 @@ object RemoteControl {
         MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", true)
         val manager = TetherManager(context)
         manager.startTethering(mode, null)
-        val intent = Intent(context, MdnsService::class.java)
-        context.startService(intent)
     }
 
     @JvmStatic
@@ -71,8 +67,6 @@ object RemoteControl {
         MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", false)
         val manager = TetherManager(context)
         manager.stopTethering(mode)
-        val intent = Intent(context, MdnsService::class.java)
-        context.stopService(intent)
     }
 
     @JvmStatic
