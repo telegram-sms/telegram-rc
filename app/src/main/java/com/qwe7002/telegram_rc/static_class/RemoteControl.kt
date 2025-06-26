@@ -15,7 +15,7 @@ import com.tencent.mmkv.MMKV
 object RemoteControl {
     @JvmStatic
     fun disableVPNHotspot(wifiManager: WifiManager) {
-        MMKV.mmkvWithID("status").putBoolean("VPNHotspot", false)
+        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("VPNHotspot", false)
         forceStopService("be.mygod.vpnhotspot")
         setWifi(false)
         try {
@@ -42,7 +42,7 @@ object RemoteControl {
         if (wifiManager.isWifiEnabled) {
             disableVPNHotspot(wifiManager)
         }
-        MMKV.mmkvWithID("status").putBoolean("VPNHotspot", true)
+        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("VPNHotspot", true)
         setWifi(true)
         try {
             while (wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
@@ -59,7 +59,7 @@ object RemoteControl {
 
     @JvmStatic
     fun enableHotspot(context: Context, mode: Int) {
-        MMKV.mmkvWithID("status").putBoolean("tether", true)
+        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", true)
         val manager = TetherManager(context)
         manager.startTethering(mode, null)
         val intent = Intent(context, MdnsService::class.java)
@@ -68,7 +68,7 @@ object RemoteControl {
 
     @JvmStatic
     fun disableHotspot(context: Context, mode: Int) {
-        MMKV.mmkvWithID("status").putBoolean("tether", false)
+        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", false)
         val manager = TetherManager(context)
         manager.stopTethering(mode)
         val intent = Intent(context, MdnsService::class.java)
@@ -78,12 +78,12 @@ object RemoteControl {
     @JvmStatic
     fun isHotspotActive(context: Context): Boolean {
         val manager = TetherManager(context)
-        MMKV.mmkvWithID("status").putBoolean("tether", manager.isTetherActive)
+        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", manager.isTetherActive)
         return manager.isTetherActive
     }
     @JvmStatic
     fun isVPNHotspotActive(): Boolean {
-        return MMKV.mmkvWithID("status").getBoolean("VPNHotspot", false)
+        return MMKV.mmkvWithID(Const.STATUS_MMKV_ID).getBoolean("VPNHotspot", false)
     }
 
     @JvmStatic

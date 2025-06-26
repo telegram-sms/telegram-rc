@@ -353,7 +353,7 @@ class ChatService : Service() {
                 }
                 var spamCount = ""
                 val spamList =
-                    MMKV.mmkvWithID("spam").decodeStringSet("sms", setOf())?.toList() ?: ArrayList()
+                    MMKV.mmkvWithID(Const.SPAM_MMKV_ID).decodeStringSet("sms", setOf())?.toList() ?: ArrayList()
                 if (spamList.isNotEmpty()) {
                     spamCount = "\n${getString(R.string.spam_count_title)}${spamList.size}"
                 }
@@ -520,7 +520,7 @@ class ChatService : Service() {
 
             "/getspamsms" -> {
                 val spamSmsList =
-                    MMKV.mmkvWithID("spam").getStringSet("sms", setOf())?.toMutableSet()
+                    MMKV.mmkvWithID(Const.SPAM_MMKV_ID).getStringSet("sms", setOf())?.toMutableSet()
                         ?: mutableSetOf()
                 if (spamSmsList.isEmpty()) {
                     requestBody.text =
@@ -559,10 +559,10 @@ class ChatService : Service() {
                                     }
                                 })
                                 val reSendListLocal =
-                                    MMKV.mmkvWithID("spam").getStringSet("sms", setOf())
+                                    MMKV.mmkvWithID(Const.SPAM_MMKV_ID).getStringSet("sms", setOf())
                                         ?.toMutableSet() ?: mutableSetOf()
                                 reSendListLocal.remove(item)
-                                MMKV.mmkvWithID("spam").putStringSet("sms", reSendListLocal)
+                                MMKV.mmkvWithID(Const.SPAM_MMKV_ID).putStringSet("sms", reSendListLocal)
                             }
                         }
                         writeLog(applicationContext, "Send spam message is complete.")
@@ -589,11 +589,11 @@ class ChatService : Service() {
                         requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
                             .toTypedArray()
                     if (commandList.size == 2) {
-                        MMKV.mmkvWithID("root").putString("dummy_ip_addr", commandList[1])
+                        MMKV.mmkvWithID(Const.ROOT_MMKV_ID).putString("dummy_ip_addr", commandList[1])
                         addDummyDevice(commandList[1])
                     } else {
-                        if (MMKV.mmkvWithID("root").containsKey("dummy_ip_addr")) {
-                            val dummyIp = MMKV.mmkvWithID("root").getString("dummy_ip_addr", "")
+                        if (MMKV.mmkvWithID(Const.ROOT_MMKV_ID).containsKey("dummy_ip_addr")) {
+                            val dummyIp = MMKV.mmkvWithID(Const.ROOT_MMKV_ID).getString("dummy_ip_addr", "")
                             if (dummyIp != null) {
                                 addDummyDevice(dummyIp)
                             }
@@ -837,7 +837,7 @@ class ChatService : Service() {
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
         sendStatusMMKV = MMKV.mmkvWithID("send_status")
-        chatInfoMMKV = MMKV.mmkvWithID("chat_info")
+        chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
         chatID = preferences.getString("chat_id", "").toString()
         botToken = preferences.getString("bot_token", "").toString()
         messageThreadId = preferences.getString("message_thread_id", "").toString()

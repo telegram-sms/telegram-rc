@@ -80,7 +80,7 @@ object Network {
     fun getOkhttpObj(): OkHttpClient {
         var doh = MMKV.defaultMMKV().getBoolean("doh_switch", true)
 
-        val proxyConfig = MMKV.mmkvWithID("proxy")
+        val proxyConfig = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
         val okhttp: OkHttpClient.Builder = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)

@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 class ReSendJob : JobService() {
     private lateinit var requestUri: String
     private val tableName: String = "resend_list"
-    private val resendMMKV= MMKV.mmkvWithID("resend")
+    private val resendMMKV= MMKV.mmkvWithID(Const.RESEND_MMKV_ID)
     private val preferences = MMKV.defaultMMKV()
     override fun onStartJob(params: JobParameters?): Boolean {
         requestUri =

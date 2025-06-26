@@ -3,7 +3,6 @@
 package com.qwe7002.telegram_rc
 
 import aga.android.luch.BeaconScanner
-import aga.android.luch.IBeaconBatchListener
 import aga.android.luch.IScanner
 import aga.android.luch.ScanDuration
 import aga.android.luch.parsers.BeaconParserFactory
@@ -22,10 +21,9 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import android.os.PowerManager.WakeLock
 import android.os.Process
-import android.provider.Settings
 import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
@@ -45,15 +43,13 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
-import java.util.Objects
-
+import java.util.concurrent.locks.ReentrantLock
 
 class BeaconReceiverService : Service() {
-    @Suppress("PrivatePropertyName")
+
     private val TAG = "beacon_receiver"
     private lateinit var wifiManager: WifiManager
     private var notFoundCount = 0
@@ -63,8 +59,10 @@ class BeaconReceiverService : Service() {
     private lateinit var requestUrl: String
     private lateinit var messageThreadId: String
     private lateinit var scanner: IScanner
-    private lateinit var wakelock: WakeLock
+    private lateinit var wakelock: PowerManager.WakeLock
     private var isRoot = false
+    private val flushReceiverLock = ReentrantLock()
+
     override fun onBind(intent: Intent): IBinder? {
         return null
     }
@@ -75,409 +73,336 @@ class BeaconReceiverService : Service() {
     }
 
     private fun startForegroundNotification() {
-        val notification =
-            Other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
-        startForeground(
-            Notify.BEACON_SERVICE, notification.build(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-        )
-
+        val notification = Other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
+        startForeground(Notify.BEACON_SERVICE, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
     }
 
-
-    private val reloadConfigReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-        }
-    }
-
-    @SuppressLint("InvalidWakeLockTag", "WakelockTimeout", "UnspecifiedRegisterReceiverFlag")
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onCreate() {
         super.onCreate()
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (!hasLocationPermissions()) {
             Log.d(TAG, "onCreate: permission denied")
+            return
         }
-        wakelock =
-            (Objects.requireNonNull(applicationContext.getSystemService(POWER_SERVICE)) as PowerManager).newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK, "beacon_receive"
-            )
+        initializeWakeLock()
+        registerReloadConfigReceiver()
+        loadPreferences()
+        initializeOkHttpClient()
+        initializeBeaconScanner()
+        registerFlushReceiver()
+        registerStopServiceReceiver()
+        scanner.start()
+    }
+
+    private fun hasLocationPermissions(): Boolean {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    }
+
+    @SuppressLint("InvalidWakeLockTag", "WakelockTimeout")
+    private fun initializeWakeLock() {
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+        wakelock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "beacon_receive")
         wakelock.setReferenceCounted(false)
-        if (!this.wakelock.isHeld) {
-            this.wakelock.acquire()
+        if (!wakelock.isHeld) {
+            wakelock.acquire()
         }
+    }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private fun registerReloadConfigReceiver() {
+        val intentFilter = IntentFilter("reload_beacon_config")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                reloadConfigReceiver,
-                IntentFilter("reload_beacon_config"),
-                RECEIVER_NOT_EXPORTED
-            )
+            registerReceiver(reloadConfigReceiver, intentFilter, RECEIVER_NOT_EXPORTED)
         } else {
-            registerReceiver(
-                reloadConfigReceiver,
-                IntentFilter("reload_beacon_config")
-            )
+            registerReceiver(reloadConfigReceiver, intentFilter)
         }
+    }
+
+    private val reloadConfigReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            // Reload configuration if needed
+        }
+    }
+
+    private fun loadPreferences() {
         val preferences = MMKV.defaultMMKV()
-        requestUrl =
-            Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
+        requestUrl = Network.getUrl(preferences.getString("bot_token", "")!!, "SendMessage")
         chatId = preferences.getString("chat_id", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
-        okhttpClient = Network.getOkhttpObj()
         isRoot = preferences.getBoolean("root", false)
+    }
 
-        val batchListener = IBeaconBatchListener { beacons ->
-            val beacon = ArrayList<BeaconModel.BeaconModel>()
-            beacons.toList().map {
-                try {
-                    val current = it
-                    val item = BeaconModel.BeaconModel(
-                        uuid = current.getIdentifierAsUuid(1).toString(),
-                        major = current.getIdentifierAsInt(2),
-                        minor = current.getIdentifierAsInt(3),
-                        rssi = current.rssi.toInt(),
-                        hardwareAddress = current.hardwareAddress,
-                        distance = scanner.ranger.calculateDistance(current)
-                    )
-                    beacon.add(item)
-                } catch (e: ConcurrentModificationException) {
-                    Log.d(TAG, "ConcurrentModificationException: $e")
-                } catch (e: NullPointerException) {
-                    Log.d(TAG, "NullPointerException: $e")
-                }
-            }
-            val intents = Intent("flush_beacons_list")
-            val gson = Gson()
-            intents.putExtra("beaconList", gson.toJson(beacon))
+    private fun initializeOkHttpClient() {
+        okhttpClient = Network.getOkhttpObj()
+    }
 
-            applicationContext.sendBroadcast(intents)
-        }
-        val beaconLayout =
-            "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24" // search the Internet to find the layout string of your specific beacon
-
+    private fun initializeBeaconScanner() {
+        val beaconLayout = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"
         val beaconParser = BeaconParserFactory.createFromLayout(beaconLayout)
-
         scanner = BeaconScanner.Builder(application)
             .setBeaconParser(beaconParser)
             .setBeaconExpirationDuration(30)
-            .setScanDuration(
-                ScanDuration.UNIFORM
-            )
+            .setScanDuration(ScanDuration.UNIFORM)
             .setRangingEnabled()
-            .setBeaconBatchListener(batchListener)
+            .setBeaconBatchListener { beacons ->
+                val beaconList = beacons.mapNotNull { beacon ->
+                    try {
+                        BeaconModel.BeaconModel(
+                            uuid = beacon.getIdentifierAsUuid(1).toString(),
+                            major = beacon.getIdentifierAsInt(2),
+                            minor = beacon.getIdentifierAsInt(3),
+                            rssi = beacon.rssi.toInt(),
+                            hardwareAddress = beacon.hardwareAddress,
+                            distance = scanner.ranger.calculateDistance(beacon)
+                        )
+                    } catch (e: Exception) {
+                        Log.d(TAG, "Error processing beacon: ${e.message}")
+                        null
+                    }
+                }
+                val intent = Intent("flush_beacons_list")
+                intent.putExtra("beaconList", Gson().toJson(beaconList))
+                applicationContext.sendBroadcast(intent)
+            }
             .build()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                flushReceiver,
-                IntentFilter("flush_beacons_list"),
-                RECEIVER_EXPORTED
-            )
-        } else {
-            registerReceiver(
-                flushReceiver,
-                IntentFilter("flush_beacons_list")
-            )
-        }
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(Const.BROADCAST_STOP_SERVICE)
-        val broadcastReceiver = broadcastReceiver()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(broadcastReceiver, intentFilter, RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(broadcastReceiver, intentFilter)
-        }
-        scanner.start()
-
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private fun registerFlushReceiver() {
+        val intentFilter = IntentFilter("flush_beacons_list")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(flushReceiver, intentFilter, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(flushReceiver, intentFilter)
+        }
+    }
 
-    private inner class broadcastReceiver : BroadcastReceiver() {
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private fun registerStopServiceReceiver() {
+        val intentFilter = IntentFilter(Const.BROADCAST_STOP_SERVICE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(stopServiceReceiver, intentFilter, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(stopServiceReceiver, intentFilter)
+        }
+    }
+
+    private val stopServiceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d("beaconReceiver", "onReceive: " + intent.action)
-            assert(intent.action != null)
-            if (Const.BROADCAST_STOP_SERVICE == intent.action) {
-                Log.i("beaconReceiver", "Received stop signal, quitting now...")
+            if (intent.action == Const.BROADCAST_STOP_SERVICE) {
+                Log.i(TAG, "Received stop signal, quitting now...")
                 Process.killProcess(Process.myPid())
             }
         }
     }
 
-    // Add a mutex lock object to protect flushReceiver
-    private val flushReceiverLock = Object()
+    private val flushReceiver = object : BroadcastReceiver() {
+        private val config = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
 
-    private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        private val config: MMKV = MMKV.mmkvWithID("beacon")
         override fun onReceive(context: Context, intent: Intent) {
-            // Use synchronized block to prevent concurrent execution
-            synchronized(flushReceiverLock) {
-                val wifiIsEnableStatus: Boolean
-                if (config.getBoolean("useVpnHotspot", false) == true) {
-                    if (!RemoteControl.isVPNHotspotExist(context) && Settings.System.canWrite(
-                            context
-                        )
-                    ) {
-                        config.putBoolean("useVpnHotspot", false)
-                    }
-                    wifiIsEnableStatus = RemoteControl.isVPNHotspotActive()
-                } else {
-                    if (!Settings.System.canWrite(context) && RemoteControl.isVPNHotspotExist(
-                            context
-                        )
-                    ) {
-                        config.putBoolean("useVpnHotspot", true)
-                    }
-                    wifiIsEnableStatus = RemoteControl.isHotspotActive(context)
-                }
-                if (config.getBoolean("beacon_enable", false) != true) {
-                    notFoundCount = 0
-                    detectCount = 0
-                    return
-                }
-                val info = getBatteryInfo()
-                if (!info.isCharging && info.batteryLevel < 25 && !wifiIsEnableStatus && !config.getBoolean(
-                        "opposite",
-                        false
-                    )
-                ) {
-                    notFoundCount = 0
-                    detectCount = 0
-                    Log.d(TAG, "onBeaconServiceConnect: Turn off beacon automatic activation")
-                    return
-                }
-                //val listenBeaconList =
-                //Paper.book("beacon").read("address", ArrayList<String>())!!
-                val listenBeaconList = config.decodeStringSet("address", emptySet())
-                if (listenBeaconList != null) {
-                    if (listenBeaconList.isEmpty()) {
-                        notFoundCount = 0
-                        detectCount = 0
-                        Log.i(TAG, "onBeaconServiceConnect: Watchlist is empty")
-                        return
-                    }
-                }
-                val bluetoothAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-                if (!bluetoothAdapter.isEnabled) {
-                    notFoundCount = 0
-                    detectCount = 0
-                    Log.i(TAG, "Bluetooth has been turned off")
-                    return
-                }
-                var foundBeacon = false
-                lateinit var detectBeacon: BeaconModel.BeaconModel
-                val gson = Gson()
-                val beacons = gson.fromJson<java.util.ArrayList<BeaconModel.BeaconModel>>(
-                    intent.getStringExtra("beaconList"),
-                    object : TypeToken<java.util.ArrayList<BeaconModel.BeaconModel>>() {}.type
-                )
-                for (beacon in beacons) {
-                    Log.d(
-                        TAG,
-                        "UUID: " + beacon.uuid + " Rssi: " + beacon.rssi
-                    )
-                    for (beaconAddress in listenBeaconList!!) {
-
-                        if (beaconItemName(beacon.uuid, beacon.major, beacon.minor) == beaconAddress
-                        ) {
-                            foundBeacon = true
-                            break
-                        }
-                    }
-                    if (foundBeacon) {
-                        detectBeacon = beacon
-                        break
-                    }
-                }
-                val beaconStatus: String
-                if (foundBeacon) {
-                    val distance = detectBeacon.distance.toInt().toString()
-                    beaconStatus = "\nBeacon Distance: $distance meter"
-                    notFoundCount = 0
-                    if (detectBeacon.distance >= 200.0) {
-                        Log.i(TAG, "onBeaconServiceConnect: Signal is too weak, no operation")
-                    } else {
-                        ++detectCount
-                    }
-                } else {
-                    beaconStatus = "\nBeacon Not Found."
-                    if (notFoundCount >= 5) {
-                        detectCount = 0
-                    }
-                    ++notFoundCount
-                }
-                val STANDBY = -1
-                val ENABLE_AP = 0
-                val DISABLE_AP = 1
-                var switchStatus = STANDBY
-                Log.d(TAG, "detect_singal_count: $detectCount")
-                Log.d(TAG, "not_found_count: $notFoundCount")
-                if (wifiIsEnableStatus && foundBeacon) {
-                    if (!config.getBoolean("opposite", false)) {
-                        if (detectCount >= config.getInt("disableCount", 10)) {
-                            detectCount = 0
-                            notFoundCount = 0
-                            if (config.getBoolean("useVpnHotspot", false)) {
-                                RemoteControl.disableVPNHotspot(wifiManager)
-                            } else {
-                                RemoteControl.disableHotspot(
-                                    context,
-                                    TetherManager.TetherMode.TETHERING_WIFI
-                                )
-                            }
-                            switchStatus = DISABLE_AP
-                        }
-                    } else {
-                        if (detectCount >= config.getInt("enableCount", 10)) {
-                            detectCount = 0
-                            notFoundCount = 0
-                            if (config.getBoolean("useVpnHotspot", false)) {
-                                RemoteControl.enableVPNHotspot(wifiManager)
-                            } else {
-                                RemoteControl.enableHotspot(
-                                    context,
-                                    TetherManager.TetherMode.TETHERING_WIFI
-                                )
-                            }
-                            switchStatus = ENABLE_AP
-                        }
-                    }
-                }
-                if (!wifiIsEnableStatus && !foundBeacon) {
-                    if (!config.getBoolean("opposite", false)) {
-                        if (notFoundCount >= config.getInt("enableCount", 10)) {
-                            detectCount = 0
-                            notFoundCount = 0
-                            if (config.getBoolean("useVpnHotspot", false)) {
-                                RemoteControl.enableVPNHotspot(wifiManager)
-                            } else {
-                                RemoteControl.enableHotspot(
-                                    context,
-                                    TetherManager.TetherMode.TETHERING_WIFI
-                                )
-                            }
-                            switchStatus = ENABLE_AP
-                        }
-                    } else {
-                        if (notFoundCount >= config.getInt("disableCount", 10)) {
-                            detectCount = 0
-                            notFoundCount = 0
-                            if (config.getBoolean("useVpnHotspot", false)) {
-                                RemoteControl.disableVPNHotspot(wifiManager)
-                            } else {
-                                RemoteControl.disableHotspot(
-                                    context,
-                                    TetherManager.TetherMode.TETHERING_WIFI
-                                )
-                            }
-                            switchStatus = DISABLE_AP
-                        }
-                    }
-                }
-
-                lateinit var message: String
-                when (switchStatus) {
-                    ENABLE_AP -> message =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
-                            getString(R.string.action_success)
-                        }$beaconStatus"
-
-                    DISABLE_AP -> message =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
-                            getString(R.string.action_success)
-                        }$beaconStatus"
-                }
-
-                CcSendJob.startJob(context, "Beacon Scan Service", message)
-                networkHandle(message, chatId, okhttpClient)
-
+            flushReceiverLock.lock()
+            try {
+                processBeaconList(intent)
+            } finally {
+                flushReceiverLock.unlock()
             }
+        }
+
+        private fun processBeaconList(intent: Intent) {
+            if (!config.getBoolean("beacon_enable", false)) {
+                resetCounters()
+                return
+            }
+
+            val batteryInfo = getBatteryInfo()
+            if (!batteryInfo.isCharging && batteryInfo.batteryLevel < 25 && !isWifiEnabled() && !config.getBoolean("opposite", false)) {
+                resetCounters()
+                Log.d(TAG, "Battery level too low, skipping beacon processing")
+                return
+            }
+
+            val listenBeaconList = config.decodeStringSet("address", emptySet()) ?: emptySet()
+            if (listenBeaconList.isEmpty()) {
+                resetCounters()
+                Log.i(TAG, "Watchlist is empty")
+                return
+            }
+
+            if (!isBluetoothEnabled()) {
+                resetCounters()
+                Log.i(TAG, "Bluetooth is disabled")
+                return
+            }
+
+            val beacons = parseBeaconList(intent.getStringExtra("beaconList"))
+            val foundBeacon = findMatchingBeacon(beacons, listenBeaconList)
+
+            updateCounters(foundBeacon != null)
+
+            val switchStatus = determineSwitchStatus(foundBeacon != null, isWifiEnabled())
+
+            val message = buildMessage(switchStatus, foundBeacon)
+            CcSendJob.startJob(applicationContext, "Beacon Scan Service", message)
+            sendNetworkRequest(message)
+        }
+
+        private fun resetCounters() {
+            notFoundCount = 0
+            detectCount = 0
+        }
+
+        private fun isWifiEnabled(): Boolean {
+            return if (config.getBoolean("useVpnHotspot", false)) {
+                RemoteControl.isVPNHotspotActive()
+            } else {
+                RemoteControl.isHotspotActive(applicationContext)
+            }
+        }
+
+        private fun isBluetoothEnabled(): Boolean {
+            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            return bluetoothAdapter?.isEnabled == true
+        }
+
+        private fun parseBeaconList(beaconListJson: String?): List<BeaconModel.BeaconModel> {
+            return if (beaconListJson != null) {
+                Gson().fromJson(beaconListJson, object : TypeToken<List<BeaconModel.BeaconModel>>() {}.type)
+            } else {
+                emptyList()
+            }
+        }
+
+        private fun findMatchingBeacon(beacons: List<BeaconModel.BeaconModel>, listenBeaconList: Set<String>): BeaconModel.BeaconModel? {
+            return beacons.find { beacon ->
+                listenBeaconList.contains(beaconItemName(beacon.uuid, beacon.major, beacon.minor))
+            }
+        }
+
+        private fun updateCounters(foundBeacon: Boolean) {
+            if (foundBeacon) {
+                notFoundCount = 0
+                detectCount++
+            } else {
+                detectCount = 0
+                notFoundCount++
+            }
+        }
+
+        private fun determineSwitchStatus(foundBeacon: Boolean, wifiEnabled: Boolean): Int {
+            val opposite = config.getBoolean("opposite", false)
+            val enableCount = config.getInt("enableCount", 10)
+            val disableCount = config.getInt("disableCount", 10)
+
+            if (wifiEnabled && foundBeacon) {
+                if (!opposite && detectCount >= disableCount) {
+                    resetCounters()
+                    toggleWifiHotspot(false)
+                    return DISABLE_AP
+                } else if (opposite && detectCount >= enableCount) {
+                    resetCounters()
+                    toggleWifiHotspot(true)
+                    return ENABLE_AP
+                }
+            } else if (!wifiEnabled && !foundBeacon) {
+                if (!opposite && notFoundCount >= enableCount) {
+                    resetCounters()
+                    toggleWifiHotspot(true)
+                    return ENABLE_AP
+                } else if (opposite && notFoundCount >= disableCount) {
+                    resetCounters()
+                    toggleWifiHotspot(false)
+                    return DISABLE_AP
+                }
+            }
+            return STANDBY
+        }
+
+        private fun toggleWifiHotspot(enable: Boolean) {
+            if (config.getBoolean("useVpnHotspot", false)) {
+                if (enable) {
+                    RemoteControl.enableVPNHotspot(wifiManager)
+                } else {
+                    RemoteControl.disableVPNHotspot(wifiManager)
+                }
+            } else {
+                val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
+                if (enable) {
+                    RemoteControl.enableHotspot(applicationContext, tetherMode)
+                } else {
+                    RemoteControl.disableHotspot(applicationContext, tetherMode)
+                }
+            }
+        }
+
+        private fun buildMessage(switchStatus: Int, foundBeacon: BeaconModel.BeaconModel?): String {
+            val beaconStatus = if (foundBeacon != null) {
+                val distance = foundBeacon.distance.toInt().toString()
+                "\nBeacon Distance: $distance meter"
+            } else {
+                "\nBeacon Not Found."
+            }
+
+            return when (switchStatus) {
+                ENABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${getString(R.string.action_success)}$beaconStatus"
+                DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${getString(R.string.action_success)}$beaconStatus"
+                else -> ""
+            }
+        }
+
+        private fun sendNetworkRequest(message: String) {
+            val requestBody = RequestMessage().apply {
+                text = "$message\n${getString(R.string.current_battery_level)}${Battery.getBatteryInfo(applicationContext)}\n${getString(R.string.current_network_connection_status)}${Network.getNetworkType(applicationContext)}"
+            }
+            val requestBodyJson = Gson().toJson(requestBody)
+            val body = requestBodyJson.toRequestBody(Const.JSON)
+            val request = Request.Builder().url(requestUrl).method("POST", body).build()
+            okhttpClient.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Resend.addResendLoop(applicationContext, requestBody.text)
+                    e.printStackTrace()
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    Log.d(TAG, "onResponse: ${response.body.string()}")
+                }
+            })
         }
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onDestroy() {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (hasLocationPermissions()) {
             scanner.stop()
         }
         wakelock.release()
-        this.stopForeground(true)
+        stopForeground(true)
         super.onDestroy()
     }
 
-
-    private fun networkHandle(
-        message: String,
-        chatId1: String,
-        okhttpClient1: OkHttpClient
-    ) {
-        val requestBody =
-            RequestMessage()
-        requestBody.chatId = chatId1
-        requestBody.messageThreadId = messageThreadId
-        requestBody.text =
-            message + "\n${getString(R.string.current_battery_level)}${
-                Battery.getBatteryInfo(
-                    applicationContext
-                )
-            }\n${
-                getString(
-                    R.string.current_network_connection_status
-                )
-            }${Network.getNetworkType(applicationContext)}"
-        val requestBodyJson = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
-        val requestObj: Request = Request.Builder().url(requestUrl).method("POST", body).build()
-        val call: Call = okhttpClient1.newCall(requestObj)
-        call.enqueue(object : Callback {
-
-            override fun onFailure(call: Call, e: IOException) {
-                Resend.addResendLoop(applicationContext, requestBody.text)
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                Log.d(TAG, "onResponse: " + response.body.string())
-            }
-        })
-    }
-
-
     private fun getBatteryInfo(): BatteryInfo {
-        val info = BatteryInfo()
-        val batteryManager =
-            (applicationContext.getSystemService(BATTERY_SERVICE) as BatteryManager)
-        info.batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
+        val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         val intent = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus: Intent = applicationContext.registerReceiver(null, intent)!!
-        when (batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
-            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> info.isCharging =
-                true
-
-            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> when (batteryStatus.getIntExtra(
-                BatteryManager.EXTRA_PLUGGED,
-                -1
-            )) {
-                BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> info.isCharging =
-                    true
+        val batteryStatus = registerReceiver(null, intent)!!
+        val isCharging = when (batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
+            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> true
+            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> {
+                when (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
+                    BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> true
+                    else -> false
+                }
             }
+            else -> false
         }
-        return info
+        return BatteryInfo(batteryLevel, isCharging)
     }
 
-    internal class BatteryInfo {
-        var batteryLevel = 0
-        var isCharging = false
-    }
+    data class BatteryInfo(val batteryLevel: Int, val isCharging: Boolean)
 
+    companion object {
+        private const val STANDBY = -1
+        private const val ENABLE_AP = 0
+        private const val DISABLE_AP = 1
+    }
 }
