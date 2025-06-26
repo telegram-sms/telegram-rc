@@ -147,7 +147,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".MdnsService"/>
+        <service android:name=".MdnsService"
+            android:foregroundServiceType="specialUse"
+            android:permission="android.permission.FOREGROUND_SERVICE"/>
 
         <service
             android:name=".KeepAliveJob"

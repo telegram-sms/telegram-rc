@@ -1,21 +1,19 @@
 package com.qwe7002.telegram_rc
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.core.app.NotificationCompat
+import com.qwe7002.telegram_rc.static_class.Other.getNotificationObj
 import java.net.InetAddress
 
 class MdnsService : Service() {
     private val TAG = "MdnsService"
-    private val CHANNEL_ID = "MdnsServiceChannel"
     private val NOTIFICATION_ID = 8
     private lateinit var nsdManager: NsdManager
     private var registrationListener: NsdManager.RegistrationListener? = null
@@ -42,22 +40,21 @@ class MdnsService : Service() {
     }
 
     private fun startForegroundService() {
-        createNotificationChannel()
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("mDNS Service")
-            .setContentText("Broadcasting hotspot gateway IP")
-            .build()
-        startForeground(NOTIFICATION_ID, notification)
-    }
+        val notification = getNotificationObj(
+            applicationContext, "mDNS Service "
+        ).build()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 
-    private fun createNotificationChannel() {
-        val serviceChannel = NotificationChannel(
-            CHANNEL_ID,
-            "mDNS Service Channel",
-            NotificationManager.IMPORTANCE_DEFAULT
-        )
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(serviceChannel)
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
+
     }
 
     private fun registerMdnsService() {
@@ -71,11 +68,11 @@ class MdnsService : Service() {
                 (dhcpInfo.gateway shr 24).toByte()
             )
         ).hostAddress ?: "0.0.0.0"
-
+        Log.d(TAG, "registerMdnsService: $gatewayIp")
         val serviceInfo = NsdServiceInfo().apply {
             serviceName = "HotspotGateway"
             serviceType = "_http._tcp."
-            port = 80
+            port = 2525
             setAttribute("gateway_ip", gatewayIp)
         }
 
