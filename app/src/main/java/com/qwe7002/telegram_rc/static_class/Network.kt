@@ -90,15 +90,22 @@ object Network {
         if (proxyConfig.getBoolean("enabled", false)) {
             val policy = ThreadPolicy.Builder().permitAll().build()
             StrictMode.setThreadPolicy(policy)
-            val inetSocketAddress = InetSocketAddress(proxyConfig.getString("host",""), proxyConfig.getInt("port", 1080))
+            val inetSocketAddress = InetSocketAddress(
+                proxyConfig.getString("host", ""),
+                proxyConfig.getInt("port", 1080)
+            )
             proxy = Proxy(Proxy.Type.SOCKS, inetSocketAddress)
             Authenticator.setDefault(object : Authenticator() {
                 override fun getPasswordAuthentication(): PasswordAuthentication? {
-                    if (requestingHost.equals(proxyConfig.getString("host",""), ignoreCase = true)) {
+                    if (requestingHost.equals(
+                            proxyConfig.getString("host", ""),
+                            ignoreCase = true
+                        )
+                    ) {
                         if (proxyConfig.getInt("port", 1080) == requestingPort) {
                             return PasswordAuthentication(
-                                proxyConfig.getString("username",""),
-                                proxyConfig.getString("password","").toString().toCharArray()
+                                proxyConfig.getString("username", ""),
+                                proxyConfig.getString("password", "").toString().toCharArray()
                             )
                         }
                     }
@@ -109,7 +116,8 @@ object Network {
             doh = true
         }
         if (doh) {
-            val dohHttpClient: OkHttpClient.Builder =OkHttpClient. Builder().retryOnConnectionFailure(true)
+            val dohHttpClient: OkHttpClient.Builder =
+                OkHttpClient.Builder().retryOnConnectionFailure(true)
             okhttp.dns(
                 DnsOverHttps.Builder().client(dohHttpClient.build())
                     .url(DNS_OVER_HTTP.toHttpUrl())
@@ -162,12 +170,8 @@ object Network {
             TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_TD_SCDMA, TelephonyManager.NETWORK_TYPE_UMTS -> netType =
                 "3G"
 
-            TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
+            TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_GSM, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
                 "2G"
-
-            TelephonyManager.NETWORK_TYPE_GSM -> {
-                "2G"
-            }
 
             TelephonyManager.NETWORK_TYPE_UNKNOWN -> {
                 "Unknown"
@@ -198,6 +202,7 @@ object Network {
         }
         return "LTE"
     }
+
     fun getNetworkType(context: Context): String {
         var netType = "Unknown"
         val connectManager =
