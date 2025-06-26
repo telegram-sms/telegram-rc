@@ -223,7 +223,7 @@ class SMSReceiver : BroadcastReceiver() {
                     val simpleDateFormat =
                         SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)
                     val writeMessage = requestBody.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(Date(System.currentTimeMillis()))
-                    val spamMMKV = MMKV.mmkvWithID()
+                    val spamMMKV = MMKV.mmkvWithID(Const.SPAM_MMKV_ID)
                     val spamSmsList =
                         spamMMKV.getStringSet("sms", setOf())?.toMutableSet()
                             ?: mutableSetOf()

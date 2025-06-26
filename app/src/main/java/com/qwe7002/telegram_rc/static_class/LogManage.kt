@@ -38,7 +38,7 @@ object LogManage {
 
     @JvmStatic
     fun readLog(context: Context, line: Int): String {
-        val result = context.getString(R.string.no_logs)
+        val result = "\n"+context.getString(R.string.no_logs)
 
         val kv = MMKV.mmkvWithID(MMKV_LOG_ID)
 
