@@ -15,7 +15,7 @@ object Resend {
         if (message.isEmpty()) {
             return
         }
-        val mmkv = MMKV.mmkvWithID("resend")
+        val mmkv = MMKV.mmkvWithID(Const.RESEND_MMKV_ID)
         val resendList = mmkv.decodeStringSet("resend_list", mutableSetOf())
         val simpleDateFormat = SimpleDateFormat(context.getString(R.string.time), Locale.UK)
         message += "\n"+context.getString(R.string.time) + simpleDateFormat.format(Date(System.currentTimeMillis()))

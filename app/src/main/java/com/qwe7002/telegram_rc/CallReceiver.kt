@@ -29,7 +29,7 @@ import java.util.Objects
 class CallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Log.d("call_receiver", "Receive action: " + intent.action)
-        stateMMKV = MMKV.mmkvWithID("status")
+        stateMMKV = MMKV.mmkvWithID(Const.STATUS_MMKV_ID)
         when (Objects.requireNonNull(intent.action)) {
             "android.intent.action.PHONE_STATE" -> {
                 if (intent.getStringExtra("incoming_number") != null) {

@@ -66,7 +66,7 @@ class BatteryService : Service() {
         super.onCreate()
         MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()
-        chatInfoMMKV = MMKV.mmkvWithID("chat_info")
+        chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
         chatId = preferences.getString("chat_id", "")!!
         botToken = preferences.getString("bot_token", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!

@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         //load config
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
-        proxyMMKV = MMKV.mmkvWithID("proxy")
+        proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
         writeSettingsButton.setOnClickListener {
             val writeSystemIntent = Intent(
                 Settings.ACTION_MANAGE_WRITE_SETTINGS, "package:$packageName".toUri()
@@ -490,9 +490,9 @@ class MainActivity : AppCompatActivity() {
                             TAG,
                             "onResponse: The current bot token does not match the saved bot token, clearing the message database."
                         )
-                        MMKV.mmkvWithID("chat_info").clear()
+                        MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID).clear()
                     }
-                    MMKV.mmkvWithID("upgrade").putInt(
+                    MMKV.mmkvWithID(Const.UPGRADE_MMKV_ID).putInt(
                         "version",
                         Const.SYSTEM_CONFIG_VERSION
                     )

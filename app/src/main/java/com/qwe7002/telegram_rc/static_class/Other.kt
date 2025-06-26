@@ -212,7 +212,7 @@ fun getNineKeyMapConvert(input: String): String {
         val item = SMSRequestInfo()
         item.phone = phone
         item.card = slot
-        MMKV.mmkvWithID("chat_info").putString(messageId.toString(), Gson().toJson(item))
+        MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID).putString(messageId.toString(), Gson().toJson(item))
         Log.d("add_message_list", "add_message_list: $messageId")
     }
 }

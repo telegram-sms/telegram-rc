@@ -27,6 +27,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
+import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isVPNHotspotExist
 import com.tencent.mmkv.MMKV
 
@@ -63,7 +64,7 @@ class BeaconActivity : AppCompatActivity() {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        beaconMMKV = MMKV.mmkvWithID("beacon")
+        beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         setContentView(R.layout.activity_beacon)
         flushListView(ArrayList())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -123,7 +124,7 @@ class BeaconActivity : AppCompatActivity() {
         var context: Context
     ) :
         BaseAdapter() {
-        private var beaconMMKV: MMKV = MMKV.mmkvWithID("beacon")
+        private var beaconMMKV: MMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         private var listenList: ArrayList<String> =
             beaconMMKV.decodeStringSet("address", setOf()).orEmpty().toCollection(ArrayList())
 
