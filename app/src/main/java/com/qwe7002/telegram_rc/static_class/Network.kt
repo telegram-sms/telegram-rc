@@ -160,7 +160,7 @@ object Network {
                     check5GState(telephony)
                 } else {
                     if (telephony.dataNetworkType == TelephonyManager.NETWORK_TYPE_NR) {
-                        "5G"
+                        "NR"
                     } else {
                         "LTE"
                     }
@@ -195,9 +195,9 @@ object Network {
         }
 
         if (hasLte && hasNr) {
-            return "NSA NR"
+            return "NR NSA"
         } else if (hasNr) {
-            return "SA 5G"
+            return "NR SA"
         }
         return "LTE"
     }
