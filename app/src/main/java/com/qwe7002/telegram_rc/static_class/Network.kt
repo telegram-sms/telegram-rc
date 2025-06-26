@@ -173,9 +173,8 @@ object Network {
             TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_GSM, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
                 "2G"
 
-            TelephonyManager.NETWORK_TYPE_UNKNOWN -> {
-                "Unknown"
-            }
+            TelephonyManager.NETWORK_TYPE_UNKNOWN -> netType = "Unknown"
+
         }
         return netType
     }
