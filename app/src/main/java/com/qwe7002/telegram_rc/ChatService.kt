@@ -836,6 +836,7 @@ class ChatService : Service() {
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
         sendStatusMMKV = MMKV.mmkvWithID("send_status")
+        statusMMKV = MMKV.mmkvWithID(Const.STATUS_MMKV_ID)
         chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
         setSmsSendStatusStandby()
         chatID = preferences.getString("chat_id", "").toString()
