@@ -170,6 +170,11 @@ class BeaconReceiverService : Service() {
                         null
                     }
                 }
+                if (beaconList.isEmpty()) {
+                    Log.d(TAG, "No beacons found")
+                    return@setBeaconBatchListener
+                }
+                Log.d(TAG, "Beacons found: ${beaconList.size}")
                 Log.d(TAG, "initializeBeaconScanner: $beaconList")
                 val intent = Intent("flush_beacons_list")
                 intent.putExtra("beaconList", Gson().toJson(beaconList))
