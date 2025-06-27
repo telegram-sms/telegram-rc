@@ -207,7 +207,7 @@ class BeaconReceiverService : Service() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Const.BROADCAST_STOP_SERVICE) {
                 Log.i(TAG, "Received stop signal, quitting now...")
-                Process.killProcess(Process.myPid())
+                stopSelf()
             }
         }
     }
