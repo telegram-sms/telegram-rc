@@ -34,10 +34,10 @@ class BatteryService : Service() {
     private lateinit var batteryReceiver: batteryBroadcastReceiver
     private lateinit var botToken: String
     private lateinit var chatId: String
+    private var sendLoopList: MutableList<sendObj> = ArrayList()
+    private var batteryLastReceiveTime = 0L
     private lateinit var messageThreadId: String
 
-    /*    private lateinit var sendLoopList: ArrayList<sendObj>*/
-    private lateinit var chatInfoMMKV: MMKV
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification =
@@ -66,7 +66,6 @@ class BatteryService : Service() {
         super.onCreate()
         MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()
-        chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
         chatId = preferences.getString("chat_id", "")!!
         botToken = preferences.getString("bot_token", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
@@ -88,17 +87,12 @@ class BatteryService : Service() {
         Thread {
             val needRemove = ArrayList<sendObj>()
             while (true) {
-                val sendLoopList = chatInfoMMKV.getStringSet("batterySendList", HashSet())?.map {
-                    Gson().fromJson(it, sendObj::class.java)
-                }?.toMutableList() ?: mutableListOf()
                 for (item in sendLoopList) {
                     networkHandle(item)
                     needRemove.add(item)
                 }
                 sendLoopList.removeAll(needRemove.toSet())
                 needRemove.clear()
-                val updatedSet = sendLoopList.map { Gson().toJson(it) }.toSet()
-                chatInfoMMKV.putStringSet("batterySendList", updatedSet)
             }
         }.start()
     }
@@ -110,16 +104,17 @@ class BatteryService : Service() {
         requestBody.text = obj.content
         requestBody.messageThreadId = messageThreadId
         var requestUri = Network.getUrl(botToken, "sendMessage")
-        if ((System.currentTimeMillis() - chatInfoMMKV.getLong(
-                "batteryLastReceiveTime",
-                0L
-            )) <= 10000L && chatInfoMMKV.getLong("batteryLastReceiveMessageId", -1L) != -1L
+        val chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
+        if ((System.currentTimeMillis() - batteryLastReceiveTime) <= 10000L && chatInfoMMKV.getLong(
+                "batteryLastReceiveMessageId",
+                -1L
+            ) != -1L
         ) {
             requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = chatInfoMMKV.getLong("batteryLastReceiveMessageId", 0L)
             Log.d(TAG, "onReceive: edit_mode")
         }
-        chatInfoMMKV.putLong("batteryLastReceiveTime", System.currentTimeMillis())
+        batteryLastReceiveTime = System.currentTimeMillis()
         val okhttpClient = Network.getOkhttpObj()
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
@@ -217,12 +212,7 @@ class BatteryService : Service() {
                 obj.action = action
                 obj.content = result
             }
-            val sendLoopList = chatInfoMMKV.getStringSet("batterySendList", HashSet())?.map {
-                Gson().fromJson(it, sendObj::class.java)
-            }?.toMutableList() ?: mutableListOf()
             sendLoopList.add(obj)
-            val updatedSet = sendLoopList.map { Gson().toJson(it) }.toSet()
-            chatInfoMMKV.putStringSet("batterySendList", updatedSet)
         }
     }
 

@@ -402,10 +402,6 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             }
-            val permissionArrayList =
-                java.util.ArrayList(listOf(*permissionList))
-            permissionArrayList.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
-            permissionList = permissionArrayList.toTypedArray<String>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 val permissionArrayList =
                     java.util.ArrayList(listOf(*permissionList))
@@ -416,6 +412,7 @@ class MainActivity : AppCompatActivity() {
                 val permissionArrayList =
                     java.util.ArrayList(listOf(*permissionList))
                 permissionArrayList.add(Manifest.permission.POST_NOTIFICATIONS)
+                permissionArrayList.add(Manifest.permission.NEARBY_WIFI_DEVICES)
                 permissionList = permissionArrayList.toTypedArray<String>()
             }
             ActivityCompat.requestPermissions(
