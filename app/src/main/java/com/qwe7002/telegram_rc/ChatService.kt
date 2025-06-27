@@ -584,8 +584,9 @@ class ChatService : Service() {
             "/autoswitch" -> {
                 /*val state = !Paper.book().read("disable_beacon", false)!!
                 Paper.book().write("disable_beacon", state)*/
-                val state = preferences.getBoolean("beacon_enable", false)
-                preferences.putBoolean("beacon_enable", !state)
+                val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
+                val state = beacon.getBoolean("beacon_enable", false)
+                beacon.putBoolean("beacon_enable", !state)
                 requestBody.text =
                     "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
             }

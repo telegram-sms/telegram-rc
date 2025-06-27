@@ -22,9 +22,13 @@ import java.util.concurrent.TimeUnit
 class ReSendJob : JobService() {
     private lateinit var requestUri: String
     private val tableName: String = "resend_list"
-    private val resendMMKV= MMKV.mmkvWithID(Const.RESEND_MMKV_ID)
-    private val preferences = MMKV.defaultMMKV()
+    private lateinit var resendMMKV:MMKV
+    private lateinit var preferences: MMKV
     override fun onStartJob(params: JobParameters?): Boolean {
+        MMKV.initialize(applicationContext)
+        preferences = MMKV.defaultMMKV()
+        resendMMKV = MMKV.mmkvWithID("resend_list", MMKV.MULTI_PROCESS_MODE)
+
         requestUri =
             Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
         Thread {

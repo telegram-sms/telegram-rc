@@ -52,8 +52,6 @@ class BeaconReceiverService : Service() {
 
     private val TAG = "beacon_receiver"
     private lateinit var wifiManager: WifiManager
-    private var notFoundCount = 0
-    private var detectCount = 0
     private lateinit var okhttpClient: OkHttpClient
     private lateinit var chatId: String
     private lateinit var requestUrl: String
@@ -91,10 +89,11 @@ class BeaconReceiverService : Service() {
             Log.i(TAG, "onCreate: permission denied")
             return
         }
+        okhttpClient = Network.getOkhttpObj()
+
         initializeWakeLock()
         registerReloadConfigReceiver()
         loadPreferences()
-        initializeOkHttpClient()
         initializeBeaconScanner()
         registerFlushReceiver()
         registerStopServiceReceiver()
@@ -147,10 +146,6 @@ class BeaconReceiverService : Service() {
         isRoot = preferences.getBoolean("root", false)
     }
 
-    private fun initializeOkHttpClient() {
-        okhttpClient = Network.getOkhttpObj()
-    }
-
     private fun initializeBeaconScanner() {
         val beaconLayout = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"
         val beaconParser = BeaconParserFactory.createFromLayout(beaconLayout)
@@ -175,6 +170,7 @@ class BeaconReceiverService : Service() {
                         null
                     }
                 }
+                Log.d(TAG, "initializeBeaconScanner: $beaconList")
                 val intent = Intent("flush_beacons_list")
                 intent.putExtra("beaconList", Gson().toJson(beaconList))
                 applicationContext.sendBroadcast(intent)
@@ -229,6 +225,7 @@ class BeaconReceiverService : Service() {
         private fun processBeaconList(intent: Intent) {
             if (!config.getBoolean("beacon_enable", false)) {
                 resetCounters()
+                Log.d(TAG, "processBeaconList: disable")
                 return
             }
 
@@ -262,15 +259,43 @@ class BeaconReceiverService : Service() {
             updateCounters(foundBeacon != null)
 
             val switchStatus = determineSwitchStatus(foundBeacon != null, isWifiEnabled())
-
+            if (switchStatus == STANDBY) {
+                Log.d(TAG, "processBeaconList: standby")
+                return
+            }
             val message = buildMessage(switchStatus, foundBeacon)
-            CcSendJob.startJob(applicationContext, "Beacon Scan Service", message)
-            sendNetworkRequest(message)
+            Log.d(TAG, "processBeaconList: $message")
+            val requestBody = RequestMessage()
+            requestBody.chatId = chatId
+            requestBody.text = "$message\n${getString(R.string.current_battery_level)}${
+                    Battery.getBatteryInfo(applicationContext)
+                }\n${getString(R.string.current_network_connection_status)}${
+                    Network.getNetworkType(
+                        applicationContext
+                    )
+                }"
+            requestBody.messageThreadId = messageThreadId
+
+            val requestBodyJson = Gson().toJson(requestBody)
+            val body = requestBodyJson.toRequestBody(Const.JSON)
+            val request = Request.Builder().url(requestUrl).method("POST", body).build()
+            okhttpClient.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.d(TAG, "onFailure: "+e.message)
+                    Resend.addResendLoop(applicationContext, requestBody.text)
+                    e.printStackTrace()
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    Log.d(TAG, "onResponse: ${response.body.string()}")
+                }
+            })
+
         }
 
         private fun resetCounters() {
-            notFoundCount = 0
-            detectCount = 0
+            config.remove("notFoundCount")
+            config.remove("detectCount")
         }
 
         private fun isWifiEnabled(): Boolean {
@@ -308,11 +333,11 @@ class BeaconReceiverService : Service() {
 
         private fun updateCounters(foundBeacon: Boolean) {
             if (foundBeacon) {
-                notFoundCount = 0
-                detectCount++
+                config.putInt("notFoundCount", 0)
+                config.putInt("detectCount", config.getInt("detectCount", 0) + 1)
             } else {
-                detectCount = 0
-                notFoundCount++
+                config.putInt("detectCount", 0)
+                config.putInt("notFoundCount", config.getInt("notFoundCount", 0) + 1)
             }
         }
 
@@ -322,21 +347,21 @@ class BeaconReceiverService : Service() {
             val disableCount = config.getInt("disableCount", 10)
 
             if (wifiEnabled && foundBeacon) {
-                if (!opposite && detectCount >= disableCount) {
+                if (!opposite && config.getInt("detectCount", 0) >= disableCount) {
                     resetCounters()
                     toggleWifiHotspot(false)
                     return DISABLE_AP
-                } else if (opposite && detectCount >= enableCount) {
+                } else if (opposite && config.getInt("detectCount", 0) >= enableCount) {
                     resetCounters()
                     toggleWifiHotspot(true)
                     return ENABLE_AP
                 }
             } else if (!wifiEnabled && !foundBeacon) {
-                if (!opposite && notFoundCount >= enableCount) {
+                if (!opposite && config.getInt("notFoundCount", 0) >= enableCount) {
                     resetCounters()
                     toggleWifiHotspot(true)
                     return ENABLE_AP
-                } else if (opposite && notFoundCount >= disableCount) {
+                } else if (opposite && config.getInt("notFoundCount", 0) >= disableCount) {
                     resetCounters()
                     toggleWifiHotspot(false)
                     return DISABLE_AP
@@ -356,7 +381,6 @@ class BeaconReceiverService : Service() {
                 val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
                 if (enable) {
                     RemoteControl.enableHotspot(applicationContext, tetherMode)
-
                 } else {
                     RemoteControl.disableHotspot(applicationContext, tetherMode)
                 }
@@ -370,16 +394,17 @@ class BeaconReceiverService : Service() {
             } else {
                 "\nBeacon Not Found."
             }
-
+            if (switchStatus == ENABLE_AP) {
+                Thread.sleep(300)
+            }
             return when (switchStatus) {
-                ENABLE_AP -> {
-                    Thread.sleep(300)
+                ENABLE_AP ->
                     "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
                         getString(
                             R.string.action_success
                         )
                     }\nGateway IP: ${Network.getHotspotIpAddress()}$beaconStatus"
-                }
+
 
                 DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
                     getString(
@@ -391,30 +416,6 @@ class BeaconReceiverService : Service() {
             }
         }
 
-        private fun sendNetworkRequest(message: String) {
-            val requestBody = RequestMessage().apply {
-                text = "$message\n${getString(R.string.current_battery_level)}${
-                    Battery.getBatteryInfo(applicationContext)
-                }\n${getString(R.string.current_network_connection_status)}${
-                    Network.getNetworkType(
-                        applicationContext
-                    )
-                }"
-            }
-            val requestBodyJson = Gson().toJson(requestBody)
-            val body = requestBodyJson.toRequestBody(Const.JSON)
-            val request = Request.Builder().url(requestUrl).method("POST", body).build()
-            okhttpClient.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    Resend.addResendLoop(applicationContext, requestBody.text)
-                    e.printStackTrace()
-                }
-
-                override fun onResponse(call: Call, response: Response) {
-                    Log.d(TAG, "onResponse: ${response.body.string()}")
-                }
-            })
-        }
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
