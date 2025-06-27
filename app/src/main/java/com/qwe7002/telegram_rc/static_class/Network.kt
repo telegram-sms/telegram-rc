@@ -23,8 +23,10 @@ import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
 import org.jetbrains.annotations.Contract
 import java.net.Authenticator
+import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.net.NetworkInterface
 import java.net.PasswordAuthentication
 import java.net.Proxy
 import java.net.UnknownHostException
@@ -242,5 +244,31 @@ object Network {
         }
 
         return netType
+    }
+    fun getHotspotIpAddress(): String {
+        // Get all network interfaces
+        val interfaces = NetworkInterface.getNetworkInterfaces()
+        while (interfaces.hasMoreElements()) {
+            try {
+                val networkInterface = interfaces.nextElement()
+                val interfaceName = networkInterface.name
+                // Check interfaces starting with "wlan"
+                if (interfaceName.startsWith("wlan")) {
+                    Log.d("getHotspotIpAddress", "Checking interface: $interfaceName")
+                    val addresses = networkInterface.inetAddresses
+
+                    while (addresses.hasMoreElements()) {
+                        val address = addresses.nextElement()
+                        if (!address.isLoopbackAddress && address is Inet4Address) {
+                            Log.d("getHotspotIpAddress", "Found IP on $interfaceName: ${address.hostAddress}")
+                            return address.hostAddress
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("getHotspotIpAddress", "Error getting hotspot IP: ${e.message}")
+            }
+        }
+        return "Unknown"
     }
 }
