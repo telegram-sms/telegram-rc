@@ -123,6 +123,7 @@ class ChatService : Service() {
         wifiLock.release()
         wakeLock.release()
         unregisterReceiver(broadcastReceiver)
+        stopForeground(true)
         super.onDestroy()
     }
 
@@ -903,7 +904,6 @@ class ChatService : Service() {
             if (Const.BROADCAST_STOP_SERVICE == intent.action) {
                 Log.i(TAG, "Received stop signal, quitting now...")
                 stopSelf()
-                Process.killProcess(Process.myPid())
             }
         }
     }

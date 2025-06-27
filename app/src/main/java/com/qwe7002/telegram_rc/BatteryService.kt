@@ -164,7 +164,6 @@ class BatteryService : Service() {
             if (intent.action == Const.BROADCAST_STOP_SERVICE) {
                 Log.i(TAG, "Received stop signal, quitting now...")
                 stopSelf()
-                Process.killProcess(Process.myPid())
                 return
             }
             val builder = StringBuilder(context.getString(R.string.system_message_head) + "\n")
