@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit
 class KeepAliveJob : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
+        MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()
         if (preferences.contains("initialized")) {
             ServiceManage.startService(
