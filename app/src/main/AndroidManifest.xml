@@ -62,7 +62,7 @@
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="location"
-            android:permission="android.permission.FOREGROUND_SERVICE"
+            android:permission="android.permission.FOREGROUND_SERVICE_LOCATION"
             android:process=":beacon" />
 
         <activity

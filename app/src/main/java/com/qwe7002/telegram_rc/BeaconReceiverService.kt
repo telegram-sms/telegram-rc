@@ -88,7 +88,7 @@ class BeaconReceiverService : Service() {
         super.onCreate()
         MMKV.initialize(applicationContext)
         if (!hasLocationPermissions()) {
-            Log.d(TAG, "onCreate: permission denied")
+            Log.i(TAG, "onCreate: permission denied")
             return
         }
         initializeWakeLock()
@@ -217,6 +217,10 @@ class BeaconReceiverService : Service() {
             flushReceiverLock.lock()
             try {
                 processBeaconList(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing beacon list: ${e.message}", e)
+                // Optionally, you can reset counters or handle the error as needed
+                resetCounters()
             } finally {
                 flushReceiverLock.unlock()
             }
