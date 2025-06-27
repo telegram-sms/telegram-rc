@@ -529,6 +529,7 @@ class MainActivity : AppCompatActivity() {
                             batteryMonitoringSwitch.isChecked,
                             chatCommandSwitch.isChecked
                         )
+                        startBeaconService(applicationContext)
                         KeepAliveJob.startJob(applicationContext)
                         ReSendJob.startJob(applicationContext)
                     }.start()
