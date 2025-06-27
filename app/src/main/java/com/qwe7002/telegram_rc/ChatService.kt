@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
+import android.net.DhcpInfo
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.WifiLock
 import android.os.Build
@@ -19,6 +20,7 @@ import android.os.PowerManager.WakeLock
 import android.os.Process
 import android.provider.Settings
 import android.telephony.TelephonyManager
+import android.text.format.Formatter
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
@@ -73,13 +75,17 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import java.io.BufferedReader
 import java.io.IOException
+import java.io.InputStreamReader
+import java.net.Inet4Address
+import java.net.NetworkInterface
 import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.TimeUnit
 
 
-@Suppress("DEPRECATION", "ClassName")
+@Suppress("DEPRECATION", "ClassName", "NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class ChatService : Service() {
     // global object
     private lateinit var okhttpClient: OkHttpClient
@@ -353,7 +359,8 @@ class ChatService : Service() {
                 }
                 var spamCount = ""
                 val spamList =
-                    MMKV.mmkvWithID(Const.SPAM_MMKV_ID).decodeStringSet("sms", setOf())?.toList() ?: ArrayList()
+                    MMKV.mmkvWithID(Const.SPAM_MMKV_ID).decodeStringSet("sms", setOf())?.toList()
+                        ?: ArrayList()
                 if (spamList.isNotEmpty()) {
                     spamCount = "\n${getString(R.string.spam_count_title)}${spamList.size}"
                 }
@@ -435,6 +442,8 @@ class ChatService : Service() {
                     }
                     statusMMKV.putInt("tether_mode", tetherMode)
                     enableHotspot(applicationContext, tetherMode)
+                    Thread.sleep(300)
+                    resultAp += "\nGateway IP: ${Network.getHotspotIpAddress()}"
                 } else {
                     statusMMKV.putBoolean("tether", false)
                     resultAp =
@@ -562,7 +571,8 @@ class ChatService : Service() {
                                     MMKV.mmkvWithID(Const.SPAM_MMKV_ID).getStringSet("sms", setOf())
                                         ?.toMutableSet() ?: mutableSetOf()
                                 reSendListLocal.remove(item)
-                                MMKV.mmkvWithID(Const.SPAM_MMKV_ID).putStringSet("sms", reSendListLocal)
+                                MMKV.mmkvWithID(Const.SPAM_MMKV_ID)
+                                    .putStringSet("sms", reSendListLocal)
                             }
                         }
                         writeLog(applicationContext, "Send spam message is complete.")
@@ -589,11 +599,13 @@ class ChatService : Service() {
                         requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
                             .toTypedArray()
                     if (commandList.size == 2) {
-                        MMKV.mmkvWithID(Const.ROOT_MMKV_ID).putString("dummy_ip_addr", commandList[1])
+                        MMKV.mmkvWithID(Const.ROOT_MMKV_ID)
+                            .putString("dummy_ip_addr", commandList[1])
                         addDummyDevice(commandList[1])
                     } else {
                         if (MMKV.mmkvWithID(Const.ROOT_MMKV_ID).containsKey("dummy_ip_addr")) {
-                            val dummyIp = MMKV.mmkvWithID(Const.ROOT_MMKV_ID).getString("dummy_ip_addr", "")
+                            val dummyIp =
+                                MMKV.mmkvWithID(Const.ROOT_MMKV_ID).getString("dummy_ip_addr", "")
                             if (dummyIp != null) {
                                 addDummyDevice(dummyIp)
                             }

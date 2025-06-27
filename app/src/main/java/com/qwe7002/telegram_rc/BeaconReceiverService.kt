@@ -74,8 +74,13 @@ class BeaconReceiverService : Service() {
     }
 
     private fun startForegroundNotification() {
-        val notification = Other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
-        startForeground(Notify.BEACON_SERVICE, notification.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        val notification =
+            Other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
+        startForeground(
+            Notify.BEACON_SERVICE,
+            notification.build(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
@@ -97,8 +102,14 @@ class BeaconReceiverService : Service() {
     }
 
     private fun hasLocationPermissions(): Boolean {
-        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        return ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
     }
 
     @SuppressLint("InvalidWakeLockTag", "WakelockTimeout")
@@ -218,7 +229,11 @@ class BeaconReceiverService : Service() {
             }
 
             val batteryInfo = getBatteryInfo()
-            if (!batteryInfo.isCharging && batteryInfo.batteryLevel < 25 && !isWifiEnabled() && !config.getBoolean("opposite", false)) {
+            if (!batteryInfo.isCharging && batteryInfo.batteryLevel < 25 && !isWifiEnabled() && !config.getBoolean(
+                    "opposite",
+                    false
+                )
+            ) {
                 resetCounters()
                 Log.d(TAG, "Battery level too low, skipping beacon processing")
                 return
@@ -269,13 +284,19 @@ class BeaconReceiverService : Service() {
 
         private fun parseBeaconList(beaconListJson: String?): List<BeaconModel.BeaconModel> {
             return if (beaconListJson != null) {
-                Gson().fromJson(beaconListJson, object : TypeToken<List<BeaconModel.BeaconModel>>() {}.type)
+                Gson().fromJson(
+                    beaconListJson,
+                    object : TypeToken<List<BeaconModel.BeaconModel>>() {}.type
+                )
             } else {
                 emptyList()
             }
         }
 
-        private fun findMatchingBeacon(beacons: List<BeaconModel.BeaconModel>, listenBeaconList: Set<String>): BeaconModel.BeaconModel? {
+        private fun findMatchingBeacon(
+            beacons: List<BeaconModel.BeaconModel>,
+            listenBeaconList: Set<String>
+        ): BeaconModel.BeaconModel? {
             return beacons.find { beacon ->
                 listenBeaconList.contains(beaconItemName(beacon.uuid, beacon.major, beacon.minor))
             }
@@ -331,6 +352,7 @@ class BeaconReceiverService : Service() {
                 val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
                 if (enable) {
                     RemoteControl.enableHotspot(applicationContext, tetherMode)
+
                 } else {
                     RemoteControl.disableHotspot(applicationContext, tetherMode)
                 }
@@ -346,15 +368,34 @@ class BeaconReceiverService : Service() {
             }
 
             return when (switchStatus) {
-                ENABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${getString(R.string.action_success)}$beaconStatus"
-                DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${getString(R.string.action_success)}$beaconStatus"
+                ENABLE_AP -> {
+                    Thread.sleep(300)
+                    "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
+                        getString(
+                            R.string.action_success
+                        )
+                    }\nGateway IP: ${Network.getHotspotIpAddress()}$beaconStatus"
+                }
+
+                DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
+                    getString(
+                        R.string.action_success
+                    )
+                }$beaconStatus"
+
                 else -> ""
             }
         }
 
         private fun sendNetworkRequest(message: String) {
             val requestBody = RequestMessage().apply {
-                text = "$message\n${getString(R.string.current_battery_level)}${Battery.getBatteryInfo(applicationContext)}\n${getString(R.string.current_network_connection_status)}${Network.getNetworkType(applicationContext)}"
+                text = "$message\n${getString(R.string.current_battery_level)}${
+                    Battery.getBatteryInfo(applicationContext)
+                }\n${getString(R.string.current_network_connection_status)}${
+                    Network.getNetworkType(
+                        applicationContext
+                    )
+                }"
             }
             val requestBodyJson = Gson().toJson(requestBody)
             val body = requestBodyJson.toRequestBody(Const.JSON)
@@ -395,6 +436,7 @@ class BeaconReceiverService : Service() {
                     else -> false
                 }
             }
+
             else -> false
         }
         return BatteryInfo(batteryLevel, isCharging)
