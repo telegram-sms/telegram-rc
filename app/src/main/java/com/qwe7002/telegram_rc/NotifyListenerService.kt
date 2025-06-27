@@ -25,12 +25,12 @@ import java.util.Objects
 
 class NotifyListenerService : NotificationListenerService() {
     private val logTag: String = "notification_receiver"
-    private val preferences: MMKV = MMKV.defaultMMKV()
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
         Log.d(logTag, "onNotificationPosted: $packageName")
-
+        MMKV.initialize(applicationContext)
+        val preferences = MMKV.defaultMMKV()
         if (!preferences.contains("initialized")) {
             Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
             return
