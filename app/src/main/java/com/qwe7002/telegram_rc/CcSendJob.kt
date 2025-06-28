@@ -36,8 +36,6 @@ class CcSendJob : JobService() {
             title += getString(R.string.verification_code)
         }
         Thread {
-/*            val serviceListJson =
-                Paper.book("system_config").read("CC_service_list", "[]").toString()*/
            val serviceListJson = MMKV.defaultMMKV().getString("CC_service_list", "[]")
             val gson = Gson()
             var type = object : TypeToken<ArrayList<CcSendService>>() {}.type
