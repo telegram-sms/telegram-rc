@@ -1,5 +1,7 @@
 package com.qwe7002.telegram_rc.root_kit
 
+import java.util.concurrent.TimeUnit
+
 object ActivityManage {
     @Suppress("unused")
     fun startService(packageName: String, serviceName: String) {
@@ -23,10 +25,4 @@ object ActivityManage {
         Shell.runShellCommand("am force-stop -n $packageName")
     }
 
-    @JvmStatic
-    @Suppress("unused")
-    fun checkServiceIsRunning(packageName: String, serviceName: String): Boolean {
-        return Shell.runShellCommand("dumpsys activity services | grep $packageName/$serviceName")
-    }
 }
-
