@@ -6,7 +6,7 @@
     <string name="switch_data">Switching mobile network status.</string>
     <string name="restart_network">Restarting the mobile network.</string>
     <string name="switch_ap_message">/hotspot - Toggle Hotspot switch\n/autoswitch - According to Beacon automatic switch hotspot</string>
-    <string name="switch_data_message">/data - Toggle data switch\n/restartnetwork - Reset carrier network</string>
+    <string name="switch_data_message">/data - Toggle data switch\n/wifi - Toggle wifi switch</string>
     <string name="current_data_card">Data card</string>
     <string name="no_permission">Not getting privileges.</string>
     <string name="adb_config">"Network adb setup "</string>

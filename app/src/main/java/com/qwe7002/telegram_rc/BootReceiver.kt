@@ -9,6 +9,7 @@ import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
+import com.topjohnwu.superuser.Shell
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -28,7 +29,8 @@ class BootReceiver : BroadcastReceiver() {
             ServiceManage.startBeaconService(context)
             KeepAliveJob.startJob(context)
             ReSendJob.startJob(context)
-            if (preferences.getBoolean("root", false)) {
+            Log.i("BootReceiver", Shell.getShell().isRoot.toString())
+            if (Shell.isAppGrantedRoot()==true) {
                 val rootMMKV = MMKV.mmkvWithID(Const.ROOT_MMKV_ID)
                 if (rootMMKV.contains("dummy_ip_addr")) {
                     val dummyIp = rootMMKV.getString("dummy_ip_addr", "")

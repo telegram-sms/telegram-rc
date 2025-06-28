@@ -39,7 +39,6 @@ import com.google.gson.JsonParser
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.data_structure.PollingJson
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
-import com.qwe7002.telegram_rc.root_kit.Shell.checkRoot
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
@@ -61,6 +60,7 @@ import java.util.Objects
 import java.util.concurrent.TimeUnit
 import androidx.core.net.toUri
 import com.tencent.mmkv.MMKV
+import com.topjohnwu.superuser.Shell
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "main_activity"
@@ -85,7 +85,6 @@ class MainActivity : AppCompatActivity() {
         val dohSwitch = findViewById<SwitchMaterial>(R.id.doh_switch)
         val chargerStatusSwitch = findViewById<SwitchMaterial>(R.id.charger_status_switch)
         val verificationCodeSwitch = findViewById<SwitchMaterial>(R.id.verification_code_switch)
-        val rootSwitch = findViewById<SwitchMaterial>(R.id.root_switch)
         val displayDualSimDisplayNameSwitch =
             findViewById<SwitchMaterial>(R.id.display_dual_sim_switch)
         val saveButton = findViewById<Button>(R.id.save_button)
@@ -114,6 +113,7 @@ class MainActivity : AppCompatActivity() {
                 preferences.getBoolean("battery_monitoring_switch", false),
                 preferences.getBoolean("chat_command", false)
             )
+            Log.i("BootReceiver", Shell.getShell().isRoot.toString())
             startBeaconService(applicationContext)
             KeepAliveJob.startJob(applicationContext)
             ReSendJob.startJob(applicationContext)
@@ -133,7 +133,6 @@ class MainActivity : AppCompatActivity() {
             }
             displayDualSimDisplayNameSwitch.isChecked = displayDualSimDisplayName
         }
-        rootSwitch.isChecked = preferences.getBoolean("root", false)
 
         botTokenEditView.setText(botTokenSave)
         chatIdEditView.setText(chatIdSave)
@@ -236,16 +235,8 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable) {
             }
         })
-        rootSwitch.setOnClickListener {
-            Thread {
-                if (!checkRoot()) {
-                    runOnUiThread { rootSwitch.isChecked = false }
-                }
-            }.start()
-        }
         getIdButton.setOnClickListener { v: View ->
             if (botTokenEditView.text.toString().isEmpty()) {
-                /*                Snackbar.make(v, R.string.token_not_configure, Snackbar.LENGTH_LONG).show()*/
                 showErrorDialog(applicationContext.getString(R.string.token_not_configure))
                 return@setOnClickListener
             }
@@ -359,6 +350,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         saveButton.setOnClickListener { v: View? ->
+            Log.i("BootReceiver", Shell.getShell().isRoot.toString())
             if (botTokenEditView.text.toString().isEmpty() || chatIdEditView.text.toString()
                     .isEmpty()
             ) {
@@ -516,7 +508,6 @@ class MainActivity : AppCompatActivity() {
                         displayDualSimDisplayNameSwitch.isChecked
                     )
                     preferences.putBoolean("verification_code", verificationCodeSwitch.isChecked)
-                    preferences.putBoolean("root", rootSwitch.isChecked)
                     preferences.putBoolean("doh_switch", dohSwitch.isChecked)
                     preferences.putBoolean("initialized", true)
                     preferences.putBoolean("privacy_dialog_agree", true)

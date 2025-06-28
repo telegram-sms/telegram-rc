@@ -61,6 +61,7 @@ import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.tencent.mmkv.MMKV
+import com.topjohnwu.superuser.Shell
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -306,7 +307,8 @@ class ChatService : Service() {
                 if (Settings.System.canWrite(applicationContext)) {
                     switchAp += "\n${getString(R.string.switch_ap_message)}"
                 }
-                if (preferences.getBoolean("root", false)) {
+
+                if (Shell.isAppGrantedRoot()==true) {
                     switchAp += "\n${getString(R.string.switch_data_message)}"
                 }
                 if (command == "/commandlist") {
@@ -378,12 +380,13 @@ class ChatService : Service() {
             )
 
             "/wifi" -> {
-                if (!preferences.getBoolean("root", false)) {
+                if (Shell.isAppGrantedRoot() != true) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
                     val wifimanager =
                         applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                    Log.d(TAG, "receiveHandle: "+wifimanager.isWifiEnabled)
                     setWifi(!wifimanager.isWifiEnabled)
                     requestBody.text = "${getString(R.string.system_message_head)}\nDone"
                 }
@@ -426,8 +429,8 @@ class ChatService : Service() {
                 )
                 requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
             }
-            "/mobiledata" -> {
-                if (!preferences.getBoolean("root", false)) {
+            "/data" -> {
+                if (Shell.isAppGrantedRoot()!=true) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
@@ -519,8 +522,6 @@ class ChatService : Service() {
             }
 
             "/autoswitch" -> {
-                /*val state = !Paper.book().read("disable_beacon", false)!!
-                Paper.book().write("disable_beacon", state)*/
                 val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
                 val state = beacon.getBoolean("beacon_enable", false)
                 beacon.putBoolean("beacon_enable", !state)
@@ -529,7 +530,7 @@ class ChatService : Service() {
             }
 
             "/setdummy" -> {
-                if (!preferences.getBoolean("root", false)) {
+                if (Shell.isAppGrantedRoot()!=true) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
@@ -555,7 +556,7 @@ class ChatService : Service() {
             }
 
             "/deldummy" -> {
-                if (!preferences.getBoolean("root", false)) {
+                if (Shell.isAppGrantedRoot()!=true) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
@@ -746,9 +747,9 @@ class ChatService : Service() {
                     statusMMKV.remove("tether_mode")
 
                 }
-                if (hasCommand && preferences.getBoolean("root", false)) {
+                if (hasCommand && Shell.isAppGrantedRoot()==true) {
                     when (commandValue) {
-                        "/mobiledata" -> setData(
+                        "/data" -> setData(
                             !getDataEnable(
                                 applicationContext
                             )
