@@ -34,6 +34,7 @@ import com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.setData
 import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
+import com.qwe7002.telegram_rc.root_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.readLog
@@ -250,7 +251,7 @@ class ChatService : Service() {
                 null
             )
             val saveItem =
-                Gson().fromJson<SMSRequestInfo>(saveItemString, SMSRequestInfo::class.java)
+                Gson().fromJson(saveItemString, SMSRequestInfo::class.java)
 
             if (saveItem != null && requestMsg.isNotEmpty()) {
                 val phoneNumber = saveItem.phone
@@ -309,6 +310,14 @@ class ChatService : Service() {
                 }
 
                 if (Shell.isAppGrantedRoot()==true) {
+                    if (VPNHotspot.isVPNHotspotExist(applicationContext)) {
+                        switchAp += "\n${
+                            getString(R.string.switch_ap_message).replace(
+                                "/hotspot",
+                                "/vpnhotspot"
+                            )
+                        }"
+                    }
                     switchAp += "\n${getString(R.string.switch_data_message)}"
                 }
                 if (command == "/commandlist") {
@@ -429,6 +438,39 @@ class ChatService : Service() {
                 )
                 requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
             }
+
+            "/vpnhotspot" -> {
+                if (Shell.isAppGrantedRoot()!=true || !VPNHotspot.isVPNHotspotExist(
+                        applicationContext
+                    )
+                ) {
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
+
+                } else {
+                    val wifiManager =
+                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                    val wifiOpen = statusMMKV.getBoolean("VPNHotspot", false)
+                    var resultVpnAp: String
+                    if (!wifiOpen) {
+                        resultVpnAp =
+                            getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
+                        Thread { VPNHotspot.enableVPNHotspot(wifiManager) }.start()
+                    } else {
+                        statusMMKV.putBoolean("VPNHotspot", false)
+                        resultVpnAp =
+                            getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
+                    }
+                    resultVpnAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
+                        applicationContext
+                    ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
+                        applicationContext
+                    )
+
+                    requestBody.text = "${getString(R.string.system_message_head)}\n$resultVpnAp"
+                }
+            }
+
             "/data" -> {
                 if (Shell.isAppGrantedRoot()!=true) {
                     requestBody.text =
@@ -754,6 +796,14 @@ class ChatService : Service() {
                                 applicationContext
                             )
                         )
+                        "/vpnhotspot" -> if (!statusMMKV.getBoolean("VPNHotspot", false)) {
+                            val wifiManager = checkNotNull(
+                                applicationContext.getSystemService(
+                                    WIFI_SERVICE
+                                ) as WifiManager
+                            )
+                            VPNHotspot.disableVPNHotspot(wifiManager)
+                        }
                     }
                 }
             }
