@@ -437,6 +437,8 @@ class BeaconReceiverService : Service() {
         }
         wakelock.release()
         unregisterReceiver(flushReceiver)
+        unregisterReceiver(reloadConfigReceiver)
+        unregisterReceiver(stopServiceReceiver)
         stopForeground(true)
         super.onDestroy()
     }
