@@ -59,7 +59,6 @@ class BeaconReceiverService : Service() {
     private lateinit var scanner: IScanner
     private lateinit var wakelock: PowerManager.WakeLock
     private lateinit var config: MMKV
-    private var isRoot = false
     private val flushReceiverLock = ReentrantLock()
 
     override fun onBind(intent: Intent): IBinder? {
@@ -150,7 +149,6 @@ class BeaconReceiverService : Service() {
         requestUrl = Network.getUrl(preferences.getString("bot_token", "")!!, "SendMessage")
         chatId = preferences.getString("chat_id", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
-        isRoot = preferences.getBoolean("root", false)
     }
 
     private fun initializeBeaconScanner() {
