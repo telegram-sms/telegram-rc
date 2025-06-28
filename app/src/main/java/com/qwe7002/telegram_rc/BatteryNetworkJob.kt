@@ -106,7 +106,7 @@ class BatteryNetworkJob : JobService() {
                 jobFinished(params,false)
             }
         })
-        return false
+        return true
     }
 
     override fun onStopJob(params: JobParameters?): Boolean {
