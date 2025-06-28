@@ -28,7 +28,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.static_class.Const
-import com.qwe7002.telegram_rc.static_class.RemoteControl.isVPNHotspotExist
 import com.tencent.mmkv.MMKV
 
 class BeaconActivity : AppCompatActivity() {
@@ -90,21 +89,13 @@ class BeaconActivity : AppCompatActivity() {
         val inflater = this.layoutInflater
         val dialogView = inflater.inflate(R.layout.set_beacon_layout, null)
         val enable = dialogView.findViewById<SwitchMaterial>(R.id.beacon_enable_switch)
-        val useVpnHotspotSwitch =
-            dialogView.findViewById<SwitchMaterial>(R.id.beacon_use_vpn_hotspot_switch)
         val disableCount = dialogView.findViewById<EditText>(R.id.beacon_disable_count_editview)
         val enableCount = dialogView.findViewById<EditText>(R.id.beacon_enable_count_editview)
-        useVpnHotspotSwitch.isChecked = beaconMMKV.getBoolean("useVpnHotspot", false) &&
-                isVPNHotspotExist(applicationContext)
-        useVpnHotspotSwitch.isEnabled =
-            Settings.System.canWrite(applicationContext) && isVPNHotspotExist(applicationContext)
-
         disableCount.setText(beaconMMKV.getInt("disableCount", 10).toString())
         enableCount.setText(beaconMMKV.getInt("enableCount", 10).toString())
         AlertDialog.Builder(this).setTitle("Beacon configuration")
             .setView(dialogView)
             .setPositiveButton(R.string.ok_button) { _: DialogInterface?, _: Int ->
-                beaconMMKV.putBoolean("useVpnHotspot", useVpnHotspotSwitch.isChecked)
                 beaconMMKV.putInt("disableCount", disableCount.text.toString().toInt())
                 beaconMMKV.putInt("enableCount", enableCount.text.toString().toInt())
                 beaconMMKV.putBoolean("opposite", enable.isChecked)

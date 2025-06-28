@@ -101,13 +101,6 @@ class BatteryService : Service() {
                         builder.append("\n").append(getString(R.string.disable_wifi))
                             .append(context.getString(R.string.action_success))
                     }
-                    if (RemoteControl.isVPNHotspotActive()) {
-                        val wifiManager =
-                            (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
-                        RemoteControl.disableVPNHotspot(wifiManager)
-                        builder.append("\n").append(getString(R.string.disable_wifi))
-                            .append(context.getString(R.string.action_success))
-                    }
                 }
 
                 Intent.ACTION_POWER_CONNECTED -> builder.append(context.getString(R.string.charger_connect))

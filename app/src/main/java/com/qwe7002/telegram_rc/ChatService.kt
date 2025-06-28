@@ -30,7 +30,6 @@ import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.InlineKeyboard
 import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.KeyboardMarkup
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
-import com.qwe7002.telegram_rc.root_kit.ActivityManage.checkServiceIsRunning
 import com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.setData
@@ -55,11 +54,8 @@ import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Other.isPhoneNumber
 import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
-import com.qwe7002.telegram_rc.static_class.RemoteControl.disableVPNHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
-import com.qwe7002.telegram_rc.static_class.RemoteControl.enableVPNHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isHotspotActive
-import com.qwe7002.telegram_rc.static_class.RemoteControl.isVPNHotspotExist
 import com.qwe7002.telegram_rc.static_class.SMS.sendFallbackSMS
 import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
@@ -76,7 +72,6 @@ import java.io.IOException
 import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
 
 
 @Suppress("DEPRECATION", "ClassName", "NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -312,14 +307,6 @@ class ChatService : Service() {
                     switchAp += "\n${getString(R.string.switch_ap_message)}"
                 }
                 if (preferences.getBoolean("root", false)) {
-                    if (isVPNHotspotExist(applicationContext)) {
-                        switchAp += "\n${
-                            getString(R.string.switch_ap_message).replace(
-                                "/hotspot",
-                                "/vpnhotspot"
-                            )
-                        }"
-                    }
                     switchAp += "\n${getString(R.string.switch_data_message)}"
                 }
                 if (command == "/commandlist") {
@@ -357,32 +344,15 @@ class ChatService : Service() {
                         )
                     }
                 }
-                var spamCount = ""
                 val spamList =
                     MMKV.mmkvWithID(Const.SPAM_MMKV_ID).decodeStringSet("sms", setOf())?.toList()
                         ?: ArrayList()
-                if (spamList.isNotEmpty()) {
-                    spamCount = "\n${getString(R.string.spam_count_title)}${spamList.size}"
-                }
+                val spamCount = "\n${getString(R.string.spam_count_title)}${spamList.size}"
+
                 var isHotspotRunning = ""
                 if (Settings.System.canWrite(applicationContext)) {
                     isHotspotRunning += "\n${getString(R.string.hotspot_status)}"
                     isHotspotRunning += if (isHotspotActive(applicationContext)) {
-                        getString(R.string.enable)
-                    } else {
-                        getString(R.string.disable)
-                    }
-                }
-                if (preferences.getBoolean("root", false) && isVPNHotspotExist(
-                        applicationContext
-                    )
-                ) {
-                    isHotspotRunning += "\nVPN ${getString(R.string.hotspot_status)}"
-                    isHotspotRunning += if (checkServiceIsRunning(
-                            "be.mygod.vpnhotspot",
-                            ".RepeaterService"
-                        )
-                    ) {
                         getString(R.string.enable)
                     } else {
                         getString(R.string.disable)
@@ -400,7 +370,7 @@ class ChatService : Service() {
                     ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
                         applicationContext
                     ) + isHotspotRunning + beaconStatus + spamCount + cardInfo
-                Log.d(TAG, "receive_handle: " + requestBody.text)
+                Log.d(TAG, "getInfo: " + requestBody.text)
             }
 
             "/log" -> requestBody.text = getString(R.string.system_message_head) + readLog(
@@ -456,39 +426,6 @@ class ChatService : Service() {
                 )
                 requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
             }
-
-            "/vpnhotspot" -> {
-                if (!preferences.getBoolean("root", false) || !isVPNHotspotExist(
-                        applicationContext
-                    )
-                ) {
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
-
-                } else {
-                    val wifiManager =
-                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                    val wifiOpen = statusMMKV.getBoolean("VPNHotspot", false)
-                    var resultVpnAp: String
-                    if (!wifiOpen) {
-                        resultVpnAp =
-                            getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
-                        Thread { enableVPNHotspot(wifiManager) }.start()
-                    } else {
-                        statusMMKV.putBoolean("VPNHotspot", false)
-                        resultVpnAp =
-                            getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
-                    }
-                    resultVpnAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
-                        applicationContext
-                    ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
-                        applicationContext
-                    )
-
-                    requestBody.text = "${getString(R.string.system_message_head)}\n$resultVpnAp"
-                }
-            }
-
             "/mobiledata" -> {
                 if (!preferences.getBoolean("root", false)) {
                     requestBody.text =
@@ -811,15 +748,6 @@ class ChatService : Service() {
                 }
                 if (hasCommand && preferences.getBoolean("root", false)) {
                     when (commandValue) {
-                        "/vpnhotspot" -> if (!statusMMKV.getBoolean("VPNHotspot", false)) {
-                            val wifiManager = checkNotNull(
-                                applicationContext.getSystemService(
-                                    WIFI_SERVICE
-                                ) as WifiManager
-                            )
-                            disableVPNHotspot(wifiManager)
-                        }
-
                         "/mobiledata" -> setData(
                             !getDataEnable(
                                 applicationContext
@@ -950,7 +878,7 @@ class ChatService : Service() {
                         "Connection to the Telegram API service failed"
                     )
                     try {
-                        Thread.sleep(1000L)
+                        Thread.sleep(100L)
                     } catch (e1: InterruptedException) {
                         e1.printStackTrace()
                     }

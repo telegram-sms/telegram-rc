@@ -79,7 +79,7 @@ class BeaconReceiverService : Service() {
                 notification.build(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
-        }else{
+        } else {
             startForeground(
                 Notify.BEACON_SERVICE,
                 notification.build()
@@ -279,12 +279,12 @@ class BeaconReceiverService : Service() {
             val requestBody = RequestMessage()
             requestBody.chatId = chatId
             requestBody.text = "$message\n${getString(R.string.current_battery_level)}${
-                    Battery.getBatteryInfo(applicationContext)
-                }\n${getString(R.string.current_network_connection_status)}${
-                    Network.getNetworkType(
-                        applicationContext
-                    )
-                }"
+                Battery.getBatteryInfo(applicationContext)
+            }\n${getString(R.string.current_network_connection_status)}${
+                Network.getNetworkType(
+                    applicationContext
+                )
+            }"
             requestBody.messageThreadId = messageThreadId
 
             val requestBodyJson = Gson().toJson(requestBody)
@@ -292,7 +292,7 @@ class BeaconReceiverService : Service() {
             val request = Request.Builder().url(requestUrl).method("POST", body).build()
             okhttpClient.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.d(TAG, "onFailure: "+e.message)
+                    Log.d(TAG, "onFailure: " + e.message)
                     Resend.addResendLoop(applicationContext, requestBody.text)
                     e.printStackTrace()
                 }
@@ -310,11 +310,7 @@ class BeaconReceiverService : Service() {
         }
 
         private fun isWifiEnabled(): Boolean {
-            return if (config.getBoolean("useVpnHotspot", false)) {
-                RemoteControl.isVPNHotspotActive()
-            } else {
-                RemoteControl.isHotspotActive(applicationContext)
-            }
+            return RemoteControl.isHotspotActive(applicationContext)
         }
 
         private fun isBluetoothEnabled(): Boolean {
@@ -382,21 +378,14 @@ class BeaconReceiverService : Service() {
         }
 
         private fun toggleWifiHotspot(enable: Boolean) {
-            if (config.getBoolean("useVpnHotspot", false)) {
-                if (enable) {
-                    RemoteControl.enableVPNHotspot(wifiManager)
-                } else {
-                    RemoteControl.disableVPNHotspot(wifiManager)
-                }
+            val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
+            if (enable) {
+                RemoteControl.enableHotspot(applicationContext, tetherMode)
             } else {
-                val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
-                if (enable) {
-                    RemoteControl.enableHotspot(applicationContext, tetherMode)
-                } else {
-                    RemoteControl.disableHotspot(applicationContext, tetherMode)
-                }
+                RemoteControl.disableHotspot(applicationContext, tetherMode)
             }
         }
+
 
         private fun buildMessage(switchStatus: Int, foundBeacon: BeaconModel.BeaconModel?): String {
             val beaconStatus = if (foundBeacon != null) {
