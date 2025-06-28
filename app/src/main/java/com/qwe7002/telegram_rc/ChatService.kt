@@ -309,7 +309,7 @@ class ChatService : Service() {
                     switchAp += "\n${getString(R.string.switch_ap_message)}"
                 }
 
-                if (Shell.isAppGrantedRoot()==true) {
+                if (Shell.isAppGrantedRoot() == true) {
                     if (VPNHotspot.isVPNHotspotExist(applicationContext)) {
                         switchAp += "\n${
                             getString(R.string.switch_ap_message).replace(
@@ -395,9 +395,15 @@ class ChatService : Service() {
                 } else {
                     val wifimanager =
                         applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                    Log.d(TAG, "receiveHandle: "+wifimanager.isWifiEnabled)
+                    Log.d(TAG, "receiveHandle: " + wifimanager.isWifiEnabled)
                     setWifi(!wifimanager.isWifiEnabled)
-                    requestBody.text = "${getString(R.string.system_message_head)}\nDone"
+                    requestBody.text = "${getString(R.string.system_message_head)}\nWIFI state: ${
+                        if (wifimanager.isWifiEnabled) {
+                            getString(R.string.enable)
+                        } else {
+                            getString(R.string.disable)
+                        }
+                    }"
                 }
             }
 
@@ -424,7 +430,7 @@ class ChatService : Service() {
                     }
                     statusMMKV.putInt("tether_mode", tetherMode)
                     enableHotspot(applicationContext, tetherMode)
-                    Thread.sleep(300)
+                    Thread.sleep(500)
                     resultAp += "\nGateway IP: ${Network.getHotspotIpAddress()}"
                 } else {
                     statusMMKV.putBoolean("tether", false)
@@ -440,7 +446,7 @@ class ChatService : Service() {
             }
 
             "/vpnhotspot" -> {
-                if (Shell.isAppGrantedRoot()!=true || !VPNHotspot.isVPNHotspotExist(
+                if (Shell.isAppGrantedRoot() != true || !VPNHotspot.isVPNHotspotExist(
                         applicationContext
                     )
                 ) {
@@ -472,11 +478,14 @@ class ChatService : Service() {
             }
 
             "/data" -> {
-                if (Shell.isAppGrantedRoot()!=true) {
+                if (Shell.isAppGrantedRoot() != true) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
-                    val resultData = applicationContext.getString(R.string.switch_data)
+                    val resultData =
+                        "Switching mobile network status: " + !getDataEnable(
+                            applicationContext
+                        )
                     requestBody.text = "${getString(R.string.system_message_head)}\n$resultData"
                 }
             }
@@ -572,7 +581,7 @@ class ChatService : Service() {
             }
 
             "/setdummy" -> {
-                if (Shell.isAppGrantedRoot()!=true) {
+                if (Shell.isAppGrantedRoot() != true) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
@@ -593,18 +602,22 @@ class ChatService : Service() {
                         }
                     }
                     requestBody.text =
-                        "${applicationContext.getString(R.string.system_message_head)}\nDone"
+                        "${applicationContext.getString(R.string.system_message_head)}\nThe virtual device IP address has been set：${
+                            MMKV.mmkvWithID(
+                                Const.ROOT_MMKV_ID
+                            ).getString("dummy_ip_addr", "")
+                        }"
                 }
             }
 
             "/deldummy" -> {
-                if (Shell.isAppGrantedRoot()!=true) {
+                if (Shell.isAppGrantedRoot() != true) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
                     delDummyDevice()
                     requestBody.text =
-                        "${applicationContext.getString(R.string.system_message_head)}\nDone"
+                        "${applicationContext.getString(R.string.system_message_head)}\nThe virtual device has been deleted."
                 }
             }
 
@@ -789,13 +802,14 @@ class ChatService : Service() {
                     statusMMKV.remove("tether_mode")
 
                 }
-                if (hasCommand && Shell.isAppGrantedRoot()==true) {
+                if (hasCommand && Shell.isAppGrantedRoot() == true) {
                     when (commandValue) {
                         "/data" -> setData(
                             !getDataEnable(
                                 applicationContext
                             )
                         )
+
                         "/vpnhotspot" -> if (!statusMMKV.getBoolean("VPNHotspot", false)) {
                             val wifiManager = checkNotNull(
                                 applicationContext.getSystemService(
