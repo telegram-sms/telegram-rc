@@ -30,6 +30,7 @@ import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
+import com.qwe7002.telegram_rc.root_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.Network
@@ -310,7 +311,11 @@ class BeaconReceiverService : Service() {
         }
 
         private fun isWifiEnabled(): Boolean {
-            return RemoteControl.isHotspotActive(applicationContext)
+            return if (config.getBoolean("useVpnHotspot", false)) {
+                VPNHotspot.isVPNHotspotActive()
+            } else {
+                RemoteControl.isHotspotActive(applicationContext)
+            }
         }
 
         private fun isBluetoothEnabled(): Boolean {
@@ -378,11 +383,19 @@ class BeaconReceiverService : Service() {
         }
 
         private fun toggleWifiHotspot(enable: Boolean) {
-            val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
-            if (enable) {
-                RemoteControl.enableHotspot(applicationContext, tetherMode)
+            if (config.getBoolean("useVpnHotspot", false)) {
+                if (enable) {
+                    VPNHotspot.enableVPNHotspot(wifiManager)
+                } else {
+                    VPNHotspot.disableVPNHotspot(wifiManager)
+                }
             } else {
-                RemoteControl.disableHotspot(applicationContext, tetherMode)
+                val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
+                if (enable) {
+                    RemoteControl.enableHotspot(applicationContext, tetherMode)
+                } else {
+                    RemoteControl.disableHotspot(applicationContext, tetherMode)
+                }
             }
         }
 
