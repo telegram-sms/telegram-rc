@@ -598,11 +598,6 @@ class MainActivity : AppCompatActivity() {
             0 -> {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "No camera permissions.")
-                    /*                    Snackbar.make(
-                                            findViewById(R.id.bot_token_editview),
-                                            R.string.no_camera_permission,
-                                            Snackbar.LENGTH_LONG
-                                        ).show()*/
                     showErrorDialog(applicationContext.getString(R.string.no_camera_permission))
                     return
                 }
