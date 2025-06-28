@@ -11,33 +11,17 @@ import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
-import android.os.Process
 import android.util.Log
 import com.fitc.wifihotspot.TetherManager
-import com.google.gson.Gson
-import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.static_class.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
-import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl
-import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.IOException
 import java.util.Objects
 
 class BatteryService : Service() {
     private lateinit var batteryReceiver: batteryBroadcastReceiver
-    private lateinit var botToken: String
-    private lateinit var chatId: String
-    private var sendLoopList: MutableList<sendObj> = ArrayList()
-    private var batteryLastReceiveTime = 0L
-    private lateinit var messageThreadId: String
-
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification =
@@ -66,9 +50,6 @@ class BatteryService : Service() {
         super.onCreate()
         MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()
-        chatId = preferences.getString("chat_id", "")!!
-        botToken = preferences.getString("bot_token", "")!!
-        messageThreadId = preferences.getString("message_thread_id", "")!!
         val chargerStatus = preferences.getBoolean("charger_status", false)
         batteryReceiver = batteryBroadcastReceiver()
         val filter = IntentFilter()
@@ -84,63 +65,6 @@ class BatteryService : Service() {
         } else {
             registerReceiver(batteryReceiver, filter)
         }
-        Thread {
-            val needRemove = ArrayList<sendObj>()
-            while (true) {
-                for (item in sendLoopList) {
-                    networkHandle(item)
-                    needRemove.add(item)
-                }
-                sendLoopList.removeAll(needRemove.toSet())
-                needRemove.clear()
-            }
-        }.start()
-    }
-
-    private fun networkHandle(obj: sendObj) {
-        val TAG = "network_handle"
-        val requestBody = RequestMessage()
-        requestBody.chatId = chatId
-        requestBody.text = obj.content
-        requestBody.messageThreadId = messageThreadId
-        var requestUri = Network.getUrl(botToken, "sendMessage")
-        val chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
-        if ((System.currentTimeMillis() - batteryLastReceiveTime) <= 10000L && chatInfoMMKV.getLong(
-                "batteryLastReceiveMessageId",
-                -1L
-            ) != -1L
-        ) {
-            requestUri = Network.getUrl(botToken, "editMessageText")
-            requestBody.messageId = chatInfoMMKV.getLong("batteryLastReceiveMessageId", 0L)
-            Log.d(TAG, "onReceive: edit_mode")
-        }
-        batteryLastReceiveTime = System.currentTimeMillis()
-        val okhttpClient = Network.getOkhttpObj()
-        val requestBodyRaw = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
-        val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
-        val call = okhttpClient.newCall(request)
-        val errorHead = "Send battery info failed:"
-        try {
-            val response = call.execute()
-            if (response.code == 200) {
-                chatInfoMMKV.putLong(
-                    "batteryLastReceiveMessageId",
-                    Other.getMessageId(Objects.requireNonNull(response.body).string())
-                )
-            } else {
-                chatInfoMMKV.remove("batteryLastReceiveMessageId")
-                if (obj.action == Intent.ACTION_BATTERY_LOW) {
-                    SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
-                }
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            LogManage.writeLog(applicationContext, errorHead + e.message)
-            if (obj.action == Intent.ACTION_BATTERY_LOW) {
-                SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
-            }
-        }
     }
 
     override fun onDestroy() {
@@ -152,10 +76,6 @@ class BatteryService : Service() {
         return null
     }
 
-    private class sendObj {
-        lateinit var content: String
-        lateinit var action: String
-    }
 
     internal inner class batteryBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -206,12 +126,7 @@ class BatteryService : Service() {
             if (action == Intent.ACTION_BATTERY_LOW || action == Intent.ACTION_BATTERY_OKAY) {
                 CcSendJob.startJob(context, context.getString(R.string.app_name), result)
             }
-            val obj = sendObj()
-            if (action != null) {
-                obj.action = action
-                obj.content = result
-            }
-            sendLoopList.add(obj)
+            BatteryNetworkJob.startJob(context, result, action)
         }
     }
 

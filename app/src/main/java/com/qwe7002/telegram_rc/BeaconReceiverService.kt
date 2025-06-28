@@ -74,11 +74,18 @@ class BeaconReceiverService : Service() {
     private fun startForegroundNotification() {
         val notification =
             Other.getNotificationObj(applicationContext, getString(R.string.beacon_receiver))
-        startForeground(
-            Notify.BEACON_SERVICE,
-            notification.build(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                Notify.BEACON_SERVICE,
+                notification.build(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        }else{
+            startForeground(
+                Notify.BEACON_SERVICE,
+                notification.build()
+            )
+        }
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
