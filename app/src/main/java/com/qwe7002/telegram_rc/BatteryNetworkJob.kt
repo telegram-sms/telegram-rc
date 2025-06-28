@@ -22,7 +22,6 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.util.Objects
-import java.util.concurrent.TimeUnit
 
 
 class BatteryNetworkJob : JobService() {
