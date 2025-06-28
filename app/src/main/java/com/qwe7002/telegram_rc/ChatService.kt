@@ -10,17 +10,14 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
-import android.net.DhcpInfo
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.WifiLock
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
-import android.os.Process
 import android.provider.Settings
 import android.telephony.TelephonyManager
-import android.text.format.Formatter
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
@@ -75,14 +72,11 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStreamReader
-import java.net.Inet4Address
-import java.net.NetworkInterface
 import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 
 
 @Suppress("DEPRECATION", "ClassName", "NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -100,9 +94,11 @@ class ChatService : Service() {
     private lateinit var statusMMKV: MMKV
     private lateinit var chatInfoMMKV: MMKV
     private lateinit var sendStatusMMKV: MMKV
+    private lateinit var mainThread: Thread
+    private var terminalThread = false
 
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = getNotificationObj(
             applicationContext, getString(R.string.chat_command_service_name)
         )
@@ -123,6 +119,9 @@ class ChatService : Service() {
         wifiLock.release()
         wakeLock.release()
         unregisterReceiver(broadcastReceiver)
+        if (mainThread.isAlive) {
+            mainThread.interrupt()
+        }
         stopForeground(true)
         super.onDestroy()
     }
@@ -877,7 +876,8 @@ class ChatService : Service() {
         if (!wakeLock.isHeld) {
             wakeLock.acquire()
         }
-        Thread(threadMainRunnable()).start()
+        mainThread = Thread(threadMainRunnable())
+        mainThread.start()
         val intentFilter = IntentFilter()
         intentFilter.addAction(Const.BROADCAST_STOP_SERVICE)
         broadcastReceiver = quitBroadcastReceiver()
@@ -903,6 +903,7 @@ class ChatService : Service() {
             checkNotNull(intent.action)
             if (Const.BROADCAST_STOP_SERVICE == intent.action) {
                 Log.i(TAG, "Received stop signal, quitting now...")
+                terminalThread = true
                 stopSelf()
             }
         }
@@ -910,9 +911,15 @@ class ChatService : Service() {
 
 
     internal inner class threadMainRunnable : Runnable {
+
         override fun run() {
             Log.d(TAG, "run: thread main start")
             while (true) {
+                if (terminalThread) {
+                    Log.d(TAG, "run: thread Stop")
+                    terminalThread = false
+                    break
+                }
                 val timeout = 60
                 val httpTimeout = 65
                 val okhttpClientNew = okhttpClient.newBuilder()
@@ -985,6 +992,7 @@ class ChatService : Service() {
                         break
                     }
                 }
+
             }
         }
     }
@@ -996,5 +1004,4 @@ class ChatService : Service() {
 
     }
 }
-
 
