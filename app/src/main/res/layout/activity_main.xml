@@ -2,12 +2,11 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
 
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:alpha="@dimen/alpha"
         android:scaleType="center"
         android:src="@drawable/character_set"
@@ -17,14 +16,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:ignore="UselessParent">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:paddingLeft="@dimen/activity_horizontal_margin"
             android:paddingTop="@dimen/activity_vertical_margin"
             android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingBottom="@dimen/activity_vertical_margin"
-            android:orientation="vertical">
+            android:paddingBottom="@dimen/activity_vertical_margin">
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
@@ -56,11 +57,11 @@
                     android:singleLine="true"
                     tools:ignore="TextFields" />
             </com.google.android.material.textfield.TextInputLayout>
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/message_thread_id_view">
+                android:id="@+id/message_thread_id_view"
+                android:visibility="gone">
 
                 <EditText
                     android:id="@+id/message_thread_id_editview"
@@ -97,7 +98,6 @@
                 android:paddingStart="3dp"
                 android:text="@string/network_error_falls_back_to_sms"
                 tools:ignore="RtlSymmetry" />
-
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/battery_monitoring_switch"
                 android:layout_width="match_parent"
@@ -105,7 +105,6 @@
                 android:paddingStart="3dp"
                 android:text="@string/battery_monitoring"
                 tools:ignore="RtlSymmetry" />
-
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/charger_status_switch"
                 android:layout_width="match_parent"
@@ -113,7 +112,6 @@
                 android:paddingStart="3dp"
                 android:text="@string/charger_status"
                 tools:ignore="RtlSymmetry" />
-
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/chat_command_switch"
                 android:layout_width="match_parent"
@@ -121,7 +119,6 @@
                 android:paddingStart="3dp"
                 android:text="@string/chat_command"
                 tools:ignore="RtlSymmetry" />
-
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/verification_code_switch"
                 android:layout_width="match_parent"
@@ -129,15 +126,6 @@
                 android:paddingStart="3dp"
                 android:text="@string/using_verification_code_identification"
                 tools:ignore="RtlSymmetry" />
-
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/root_switch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="3dp"
-                android:text="@string/root_switch"
-                tools:ignore="RtlSymmetry" />
-
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/display_dual_sim_switch"
                 android:layout_width="match_parent"
@@ -146,6 +134,7 @@
                 android:text="@string/display_sim_card_alias_in_dual_card_mode"
                 tools:ignore="RtlSymmetry" />
 
+
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/doh_switch"
                 android:layout_width="match_parent"
@@ -153,6 +142,7 @@
                 android:paddingStart="3dp"
                 android:text="@string/using_doh"
                 tools:ignore="RtlSymmetry" />
+
 
             <Button
                 android:id="@+id/write_settings_button"
@@ -177,4 +167,6 @@
 
         </LinearLayout>
     </ScrollView>
+
+
 </FrameLayout>
