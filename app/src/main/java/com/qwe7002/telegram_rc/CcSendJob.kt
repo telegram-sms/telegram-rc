@@ -12,7 +12,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
-import com.qwe7002.telegram_rc.static_class.CcSend
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
@@ -54,7 +53,7 @@ class CcSendJob : JobService() {
                     0 -> {
                         networkProgressHandle(
                             "GET",
-                            CcSend.render(
+                            render(
                                 item.webhook,
                                 mapOf(
                                     "Title" to Uri.encode(title),
@@ -71,7 +70,7 @@ class CcSendJob : JobService() {
                     1 -> {
                         networkProgressHandle(
                             "POST",
-                            CcSend.render(
+                            render(
                                 item.webhook,
                                 mapOf(
                                     "Title" to Uri.encode(title),
@@ -79,7 +78,7 @@ class CcSendJob : JobService() {
                                     "Code" to Uri.encode(verificationCode)
                                 )
                             ),
-                            CcSend.render(
+                            render(
                                 item.body,
                                 mapOf(
                                     "Title" to title,
@@ -138,9 +137,9 @@ class CcSendJob : JobService() {
         fun startJob(context: Context, title: String, message: String, verificationCode: String) {
             val jobScheduler =
                 context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
-            CcSend.JOBID_counter += 1
+            JOBID_counter += 1
             val jobInfoBuilder = JobInfo.Builder(
-                CcSend.JOBID_counter,
+                JOBID_counter,
                 ComponentName(context.packageName, CcSendJob::class.java.getName())
             )
                 .setPersisted(true)
@@ -157,9 +156,9 @@ class CcSendJob : JobService() {
         fun startJob(context: Context, title: String, message: String) {
             val jobScheduler =
                 context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
-            CcSend.JOBID_counter += 1
+            JOBID_counter += 1
             val jobInfoBuilder = JobInfo.Builder(
-                CcSend.JOBID_counter,
+                JOBID_counter,
                 ComponentName(context.packageName, CcSendJob::class.java.getName())
             )
                 .setPersisted(true)
@@ -171,5 +170,18 @@ class CcSendJob : JobService() {
             jobScheduler.schedule(jobInfoBuilder.build())
 
         }
+        fun render(template: String, values: Map<String, String>): String {
+            var result = template
+            for ((key, value) in values) {
+                result = result.replace("{{${key}}}", value)
+            }
+            return result
+        }
+        val options: ArrayList<String> = arrayListOf(
+            "GET",
+            "POST"
+        )
+
+        var JOBID_counter: Int = 100
     }
 }

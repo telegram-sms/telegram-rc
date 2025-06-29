@@ -421,10 +421,8 @@ class ChatService : Service() {
                         tetherMode =
                             when (commandListData[1].lowercase(Locale.getDefault())) {
                                 "bluetooth" -> TetherManager.TetherMode.TETHERING_BLUETOOTH
-                                "ncm" -> TetherManager.TetherMode.TETHERING_NCM
                                 "usb" -> TetherManager.TetherMode.TETHERING_USB
                                 "nic" -> TetherManager.TetherMode.TETHERING_ETHERNET
-                                "wigig" -> TetherManager.TetherMode.TETHERING_WIGIG
                                 else -> TetherManager.TetherMode.TETHERING_WIFI
                             }
                     }
