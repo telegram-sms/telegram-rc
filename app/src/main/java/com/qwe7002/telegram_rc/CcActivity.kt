@@ -32,7 +32,6 @@ import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
-import com.qwe7002.telegram_rc.static_class.CcSend
 import com.qwe7002.telegram_rc.static_class.Const
 import com.tencent.mmkv.MMKV
 import org.json.JSONArray
@@ -74,7 +73,7 @@ class CcActivity : AppCompatActivity() {
                     val subtitle = view.findViewById<TextView>(R.id.subtitle)
 
                     title.text =
-                        CcSend.options[item?.method!!] + item.enabled.let { if (it) " (Enabled)" else " (Disabled)" }
+                        CcSendJob.options[item?.method!!] + item.enabled.let { if (it) " (Enabled)" else " (Disabled)" }
                     subtitle.text = item.webhook
 
                     return view
@@ -86,7 +85,7 @@ class CcActivity : AppCompatActivity() {
                 val dialog = inflater.inflate(R.layout.set_cc_layout, null)
                 val spinner = dialog.findViewById<Spinner>(R.id.spinner_options)
                 val adapter =
-                    ArrayAdapter(this, android.R.layout.simple_spinner_item, CcSend.options)
+                    ArrayAdapter(this, android.R.layout.simple_spinner_item, CcSendJob.options)
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinner.adapter = adapter
                 spinner.setSelection(serviceList[position].method)
@@ -221,7 +220,7 @@ class CcActivity : AppCompatActivity() {
             val spinner = dialog.findViewById<Spinner>(R.id.spinner_options)
 
             val adapter =
-                ArrayAdapter(this, android.R.layout.simple_spinner_item, CcSend.options)
+                ArrayAdapter(this, android.R.layout.simple_spinner_item, CcSendJob.options)
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinner.adapter = adapter
             spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -322,6 +321,7 @@ class CcActivity : AppCompatActivity() {
         return url.startsWith("https://")
     }
 
+    @SuppressLint("CheckResult")
     fun isValidJson(json: String): Boolean {
         return try {
             JsonParser.parseString(json)
