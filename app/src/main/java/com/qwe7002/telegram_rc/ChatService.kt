@@ -723,7 +723,7 @@ class ChatService : Service() {
                     if (isPhoneNumber(tempTo)) {
                         sendStatusMMKV.putString("to", tempTo)
                         resultSend = getString(R.string.enter_content)
-                        sendStatusMMKV.getInt("status", SEND_SMS_STATUS.WAITING_TO_SEND_STATUS)
+                        sendStatusMMKV.putInt("status", SEND_SMS_STATUS.WAITING_TO_SEND_STATUS)
                     } else {
                         setSmsSendStatusStandby()
                         resultSend = getString(R.string.unable_get_phone_number)
