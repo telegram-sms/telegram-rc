@@ -63,14 +63,13 @@ object USSD {
                     Manifest.permission.CALL_PHONE
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
-                Looper.prepare()
-                @Suppress("DEPRECATION")
-                telephonyManager!!.sendUssdRequest(
-                    ussd,
-                    USSDCallBack(context, messageId),
-                    Handler()
-                )
-                Looper.loop()
+                Handler(Looper.getMainLooper()).post {
+                    telephonyManager!!.sendUssdRequest(
+                        ussd,
+                        USSDCallBack(context, messageId),
+                        Handler(Looper.getMainLooper())
+                    )
+                }
             }
         }.start()
     }
