@@ -414,15 +414,12 @@ class BeaconReceiverService : Service() {
                         getString(
                             R.string.action_success
                         )
-                    }\nGateway IP: ${Network.getHotspotIpAddress()}$beaconStatus"
-
-
+                    }\nGateway IP: ${Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)}$beaconStatus"
                 DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
                     getString(
                         R.string.action_success
                     )
                 }$beaconStatus"
-
                 else -> ""
             }
         }
