@@ -129,14 +129,9 @@ class ChatService : Service() {
     }
 
 
-    private fun receiveHandle(resultObj: JsonObject, getIdOnly: Boolean) {
+    private fun receiveHandle(resultObj: JsonObject) {
         val updateId = resultObj["update_id"].asLong
         chatInfoMMKV.putLong("offset", updateId + 1)
-        if (getIdOnly) {
-            Log.i(TAG, "receive_handle: get_id_only")
-            return
-        }
-
         var messageType = ""
         val requestBody = RequestMessage()
         requestBody.chatId = chatID
@@ -912,10 +907,10 @@ class ChatService : Service() {
                     break
                 }
                 val timeout = 60
-                val httpTimeout = 65
+                val httpTimeout = 65L
                 val okhttpClientNew = okhttpClient.newBuilder()
-                    .readTimeout(httpTimeout.toLong(), TimeUnit.SECONDS)
-                    .writeTimeout(httpTimeout.toLong(), TimeUnit.SECONDS)
+                    .readTimeout(httpTimeout, TimeUnit.SECONDS)
+                    .writeTimeout(httpTimeout, TimeUnit.SECONDS)
                     .build()
                 val requestUri = getUrl(
                     botToken, "getUpdates"
@@ -923,10 +918,6 @@ class ChatService : Service() {
                 val requestBody = PollingJson()
                 requestBody.offset = chatInfoMMKV.getLong("offset", 0L)
                 requestBody.timeout = timeout
-                if (firstRequest) {
-                    requestBody.timeout = 0
-                    Log.d(TAG, "run: first_request")
-                }
                 val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
                 val request: Request =
                     Request.Builder().url(requestUri).method("POST", body).build()
@@ -959,9 +950,8 @@ class ChatService : Service() {
                     if (resultObj["ok"].asBoolean) {
                         val resultArray = resultObj["result"].asJsonArray
                         for (item in resultArray) {
-                            receiveHandle(item.asJsonObject, firstRequest)
+                            receiveHandle(item.asJsonObject)
                         }
-                        firstRequest = false
                     }
                 } else {
                     writeLog(applicationContext, "response code:" + response.code)
@@ -990,8 +980,6 @@ class ChatService : Service() {
 
     companion object {
         private const val TAG = "chat_command"
-
-        private var firstRequest = true
 
     }
 }

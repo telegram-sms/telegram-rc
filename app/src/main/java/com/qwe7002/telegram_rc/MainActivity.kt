@@ -354,8 +354,6 @@ class MainActivity : AppCompatActivity() {
             if (botTokenEditView.text.toString().isEmpty() || chatIdEditView.text.toString()
                     .isEmpty()
             ) {
-                /*                Snackbar.make(v!!, R.string.chat_id_or_token_not_config, Snackbar.LENGTH_LONG)
-                                    .show()*/
                 showErrorDialog(applicationContext.getString(R.string.chat_id_or_token_not_config))
                 return@setOnClickListener
             }
@@ -363,7 +361,6 @@ class MainActivity : AppCompatActivity() {
                     .isEmpty()
             ) {
                 showErrorDialog(applicationContext.getString(R.string.trusted_phone_number_empty))
-                /* Snackbar.make(v!!, R.string.trusted_phone_number_empty, Snackbar.LENGTH_LONG).show()*/
                 return@setOnClickListener
             }
             if (!preferences.getBoolean("privacy_dialog_agree", false)) {
