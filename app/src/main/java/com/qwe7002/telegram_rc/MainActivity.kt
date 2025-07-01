@@ -252,7 +252,7 @@ class MainActivity : AppCompatActivity() {
                 getUrl(botTokenEditView.text.toString().trim { it <= ' ' }, "getUpdates")
             var okhttpClient = getOkhttpObj()
             okhttpClient = okhttpClient.newBuilder()
-                .readTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(65, TimeUnit.SECONDS)
                 .build()
             val requestBody = PollingJson()
             requestBody.timeout = 60
