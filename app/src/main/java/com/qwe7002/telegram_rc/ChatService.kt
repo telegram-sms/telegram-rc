@@ -429,7 +429,7 @@ class ChatService : Service() {
                     statusMMKV.putInt("tether_mode", tetherMode)
                     enableHotspot(applicationContext, tetherMode)
                     Thread.sleep(500)
-                    resultAp += "\nGateway IP: ${Network.getHotspotIpAddress()}"
+                    resultAp += "\nGateway IP: ${Network.getHotspotIpAddress(tetherMode)}"
                 } else {
                     statusMMKV.putBoolean("tether", false)
                     resultAp =
