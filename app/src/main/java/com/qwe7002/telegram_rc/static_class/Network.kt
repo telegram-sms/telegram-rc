@@ -17,6 +17,7 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
+import com.fitc.wifihotspot.TetherManager
 import com.tencent.mmkv.MMKV
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -30,6 +31,7 @@ import java.net.NetworkInterface
 import java.net.PasswordAuthentication
 import java.net.Proxy
 import java.net.UnknownHostException
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 object Network {
@@ -245,22 +247,32 @@ object Network {
 
         return netType
     }
-    fun getHotspotIpAddress(): String {
+
+    fun getHotspotIpAddress(type: Int): String {
         // Get all network interfaces
         val interfaces = NetworkInterface.getNetworkInterfaces()
         while (interfaces.hasMoreElements()) {
             try {
                 val networkInterface = interfaces.nextElement()
                 val interfaceName = networkInterface.name
-                // Check interfaces starting with "wlan"
-                if (interfaceName.startsWith("wlan")) {
+                val prefix = when (type) {
+                    TetherManager.TetherMode.TETHERING_BLUETOOTH -> "bnep"
+                    TetherManager.TetherMode.TETHERING_USB -> "rndis"
+                    TetherManager.TetherMode.TETHERING_ETHERNET -> "eth"
+                    else -> "wlan"
+                }
+                if (interfaceName.startsWith(prefix)) {
                     Log.d("getHotspotIpAddress", "Checking interface: $interfaceName")
                     val addresses = networkInterface.inetAddresses
 
                     while (addresses.hasMoreElements()) {
                         val address = addresses.nextElement()
                         if (!address.isLoopbackAddress && address is Inet4Address) {
-                            Log.d("getHotspotIpAddress", "Found IP on $interfaceName: ${address.hostAddress}")
+                            Log.d(
+                                "getHotspotIpAddress",
+                                "Found IP on $interfaceName: ${address.hostAddress}"
+                            )
+                            @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
                             return address.hostAddress
                         }
                     }
