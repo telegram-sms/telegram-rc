@@ -11,7 +11,6 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Build.VERSION_CODES.Q
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
@@ -377,6 +376,8 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.READ_CALL_LOG,
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.NEARBY_WIFI_DEVICES,
+                    Manifest.permission.POST_NOTIFICATIONS,
                     Manifest.permission.NEARBY_WIFI_DEVICES
                 )
             } else {
@@ -395,13 +396,6 @@ class MainActivity : AppCompatActivity() {
                 val permissionArrayList =
                     java.util.ArrayList(listOf(*permissionList))
                 permissionArrayList.add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
-                permissionList = permissionArrayList.toTypedArray<String>()
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                val permissionArrayList =
-                    java.util.ArrayList(listOf(*permissionList))
-                permissionArrayList.add(Manifest.permission.POST_NOTIFICATIONS)
-                permissionArrayList.add(Manifest.permission.NEARBY_WIFI_DEVICES)
                 permissionList = permissionArrayList.toTypedArray<String>()
             }
             ActivityCompat.requestPermissions(
@@ -717,11 +711,6 @@ class MainActivity : AppCompatActivity() {
                 if (preferences.contains("initialized")) {
                     startActivity(Intent(this, QRCodeActivity::class.java))
                 } else {
-                    /*                    Snackbar.make(
-                                            findViewById(R.id.bot_token_editview),
-                                            "Uninitialized.",
-                                            Snackbar.LENGTH_LONG
-                                        ).show()*/
                     showErrorDialog("Uninitialized.")
                 }
                 return true
