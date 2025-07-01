@@ -67,12 +67,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var proxyMMKV: MMKV
     private lateinit var writeSettingsButton: Button
 
+    private val privacyPolice =
+        "/guide/${applicationContext.getString(R.string.Lang)}/privacy-policy"
 
     @SuppressLint("BatteryLife", "QueryPermissionsNeeded")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        privacyPolice = "/guide/" + applicationContext.getString(R.string.Lang) + "/privacy-policy"
         val botTokenEditView = findViewById<EditText>(R.id.bot_token_editview)
         val chatIdEditView = findViewById<EditText>(R.id.chat_id_editview)
         val trustedPhoneNumberEditView = findViewById<EditText>(R.id.trusted_phone_number_editview)
@@ -839,7 +840,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private var setPermissionBack = false
-        private lateinit var privacyPolice: String
     }
 }
 
