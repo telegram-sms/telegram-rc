@@ -441,7 +441,7 @@ class MainActivity : AppCompatActivity() {
             val okhttpClient = getOkhttpObj()
             val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
             val call = okhttpClient.newCall(request)
-            val errorHead = "Send message failed:"
+            val errorHead = "Send message failed: "
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     Log.e(TAG, "onFailure: ", e)
