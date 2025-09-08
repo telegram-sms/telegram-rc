@@ -66,14 +66,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var preferences: MMKV
     private lateinit var proxyMMKV: MMKV
     private lateinit var writeSettingsButton: Button
-
-    private val privacyPolice =
-        "/guide/${applicationContext.getString(R.string.Lang)}/privacy-policy"
+    private lateinit var privacyPolice: String
 
     @SuppressLint("BatteryLife", "QueryPermissionsNeeded")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        privacyPolice = "/guide/${applicationContext.getString(R.string.Lang)}/privacy-policy"
+        
         val botTokenEditView = findViewById<EditText>(R.id.bot_token_editview)
         val chatIdEditView = findViewById<EditText>(R.id.chat_id_editview)
         val trustedPhoneNumberEditView = findViewById<EditText>(R.id.trusted_phone_number_editview)
@@ -811,6 +811,7 @@ class MainActivity : AppCompatActivity() {
 
             R.id.donate_menu_item -> fileName = "/donate"
         }
+        // Use the already initialized privacyPolice variable
         checkNotNull(fileName)
         val uri = "https://get.telegram-sms.com$fileName".toUri()
         val builder = CustomTabsIntent.Builder()
