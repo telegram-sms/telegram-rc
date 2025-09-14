@@ -364,8 +364,9 @@ class ChatService : Service() {
                         getString(R.string.disable)
                     }
                 }
+                val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID);
                 var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
-                beaconStatus += if (preferences.getBoolean("beacon_enable", false)) {
+                beaconStatus += if (beacon.getBoolean("beacon_enable", false)) {
                     getString(R.string.enable)
                 } else {
                     getString(R.string.disable)
