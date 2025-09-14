@@ -1,11 +1,13 @@
 package com.qwe7002.telegram_rc
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -22,6 +24,7 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.gson.Gson
@@ -105,9 +108,43 @@ class BeaconActivity : AppCompatActivity() {
                     applicationContext
                 )
         }
-        AlertDialog.Builder(this).setTitle("Beacon configuration")
+        
+        // Check if we have background location permission
+        var hasBackgroundLocationPermission = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            hasBackgroundLocationPermission = ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+        
+        // If we don't have background location permission, show a warning
+        if (!hasBackgroundLocationPermission) {
+            AlertDialog.Builder(this)
+                .setTitle("Warning")
+                .setMessage("Background location permission is required for beacon monitoring to work properly in the background")
+                .setPositiveButton(R.string.ok_button) { _: DialogInterface, _: Int ->
+                    // Continue with configuration
+                    showBeaconConfigurationDialog(dialogView, enable, disableCount, enableCount, useVpnHotspotSwitch)
+                }
+                .setNegativeButton(android.R.string.cancel) { _: DialogInterface, _: Int -> }
+                .show()
+        } else {
+            showBeaconConfigurationDialog(dialogView, enable, disableCount, enableCount, useVpnHotspotSwitch)
+        }
+        return true
+    }
+    
+    private fun showBeaconConfigurationDialog(
+        dialogView: View,
+        enable: SwitchMaterial,
+        disableCount: EditText,
+        enableCount: EditText,
+        useVpnHotspotSwitch: SwitchMaterial
+    ) {
+        AlertDialog.Builder(this).setTitle(R.string.beacon_receiver_configuration)
             .setView(dialogView)
-            .setPositiveButton(R.string.ok_button) { _: DialogInterface?, _: Int ->
+            .setPositiveButton(R.string.ok_button) { _: DialogInterface, _: Int ->
                 beaconMMKV.putBoolean("useVpnHotspot", useVpnHotspotSwitch.isChecked)
                 beaconMMKV.putInt("disableCount", disableCount.text.toString().toInt())
                 beaconMMKV.putInt("enableCount", enableCount.text.toString().toInt())
@@ -115,7 +152,6 @@ class BeaconActivity : AppCompatActivity() {
                 LocalBroadcastManager.getInstance(this)
                     .sendBroadcast(Intent("reload_beacon_config"))
             }.show()
-        return true
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

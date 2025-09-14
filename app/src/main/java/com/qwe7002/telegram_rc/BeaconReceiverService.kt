@@ -107,7 +107,7 @@ class BeaconReceiverService : Service() {
     }
 
     private fun hasLocationPermissions(): Boolean {
-        return ActivityCompat.checkSelfPermission(
+        var hasPermission = ActivityCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED &&
@@ -115,6 +115,16 @@ class BeaconReceiverService : Service() {
                     this,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
+
+        // For Android 10+, also check background location permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            hasPermission = hasPermission && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        return hasPermission
     }
 
     @SuppressLint("InvalidWakeLockTag", "WakelockTimeout")
