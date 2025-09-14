@@ -81,7 +81,6 @@ class ChatService : Service() {
     // global object
     private lateinit var okhttpClient: OkHttpClient
     private lateinit var messageThreadId: String
-    private lateinit var broadcastReceiver: quitBroadcastReceiver
     private lateinit var wakeLock: WakeLock
     private lateinit var wifiLock: WifiLock
     private lateinit var preferences: MMKV
@@ -115,7 +114,7 @@ class ChatService : Service() {
     override fun onDestroy() {
         wifiLock.release()
         wakeLock.release()
-        unregisterReceiver(broadcastReceiver)
+        terminalThread = true
         if (mainThread.isAlive) {
             mainThread.interrupt()
         }
@@ -867,12 +866,6 @@ class ChatService : Service() {
         mainThread.start()
         val intentFilter = IntentFilter()
         intentFilter.addAction(Const.BROADCAST_STOP_SERVICE)
-        broadcastReceiver = quitBroadcastReceiver()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(broadcastReceiver, intentFilter, RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(broadcastReceiver, intentFilter)
-        }
     }
 
 
@@ -884,17 +877,6 @@ class ChatService : Service() {
         const val SEND_STATUS: Int = 3
     }
 
-    private inner class quitBroadcastReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            Log.d(TAG, "onReceive: " + intent.action)
-            checkNotNull(intent.action)
-            if (Const.BROADCAST_STOP_SERVICE == intent.action) {
-                Log.i(TAG, "Received stop signal, quitting now...")
-                terminalThread = true
-                stopSelf()
-            }
-        }
-    }
 
 
     internal inner class threadMainRunnable : Runnable {

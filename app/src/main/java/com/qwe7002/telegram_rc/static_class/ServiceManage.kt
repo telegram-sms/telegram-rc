@@ -15,13 +15,6 @@ import com.qwe7002.telegram_rc.ChatService
 object ServiceManage {
     @JvmStatic
     fun stopAllService(context: Context) {
-/*        val intent = Intent(Const.BROADCAST_STOP_SERVICE)*/
-        /*context.sendBroadcast(intent)
-        try {
-            Thread.sleep(1000)
-        } catch (e: InterruptedException) {
-            Log.e("Service", "stopAllService: ", e)
-        }*/
         Log.d("Service", "stopAllService: stopping all services")
         context.stopService(Intent(context, BatteryService::class.java))
         context.stopService( Intent(context, ChatService::class.java))
