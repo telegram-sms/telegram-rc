@@ -37,6 +37,7 @@ import com.topjohnwu.superuser.Shell
 
 class BeaconActivity : AppCompatActivity() {
     private lateinit var beaconMMKV: MMKV
+    private var customBeaconAdapter: CustomBeaconAdapter? = null
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val gson = Gson()
@@ -59,8 +60,12 @@ class BeaconActivity : AppCompatActivity() {
             }
 
             runOnUiThread {
-                val adapter = CustomBeaconAdapter(list, this@BeaconActivity)
-                beaconListview.adapter = adapter
+                if (customBeaconAdapter == null) {
+                    customBeaconAdapter = CustomBeaconAdapter(list, this@BeaconActivity)
+                    beaconListview.adapter = customBeaconAdapter
+                } else {
+                    customBeaconAdapter!!.updateList(list)
+                }
             }
         }
     }
@@ -111,13 +116,11 @@ class BeaconActivity : AppCompatActivity() {
         
         // Check if we have background location permission
         var hasBackgroundLocationPermission = true
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            hasBackgroundLocationPermission = ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-        
+        hasBackgroundLocationPermission = ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
         // If we don't have background location permission, show a warning
         if (!hasBackgroundLocationPermission) {
             AlertDialog.Builder(this)
@@ -167,6 +170,11 @@ class BeaconActivity : AppCompatActivity() {
         private var beaconMMKV: MMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         private var listenList: ArrayList<String> =
             beaconMMKV.decodeStringSet("address", setOf()).orEmpty().toCollection(ArrayList())
+
+        fun updateList(newList: ArrayList<BeaconModel.BeaconModel>) {
+            list = newList
+            notifyDataSetChanged()
+        }
 
         override fun getCount(): Int {
             return list.size
@@ -227,5 +235,3 @@ class BeaconActivity : AppCompatActivity() {
 
 
 }
-
-
