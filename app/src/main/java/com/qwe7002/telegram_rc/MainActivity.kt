@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
+
         val botTokenEditView = findViewById<EditText>(R.id.bot_token_editview)
         val chatIdEditView = findViewById<EditText>(R.id.chat_id_editview)
         val trustedPhoneNumberEditView = findViewById<EditText>(R.id.trusted_phone_number_editview)
@@ -560,7 +560,8 @@ class MainActivity : AppCompatActivity() {
         }
         builder.setNegativeButton(R.string.decline, null)
         builder.setNeutralButton(R.string.visit_page) { _: DialogInterface?, _: Int ->
-            val privacyPolice = "/guide/${applicationContext.getString(R.string.Lang)}/privacy-policy"
+            val privacyPolice =
+                "/guide/${applicationContext.getString(R.string.Lang)}/privacy-policy"
             val uri = "https://get.telegram-sms.com$privacyPolice".toUri()
             val privacyBuilder = CustomTabsIntent.Builder()
             val customTabsIntent = privacyBuilder.build()
@@ -737,6 +738,14 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
+            R.id.set_copy_menu_item -> {
+                if (preferences.contains("initialized")) {
+                    startActivity(Intent(this, CcActivity::class.java))
+                } else {
+                    showErrorDialog("Uninitialized.")
+                }
+            }
+
             R.id.set_notify_menu_item -> {
                 if (!isNotifyListener(applicationContext)) {
                     val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
@@ -804,7 +813,9 @@ class MainActivity : AppCompatActivity() {
             R.id.user_manual_menu_item -> fileName =
                 "/guide/" + applicationContext.getString(R.string.Lang) + "/user-manual"
 
-            R.id.privacy_policy_menu_item -> fileName = "/guide/${applicationContext.getString(R.string.Lang)}/privacy-policy"
+            R.id.privacy_policy_menu_item -> fileName =
+                "/guide/${applicationContext.getString(R.string.Lang)}/privacy-policy"
+
             R.id.question_and_answer_menu_item -> fileName =
                 "/guide/" + applicationContext.getString(R.string.Lang) + "/Q&A"
 
