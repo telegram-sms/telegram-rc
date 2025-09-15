@@ -1,9 +1,5 @@
 # Telegram Remote Control
 
-## We're in this together
-
-> Fight COVID-19. Stay at home. Save lives.
-
 ![Min Android Version](https://img.shields.io/badge/Min%20Android%20Version-8.0-orange.svg?style=flat-square)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square)](https://github.com/telegram-sms/telegram-rc/blob/master/LICENSE)
 [![GitHub Releases](https://img.shields.io/github/downloads/telegram-sms/telegram-rc/latest/app-release.apk?style=flat-square)](https://github.com/telegram-sms/telegram-rc/releases/latest)
@@ -11,8 +7,6 @@
 A robot running on your Android device.
 
 **The precompiled version of this version does not support non-64-bit instruction set devices.**
-
-The primary language used for commit messages is Simplified Chinese. However, you're welcome to use English in commit messages when making contributions.
 
 Please visit [https://reall.uk](https://reall.uk) to submit and discuss issues regarding this project.
 
@@ -51,7 +45,7 @@ This APP uses the following open source libraries:
 - [okhttp](https://github.com/square/okhttp)
 - [Gson](https://github.com/google/gson)
 - [CodeauxLib](https://gist.github.com/SumiMakito/59992fd15a865c3b9709b8e2c3bc9cf1)
-- [Paper](https://github.com/pilgr/Paper)
+- [MMKV](https://github.com/Tencent/MMKV)
 - [code-scanner](https://github.com/yuriy-budiyev/code-scanner)
 
 The creation of this APP would not be possible without help from the following people:
@@ -65,23 +59,15 @@ I would also like to thank the following people for their hard work to localise 
 - English
   - [@tangbao](https://github.com/tangbao)
   - [@jixunmoe](https://github.com/jixunmoe) ([Donate](https://paypal.me/jixun))
-- Japanese
-  - [@Lollycc](https://github.com/lollycc)
-  - [@AisakaMk2](https://github.com/AisakaMk2)
-- Spanish
-  - [@David Alonso](https://github.com/lpdavidgc)
 
 This APP uses the following public DNS service:
 
 - [1.1.1.1](https://1.1.1.1/)
-
-And finally, [sm.ms](https://sm.ms) for hosting images used in this page.
 
 ## Buy me a cup of coffee to help maintain this project further?
 
 - [via Github](https://get.telegram-sms.com/donate/github)
 - [via Paypal](https://get.telegram-sms.com/donate/paypal)
 - [via Bitcoin](bitcoin:17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae) (**17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae**)
-- [via UnionPay(中国银联云闪付)](https://get.telegram-sms.com/donate/unionpay)
 
 Your donation will make me work better for this project.
