@@ -65,11 +65,9 @@ object ServiceManage {
                 coarseLocationPermission == PackageManager.PERMISSION_GRANTED
                 
         // For Android 10+, also check background location permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val backgroundLocationPermission = 
-                context.checkSelfPermission(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            hasPermission = hasPermission && backgroundLocationPermission == PackageManager.PERMISSION_GRANTED
-        }
+        val backgroundLocationPermission =
+            context.checkSelfPermission(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        hasPermission = hasPermission && backgroundLocationPermission == PackageManager.PERMISSION_GRANTED
 
         val foregroundServiceLocationPermission =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
