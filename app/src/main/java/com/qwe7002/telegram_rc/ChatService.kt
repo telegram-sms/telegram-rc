@@ -368,7 +368,7 @@ class ChatService : Service() {
                 var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
                 if (beacon.getBoolean("beacon_enable", false)) {
                     if (!ServiceManage.hasLocationPermissions(applicationContext)) {
-                        beaconStatus += "\nLocation Permission Missing"
+                        beaconStatus += "Location Permission Missing"
                     } else {
                         beaconStatus += getString(R.string.enable)
                     }
