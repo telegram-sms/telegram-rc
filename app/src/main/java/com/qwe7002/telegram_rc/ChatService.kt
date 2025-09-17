@@ -59,6 +59,7 @@ import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isHotspotActive
 import com.qwe7002.telegram_rc.static_class.SMS.sendFallbackSMS
 import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
+import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.tencent.mmkv.MMKV
@@ -365,10 +366,15 @@ class ChatService : Service() {
                 }
                 val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID);
                 var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
-                beaconStatus += if (beacon.getBoolean("beacon_enable", false)) {
-                    getString(R.string.enable)
+                if (beacon.getBoolean("beacon_enable", false)) {
+                    if (!ServiceManage.hasLocationPermissions(applicationContext)) {
+                        beaconStatus += "\nLocation Permission Missing"
+                    } else {
+                        beaconStatus += getString(R.string.enable)
+                    }
                 } else {
-                    getString(R.string.disable)
+                    beaconStatus += getString(R.string.disable)
+
                 }
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
@@ -876,7 +882,6 @@ class ChatService : Service() {
         const val WAITING_TO_SEND_STATUS: Int = 2
         const val SEND_STATUS: Int = 3
     }
-
 
 
     internal inner class threadMainRunnable : Runnable {
