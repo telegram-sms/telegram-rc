@@ -196,6 +196,12 @@ fun getNineKeyMapConvert(input: String): String {
                 Log.d(TAG, "get_sim_display_name: Unable to obtain information")
                 return result
             }
+            result = info.displayName.toString()
+            if (info.displayName.toString().contains("CARD") || info.displayName.toString()
+                    .contains("SUB")
+            ) {
+                result = info.carrierName.toString()
+            }
             return result
         }
         result = info.displayName.toString()
