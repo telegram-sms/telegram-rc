@@ -63,6 +63,7 @@ dependencies {
     implementation 'aga.android:luch:0.4'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.6'
     implementation "androidx.core:core-ktx:1.17.0"
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.0'
     implementation 'com.tencent:mmkv:2.2.3'
     def libsuVersion = '6.0.0'
