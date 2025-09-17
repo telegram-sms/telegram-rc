@@ -337,16 +337,17 @@ class ChatService : Service() {
                         Manifest.permission.READ_PHONE_STATE
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
-                    cardInfo = "\nSIM: " + getSimDisplayName(
-                        applicationContext, 0
-                    )
-                    if (getActiveCard(applicationContext) == 2) {
-                        cardInfo = "\n${getString(R.string.current_data_card)}: SIM" + getDataSimId(
+                    cardInfo = if (getActiveCard(applicationContext) == 2) {
+                        "\n${getString(R.string.current_data_card)}: SIM" + getDataSimId(
                             applicationContext
                         ) + "\nSIM1: " + getSimDisplayName(
                             applicationContext, 0
                         ) + "\nSIM2: " + getSimDisplayName(
                             applicationContext, 1
+                        )
+                    }else{
+                        "\nSIM: " + getSimDisplayName(
+                            applicationContext, 0
                         )
                     }
                 }
