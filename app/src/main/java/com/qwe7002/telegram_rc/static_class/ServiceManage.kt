@@ -17,7 +17,7 @@ object ServiceManage {
     fun stopAllService(context: Context) {
         Log.d("Service", "stopAllService: stopping all services")
         context.stopService(Intent(context, BatteryService::class.java))
-        context.stopService( Intent(context, ChatService::class.java))
+        context.stopService(Intent(context, ChatService::class.java))
         if (hasLocationPermissions(context)) {
             context.stopService(Intent(context, BeaconReceiverService::class.java))
         }
@@ -55,19 +55,20 @@ object ServiceManage {
         }
     }
 
-    private fun hasLocationPermissions(context: Context): Boolean {
+    public fun hasLocationPermissions(context: Context): Boolean {
         val fineLocationPermission =
             context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
         val coarseLocationPermission =
             context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
-        
+
         var hasPermission = fineLocationPermission == PackageManager.PERMISSION_GRANTED &&
                 coarseLocationPermission == PackageManager.PERMISSION_GRANTED
-                
+
         // For Android 10+, also check background location permission
         val backgroundLocationPermission =
             context.checkSelfPermission(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        hasPermission = hasPermission && backgroundLocationPermission == PackageManager.PERMISSION_GRANTED
+        hasPermission =
+            hasPermission && backgroundLocationPermission == PackageManager.PERMISSION_GRANTED
 
         val foregroundServiceLocationPermission =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
