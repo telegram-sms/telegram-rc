@@ -18,19 +18,20 @@ import com.tencent.mmkv.MMKV
 import java.util.Locale
 
 object Other {
+private val NINE_KEY_MAP = mapOf(
+    'A' to '2', 'B' to '2', 'C' to '2',
+    'D' to '3', 'E' to '3', 'F' to '3',
+    'G' to '4', 'H' to '4', 'I' to '4',
+    'J' to '5', 'K' to '5', 'L' to '5',
+    'M' to '6', 'N' to '6', 'O' to '6',
+    'P' to '7', 'Q' to '7', 'R' to '7', 'S' to '7',
+    'T' to '8', 'U' to '8', 'V' to '8',
+    'W' to '9', 'X' to '9', 'Y' to '9', 'Z' to '9'
+)
+
 fun getNineKeyMapConvert(input: String): String {
-    val nineKeyMap = mapOf(
-        'A' to '2', 'B' to '2', 'C' to '2',
-        'D' to '3', 'E' to '3', 'F' to '3',
-        'G' to '4', 'H' to '4', 'I' to '4',
-        'J' to '5', 'K' to '5', 'L' to '5',
-        'M' to '6', 'N' to '6', 'O' to '6',
-        'P' to '7', 'Q' to '7', 'R' to '7', 'S' to '7',
-        'T' to '8', 'U' to '8', 'V' to '8',
-        'W' to '9', 'X' to '9', 'Y' to '9', 'Z' to '9'
-    )
-    return input.uppercase(Locale.getDefault()).map { c ->
-        nineKeyMap[c] ?: c
+    return input.uppercase(Locale.ROOT).map { c ->
+        NINE_KEY_MAP[c] ?: c
     }.joinToString("")
 }
 
@@ -120,18 +121,22 @@ fun getNineKeyMapConvert(input: String): String {
 
     @JvmStatic
     fun getNotificationObj(context: Context, notificationName: String): Notification.Builder {
-        val channel = NotificationChannel(
-            notificationName, notificationName,
-            NotificationManager.IMPORTANCE_MIN
-        )
         val manager =
             (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-        manager.createNotificationChannel(channel)
+        val channelExists = manager.getNotificationChannel(notificationName) != null
+        if (!channelExists) {
+            val channel = NotificationChannel(
+                notificationName, notificationName,
+                NotificationManager.IMPORTANCE_MIN
+            )
+            manager.createNotificationChannel(channel)
+        }
+        val appName = context.getString(R.string.app_name)
         val builder = Notification.Builder(context, notificationName).setAutoCancel(false)
             .setSmallIcon(R.drawable.ic_stat)
             .setOngoing(true)
-            .setTicker(context.getString(R.string.app_name))
-            .setContentTitle(context.getString(R.string.app_name))
+            .setTicker(appName)
+            .setContentTitle(appName)
             .setContentText(notificationName + context.getString(R.string.service_is_running))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             builder.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
@@ -196,19 +201,13 @@ fun getNineKeyMapConvert(input: String): String {
                 Log.d(TAG, "get_sim_display_name: Unable to obtain information")
                 return result
             }
-            result = info.displayName.toString()
-            if (info.displayName.toString().contains("CARD") || info.displayName.toString()
-                    .contains("SUB")
-            ) {
-                result = info.carrierName.toString()
-            }
-            return result
         }
-        result = info.displayName.toString()
-        if (info.displayName.toString().contains("CARD") || info.displayName.toString()
-                .contains("SUB")
-        ) {
-            result = info.carrierName.toString()
+        
+        val displayName = info.displayName?.toString() ?: ""
+        result = if (displayName.contains("CARD") || displayName.contains("SUB")) {
+            info.carrierName?.toString() ?: displayName
+        } else {
+            displayName
         }
         return result
     }
