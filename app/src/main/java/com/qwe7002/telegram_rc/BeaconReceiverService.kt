@@ -77,7 +77,7 @@ class BeaconReceiverService : Service() {
             startForeground(
                 Notify.BEACON_SERVICE,
                 notification.build(),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
             )
         } else {
             startForeground(

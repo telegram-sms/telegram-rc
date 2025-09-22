@@ -9,8 +9,10 @@ import android.content.Context.TELEPHONY_SERVICE
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
+import android.telephony.CellInfo
 import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
 import android.telephony.TelephonyManager
@@ -31,7 +33,7 @@ import java.net.NetworkInterface
 import java.net.PasswordAuthentication
 import java.net.Proxy
 import java.net.UnknownHostException
-import java.util.Locale
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 object Network {
@@ -156,44 +158,78 @@ object Network {
         when (telephony.dataNetworkType) {
             TelephonyManager.NETWORK_TYPE_NR,
             TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> {
-                netType = if (ActivityCompat.checkSelfPermission(
+                // For 5G (NR) we always try to determine the exact type if possible
+                // For LTE and IWLAN, we check if it's actually 5G in disguise
+                 if (ActivityCompat.checkSelfPermission(
                         context,
                         Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
-                    check5GState(telephony)
+                     netType = check5GState(context, telephony)
                 } else {
-                    if (telephony.dataNetworkType == TelephonyManager.NETWORK_TYPE_NR) {
-                        "NR"
-                    } else {
-                        "LTE"
+                    // Without location permission, we can only provide basic info
+                     netType = when (telephony.dataNetworkType) {
+                        TelephonyManager.NETWORK_TYPE_NR -> "NR"
+                        TelephonyManager.NETWORK_TYPE_LTE, 
+                        TelephonyManager.NETWORK_TYPE_IWLAN -> "LTE"
+                        else -> "Unknown" // Fallback, though shouldn't happen
                     }
                 }
             }
 
-            TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_TD_SCDMA, TelephonyManager.NETWORK_TYPE_UMTS -> netType =
-                "3G"
+            // 3G network types
+            TelephonyManager.NETWORK_TYPE_HSPAP, 
+            TelephonyManager.NETWORK_TYPE_EVDO_0, 
+            TelephonyManager.NETWORK_TYPE_EVDO_A, 
+            TelephonyManager.NETWORK_TYPE_EVDO_B, 
+            TelephonyManager.NETWORK_TYPE_EHRPD, 
+            TelephonyManager.NETWORK_TYPE_HSDPA, 
+            TelephonyManager.NETWORK_TYPE_HSUPA, 
+            TelephonyManager.NETWORK_TYPE_HSPA, 
+            TelephonyManager.NETWORK_TYPE_TD_SCDMA, 
+            TelephonyManager.NETWORK_TYPE_UMTS -> netType = "3G"
 
-            TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_GSM, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN -> netType =
-                "2G"
+            // 2G network types
+            TelephonyManager.NETWORK_TYPE_GPRS, 
+            TelephonyManager.NETWORK_TYPE_GSM, 
+            TelephonyManager.NETWORK_TYPE_EDGE, 
+            TelephonyManager.NETWORK_TYPE_CDMA, 
+            TelephonyManager.NETWORK_TYPE_1xRTT, 
+            TelephonyManager.NETWORK_TYPE_IDEN -> netType = "2G"
 
             TelephonyManager.NETWORK_TYPE_UNKNOWN -> netType = "Unknown"
-
         }
         return netType
     }
 
-    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-    private fun check5GState(telephonyManager: TelephonyManager): String {
-        val cellInfoList = telephonyManager.getAllCellInfo()
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE])
+    private fun check5GState(context: Context, telephonyManager: TelephonyManager): String {
+        val cellInfoList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // For Android Q+, we'll use a callback-based approach with requestCellInfoUpdate
+            // This will request updated cell info, but updates are rate-limited
+            requestUpdatedCellInfo(context, telephonyManager)
+        } else {
+            // For older versions, use the direct method
+            telephonyManager.allCellInfo
+        }
+        
+        if (cellInfoList.isEmpty()) {
+            Log.d("check5GState", "No cell info available")
+            return when (telephonyManager.dataNetworkType) {
+                TelephonyManager.NETWORK_TYPE_NR -> "NR"
+                TelephonyManager.NETWORK_TYPE_LTE,
+                TelephonyManager.NETWORK_TYPE_IWLAN -> "LTE"
+                else -> "Unknown" // Fallback, though shouldn't happen
+            }
+        }
+        
         var hasLte = false
         var hasNr = false
         for (cellInfo in cellInfoList) {
             if (cellInfo.isRegistered) {
-                if (cellInfo is CellInfoLte) {
-                    hasLte = true
-                } else if (cellInfo is CellInfoNr) {
-                    hasNr = true
+                when (cellInfo) {
+                    is CellInfoLte -> hasLte = true
+                    is CellInfoNr -> hasNr = true
                 }
             }
         }
@@ -206,6 +242,37 @@ object Network {
         return "LTE"
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE])
+    private fun requestUpdatedCellInfo(context: Context, telephonyManager: TelephonyManager): List<CellInfo> {
+        // On Android Q+, we request updated cell info, but this is rate-limited
+        // If the request fails or times out, we fall back to the cached data
+        var result: List<CellInfo> = telephonyManager.allCellInfo
+        val latch = CountDownLatch(1)
+        
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                telephonyManager.requestCellInfoUpdate(context.mainExecutor, object : TelephonyManager.CellInfoCallback() {
+                    override fun onCellInfo(cells: List<CellInfo>) {
+                        result = cells
+                        latch.countDown()
+                    }
+                    
+                    override fun onError(errorCode: Int, detail: Throwable?) {
+                        Log.w("check5GState", "Failed to get updated cell info. Error code: $errorCode", detail)
+                        latch.countDown()
+                    }
+                })
+                
+                // Wait up to 2 seconds for the update
+                latch.await(2, TimeUnit.SECONDS)
+            }
+        } catch (e: Exception) {
+            Log.w("check5GState", "Exception while requesting cell info update", e)
+        }
+        
+        return result
+    }
+
     fun getNetworkType(context: Context): String {
         var netType = "Unknown"
         val connectManager =
@@ -214,33 +281,44 @@ object Network {
             context
                 .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
         )
+        
+        // Check permission once before entering loop
+        val hasPhoneStatePermission = ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_PHONE_STATE
+        ) == PackageManager.PERMISSION_GRANTED
+        
         for (network in connectManager.allNetworks) {
             val networkCapabilities =
                 checkNotNull(connectManager.getNetworkCapabilities(network))
             if (!networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    netType = "WIFI"
-                    break
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    if (ActivityCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_PHONE_STATE
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        Log.i("get_network_type", "No permission.")
-                        return netType
+                when {
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> {
+                        netType = "WIFI"
+                        break
                     }
-                    netType = checkCellularNetworkType(
-                        context,
-                        telephonyManager
-                    )
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)) {
-                    netType = "Bluetooth"
-                }
-                if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                    netType = "Ethernet"
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
+                        if (!hasPhoneStatePermission) {
+                            Log.i("get_network_type", "No permission.")
+                            return netType
+                        }
+                        netType = checkCellularNetworkType(
+                            context,
+                            telephonyManager
+                        )
+                    }
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> {
+                        netType = "Bluetooth"
+                    }
+                    networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> {
+                        netType = "Ethernet"
+                    }
+                    else -> {
+                        // Handle other transport types if needed
+                        if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_LOWPAN)) {
+                            netType = "LowPAN"
+                        }
+                    }
                 }
             }
         }
