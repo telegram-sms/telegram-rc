@@ -68,7 +68,7 @@
             android:name=".BeaconReceiverService"
             android:enabled="true"
             android:exported="true"
-            android:foregroundServiceType="specialUse"
+            android:foregroundServiceType="location"
             android:permission="android.permission.FOREGROUND_SERVICE" />
 
         <activity
@@ -99,8 +99,9 @@
             android:name=".ChatService"
             android:enabled="true"
             android:exported="true"
-            android:foregroundServiceType="specialUse"
-            android:permission="android.permission.FOREGROUND_SERVICE" />
+            android:foregroundServiceType="location"
+            android:permission="android.permission.FOREGROUND_SERVICE"
+            />
 
         <activity android:name=".LogcatActivity" />
         <service
