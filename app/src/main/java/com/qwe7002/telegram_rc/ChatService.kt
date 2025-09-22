@@ -136,8 +136,8 @@ class ChatService : Service() {
         val requestBody = RequestMessage()
         requestBody.chatId = chatID
         requestBody.messageThreadId = messageThreadId
-        lateinit var messageObj: JsonObject
-        lateinit var callbackData: String
+        var messageObj: JsonObject? = null
+        var callbackData: String? = null
         if (resultObj.has("message")) {
             messageObj = resultObj["message"].asJsonObject
             messageType = messageObj["chat"].asJsonObject["type"].asString
@@ -151,11 +151,23 @@ class ChatService : Service() {
             val callbackQuery = resultObj["callback_query"].asJsonObject
             callbackData = callbackQuery["data"].asString
         }
+        
+        // 提前返回，避免后续处理空对象
+        if (messageObj == null && messageType != "callback_query") {
+            Log.i(TAG, "receive_handle: message object is null and not a callback query")
+            return
+        }
+        
         if (messageType == "callback_query" && sendStatusMMKV.getInt(
                 "status",
                 SEND_SMS_STATUS.STANDBY_STATUS
             ) != SEND_SMS_STATUS.STANDBY_STATUS
         ) {
+            // 确保callbackData已初始化
+            if (callbackData == null) {
+                Log.e(TAG, "Callback data is null")
+                return
+            }
             val slot = sendStatusMMKV.getInt("slot", -1)
             val messageId = sendStatusMMKV.getLong("message_id", -1L)
             val to = sendStatusMMKV.getString("to", "")
@@ -207,10 +219,10 @@ class ChatService : Service() {
             return
         }
 
-        lateinit var fromObj: JsonObject
+        var fromObj: JsonObject? = null
         var fromTopicId = ""
         val messageTypeIsPrivate = messageType == "private"
-        if (messageObj.has("from")) {
+        if (messageObj != null && messageObj.has("from")) {
             fromObj = messageObj["from"].asJsonObject
             if (!messageTypeIsPrivate && fromObj["is_bot"].asBoolean) {
                 Log.i(TAG, "receive_handle: receive from bot.")
@@ -218,7 +230,7 @@ class ChatService : Service() {
             }
         }
         if (messageThreadId != "") {
-            if (messageObj.has("is_topic_message")) {
+            if (messageObj != null && messageObj.has("is_topic_message")) {
                 fromTopicId = messageObj["message_thread_id"].asString
             }
             if (messageThreadId != fromTopicId) {
@@ -226,9 +238,15 @@ class ChatService : Service() {
                 return
             }
         }
-        if (messageObj.has("chat")) {
+        if (messageObj != null && messageObj.has("chat")) {
             fromObj = messageObj["chat"].asJsonObject
         }
+
+        if (fromObj == null) {
+            Log.e(TAG, "From object is null")
+            return
+        }
+        
         val fromId = fromObj["id"].asString
         if (chatID != fromId) {
             writeLog(applicationContext, "Chat ID[$fromId] not allow")
@@ -237,10 +255,10 @@ class ChatService : Service() {
 
         var command = ""
         var requestMsg = ""
-        if (messageObj.has("text")) {
+        if (messageObj != null && messageObj.has("text")) {
             requestMsg = messageObj["text"].asString
         }
-        if (messageObj.has("reply_to_message")) {
+        if (messageObj != null && messageObj.has("reply_to_message")) {
             val saveItemString = chatInfoMMKV.getString(
                 messageObj["reply_to_message"].asJsonObject["message_id"].asString,
                 null
@@ -258,7 +276,7 @@ class ChatService : Service() {
             }
         }
         var hasCommand = false
-        if (messageObj.has("entities")) {
+        if (messageObj != null && messageObj.has("entities")) {
             val tempCommand: String
             val tempCommandLowercase: String
             val entitiesArr = messageObj["entities"].asJsonArray
@@ -764,8 +782,9 @@ class ChatService : Service() {
         }
 
         val requestUri = getUrl(botToken, "sendMessage")
-        val body: RequestBody = Gson().toJson(requestBody).toRequestBody(Const.JSON)
-        Log.d(TAG, "receive_handle: " + Gson().toJson(requestBody))
+        val gson = Gson()
+        val body: RequestBody = gson.toJson(requestBody).toRequestBody(Const.JSON)
+        Log.d(TAG, "receive_handle: " + gson.toJson(requestBody))
         val sendRequest: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(sendRequest)
         val errorHead = "Send reply failed:"

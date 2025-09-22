@@ -20,7 +20,7 @@ class LogcatActivity : AppCompatActivity() {
         logcatTextview = findViewById(R.id.logcat_textview)
         this.setTitle(R.string.logcat)
         logcatTextview.text = LogManage.readLog(applicationContext, line)
-        logcatTextview.setGravity(Gravity.BOTTOM)
+        logcatTextview.gravity = Gravity.BOTTOM
         thread {
             while (true) {
                 runOnUiThread {
