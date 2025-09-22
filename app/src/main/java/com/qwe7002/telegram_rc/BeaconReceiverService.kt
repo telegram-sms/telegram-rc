@@ -102,7 +102,6 @@ class BeaconReceiverService : Service() {
         loadPreferences()
         initializeBeaconScanner()
         registerFlushReceiver()
-        registerStopServiceReceiver()
         scanner.start()
     }
 
@@ -117,12 +116,10 @@ class BeaconReceiverService : Service() {
                 ) == PackageManager.PERMISSION_GRANTED
 
         // For Android 10+, also check background location permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            hasPermission = hasPermission && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        }
+        hasPermission = hasPermission && ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
 
         return hasPermission
     }
@@ -161,6 +158,8 @@ class BeaconReceiverService : Service() {
         messageThreadId = preferences.getString("message_thread_id", "")!!
     }
 
+    private val gson = Gson()
+
     private fun initializeBeaconScanner() {
         val beaconLayout = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"
         val beaconParser = BeaconParserFactory.createFromLayout(beaconLayout)
@@ -172,14 +171,30 @@ class BeaconReceiverService : Service() {
             .setBeaconBatchListener { beacons ->
                 val beaconList = beacons.mapNotNull { beacon ->
                     try {
+                        val distance = if (::scanner.isInitialized) {
+                            try {
+                                scanner.ranger.calculateDistance(beacon)
+                            } catch (e: Exception) {
+                                Log.d(TAG, "Error calculating beacon distance: ${e.message}")
+                                -1.0
+                            }
+                        } else {
+                            -1.0
+                        }
                         BeaconModel.BeaconModel(
                             uuid = beacon.getIdentifierAsUuid(1).toString(),
                             major = beacon.getIdentifierAsInt(2),
                             minor = beacon.getIdentifierAsInt(3),
                             rssi = beacon.rssi.toInt(),
                             hardwareAddress = beacon.hardwareAddress,
-                            distance = scanner.ranger.calculateDistance(beacon)
+                            distance = distance
                         )
+                    } catch (e: IllegalArgumentException) {
+                        Log.d(TAG, "Error processing beacon data: ${e.message}")
+                        null
+                    } catch (e: IllegalStateException) {
+                        Log.d(TAG, "Error calculating beacon distance: ${e.message}")
+                        null
                     } catch (e: Exception) {
                         Log.d(TAG, "Error processing beacon: ${e.message}")
                         null
@@ -190,9 +205,8 @@ class BeaconReceiverService : Service() {
                     return@setBeaconBatchListener
                 }
                 Log.d(TAG, "Beacons found: ${beaconList.size}")
-                Log.d(TAG, "initializeBeaconScanner: $beaconList")
                 val intent = Intent("flush_beacons_list")
-                intent.putExtra("beaconList", Gson().toJson(beaconList))
+                intent.putExtra("beaconList", gson.toJson(beaconList))
                 applicationContext.sendBroadcast(intent)
             }
             .build()
@@ -208,25 +222,6 @@ class BeaconReceiverService : Service() {
         }
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun registerStopServiceReceiver() {
-        val intentFilter = IntentFilter(Const.BROADCAST_STOP_SERVICE)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(stopServiceReceiver, intentFilter, RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(stopServiceReceiver, intentFilter)
-        }
-    }
-
-    private val stopServiceReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Const.BROADCAST_STOP_SERVICE) {
-                Log.i(TAG, "Received stop signal, quitting now...")
-                stopSelf()
-            }
-        }
-    }
-
     private val flushReceiver = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
@@ -234,8 +229,24 @@ class BeaconReceiverService : Service() {
             try {
                 processBeaconList(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "Error processing beacon list: ${e.message}", e)
-                // Optionally, you can reset counters or handle the error as needed
+                when (e) {
+                    is IllegalArgumentException -> {
+                        Log.e(TAG, "Invalid beacon list data: ${e.message} for intent ${intent.action}")
+                    }
+                    is IllegalStateException -> {
+                        Log.e(TAG, "Beacon processing in illegal state: ${e.message} for intent ${intent.action}")
+                    }
+                    is IOException -> {
+                        Log.e(TAG, "IO error processing beacon list: ${e.message} for intent ${intent.action}")
+                    }
+                    is InterruptedException -> {
+                        Log.e(TAG, "Interrupted while processing beacon list: ${e.message} for intent ${intent.action}")
+                        Thread.currentThread().interrupt()
+                    }
+                    else -> {
+                        Log.e(TAG, "Error processing beacon list: ${e.message} for intent ${intent.action}", e)
+                    }
+                }
                 resetCounters()
             } finally {
                 flushReceiverLock.unlock()
@@ -296,21 +307,30 @@ class BeaconReceiverService : Service() {
             }"
             requestBody.messageThreadId = messageThreadId
 
-            val requestBodyJson = Gson().toJson(requestBody)
+            val requestBodyJson = gson.toJson(requestBody)
             val body = requestBodyJson.toRequestBody(Const.JSON)
             val request = Request.Builder().url(requestUrl).method("POST", body).build()
             okhttpClient.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.d(TAG, "onFailure: " + e.message)
-                    Resend.addResendLoop(applicationContext, requestBody.text)
-                    e.printStackTrace()
+                    try {
+                        Log.d(TAG, "onFailure: " + e.message)
+                        Resend.addResendLoop(applicationContext, requestBody.text)
+                        e.printStackTrace()
+                    } catch (ioException: Exception) {
+                        Log.e(TAG, "Error in onFailure handler: ${ioException.message}", ioException)
+                    }
                 }
 
                 override fun onResponse(call: Call, response: Response) {
-                    Log.d(TAG, "onResponse: ${response.body.string()}")
+                    try {
+                        Log.d(TAG, "onResponse: ${response.body?.string() ?: "Empty response body"}")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error processing response: ${e.message}", e)
+                    } finally {
+                        response.close()
+                    }
                 }
             })
-
         }
 
         private fun resetCounters() {
@@ -444,7 +464,6 @@ class BeaconReceiverService : Service() {
         wakelock.release()
         unregisterReceiver(flushReceiver)
         unregisterReceiver(reloadConfigReceiver)
-        unregisterReceiver(stopServiceReceiver)
         stopForeground(true)
         super.onDestroy()
     }
