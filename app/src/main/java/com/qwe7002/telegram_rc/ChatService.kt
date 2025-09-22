@@ -151,13 +151,13 @@ class ChatService : Service() {
             val callbackQuery = resultObj["callback_query"].asJsonObject
             callbackData = callbackQuery["data"].asString
         }
-        
+
         // 提前返回，避免后续处理空对象
         if (messageObj == null && messageType != "callback_query") {
             Log.i(TAG, "receive_handle: message object is null and not a callback query")
             return
         }
-        
+
         if (messageType == "callback_query" && sendStatusMMKV.getInt(
                 "status",
                 SEND_SMS_STATUS.STANDBY_STATUS
@@ -246,7 +246,7 @@ class ChatService : Service() {
             Log.e(TAG, "From object is null")
             return
         }
-        
+
         val fromId = fromObj["id"].asString
         if (chatID != fromId) {
             writeLog(applicationContext, "Chat ID[$fromId] not allow")
@@ -363,7 +363,7 @@ class ChatService : Service() {
                         ) + "\nSIM2: " + getSimDisplayName(
                             applicationContext, 1
                         )
-                    }else{
+                    } else {
                         "\nSIM: " + getSimDisplayName(
                             applicationContext, 0
                         )
@@ -428,70 +428,81 @@ class ChatService : Service() {
             }
 
             "/hotspot" -> {
-                val apStatus = isHotspotActive(applicationContext)
-                var resultAp: String
-                if (!apStatus) {
-                    resultAp =
-                        getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
-                    val commandListData =
-                        requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
-                            .toTypedArray()
-                    var tetherMode = TetherManager.TetherMode.TETHERING_WIFI
-                    if (commandListData.size == 2) {
-                        tetherMode =
-                            when (commandListData[1].lowercase(Locale.getDefault())) {
-                                "bluetooth" -> TetherManager.TetherMode.TETHERING_BLUETOOTH
-                                "usb" -> TetherManager.TetherMode.TETHERING_USB
-                                "nic" -> TetherManager.TetherMode.TETHERING_ETHERNET
-                                else -> TetherManager.TetherMode.TETHERING_WIFI
-                            }
-                    }
-                    statusMMKV.putInt("tether_mode", tetherMode)
-                    enableHotspot(applicationContext, tetherMode)
-                    Thread.sleep(500)
-                    resultAp += "\nGateway IP: ${Network.getHotspotIpAddress(tetherMode)}"
-                } else {
-                    statusMMKV.putBoolean("tether", false)
-                    resultAp =
-                        getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
-                }
-                resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
-                    applicationContext
-                ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
-                    applicationContext
-                )
-                requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
-            }
-
-            "/vpnhotspot" -> {
-                if (Shell.isAppGrantedRoot() != true || !VPNHotspot.isVPNHotspotExist(
-                        applicationContext
-                    )
-                ) {
+                if (MMKV.mmkvWithID(Const.BEACON_MMKV_ID).getBoolean("beacon_enable", false)) {
                     requestBody.text =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
-
-                } else {
-                    val wifiManager =
-                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                    val wifiOpen = statusMMKV.getBoolean("VPNHotspot", false)
-                    var resultVpnAp: String
-                    if (!wifiOpen) {
-                        resultVpnAp =
+                        "${getString(R.string.system_message_head)}\nAutoSwitch is enabled, please disable it first."
+                }else {
+                    val apStatus = isHotspotActive(applicationContext)
+                    var resultAp: String
+                    if (!apStatus) {
+                        resultAp =
                             getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
-                        Thread { VPNHotspot.enableVPNHotspot(wifiManager) }.start()
+                        val commandListData =
+                            requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
+                                .toTypedArray()
+                        var tetherMode = TetherManager.TetherMode.TETHERING_WIFI
+                        if (commandListData.size == 2) {
+                            tetherMode =
+                                when (commandListData[1].lowercase(Locale.getDefault())) {
+                                    "bluetooth" -> TetherManager.TetherMode.TETHERING_BLUETOOTH
+                                    "usb" -> TetherManager.TetherMode.TETHERING_USB
+                                    "nic" -> TetherManager.TetherMode.TETHERING_ETHERNET
+                                    else -> TetherManager.TetherMode.TETHERING_WIFI
+                                }
+                        }
+                        statusMMKV.putInt("tether_mode", tetherMode)
+                        enableHotspot(applicationContext, tetherMode)
+                        Thread.sleep(500)
+                        resultAp += "\nGateway IP: ${Network.getHotspotIpAddress(tetherMode)}"
                     } else {
-                        statusMMKV.putBoolean("VPNHotspot", false)
-                        resultVpnAp =
+                        statusMMKV.putBoolean("tether", false)
+                        resultAp =
                             getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
                     }
-                    resultVpnAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
+                    resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
                     ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
                         applicationContext
                     )
+                    requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
+                }
+            }
 
-                    requestBody.text = "${getString(R.string.system_message_head)}\n$resultVpnAp"
+            "/vpnhotspot" -> {
+                if (MMKV.mmkvWithID(Const.BEACON_MMKV_ID).getBoolean("beacon_enable", false)) {
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\nAutoSwitch is enabled, please disable it first."
+                }else {
+                    if (Shell.isAppGrantedRoot() != true || !VPNHotspot.isVPNHotspotExist(
+                            applicationContext
+                        )
+                    ) {
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
+
+                    } else {
+                        val wifiManager =
+                            applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                        val wifiOpen = statusMMKV.getBoolean("VPNHotspot", false)
+                        var resultVpnAp: String
+                        if (!wifiOpen) {
+                            resultVpnAp =
+                                getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
+                            Thread { VPNHotspot.enableVPNHotspot(wifiManager) }.start()
+                        } else {
+                            statusMMKV.putBoolean("VPNHotspot", false)
+                            resultVpnAp =
+                                getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
+                        }
+                        resultVpnAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
+                            applicationContext
+                        ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
+                            applicationContext
+                        )
+
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\n$resultVpnAp"
+                    }
                 }
             }
 
