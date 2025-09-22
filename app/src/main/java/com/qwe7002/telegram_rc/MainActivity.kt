@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package com.qwe7002.telegram_rc
 
 import android.Manifest
@@ -24,6 +22,9 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabColorSchemeParams
@@ -66,28 +67,83 @@ class MainActivity : AppCompatActivity() {
     private lateinit var preferences: MMKV
     private lateinit var proxyMMKV: MMKV
     private lateinit var writeSettingsButton: Button
+    private lateinit var scannerLauncher: ActivityResultLauncher<Intent>
+    
+    // View components
+    private lateinit var botTokenEditView: EditText
+    private lateinit var chatIdEditView: EditText
+    private lateinit var trustedPhoneNumberEditView: EditText
+    private lateinit var messageThreadIdEditView: EditText
+    private lateinit var messageThreadIdView: TextInputLayout
+    private lateinit var chatCommandSwitch: SwitchMaterial
+    private lateinit var fallbackSmsSwitch: SwitchMaterial
+    private lateinit var batteryMonitoringSwitch: SwitchMaterial
+    private lateinit var dohSwitch: SwitchMaterial
+    private lateinit var chargerStatusSwitch: SwitchMaterial
+    private lateinit var verificationCodeSwitch: SwitchMaterial
+    private lateinit var displayDualSimDisplayNameSwitch: SwitchMaterial
+    private lateinit var saveButton: Button
+    private lateinit var getIdButton: Button
 
     @SuppressLint("BatteryLife", "QueryPermissionsNeeded")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        
+        // 初始化ActivityResultLauncher
+        scannerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if (result.resultCode == Const.RESULT_CONFIG_JSON) {
+                val data = result.data
+                val configJson = data?.getStringExtra("config_json")
+                if (configJson != null) {
+                    val gson = Gson()
+                    val scannerJson = gson.fromJson(configJson, ScannerJson::class.java)
+                    botTokenEditView.setText(scannerJson.botToken)
+                    chatIdEditView.setText(scannerJson.chatId)
+                    batteryMonitoringSwitch.isChecked = scannerJson.batteryMonitoringSwitch
+                    verificationCodeSwitch.isChecked = scannerJson.verificationCode
 
-        val botTokenEditView = findViewById<EditText>(R.id.bot_token_editview)
-        val chatIdEditView = findViewById<EditText>(R.id.chat_id_editview)
-        val trustedPhoneNumberEditView = findViewById<EditText>(R.id.trusted_phone_number_editview)
-        val messageThreadIdEditView = findViewById<EditText>(R.id.message_thread_id_editview)
-        val messageThreadIdView = findViewById<TextInputLayout>(R.id.message_thread_id_view)
-        val chatCommandSwitch = findViewById<SwitchMaterial>(R.id.chat_command_switch)
-        val fallbackSmsSwitch = findViewById<SwitchMaterial>(R.id.fallback_sms_switch)
-        val batteryMonitoringSwitch = findViewById<SwitchMaterial>(R.id.battery_monitoring_switch)
-        val dohSwitch = findViewById<SwitchMaterial>(R.id.doh_switch)
-        val chargerStatusSwitch = findViewById<SwitchMaterial>(R.id.charger_status_switch)
-        val verificationCodeSwitch = findViewById<SwitchMaterial>(R.id.verification_code_switch)
-        val displayDualSimDisplayNameSwitch =
-            findViewById<SwitchMaterial>(R.id.display_dual_sim_switch)
-        val saveButton = findViewById<Button>(R.id.save_button)
-        val getIdButton = findViewById<Button>(R.id.get_id_button)
+                    if (scannerJson.chargerStatus) {
+                        chargerStatusSwitch.isChecked = true
+                        chargerStatusSwitch.visibility = View.VISIBLE
+                    } else {
+                        chargerStatusSwitch.isChecked = false
+                        chargerStatusSwitch.visibility = View.GONE
+                    }
+
+                    chatCommandSwitch.isChecked = scannerJson.chatCommand
+                    setPrivacyModeCheckbox(scannerJson.chatId, messageThreadIdView)
+
+                    trustedPhoneNumberEditView.setText(scannerJson.trustedPhoneNumber)
+                    fallbackSmsSwitch.isChecked = scannerJson.fallbackSms
+                    if (scannerJson.trustedPhoneNumber.isNotEmpty()) {
+                        fallbackSmsSwitch.visibility = View.VISIBLE
+                    } else {
+                        fallbackSmsSwitch.visibility = View.GONE
+                        fallbackSmsSwitch.isChecked = false
+                    }
+                    messageThreadIdEditView.setText(scannerJson.topicID)
+                }
+            }
+        }
+        
+        // 初始化视图组件
+        botTokenEditView = findViewById(R.id.bot_token_editview)
+        chatIdEditView = findViewById(R.id.chat_id_editview)
+        trustedPhoneNumberEditView = findViewById(R.id.trusted_phone_number_editview)
+        messageThreadIdEditView = findViewById(R.id.message_thread_id_editview)
+        messageThreadIdView = findViewById(R.id.message_thread_id_view)
+        chatCommandSwitch = findViewById(R.id.chat_command_switch)
+        fallbackSmsSwitch = findViewById(R.id.fallback_sms_switch)
+        batteryMonitoringSwitch = findViewById(R.id.battery_monitoring_switch)
+        dohSwitch = findViewById(R.id.doh_switch)
+        chargerStatusSwitch = findViewById(R.id.charger_status_switch)
+        verificationCodeSwitch = findViewById(R.id.verification_code_switch)
+        displayDualSimDisplayNameSwitch = findViewById(R.id.display_dual_sim_switch)
+        saveButton = findViewById(R.id.save_button)
+        getIdButton = findViewById(R.id.get_id_button)
         writeSettingsButton = findViewById(R.id.write_settings_button)
+        
         //load config
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
@@ -195,7 +251,12 @@ class MainActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             val tm = checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
-            if (tm.phoneCount <= 1) {
+            val phoneCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                tm.activeModemCount
+            } else {
+                tm.phoneCount
+            }
+            if (phoneCount <= 1) {
                 displayDualSimDisplayNameSwitch.visibility = View.GONE
             }
         }
@@ -376,8 +437,7 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.NEARBY_WIFI_DEVICES,
-                    Manifest.permission.POST_NOTIFICATIONS,
-                    Manifest.permission.NEARBY_WIFI_DEVICES
+                    Manifest.permission.POST_NOTIFICATIONS
                 )
             } else {
                 arrayOf(
@@ -594,7 +654,7 @@ class MainActivity : AppCompatActivity() {
                     return
                 }
                 val intent = Intent(applicationContext, ScannerActivity::class.java)
-                startActivityForResult(intent, 1)
+                scannerLauncher.launch(intent)
             }
 
             1 -> {
@@ -603,7 +663,13 @@ class MainActivity : AppCompatActivity() {
                 if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                     val telephonyManager =
                         checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
-                    if (telephonyManager.phoneCount <= 1 || getActiveCard(
+                    val phoneCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        telephonyManager.activeModemCount
+                    } else {
+                        @Suppress("DEPRECATION")
+                        telephonyManager.phoneCount
+                    }
+                    if (phoneCount <= 1 || getActiveCard(
                             applicationContext
                         ) < 2
                     ) {
