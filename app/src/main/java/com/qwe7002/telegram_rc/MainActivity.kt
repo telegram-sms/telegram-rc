@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.qwe7002.telegram_rc
 
 import android.Manifest
@@ -254,6 +256,7 @@ class MainActivity : AppCompatActivity() {
             val phoneCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 tm.activeModemCount
             } else {
+                @Suppress("DEPRECATION")
                 tm.phoneCount
             }
             if (phoneCount <= 1) {
