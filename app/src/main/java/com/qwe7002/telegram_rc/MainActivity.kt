@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var proxyMMKV: MMKV
     private lateinit var writeSettingsButton: Button
     private lateinit var scannerLauncher: ActivityResultLauncher<Intent>
-    
+
     // View components
     private lateinit var botTokenEditView: EditText
     private lateinit var chatIdEditView: EditText
@@ -91,44 +91,45 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
+
         // 初始化ActivityResultLauncher
-        scannerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode == Const.RESULT_CONFIG_JSON) {
-                val data = result.data
-                val configJson = data?.getStringExtra("config_json")
-                if (configJson != null) {
-                    val gson = Gson()
-                    val scannerJson = gson.fromJson(configJson, ScannerJson::class.java)
-                    botTokenEditView.setText(scannerJson.botToken)
-                    chatIdEditView.setText(scannerJson.chatId)
-                    batteryMonitoringSwitch.isChecked = scannerJson.batteryMonitoringSwitch
-                    verificationCodeSwitch.isChecked = scannerJson.verificationCode
+        scannerLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+                if (result.resultCode == Const.RESULT_CONFIG_JSON) {
+                    val data = result.data
+                    val configJson = data?.getStringExtra("config_json")
+                    if (configJson != null) {
+                        val gson = Gson()
+                        val scannerJson = gson.fromJson(configJson, ScannerJson::class.java)
+                        botTokenEditView.setText(scannerJson.botToken)
+                        chatIdEditView.setText(scannerJson.chatId)
+                        batteryMonitoringSwitch.isChecked = scannerJson.batteryMonitoringSwitch
+                        verificationCodeSwitch.isChecked = scannerJson.verificationCode
 
-                    if (scannerJson.chargerStatus) {
-                        chargerStatusSwitch.isChecked = true
-                        chargerStatusSwitch.visibility = View.VISIBLE
-                    } else {
-                        chargerStatusSwitch.isChecked = false
-                        chargerStatusSwitch.visibility = View.GONE
+                        if (scannerJson.chargerStatus) {
+                            chargerStatusSwitch.isChecked = true
+                            chargerStatusSwitch.visibility = View.VISIBLE
+                        } else {
+                            chargerStatusSwitch.isChecked = false
+                            chargerStatusSwitch.visibility = View.GONE
+                        }
+
+                        chatCommandSwitch.isChecked = scannerJson.chatCommand
+                        setPrivacyModeCheckbox(scannerJson.chatId, messageThreadIdView)
+
+                        trustedPhoneNumberEditView.setText(scannerJson.trustedPhoneNumber)
+                        fallbackSmsSwitch.isChecked = scannerJson.fallbackSms
+                        if (scannerJson.trustedPhoneNumber.isNotEmpty()) {
+                            fallbackSmsSwitch.visibility = View.VISIBLE
+                        } else {
+                            fallbackSmsSwitch.visibility = View.GONE
+                            fallbackSmsSwitch.isChecked = false
+                        }
+                        messageThreadIdEditView.setText(scannerJson.topicID)
                     }
-
-                    chatCommandSwitch.isChecked = scannerJson.chatCommand
-                    setPrivacyModeCheckbox(scannerJson.chatId, messageThreadIdView)
-
-                    trustedPhoneNumberEditView.setText(scannerJson.trustedPhoneNumber)
-                    fallbackSmsSwitch.isChecked = scannerJson.fallbackSms
-                    if (scannerJson.trustedPhoneNumber.isNotEmpty()) {
-                        fallbackSmsSwitch.visibility = View.VISIBLE
-                    } else {
-                        fallbackSmsSwitch.visibility = View.GONE
-                        fallbackSmsSwitch.isChecked = false
-                    }
-                    messageThreadIdEditView.setText(scannerJson.topicID)
                 }
             }
-        }
-        
+
         // 初始化视图组件
         botTokenEditView = findViewById(R.id.bot_token_editview)
         chatIdEditView = findViewById(R.id.chat_id_editview)
@@ -145,7 +146,7 @@ class MainActivity : AppCompatActivity() {
         saveButton = findViewById(R.id.save_button)
         getIdButton = findViewById(R.id.get_id_button)
         writeSettingsButton = findViewById(R.id.write_settings_button)
-        
+
         //load config
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
@@ -192,6 +193,7 @@ class MainActivity : AppCompatActivity() {
 
         botTokenEditView.setText(botTokenSave)
         chatIdEditView.setText(chatIdSave)
+        setPrivacyModeCheckbox(chatIdSave.toString(), messageThreadIdView)
         messageThreadIdEditView.setText(messageThreadIdSave)
         trustedPhoneNumberEditView.setText(preferences.getString("trusted_phone_number", ""))
 

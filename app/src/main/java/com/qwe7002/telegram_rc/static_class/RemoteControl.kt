@@ -28,7 +28,7 @@ object RemoteControl {
     @JvmStatic
     fun isHotspotActive(context: Context): Boolean {
         val manager = TetherManager(context)
-        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", manager.isTetherActive)
-        return manager.isTetherActive
+        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", manager.isTetherActive())
+        return manager.isTetherActive()
     }
 }

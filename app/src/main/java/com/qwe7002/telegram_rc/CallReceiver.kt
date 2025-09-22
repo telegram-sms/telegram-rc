@@ -32,8 +32,9 @@ class CallReceiver : BroadcastReceiver() {
         stateMMKV = MMKV.mmkvWithID(Const.STATUS_MMKV_ID)
         when (Objects.requireNonNull(intent.action)) {
             "android.intent.action.PHONE_STATE" -> {
-                if (intent.getStringExtra("incoming_number") != null) {
-                    stateMMKV.putString("incoming_number", intent.getStringExtra("incoming_number"))
+                val incomingNumber = intent.getStringExtra("incoming_number")
+                if (incomingNumber != null) {
+                    stateMMKV.putString("incoming_number", incomingNumber)
                 }
                 val telephony = context
                     .getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -54,48 +55,51 @@ class CallReceiver : BroadcastReceiver() {
 
         @Deprecated("Deprecated in Java")
         override fun onCallStateChanged(nowState: Int, nowIncomingNumber: String) {
-            if (stateMMKV.getInt("incoming_last_status",TelephonyManager.CALL_STATE_IDLE) == TelephonyManager.CALL_STATE_RINGING
+            if (stateMMKV.getInt("incoming_last_status", TelephonyManager.CALL_STATE_IDLE) == TelephonyManager.CALL_STATE_RINGING
                 && nowState == TelephonyManager.CALL_STATE_IDLE
             ) {
-                val incomingNumber = stateMMKV.getString("incoming_number", "").toString()
-                val preferences =MMKV.defaultMMKV()
+                val incomingNumber = stateMMKV.getString("incoming_number", "")
+                // 检查电话号码是否为空
+                if (incomingNumber.isNullOrEmpty()) {
+                    Log.i("call_status_listener", "Incoming number is empty")
+                    return
+                }
+                
+                val preferences = MMKV.defaultMMKV()
                 if (!preferences.contains("initialized")) {
                     Log.i("call_status_listener", "Uninitialized, Phone receiver is deactivated.")
                     return
                 }
-                val botToken = preferences.getString("bot_token", "").toString()
-                val chatId = preferences.getString("chat_id", "").toString()
+                val botToken = preferences.getString("bot_token", "") ?: ""
+                val chatId = preferences.getString("chat_id", "") ?: ""
                 val requestUri = Network.getUrl(botToken, "sendMessage")
-                val requestBody =
-                    RequestMessage()
+                val requestBody = RequestMessage()
                 requestBody.chatId = chatId
-                requestBody.messageThreadId =
-                    preferences.getString("message_thread_id", "")
+                requestBody.messageThreadId = preferences.getString("message_thread_id", "") ?: ""
                 val dualSim = Other.getDualSimCardDisplay(
                     context,
                     stateMMKV.getInt("incoming_slot", -1),
                     preferences.getBoolean("display_dual_sim_display_name", false)
                 )
-                requestBody.text = "[" + dualSim + context.getString(R.string.missed_call_head) + "]" + "\n" + context.getString(R.string.Incoming_number) + incomingNumber
+                requestBody.text = "[$dualSim${context.getString(R.string.missed_call_head)}]\n${context.getString(R.string.Incoming_number)}$incomingNumber"
                 CcSendJob.startJob(context, context.getString(R.string.missed_call_head), requestBody.text)
-                val requestBodyRaw = Gson().toJson(requestBody)
+                val gson = Gson()
+                val requestBodyRaw = gson.toJson(requestBody)
                 val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
-                val okhttpClient =
-                    Network.getOkhttpObj()
-                val request: Request =
-                    Request.Builder().url(requestUri).method("POST", body).build()
+                val okhttpClient = Network.getOkhttpObj()
+                val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClient.newCall(request)
                 val errorHead = "Send missed call error:"
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         e.printStackTrace()
-                        LogManage.writeLog(context, errorHead + e.message)
+                        LogManage.writeLog(context, "$errorHead${e.message}")
                         SMS.sendFallbackSMS(
                             context,
                             requestBody.text,
                             Other.getSubId(context, stateMMKV.getInt("incoming_slot", -1))
                         )
-                        Resend.addResendLoop(context,requestBody.text)
+                        Resend.addResendLoop(context, requestBody.text)
                     }
 
                     @Throws(IOException::class)
@@ -103,10 +107,9 @@ class CallReceiver : BroadcastReceiver() {
                         if (response.code != 200) {
                             LogManage.writeLog(
                                 context,
-                                errorHead + response.code + " " + Objects.requireNonNull(response.body)
-                                    .string()
+                                "$errorHead${response.code} ${Objects.requireNonNull(response.body).string()}"
                             )
-                            Resend.addResendLoop(context,requestBody.text)
+                            Resend.addResendLoop(context, requestBody.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!Other.isPhoneNumber(incomingNumber)) {
