@@ -315,7 +315,7 @@ object Network {
             }
             hasNr && nrAdvanced -> {
                 // 5G networks with advanced capabilities
-                "NR SA (5GA)"
+                "NR Advanced"
             }
             hasNr -> {
                 // Standard 5G networks
