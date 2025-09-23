@@ -54,6 +54,7 @@ import com.qwe7002.telegram_rc.static_class.Other.getSendPhoneNumber
 import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Other.isPhoneNumber
+import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isHotspotActive
@@ -348,25 +349,77 @@ class ChatService : Service() {
 
             "/ping", "/getinfo" -> {
                 var cardInfo = ""
-                applicationContext
-                    .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+                val telephonyManager =
+                    applicationContext.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
                 if (ActivityCompat.checkSelfPermission(
                         applicationContext,
                         Manifest.permission.READ_PHONE_STATE
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
                     cardInfo = if (getActiveCard(applicationContext) == 2) {
+                        val subId1 = getSubId(applicationContext, 0)
+                        val subId2 = getSubId(applicationContext, 1)
+                        val tm1 = telephonyManager.createForSubscriptionId(subId1)
+                        val tm2 = telephonyManager.createForSubscriptionId(subId2)
+                        
+                        var sim1Info = getSimDisplayName(applicationContext, 0)
+                        var sim2Info = getSimDisplayName(applicationContext, 1)
+                        
+                        // 获取SIM1信号信息
+                        if (ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val cellInfoList1 = tm1.allCellInfo
+                            if (cellInfoList1.isNotEmpty()) {
+                                val registeredCell1 = cellInfoList1.find { it.isRegistered }
+                                if (registeredCell1 != null) {
+                                    val cellDetails = ArfcnConverter.getCellInfoDetails(registeredCell1)
+                                    sim1Info += " $cellDetails"
+                                }
+                            }
+                        }
+                        
+                        // 获取SIM2信号信息
+                        if (ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val cellInfoList2 = tm2.allCellInfo
+                            if (cellInfoList2.isNotEmpty()) {
+                                val registeredCell2 = cellInfoList2.find { it.isRegistered }
+                                if (registeredCell2 != null) {
+                                    val cellDetails = ArfcnConverter.getCellInfoDetails(registeredCell2)
+                                    sim2Info += " $cellDetails"
+                                }
+                            }
+                        }
+                        
                         "\n${getString(R.string.current_data_card)}: SIM" + getDataSimId(
                             applicationContext
-                        ) + "\nSIM1: " + getSimDisplayName(
-                            applicationContext, 0
-                        ) + "\nSIM2: " + getSimDisplayName(
-                            applicationContext, 1
-                        )
+                        ) + "\nSIM1: " + sim1Info + "\nSIM2: " + sim2Info
                     } else {
-                        "\nSIM: " + getSimDisplayName(
-                            applicationContext, 0
-                        )
+                        var simInfo = getSimDisplayName(applicationContext, 0)
+                        
+                        // 获取单卡信号信息
+                        if (ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val cellInfoList = telephonyManager.allCellInfo
+                            if (cellInfoList.isNotEmpty()) {
+                                val registeredCell = cellInfoList.find { it.isRegistered }
+                                if (registeredCell != null) {
+                                    val cellDetails = ArfcnConverter.getCellInfoDetails(registeredCell)
+                                    simInfo += " $cellDetails"
+                                }
+                            }
+                        }
+                        
+                        "\nSIM: " + simInfo
                     }
                 }
                 val spamList =
