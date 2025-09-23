@@ -821,10 +821,6 @@ class ChatService : Service() {
                 // 安全地获取响应体内容
                 val responseString = try {
                     val body = response.body
-                    if (body == null) {
-                        writeLog(applicationContext, "Response body is null")
-                        return
-                    }
                     body.string()
                 } catch (e: IOException) {
                     writeLog(applicationContext, "Failed to read response body: ${e.message}")
