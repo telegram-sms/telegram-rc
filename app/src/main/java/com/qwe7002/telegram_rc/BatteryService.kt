@@ -58,7 +58,6 @@ class BatteryService : Service() {
             filter.addAction(Intent.ACTION_POWER_CONNECTED)
             filter.addAction(Intent.ACTION_POWER_DISCONNECTED)
         }
-        filter.addAction(Const.BROADCAST_STOP_SERVICE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(batteryReceiver, filter, RECEIVER_EXPORTED)
         } else {
@@ -80,11 +79,6 @@ class BatteryService : Service() {
         override fun onReceive(context: Context, intent: Intent) {
             val TAG = "battery_receiver"
             Log.d(TAG, "Receive action: " + intent.action)
-            if (intent.action == Const.BROADCAST_STOP_SERVICE) {
-                Log.i(TAG, "Received stop signal, quitting now...")
-                stopSelf()
-                return
-            }
             val builder = StringBuilder(context.getString(R.string.system_message_head) + "\n")
             val action = intent.action
             val batteryManager = context.getSystemService(BATTERY_SERVICE) as BatteryManager
