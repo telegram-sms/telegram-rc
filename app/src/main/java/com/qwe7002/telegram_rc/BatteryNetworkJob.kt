@@ -28,20 +28,32 @@ class BatteryNetworkJob : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("BatteryNetworkJob", "onStartJob: ")
-        MMKV.initialize(applicationContext)
-        val message: String = params?.extras?.getString("message", "") ?: ""
-        val action: String? = params?.extras?.getString("action", null)
+        
+        if (params == null) {
+            Log.e("BatteryNetworkJob", "onStartJob: params is null")
+            return false
+        }
+        
+        val extras = params.extras
+        val message: String = extras.getString("message", "") ?: ""
+        val action: String? = extras.getString("action", null)
         val TAG = "network_handle"
+        
+        MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()
-        val chatId = preferences.getString("chat_id", "")!!
-        val botToken = preferences.getString("bot_token", "")!!
-        val messageThreadId = preferences.getString("message_thread_id", "")!!
-        val requestBody = RequestMessage()
-        requestBody.chatId = chatId
-        requestBody.text = message
-        requestBody.messageThreadId = messageThreadId
-        var requestUri = Network.getUrl(botToken, "sendMessage")
+        val chatId = preferences.getString("chat_id", "") ?: ""
+        val botToken = preferences.getString("bot_token", "") ?: ""
+        val messageThreadId = preferences.getString("message_thread_id", "") ?: ""
+        
+        val requestBody = RequestMessage().apply {
+            this.chatId = chatId
+            this.text = message
+            this.messageThreadId = messageThreadId
+        }
+        
         val chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
+        var requestUri = Network.getUrl(botToken, "sendMessage")
+        
         if ((System.currentTimeMillis() - chatInfoMMKV.getLong(
                 "batteryLastReceiveTime",
                 0L
@@ -54,31 +66,15 @@ class BatteryNetworkJob : JobService() {
             requestBody.messageId = chatInfoMMKV.getLong("batteryLastReceiveMessageId", 0L)
             Log.d(TAG, "onReceive: edit_mode")
         }
-        chatInfoMMKV.getLong("batteryLastReceiveTime", System.currentTimeMillis())
+        
+        chatInfoMMKV.putLong("batteryLastReceiveTime", System.currentTimeMillis())
         val okhttpClient = Network.getOkhttpObj()
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send battery info failed:"
-        /*try {
-            val response = call.execute()
-            if (response.code == 200) {
-                chatInfoMMKV.putLong(
-                    "batteryLastReceiveMessageId",
-                    Other.getMessageId(Objects.requireNonNull(response.body).string())
-                )
-            } else {
-                chatInfoMMKV.remove("batteryLastReceiveMessageId")
-                if (action == Intent.ACTION_BATTERY_LOW) {
-                    SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
-                }
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            LogManage.writeLog(applicationContext, errorHead + e.message)
-
-        }*/
+        
         call.enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 e.printStackTrace()
@@ -86,12 +82,14 @@ class BatteryNetworkJob : JobService() {
                 if (action == Intent.ACTION_BATTERY_LOW) {
                     SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                 }
-                jobFinished(params,false)
+                jobFinished(params, false)
             }
 
             @Throws(IOException::class)
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                val result = Objects.requireNonNull(response.body).string()
+                val responseBody = response.body
+
+                val result = responseBody.string()
                 if (response.code != 200) {
                     LogManage.writeLog(applicationContext, errorHead + response.code + " " + result)
                     if (action == Intent.ACTION_BATTERY_LOW) {
@@ -103,7 +101,7 @@ class BatteryNetworkJob : JobService() {
                         Other.getMessageId(result)
                     )
                 }
-                jobFinished(params,false)
+                jobFinished(params, false)
             }
         })
         return true
