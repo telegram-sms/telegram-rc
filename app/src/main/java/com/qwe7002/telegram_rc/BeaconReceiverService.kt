@@ -358,6 +358,9 @@ class BeaconReceiverService : Service() {
                                         Log.e(TAG, "Error getting hotspot IP address: ${e.message}")
                                         // 继续重试
                                     }
+                                    if (i == maxRetries) {
+                                        Log.w(TAG, "Failed to get hotspot IP after $maxRetries attempts")
+                                    }
                                 }
 
                                 // 如果获取到新IP，编辑消息
