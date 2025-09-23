@@ -204,15 +204,11 @@ object Network {
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE])
     private fun check5GState(context: Context, telephonyManager: TelephonyManager): String {
-        val cellInfoList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // For Android Q+, we'll use a callback-based approach with requestCellInfoUpdate
+        val cellInfoList =
+        // For Android Q+, we'll use a callback-based approach with requestCellInfoUpdate
             // This will request updated cell info, but updates are rate-limited
             requestUpdatedCellInfo(context, telephonyManager)
-        } else {
-            // For older versions, use the direct method
-            telephonyManager.allCellInfo
-        }
-        
+
         if (cellInfoList.isEmpty()) {
             Log.d("check5GState", "No cell info available")
             return when (telephonyManager.dataNetworkType) {
@@ -250,22 +246,20 @@ object Network {
         val latch = CountDownLatch(1)
         
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                telephonyManager.requestCellInfoUpdate(context.mainExecutor, object : TelephonyManager.CellInfoCallback() {
-                    override fun onCellInfo(cells: List<CellInfo>) {
-                        result = cells
-                        latch.countDown()
-                    }
-                    
-                    override fun onError(errorCode: Int, detail: Throwable?) {
-                        Log.w("check5GState", "Failed to get updated cell info. Error code: $errorCode", detail)
-                        latch.countDown()
-                    }
-                })
-                
-                // Wait up to 2 seconds for the update
-                latch.await(2, TimeUnit.SECONDS)
-            }
+            telephonyManager.requestCellInfoUpdate(context.mainExecutor, object : TelephonyManager.CellInfoCallback() {
+                override fun onCellInfo(cells: List<CellInfo>) {
+                    result = cells
+                    latch.countDown()
+                }
+
+                override fun onError(errorCode: Int, detail: Throwable?) {
+                    Log.w("check5GState", "Failed to get updated cell info. Error code: $errorCode", detail)
+                    latch.countDown()
+                }
+            })
+
+            // Wait up to 2 seconds for the update
+            latch.await(2, TimeUnit.SECONDS)
         } catch (e: Exception) {
             Log.w("check5GState", "Exception while requesting cell info update", e)
         }
