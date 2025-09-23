@@ -15,19 +15,36 @@ import java.util.concurrent.TimeUnit
 class KeepAliveJob : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
-        MMKV.initialize(applicationContext)
-        val preferences = MMKV.defaultMMKV()
-        if (preferences.contains("initialized")) {
-            ServiceManage.startService(
-                applicationContext,
-                preferences.getBoolean("battery_monitoring_switch", false),
-                preferences.getBoolean("chat_command", false)
-            )
-            ServiceManage.startBeaconService(applicationContext)
+        try {
+            if (params == null) {
+                Log.e("KeepAliveJob", "onStartJob: params is null")
+                return false
+            }
+            
+            MMKV.initialize(applicationContext)
+            val preferences = MMKV.defaultMMKV()
+            if (preferences.contains("initialized")) {
+                ServiceManage.startService(
+                    applicationContext,
+                    preferences.getBoolean("battery_monitoring_switch", false),
+                    preferences.getBoolean("chat_command", false)
+                )
+                ServiceManage.startBeaconService(applicationContext)
+            }
+            Log.d("telegram-rc", "startJob: Try to pull up the service")
+            this.jobFinished(params, false)
+            startJob(applicationContext)
+        } catch (e: Exception) {
+            Log.e("KeepAliveJob", "Error in onStartJob", e)
+            if (params != null) {
+                try {
+                    this.jobFinished(params, false)
+                } catch (finishException: Exception) {
+                    Log.e("KeepAliveJob", "Error finishing job", finishException)
+                }
+            }
+            return false
         }
-        Log.d("telegram-rc", "startJob: Try to pull up the service")
-        this.jobFinished(params, false)
-        startJob(applicationContext)
         return true
     }
 

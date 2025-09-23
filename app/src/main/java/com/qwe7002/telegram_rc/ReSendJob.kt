@@ -6,6 +6,7 @@ import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.static_class.Const
@@ -25,28 +26,44 @@ class ReSendJob : JobService() {
     private lateinit var resendMMKV:MMKV
     private lateinit var preferences: MMKV
     override fun onStartJob(params: JobParameters?): Boolean {
-        MMKV.initialize(applicationContext)
-        preferences = MMKV.defaultMMKV()
-        resendMMKV = MMKV.mmkvWithID("resend_list", MMKV.MULTI_PROCESS_MODE)
+        if (params == null) {
+            Log.e("ReSendJob", "onStartJob: params is null")
+            return false
+        }
+        
+        try {
+            MMKV.initialize(applicationContext)
+            preferences = MMKV.defaultMMKV()
+            resendMMKV = MMKV.mmkvWithID("resend_list", MMKV.MULTI_PROCESS_MODE)
 
-        requestUri =
-            Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
-        Thread {
-            val sendList = resendMMKV.decodeStringSet(tableName, setOf())?.toList() ?: listOf()
-            val okhttpClient = Network.getOkhttpObj()
-            for (item in sendList) {
-                networkProgressHandle(
-                    item,
-                    preferences.getString("chat_id", "").toString(),
-                    okhttpClient,
-                    preferences.getString("message_thread_id", "").toString()
-                )
-            }
-            if (sendList.isNotEmpty()) {
-                LogManage.writeLog(applicationContext, "The resend failure message is complete.")
-            }
-            jobFinished(params, false)
-        }.start()
+            requestUri =
+                Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
+            
+            Thread {
+                try {
+                    val sendList = resendMMKV.decodeStringSet(tableName, setOf())?.toList() ?: listOf()
+                    val okhttpClient = Network.getOkhttpObj()
+                    for (item in sendList) {
+                        networkProgressHandle(
+                            item,
+                            preferences.getString("chat_id", "").toString(),
+                            okhttpClient,
+                            preferences.getString("message_thread_id", "").toString()
+                        )
+                    }
+                    if (sendList.isNotEmpty()) {
+                        LogManage.writeLog(applicationContext, "The resend failure message is complete.")
+                    }
+                } catch (e: Exception) {
+                    Log.e("ReSendJob", "Error in resend job", e)
+                } finally {
+                    jobFinished(params, false)
+                }
+            }.start()
+        } catch (e: Exception) {
+            Log.e("ReSendJob", "Failed to start resend job", e)
+            return false
+        }
         return true
     }
 
@@ -73,17 +90,25 @@ class ReSendJob : JobService() {
         val call = okhttpClient.newCall(requestObj)
         try {
             val response = call.execute()
-            if (response.code == 200) {
-               // val resendListLocal = Paper.book().read(tableName, ArrayList<String>())!!
-                val resendListLocal = resendMMKV.decodeStringSet(tableName, setOf())?.toMutableList() ?: mutableListOf()
-                resendListLocal.remove(message)
-                //Paper.book().write(tableName, resendListLocal)
-                resendMMKV.encode(tableName, resendListLocal.toSet())
+            try {
+                if (response.code == 200) {
+                    val resendListLocal = resendMMKV.decodeStringSet(tableName, setOf())?.toMutableList() ?: mutableListOf()
+                    resendListLocal.remove(message)
+                    resendMMKV.encode(tableName, resendListLocal.toSet())
+                }
+            } finally {
+                response.close()
             }
         } catch (e: IOException) {
             LogManage.writeLog(
                 applicationContext,
                 "An error occurred while resending: " + e.message
+            )
+            e.printStackTrace()
+        } catch (e: Exception) {
+            LogManage.writeLog(
+                applicationContext,
+                "An unexpected error occurred while resending: " + e.message
             )
             e.printStackTrace()
         }
