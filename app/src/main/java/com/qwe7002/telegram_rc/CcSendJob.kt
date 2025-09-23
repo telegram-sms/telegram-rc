@@ -25,79 +25,96 @@ import java.io.IOException
 class CcSendJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("CCSend", "startJob: Trying to send message.")
-        val message: String = params?.extras?.getString("message", "") ?: ""
-        var title: String = params?.extras?.getString("title", getString(R.string.app_name))
+        
+        if (params == null) {
+            Log.e("CCSend", "onStartJob: params is null")
+            return false
+        }
+        
+        val extras = params.extras
+
+        val message: String = extras.getString("message", "") ?: ""
+        var title: String = extras.getString("title", getString(R.string.app_name))
             ?: getString(R.string.app_name)
-        var verificationCode: String = params?.extras?.getString("verification_code", "") ?: ""
+        var verificationCode: String = extras.getString("verification_code", "") ?: ""
         if (verificationCode.isEmpty()) {
             verificationCode = message
         } else {
             title += getString(R.string.verification_code)
         }
         Thread {
-           val serviceListJson = MMKV.defaultMMKV().getString("CC_service_list", "[]")
-            val gson = Gson()
-            var type = object : TypeToken<ArrayList<CcSendService>>() {}.type
-            val sendList: ArrayList<CcSendService> = gson.fromJson(serviceListJson, type)
-            val okhttpClient =
-                Network.getOkhttpObj()
-            for (item in sendList) {
-                if(item.enabled.not()) continue
-                var header: Map<String, String> = mapOf()
-                if (item.header.isNotEmpty()) {
-                    type = object : TypeToken<Map<String, String>>() {}.type
-                    header = gson.fromJson(item.header, type)
-                }
-                when (item.method) {
-                    // 0: GET, 1: POST
-                    0 -> {
-                        networkProgressHandle(
-                            "GET",
-                            render(
-                                item.webhook,
-                                mapOf(
-                                    "Title" to Uri.encode(title),
-                                    "Message" to Uri.encode(message),
-                                    "Code" to Uri.encode(verificationCode)
-                                )
-                            ),
-                            null,
-                            header,
-                            okhttpClient
-                        )
+            try {
+                val serviceListJson = MMKV.defaultMMKV().getString("CC_service_list", "[]")
+                val gson = Gson()
+                var type = object : TypeToken<ArrayList<CcSendService>>() {}.type
+                val sendList: ArrayList<CcSendService> = gson.fromJson(serviceListJson, type)
+                val okhttpClient =
+                    Network.getOkhttpObj()
+                for (item in sendList) {
+                    if(item.enabled.not()) continue
+                    var header: Map<String, String> = mapOf()
+                    if (item.header.isNotEmpty()) {
+                        type = object : TypeToken<Map<String, String>>() {}.type
+                        header = gson.fromJson(item.header, type)
                     }
+                    when (item.method) {
+                        // 0: GET, 1: POST
+                        0 -> {
+                            networkProgressHandle(
+                                "GET",
+                                render(
+                                    item.webhook,
+                                    mapOf(
+                                        "Title" to Uri.encode(title),
+                                        "Message" to Uri.encode(message),
+                                        "Code" to Uri.encode(verificationCode)
+                                    )
+                                ),
+                                null,
+                                header,
+                                okhttpClient
+                            )
+                        }
 
-                    1 -> {
-                        networkProgressHandle(
-                            "POST",
-                            render(
-                                item.webhook,
-                                mapOf(
-                                    "Title" to Uri.encode(title),
-                                    "Message" to Uri.encode(message),
-                                    "Code" to Uri.encode(verificationCode)
-                                )
-                            ),
-                            render(
-                                item.body,
-                                mapOf(
-                                    "Title" to title,
-                                    "Message" to message,
-                                    "Code" to verificationCode
-                                )
-                            ).toRequestBody(
-                                Const.JSON
-                            ),
-                            header,
-                            okhttpClient
-                        )
+                        1 -> {
+                            networkProgressHandle(
+                                "POST",
+                                render(
+                                    item.webhook,
+                                    mapOf(
+                                        "Title" to Uri.encode(title),
+                                        "Message" to Uri.encode(message),
+                                        "Code" to Uri.encode(verificationCode)
+                                    )
+                                ),
+                                render(
+                                    item.body,
+                                    mapOf(
+                                        "Title" to title,
+                                        "Message" to message,
+                                        "Code" to verificationCode
+                                    )
+                                ).toRequestBody(
+                                    Const.JSON
+                                ),
+                                header,
+                                okhttpClient
+                            )
+                        }
                     }
                 }
+                if (sendList.isNotEmpty()) {
+                    LogManage.writeLog(applicationContext, "The resend failure message is complete.")
+                }
+            } catch (e: Exception) {
+                Log.e("CCSend", "Error in CcSend job", e)
+            } finally {
+                try {
+                    jobFinished(params, false)
+                } catch (e: Exception) {
+                    Log.e("CCSend", "Error finishing job", e)
+                }
             }
-            if (sendList.isNotEmpty()) {
-                LogManage.writeLog(applicationContext, "The resend failure message is complete.")
-            }
-            jobFinished(params, false)
         }.start()
 
         return true
