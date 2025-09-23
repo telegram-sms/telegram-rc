@@ -418,8 +418,8 @@ class ChatService : Service() {
                                 }
                             }
                         }
-                        
-                        "\nSIM: " + simInfo
+
+                        "\nSIM: $simInfo"
                     }
                 }
                 val spamList =
