@@ -18,22 +18,22 @@ import com.tencent.mmkv.MMKV
 import java.util.Locale
 
 object Other {
-private val NINE_KEY_MAP = mapOf(
-    'A' to '2', 'B' to '2', 'C' to '2',
-    'D' to '3', 'E' to '3', 'F' to '3',
-    'G' to '4', 'H' to '4', 'I' to '4',
-    'J' to '5', 'K' to '5', 'L' to '5',
-    'M' to '6', 'N' to '6', 'O' to '6',
-    'P' to '7', 'Q' to '7', 'R' to '7', 'S' to '7',
-    'T' to '8', 'U' to '8', 'V' to '8',
-    'W' to '9', 'X' to '9', 'Y' to '9', 'Z' to '9'
-)
+    private val NINE_KEY_MAP = mapOf(
+        'A' to '2', 'B' to '2', 'C' to '2',
+        'D' to '3', 'E' to '3', 'F' to '3',
+        'G' to '4', 'H' to '4', 'I' to '4',
+        'J' to '5', 'K' to '5', 'L' to '5',
+        'M' to '6', 'N' to '6', 'O' to '6',
+        'P' to '7', 'Q' to '7', 'R' to '7', 'S' to '7',
+        'T' to '8', 'U' to '8', 'V' to '8',
+        'W' to '9', 'X' to '9', 'Y' to '9', 'Z' to '9'
+    )
 
-fun getNineKeyMapConvert(input: String): String {
-    return input.uppercase(Locale.ROOT).map { c ->
-        NINE_KEY_MAP[c] ?: c
-    }.joinToString("")
-}
+    fun getNineKeyMapConvert(input: String): String {
+        return input.uppercase(Locale.ROOT).map { c ->
+            NINE_KEY_MAP[c] ?: c
+        }.joinToString("")
+    }
 
     @JvmStatic
     fun parseStringToLong(intStr: String): Long {
@@ -202,7 +202,7 @@ fun getNineKeyMapConvert(input: String): String {
                 return result
             }
         }
-        
+
         val displayName = info.displayName?.toString() ?: ""
         result = if (displayName.contains("CARD") || displayName.contains("SUB")) {
             info.carrierName?.toString() ?: displayName
@@ -217,7 +217,8 @@ fun getNineKeyMapConvert(input: String): String {
         val item = SMSRequestInfo()
         item.phone = phone
         item.card = slot
-        MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID).putString(messageId.toString(), Gson().toJson(item))
+        MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
+            .putString(messageId.toString(), Gson().toJson(item))
         Log.d("add_message_list", "add_message_list: $messageId")
     }
 }

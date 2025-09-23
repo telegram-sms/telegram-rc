@@ -55,6 +55,8 @@ import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Other.isPhoneNumber
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
+import com.qwe7002.telegram_rc.static_class.Other
+import com.qwe7002.telegram_rc.static_class.Phone
 import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isHotspotActive
@@ -675,6 +677,35 @@ class ChatService : Service() {
                 beacon.putBoolean("beacon_enable", !state)
                 requestBody.text =
                     "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
+            }
+
+            "/phonenumber" -> {
+                var phoneResult = ""
+                if (ActivityCompat.checkSelfPermission(
+                        applicationContext,
+                        Manifest.permission.READ_PHONE_STATE
+                    ) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(
+                        applicationContext,
+                        Manifest.permission.READ_PHONE_NUMBERS
+                    ) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(
+                        applicationContext,
+                        Manifest.permission.READ_SMS
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
+                    phoneResult += "SIM 1: $phone1Number"
+
+                    if (getActiveCard(applicationContext) > 1) {
+                        val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
+                        phoneResult += "\nSIM 2: $phone2Number"
+                    }
+                } else {
+                    phoneResult = getString(R.string.no_permission)
+                }
+
+                requestBody.text = "${getString(R.string.system_message_head)}\n$phoneResult"
             }
 
             "/setdummy" -> {
