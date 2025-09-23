@@ -152,30 +152,46 @@ class CcSendJob : JobService() {
 
     companion object {
         fun startJob(context: Context, title: String, message: String, verificationCode: String) {
-            val jobScheduler =
-                context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
-            JOBID_counter += 1
-            val jobInfoBuilder = JobInfo.Builder(
-                JOBID_counter,
-                ComponentName(context.packageName, CcSendJob::class.java.getName())
-            )
-                .setPersisted(true)
-            val extras = PersistableBundle()
-            extras.putString("title", title)
-            extras.putString("message", message)
-            extras.putString("verification_code", verificationCode)
-            jobInfoBuilder.setExtras(extras)
-            jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            jobScheduler.schedule(jobInfoBuilder.build())
-
+            try {
+                val jobScheduler =
+                    context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+                synchronized(jobIdLock) {
+                    JOBID_counter += 1
+                }
+                val jobId = synchronized(jobIdLock) {
+                    JOBID_counter
+                }
+                val jobInfoBuilder = JobInfo.Builder(
+                    jobId,
+                    ComponentName(context.packageName, CcSendJob::class.java.getName())
+                )
+                    .setPersisted(true)
+                val extras = PersistableBundle()
+                extras.putString("title", title)
+                extras.putString("message", message)
+                extras.putString("verification_code", verificationCode)
+                jobInfoBuilder.setExtras(extras)
+                jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                val result = jobScheduler.schedule(jobInfoBuilder.build())
+                if (result <= 0) {
+                    Log.e("CCSend", "Failed to schedule job, result code: $result")
+                }
+            } catch (e: Exception) {
+                Log.e("CCSend", "Failed to start job", e)
+            }
         }
 
         fun startJob(context: Context, title: String, message: String) {
             val jobScheduler =
                 context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
-            JOBID_counter += 1
+            synchronized(jobIdLock) {
+                JOBID_counter += 1
+            }
+            val jobId = synchronized(jobIdLock) {
+                JOBID_counter
+            }
             val jobInfoBuilder = JobInfo.Builder(
-                JOBID_counter,
+                jobId,
                 ComponentName(context.packageName, CcSendJob::class.java.getName())
             )
                 .setPersisted(true)
@@ -200,5 +216,6 @@ class CcSendJob : JobService() {
         )
 
         var JOBID_counter: Int = 100
+        private val jobIdLock = Any()
     }
 }
