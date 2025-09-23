@@ -458,31 +458,39 @@ class BeaconReceiverService : Service() {
 
         private fun determineSwitchStatus(foundBeacon: Boolean, wifiEnabled: Boolean): Int {
             val opposite = config.getBoolean("opposite", false)
-            val enableCount = config.getInt("enableCount", 10)
-            val disableCount = config.getInt("disableCount", 10)
+            // 确保配置值至少为1，避免无效的计数阈值
+            val enableCount = maxOf(1, config.getInt("enableCount", 10))
+            val disableCount = maxOf(1, config.getInt("disableCount", 10))
 
-            if (wifiEnabled && foundBeacon) {
-                if (!opposite && config.getInt("detectCount", 0) >= disableCount) {
+            return if (wifiEnabled && foundBeacon) {
+                val detectCount = config.getInt("detectCount", 0)
+                if (!opposite && detectCount >= disableCount) {
                     resetCounters()
                     toggleWifiHotspot(false)
-                    return DISABLE_AP
-                } else if (opposite && config.getInt("detectCount", 0) >= enableCount) {
+                    DISABLE_AP
+                } else if (opposite && detectCount >= enableCount) {
                     resetCounters()
                     toggleWifiHotspot(true)
-                    return ENABLE_AP
+                    ENABLE_AP
+                } else {
+                    STANDBY
                 }
             } else if (!wifiEnabled && !foundBeacon) {
-                if (!opposite && config.getInt("notFoundCount", 0) >= enableCount) {
+                val notFoundCount = config.getInt("notFoundCount", 0)
+                if (!opposite && notFoundCount >= enableCount) {
                     resetCounters()
                     toggleWifiHotspot(true)
-                    return ENABLE_AP
-                } else if (opposite && config.getInt("notFoundCount", 0) >= disableCount) {
+                    ENABLE_AP
+                } else if (opposite && notFoundCount >= disableCount) {
                     resetCounters()
                     toggleWifiHotspot(false)
-                    return DISABLE_AP
+                    DISABLE_AP
+                } else {
+                    STANDBY
                 }
+            } else {
+                STANDBY
             }
-            return STANDBY
         }
 
         private fun toggleWifiHotspot(enable: Boolean) {
