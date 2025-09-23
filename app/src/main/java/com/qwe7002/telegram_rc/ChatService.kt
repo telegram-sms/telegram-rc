@@ -349,6 +349,9 @@ class ChatService : Service() {
 
             "/ping", "/getinfo" -> {
                 var cardInfo = ""
+                val networkType = Network.getNetworkType(
+                    applicationContext
+                )
                 val telephonyManager =
                     applicationContext.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
                 if (ActivityCompat.checkSelfPermission(
@@ -361,10 +364,10 @@ class ChatService : Service() {
                         val subId2 = getSubId(applicationContext, 1)
                         val tm1 = telephonyManager.createForSubscriptionId(subId1)
                         val tm2 = telephonyManager.createForSubscriptionId(subId2)
-                        
+
                         var sim1Info = getSimDisplayName(applicationContext, 0)
                         var sim2Info = getSimDisplayName(applicationContext, 1)
-                        
+
                         // 获取SIM1信号信息
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
@@ -375,12 +378,13 @@ class ChatService : Service() {
                             if (cellInfoList1.isNotEmpty()) {
                                 val registeredCell1 = cellInfoList1.find { it.isRegistered }
                                 if (registeredCell1 != null) {
-                                    val cellDetails = ArfcnConverter.getCellInfoDetails(registeredCell1)
+                                    val cellDetails =
+                                        ArfcnConverter.getCellInfoDetails(registeredCell1)
                                     sim1Info += " $cellDetails"
                                 }
                             }
                         }
-                        
+
                         // 获取SIM2信号信息
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
@@ -391,18 +395,19 @@ class ChatService : Service() {
                             if (cellInfoList2.isNotEmpty()) {
                                 val registeredCell2 = cellInfoList2.find { it.isRegistered }
                                 if (registeredCell2 != null) {
-                                    val cellDetails = ArfcnConverter.getCellInfoDetails(registeredCell2)
+                                    val cellDetails =
+                                        ArfcnConverter.getCellInfoDetails(registeredCell2)
                                     sim2Info += " $cellDetails"
                                 }
                             }
                         }
-                        
+
                         "\n${getString(R.string.current_data_card)}: SIM" + getDataSimId(
                             applicationContext
                         ) + "\nSIM1: " + sim1Info + "\nSIM2: " + sim2Info
                     } else {
                         var simInfo = getSimDisplayName(applicationContext, 0)
-                        
+
                         // 获取单卡信号信息
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
@@ -413,7 +418,8 @@ class ChatService : Service() {
                             if (cellInfoList.isNotEmpty()) {
                                 val registeredCell = cellInfoList.find { it.isRegistered }
                                 if (registeredCell != null) {
-                                    val cellDetails = ArfcnConverter.getCellInfoDetails(registeredCell)
+                                    val cellDetails =
+                                        ArfcnConverter.getCellInfoDetails(registeredCell)
                                     simInfo += " $cellDetails"
                                 }
                             }
@@ -438,22 +444,20 @@ class ChatService : Service() {
                 }
                 val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID);
                 var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
-                if (beacon.getBoolean("beacon_enable", false)) {
+                beaconStatus += if (beacon.getBoolean("beacon_enable", false)) {
                     if (!ServiceManage.hasLocationPermissions(applicationContext)) {
-                        beaconStatus += "Location Permission Missing"
+                        "Location Permission Missing"
                     } else {
-                        beaconStatus += getString(R.string.enable)
+                        getString(R.string.enable)
                     }
                 } else {
-                    beaconStatus += getString(R.string.disable)
+                    getString(R.string.disable)
 
                 }
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
-                    ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
-                        applicationContext
-                    ) + isHotspotRunning + beaconStatus + spamCount + cardInfo
+                    ) + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + spamCount + cardInfo
                 Log.d(TAG, "getInfo: " + requestBody.text)
             }
 
@@ -952,14 +956,20 @@ class ChatService : Service() {
                                         }
                                         Thread.sleep(retryDelay)
                                     } catch (e: InterruptedException) {
-                                        Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
+                                        Log.w(
+                                            TAG,
+                                            "Hotspot IP update thread interrupted: ${e.message}"
+                                        )
                                         return@Thread
                                     } catch (e: Exception) {
                                         Log.e(TAG, "Error getting hotspot IP address: ${e.message}")
                                         // 继续重试
                                     }
                                     if (i == maxRetries) {
-                                        Log.e(TAG, "Failed to get hotspot IP after $maxRetries attempts")
+                                        Log.e(
+                                            TAG,
+                                            "Failed to get hotspot IP after $maxRetries attempts"
+                                        )
                                     }
                                 }
 

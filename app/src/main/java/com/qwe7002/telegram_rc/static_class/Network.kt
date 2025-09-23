@@ -215,93 +215,28 @@ object Network {
                 TelephonyManager.NETWORK_TYPE_NR -> "NR"
                 TelephonyManager.NETWORK_TYPE_LTE,
                 TelephonyManager.NETWORK_TYPE_IWLAN -> "LTE"
+
                 else -> "Unknown" // Fallback, though shouldn't happen
             }
         }
-        
+
         var hasLte = false
         var hasNr = false
-        var hasCa = false // Carrier aggregation flag for LTE-A
-        var nrAdvanced = false // Advanced 5G capabilities
-        
+
+        var lteCellCount = 0
+        var nrCellCount = 0
+
         for (cellInfo in cellInfoList) {
             if (cellInfo.isRegistered) {
                 when (cellInfo) {
                     is CellInfoLte -> {
                         hasLte = true
-                        // Check for LTE-A (Carrier Aggregation)
-                        try {
-                            val cellIdentity = cellInfo.cellIdentity
-                            val cellSignalStrength = cellInfo.cellSignalStrength
-                            
-                            // Check if EARFCN is available (indicates valid LTE cell)
-                            if (cellIdentity.earfcn != Int.MAX_VALUE) {
-                                // Try to detect carrier aggregation by checking for multiple cells
-                                // This is a simplified approach - in reality, LTE-A detection requires
-                                // checking multiple parameters including bandwidth, carrier aggregation
-                                // layers, etc.
-                                if (cellSignalStrength.javaClass.getMethod("getBandwidth").invoke(cellSignalStrength) as Int > 20000) {
-                                    // Bandwidth > 20MHz indicates carrier aggregation (LTE-A)
-                                    hasCa = true
-                                }
-                            }
-                        } catch (e: Exception) {
-                            Log.d("check5GState", "Exception checking LTE-A: ${e.message}")
-                        }
+                        lteCellCount++
                     }
+
                     is CellInfoNr -> {
                         hasNr = true
-                        // Check for 5G-A (NR Advanced) capabilities
-                        try {
-                            val cellIdentity = cellInfo.cellIdentity
-                            val cellSignalStrength = cellInfo.cellSignalStrength
-                            
-                            // Try to detect advanced 5G features
-                            // Using reflection to access methods that might not be available on all Android versions
-                            try {
-                                // Check for SS-RSRP (Synchronization Signal Reference Signal Received Power)
-                                val ssRsrpMethod = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                                    cellSignalStrength.javaClass.getMethod("getSsRsrp")
-                                } else {
-                                    @Suppress("DEPRECATION")
-                                    cellSignalStrength.javaClass.getMethod("getRsrp")
-                                }
-                                
-                                val ssRsrp = ssRsrpMethod.invoke(cellSignalStrength) as Int
-                                // If RSRP is better than -110 dBm, it might indicate 5G-A
-                                if (ssRsrp > -110 && ssRsrp != Int.MAX_VALUE) {
-                                    nrAdvanced = true
-                                }
-                            } catch (e: Exception) {
-                                Log.d("check5GState", "Exception checking NR RSRP: ${e.message}")
-                            }
-                            
-                            // Check for CSI-RSRP (Channel State Information RSRP) if available
-                            try {
-                                val csiRsrpMethod = cellSignalStrength.javaClass.getMethod("getCsiRsrp")
-                                val csiRsrp = csiRsrpMethod.invoke(cellSignalStrength) as Int
-                                // If CSI-RSRP is better than -110 dBm, it might indicate 5G-A
-                                if (csiRsrp > -110 && csiRsrp != Int.MAX_VALUE) {
-                                    nrAdvanced = true
-                                }
-                            } catch (e: Exception) {
-                                Log.d("check5GState", "Exception checking CSI-RSRP: ${e.message}")
-                            }
-                            
-                            // Check for NR-ARFCN to determine band
-                            try {
-                                val nrArfcnMethod = cellIdentity.javaClass.getMethod("getNrarfcn")
-                                val nrArfc = nrArfcnMethod.invoke(cellIdentity) as Int
-                                // High frequency bands (especially mmWave) often indicate 5G-A
-                                if (nrArfc > 2000000) { // mmWave bands typically have high ARFCN values
-                                    nrAdvanced = true
-                                }
-                            } catch (e: Exception) {
-                                Log.d("check5GState", "Exception checking NR ARFCN: ${e.message}")
-                            }
-                        } catch (e: Exception) {
-                            Log.d("check5GState", "Exception checking NR Advanced: ${e.message}")
-                        }
+                        nrCellCount++
                     }
                 }
             }
@@ -313,28 +248,34 @@ object Network {
                 // LTE and NR both registered = EN-DC (NR NSA)
                 "NR NSA"
             }
-            hasNr && nrAdvanced -> {
+
+            hasNr && nrCellCount > 1 -> {
                 // 5G networks with advanced capabilities
                 "NR Advanced"
             }
+
             hasNr -> {
                 // Standard 5G networks
                 "NR SA"
             }
-            hasLte && hasCa -> {
+
+            hasLte && lteCellCount > 1 -> {
                 // LTE with carrier aggregation = LTE-A
                 "LTE-A"
             }
+
             hasLte -> {
                 // Plain LTE
                 "LTE"
             }
+
             else -> {
                 // Fallback
                 when (telephonyManager.dataNetworkType) {
                     TelephonyManager.NETWORK_TYPE_NR -> "NR"
                     TelephonyManager.NETWORK_TYPE_LTE,
                     TelephonyManager.NETWORK_TYPE_IWLAN -> "LTE"
+
                     else -> "Unknown"
                 }
             }
