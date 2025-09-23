@@ -323,7 +323,82 @@ class BeaconReceiverService : Service() {
 
                 override fun onResponse(call: Call, response: Response) {
                     try {
-                        Log.d(TAG, "onResponse: ${response.body?.string() ?: "Empty response body"}")
+                        val responseString = response.body.string()
+                        Log.d(TAG, "onResponse: $responseString")
+                        
+                        // 如果需要更新热点IP地址，则启动更新线程
+                        if (config.getBoolean("need_update_hotspot_ip", false)) {
+                            // 获取messageId
+                            val messageId = Other.getMessageId(responseString)
+                            
+                            val updateThread = Thread {
+                                // 等待初始消息发送完成
+                                try {
+                                    Thread.sleep(2000)
+                                } catch (e: InterruptedException) {
+                                    Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
+                                    return@Thread
+                                }
+
+                                // 尝试多次获取IP地址
+                                var newIp = "Unknown"
+                                val maxRetries = 10
+                                val retryDelay = 1000L
+                                for (i in 1..maxRetries) {
+                                    try {
+                                        newIp = Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)
+                                        if (newIp != "Unknown") {
+                                            break
+                                        }
+                                        Thread.sleep(retryDelay)
+                                    } catch (e: InterruptedException) {
+                                        Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
+                                        return@Thread
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Error getting hotspot IP address: ${e.message}")
+                                        // 继续重试
+                                    }
+                                }
+
+                                // 如果获取到新IP，编辑消息
+                                if (newIp != "Unknown") {
+                                    val editRequest = RequestMessage()
+                                    editRequest.chatId = chatId
+                                    editRequest.messageId = messageId
+                                    editRequest.messageThreadId = messageThreadId
+                                    
+                                    // 构建更新后的消息内容
+                                    val originalMessage = requestBody.text
+                                    editRequest.text = originalMessage.replace("Gateway IP: Unknown", "Gateway IP: $newIp")
+
+                                    val gson = Gson()
+                                    val requestBodyRaw = gson.toJson(editRequest)
+                                    val body = requestBodyRaw.toRequestBody(Const.JSON)
+                                    val requestUri = Network.getUrl(config.getString("bot_token", "")!!, "editMessageText")
+                                    val request = Request.Builder().url(requestUri).method("POST", body).build()
+
+                                    try {
+                                        val client = Network.getOkhttpObj()
+                                        val editResponse = client.newCall(request).execute()
+                                        try {
+                                            Log.d(TAG, "Hotspot IP update result: ${editResponse.code}")
+                                            if (editResponse.code != 200) {
+                                                Log.e(TAG, "Failed to update hotspot IP message. Status code: ${editResponse.code}")
+                                            }
+                                        } finally {
+                                            editResponse.close()
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Failed to update hotspot IP message", e)
+                                    } finally {
+                                        // 更新完成后清除标记
+                                        config.putBoolean("need_update_hotspot_ip", false)
+                                    }
+                                }
+                            }
+                            updateThread.isDaemon = true
+                            updateThread.start()
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error processing response: ${e.message}", e)
                     } finally {
@@ -439,12 +514,22 @@ class BeaconReceiverService : Service() {
                 Thread.sleep(300)
             }
             return when (switchStatus) {
-                ENABLE_AP ->
+                ENABLE_AP -> {
+                    val hotspotIp = Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)
+                    val ipText = if (hotspotIp == "Unknown") {
+                        // 标记需要更新IP地址
+                        config.putBoolean("need_update_hotspot_ip", true)
+                        "Gateway IP: Unknown"
+                    } else {
+                        config.putBoolean("need_update_hotspot_ip", false)
+                        "Gateway IP: $hotspotIp"
+                    }
                     "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
                         getString(
                             R.string.action_success
                         )
-                    }\nGateway IP: ${Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)}$beaconStatus"
+                    }\n$ipText$beaconStatus"
+                }
                 DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
                     getString(
                         R.string.action_success

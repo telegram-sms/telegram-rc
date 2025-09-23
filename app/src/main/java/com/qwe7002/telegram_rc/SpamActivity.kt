@@ -22,9 +22,6 @@ class SpamActivity : AppCompatActivity() {
         val inflater = this.layoutInflater
         val fab = findViewById<FloatingActionButton>(R.id.spam_list_fab)
         val spamList = findViewById<ListView>(R.id.spam_list)
-
-        //val blockKeywordList =
-            //Paper.book("system_config").read("block_keyword_list", ArrayList<String>())!!
         val blockKeywordList = MMKV.defaultMMKV()
             .getStringSet("block_keyword_list", setOf())?.toMutableList() ?: mutableListOf()
         val spamListAdapter = ArrayAdapter(

@@ -891,7 +891,7 @@ class ChatService : Service() {
                                 var newIp = "Unknown"
                                 val maxRetries = 10
                                 val retryDelay = 1000L
-                                for (_i in 1..maxRetries) {
+                                for (i in 1..maxRetries) {
                                     try {
                                         newIp = Network.getHotspotIpAddress(tetherMode)
                                         if (newIp != "Unknown") {
@@ -899,10 +899,7 @@ class ChatService : Service() {
                                         }
                                         Thread.sleep(retryDelay)
                                     } catch (e: InterruptedException) {
-                                        Log.w(
-                                            TAG,
-                                            "Hotspot IP update thread interrupted: ${e.message}"
-                                        )
+                                        Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
                                         return@Thread
                                     } catch (e: Exception) {
                                         Log.e(TAG, "Error getting hotspot IP address: ${e.message}")
@@ -1051,8 +1048,6 @@ class ChatService : Service() {
         }
         mainThread = Thread(threadMainRunnable())
         mainThread.start()
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(Const.BROADCAST_STOP_SERVICE)
     }
 
 

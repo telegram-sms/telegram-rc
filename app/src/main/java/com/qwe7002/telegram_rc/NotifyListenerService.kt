@@ -35,9 +35,6 @@ class NotifyListenerService : NotificationListenerService() {
             Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
             return
         }
-
-/*        val listenList: List<String> =
-            Paper.book("system_config").read("notify_listen_list", ArrayList())!!*/
         val listenList: List<String> = MMKV.defaultMMKV().decodeStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
         if (!listenList.contains(packageName)) {
             Log.i(logTag, "[$packageName] Not in the list of listening packages.")
