@@ -453,11 +453,22 @@ class ChatService : Service() {
                         statusMMKV.putInt("tether_mode", tetherMode)
                         enableHotspot(applicationContext, tetherMode)
                         Thread.sleep(500)
-                        resultAp += "\nGateway IP: ${Network.getHotspotIpAddress(tetherMode)}"
+                        val hotspotIp = Network.getHotspotIpAddress(tetherMode)
+                        resultAp += "\nGateway IP: $hotspotIp"
+
+                        // 如果获取到的IP是Unknown，则标记需要在消息发送后更新IP地址
+                        if (hotspotIp == "Unknown") {
+                            statusMMKV.putBoolean("hotspot_ip_update_needed", true)
+                            statusMMKV.putInt("hotspot_tether_mode", tetherMode)
+                        } else {
+                            statusMMKV.putBoolean("hotspot_ip_update_needed", false)
+                        }
                     } else {
                         statusMMKV.putBoolean("tether", false)
                         resultAp =
                             getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
+                        // 清除标记
+                        statusMMKV.putBoolean("hotspot_ip_update_needed", false)
                     }
                     resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
@@ -807,31 +818,151 @@ class ChatService : Service() {
 
             @Throws(IOException::class)
             override fun onResponse(call: Call, response: Response) {
-                val responseString = Objects.requireNonNull(response.body).string()
-                if (response.code != 200) {
-                    writeLog(applicationContext, errorHead + response.code + " " + responseString)
+                // 安全地获取响应体内容
+                val responseString = try {
+                    val body = response.body
+                    if (body == null) {
+                        writeLog(applicationContext, "Response body is null")
+                        return
+                    }
+                    body.string()
+                } catch (e: IOException) {
+                    writeLog(applicationContext, "Failed to read response body: ${e.message}")
+                    return
+                } catch (e: NullPointerException) {
+                    writeLog(applicationContext, "Response body is null: ${e.message}")
                     return
                 }
+
+                if (response.code != 200) {
+                    writeLog(applicationContext, errorHead + response.code + " " + responseString)
+                    try {
+                        response.close()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to close response: ${e.message}")
+                    }
+                    return
+                }
+                
+                val resultObj: JsonObject
+                try {
+                    resultObj = JsonParser.parseString(responseString).asJsonObject
+                } catch (e: Exception) {
+                    writeLog(applicationContext, "Failed to parse response JSON: ${e.message}")
+                    try {
+                        response.close()
+                    } catch (e2: Exception) {
+                        Log.w(TAG, "Failed to close response: ${e2.message}")
+                    }
+                    return
+                }
+                
                 val commandValue = command.replace("_", "")
                 if (!hasCommand && sendStatusMMKV.getInt(
                         "status",
                         SEND_SMS_STATUS.STANDBY_STATUS
                     ) == SEND_SMS_STATUS.SEND_STATUS
                 ) {
-                    sendStatusMMKV.putLong("message_id", getMessageId(responseString))
+                    try {
+                        sendStatusMMKV.putLong("message_id", getMessageId(responseString))
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to get message ID: ${e.message}")
+                    }
                 }
 
-                if (commandValue == "/hotspot" && !statusMMKV.getBoolean("tether", false)) {
-                    disableHotspot(
-                        applicationContext,
-                        statusMMKV.getInt(
-                            "tether_mode",
-                            TetherManager.TetherMode.TETHERING_WIFI
+                // 合并/hotspot条件判断，并处理需要更新IP地址的情况
+                if (commandValue == "/hotspot" && resultObj.has("result")) {
+                    val messageObj = resultObj["result"].asJsonObject
+                    if (messageObj.has("message_id")) {
+                        val hotspotMessageId = messageObj["message_id"].asLong
+                        statusMMKV.putLong("hotspot_message_id", hotspotMessageId)
+                        
+                        // 如果需要更新热点IP地址，则启动更新线程
+                        if (statusMMKV.getBoolean("hotspot_ip_update_needed", false)) {
+                            val tetherMode = statusMMKV.getInt("hotspot_tether_mode", TetherManager.TetherMode.TETHERING_WIFI)
+                            val editThread = Thread {
+                                // 等待初始消息发送完成
+                                try {
+                                    Thread.sleep(2000)
+                                } catch (e: InterruptedException) {
+                                    Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
+                                    return@Thread
+                                }
+
+                                // 尝试多次获取IP地址
+                                var newIp = "Unknown"
+                                val maxRetries = 10
+                                val retryDelay = 1000L
+                                for (_i in 1..maxRetries) {
+                                    try {
+                                        newIp = Network.getHotspotIpAddress(tetherMode)
+                                        if (newIp != "Unknown") {
+                                            break
+                                        }
+                                        Thread.sleep(retryDelay)
+                                    } catch (e: InterruptedException) {
+                                        Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
+                                        return@Thread
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Error getting hotspot IP address: ${e.message}")
+                                        // 继续重试
+                                    }
+                                }
+
+                                // 如果获取到新IP，编辑消息
+                                val messageId = statusMMKV.getLong("hotspot_message_id", -1L)
+                                if (newIp != "Unknown" && messageId != -1L) {
+                                    val editRequest = RequestMessage()
+                                    editRequest.chatId = chatID
+                                    editRequest.messageId = messageId
+                                    editRequest.messageThreadId = messageThreadId
+                                    // 获取原始消息内容
+                                    val originalText = requestBody.text
+                                    editRequest.text = originalText.replace("Gateway IP: Unknown", "Gateway IP: $newIp")
+
+                                    val gson = Gson()
+                                    val requestBodyRaw = gson.toJson(editRequest)
+                                    val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+                                    val requestUri = getUrl(botToken, "editMessageText")
+                                    val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
+
+                                    try {
+                                        val client = getOkhttpObj()
+                                        val editResponse = client.newCall(request).execute()
+                                        try {
+                                            Log.d(TAG, "Hotspot IP update result: ${editResponse.code}")
+                                            if (editResponse.code != 200) {
+                                                Log.e(TAG, "Failed to update hotspot IP message. Status code: ${editResponse.code}")
+                                            }
+                                        } finally {
+                                            editResponse.close()
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Failed to update hotspot IP message", e)
+                                    } finally {
+                                        // 更新完成后清除标记
+                                        statusMMKV.putBoolean("hotspot_ip_update_needed", false)
+                                    }
+                                }
+                            }
+                            editThread.isDaemon = true
+                            editThread.start()
+                        }
+                    }
+                    
+                    // 处理热点关闭逻辑
+                    if (!statusMMKV.getBoolean("tether", false)) {
+                        disableHotspot(
+                            applicationContext,
+                            statusMMKV.getInt(
+                                "tether_mode",
+                                TetherManager.TetherMode.TETHERING_WIFI
+                            )
                         )
-                    )
-                    statusMMKV.remove("tether_mode")
-
+                        statusMMKV.remove("tether_mode")
+                    }
                 }
+                
                 if (hasCommand && Shell.isAppGrantedRoot() == true) {
                     when (commandValue) {
                         "/data" -> setData(
@@ -849,6 +980,13 @@ class ChatService : Service() {
                             VPNHotspot.disableVPNHotspot(wifiManager)
                         }
                     }
+                }
+                
+                // 确保response被正确关闭
+                try {
+                    response.close()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to close response: ${e.message}")
                 }
             }
         })
@@ -997,6 +1135,8 @@ class ChatService : Service() {
         }
     }
 
+    // 移除了updateHotspotMessageId和getHotspotMessageId方法，因为现在直接使用statusMMKV操作
+    
     companion object {
         private const val TAG = "chat_command"
 
