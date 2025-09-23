@@ -35,6 +35,7 @@ import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.setData
 import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
 import com.qwe7002.telegram_rc.root_kit.VPNHotspot
+import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.readLog
@@ -54,8 +55,6 @@ import com.qwe7002.telegram_rc.static_class.Other.getSendPhoneNumber
 import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Other.isPhoneNumber
-import com.qwe7002.telegram_rc.static_class.ArfcnConverter
-import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Phone
 import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
@@ -369,7 +368,24 @@ class ChatService : Service() {
 
                         var sim1Info = getSimDisplayName(applicationContext, 0)
                         var sim2Info = getSimDisplayName(applicationContext, 1)
-
+                        if (ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.READ_PHONE_STATE
+                            ) == PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.READ_PHONE_NUMBERS
+                            ) == PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.READ_SMS
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
+                            sim1Info += "\nSIM1 Number: $phone1Number"
+                            val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
+                            sim2Info += "\nSIM2 Number: $phone2Number"
+                        }
                         // 获取SIM1信号信息
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
@@ -382,7 +398,7 @@ class ChatService : Service() {
                                 if (registeredCell1 != null) {
                                     val cellDetails =
                                         ArfcnConverter.getCellInfoDetails(registeredCell1)
-                                    sim1Info += " $cellDetails"
+                                    sim1Info += "\nSIM1 Signal: $cellDetails"
                                 }
                             }
                         }
@@ -399,7 +415,7 @@ class ChatService : Service() {
                                 if (registeredCell2 != null) {
                                     val cellDetails =
                                         ArfcnConverter.getCellInfoDetails(registeredCell2)
-                                    sim2Info += " $cellDetails"
+                                    sim2Info += "\nSIM2 Signal: $cellDetails"
                                 }
                             }
                         }
@@ -410,6 +426,22 @@ class ChatService : Service() {
                     } else {
                         var simInfo = getSimDisplayName(applicationContext, 0)
 
+                        if (ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.READ_PHONE_STATE
+                            ) == PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.READ_PHONE_NUMBERS
+                            ) == PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.READ_SMS
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
+                            simInfo += "\nNumber: $phone1Number"
+                        }
                         // 获取单卡信号信息
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
@@ -422,7 +454,7 @@ class ChatService : Service() {
                                 if (registeredCell != null) {
                                     val cellDetails =
                                         ArfcnConverter.getCellInfoDetails(registeredCell)
-                                    simInfo += " $cellDetails"
+                                    simInfo += "\nSignal: $cellDetails"
                                 }
                             }
                         }
@@ -454,7 +486,6 @@ class ChatService : Service() {
                     }
                 } else {
                     getString(R.string.disable)
-
                 }
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
@@ -677,35 +708,6 @@ class ChatService : Service() {
                 beacon.putBoolean("beacon_enable", !state)
                 requestBody.text =
                     "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
-            }
-
-            "/phonenumber" -> {
-                var phoneResult = ""
-                if (ActivityCompat.checkSelfPermission(
-                        applicationContext,
-                        Manifest.permission.READ_PHONE_STATE
-                    ) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(
-                        applicationContext,
-                        Manifest.permission.READ_PHONE_NUMBERS
-                    ) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(
-                        applicationContext,
-                        Manifest.permission.READ_SMS
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
-                    phoneResult += "SIM 1: $phone1Number"
-
-                    if (getActiveCard(applicationContext) > 1) {
-                        val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
-                        phoneResult += "\nSIM 2: $phone2Number"
-                    }
-                } else {
-                    phoneResult = getString(R.string.no_permission)
-                }
-
-                requestBody.text = "${getString(R.string.system_message_head)}\n$phoneResult"
             }
 
             "/setdummy" -> {

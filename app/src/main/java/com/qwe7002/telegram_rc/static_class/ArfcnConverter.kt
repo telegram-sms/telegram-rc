@@ -244,7 +244,7 @@ object ArfcnConverter {
                     }
                     val dbm = cellSignalStrength.dbm
                     
-                    "($dbm dBm${if (band != null) ", B$band" else ""}${if (earfcn != Int.MAX_VALUE) ", EARFCN: $earfcn" else ""})"
+                    "$dbm dBm${if (band != null) ", B$band" else ""}${if (earfcn != Int.MAX_VALUE) ", EARFCN: $earfcn" else ""}"
                 }
                 is CellInfoNr -> {
                     val cellIdentity = cellInfo.cellIdentity
@@ -273,15 +273,15 @@ object ArfcnConverter {
 
                     val rsrpStr = if (ssRsrp != Int.MAX_VALUE) "$ssRsrp dBm" else "N/A"
 
-                    "($rsrpStr${if (band != null) ", N$band" else ""}${if (arfcn != Int.MAX_VALUE) ", ARFCN: $arfcn" else ""})"
+                    "$rsrpStr${if (band != null) ", N$band" else ""}${if (arfcn != Int.MAX_VALUE) ", ARFCN: $arfcn" else ""}"
                 }
                 else -> {
-                    "(Unknown cell type)"
+                    "Unknown cell type"
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error getting cell info details", e)
-            "(Error getting cell info)"
+            "Error getting cell info"
         }
     }
 }
