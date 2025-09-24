@@ -367,9 +367,22 @@ class ChatService : Service() {
                         val subId2 = getSubId(applicationContext, 1)
                         val tm1 = telephonyManager.createForSubscriptionId(subId1)
                         val tm2 = telephonyManager.createForSubscriptionId(subId2)
-
-                        var sim1Info = getSimDisplayName(applicationContext, 0)
-                        var sim2Info = getSimDisplayName(applicationContext, 1)
+                        val sim1Display = getSimDisplayName(applicationContext, 0)
+                        val sim2Display = getSimDisplayName(applicationContext, 1)
+                        var sim1Info: String
+                        var sim2Info: String
+                        if (sim1Display == tm1.simOperatorName) {
+                            sim1Info = telephonyManager.simOperatorName
+                        } else {
+                            sim1Info =
+                                telephonyManager.simOperatorName + "\nSIM1 Alias: " + sim1Display
+                        }
+                        if (sim2Display == tm2.simOperatorName) {
+                            sim2Info = telephonyManager.simOperatorName
+                        } else {
+                            sim2Info =
+                                telephonyManager.simOperatorName + "\nSIM2 Alias: " + sim2Display
+                        }
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
                                 Manifest.permission.READ_PHONE_STATE
@@ -438,8 +451,7 @@ class ChatService : Service() {
                             applicationContext
                         ) + "\nSIM1: " + sim1Info + "\nSIM2: " + sim2Info
                     } else {
-                        var simInfo = getSimDisplayName(applicationContext, 0)
-
+                        var simInfo = ""
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
                                 Manifest.permission.READ_PHONE_STATE
@@ -453,6 +465,17 @@ class ChatService : Service() {
                                 Manifest.permission.READ_SMS
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
+                            val simDisplayName = getSimDisplayName(
+                                applicationContext,
+                                getActiveCard(applicationContext)
+                            )
+                            if (simDisplayName == telephonyManager.simOperatorName) {
+                                simInfo = telephonyManager.simOperatorName
+                            } else {
+                                simInfo =
+                                    telephonyManager.simOperatorName + "\nSIM Alias: " + simDisplayName
+                            }
+
                             val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
                             simInfo += " ($phone1Number)"
                             val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
@@ -479,7 +502,7 @@ class ChatService : Service() {
                             }
                         }
 
-                        "\nSIM: $simInfo"
+                        "\nSIM: $simInfo\nSIM Carrier: ${telephonyManager.simOperatorName}"
                     }
                 }
                 val spamList =
