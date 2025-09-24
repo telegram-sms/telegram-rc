@@ -3,10 +3,7 @@ package com.qwe7002.telegram_rc
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
@@ -17,6 +14,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.provider.Settings
+import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
@@ -35,6 +33,7 @@ import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
 import com.qwe7002.telegram_rc.root_kit.Networks.setData
 import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
 import com.qwe7002.telegram_rc.root_kit.VPNHotspot
+import com.qwe7002.telegram_rc.shizuku_kit.DefaultDataSubIdKit
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
@@ -75,6 +74,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import rikka.shizuku.Shizuku
 import java.io.IOException
 import java.util.Locale
 import java.util.Objects
@@ -540,6 +540,38 @@ class ChatService : Service() {
             "/log" -> requestBody.text = getString(R.string.system_message_head) + readLog(
                 applicationContext, 10
             )
+
+            "/datacard" -> {
+                if (!Shizuku.pingBinder()) {
+                    Log.e("Shizuku", "Shizuku not running")
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\nShizuku not running"
+                }
+
+                // 请求 Shizuku 权限
+                if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\nShizuku permission not granted"
+                }
+                if (getActiveCard(applicationContext) < 2) {
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\nYou cannot switch the default data SIM card"
+                }
+                val subscriptionManager =
+                    (applicationContext.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
+                val info =
+                    subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
+                var slotIndex = 0
+                if (info.simSlotIndex == 0) {
+                    slotIndex = 1
+                }
+                val subscriptionInfo =
+                    subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slotIndex)
+                val dataSub = DefaultDataSubIdKit()
+                dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
+                requestBody.text =
+                    "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
+            }
 
             "/wifi" -> {
                 if (Shell.isAppGrantedRoot() != true) {

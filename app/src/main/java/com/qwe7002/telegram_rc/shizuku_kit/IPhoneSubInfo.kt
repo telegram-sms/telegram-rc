@@ -11,7 +11,7 @@ import com.android.internal.telephony.IPhoneSubInfo
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 
-class ShizukuIPhoneInfo {
+class IPhoneSubInfo {
     private fun getIPhoneSubInfo(): IPhoneSubInfo? {
         val binder: IBinder =
             ShizukuBinderWrapper(SystemServiceHelper.getSystemService("iphonesubinfo"))
