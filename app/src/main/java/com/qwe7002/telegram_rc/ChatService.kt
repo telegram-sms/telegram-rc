@@ -28,12 +28,10 @@ import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.InlineKeyboard
 import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.KeyboardMarkup
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
-import com.qwe7002.telegram_rc.root_kit.Networks.addDummyDevice
-import com.qwe7002.telegram_rc.root_kit.Networks.delDummyDevice
-import com.qwe7002.telegram_rc.root_kit.Networks.setData
-import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
+import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
+import com.qwe7002.telegram_rc.shizuku_kit.Networks.setWifi
 import com.qwe7002.telegram_rc.root_kit.VPNHotspot
-import com.qwe7002.telegram_rc.shizuku_kit.DefaultDataSubIdKit
+import com.qwe7002.telegram_rc.shizuku_kit.ISub
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
@@ -546,35 +544,37 @@ class ChatService : Service() {
                     Log.e("Shizuku", "Shizuku not running")
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\nShizuku not running"
-                }
+                } else {
 
-                // 请求 Shizuku 权限
-                if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\nShizuku permission not granted"
+                    // 请求 Shizuku 权限
+                    if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\nShizuku permission not granted"
+                    } else {
+                        if (getActiveCard(applicationContext) < 2) {
+                            requestBody.text =
+                                "${getString(R.string.system_message_head)}\nYou cannot switch the default data SIM card"
+                        }
+                        val subscriptionManager =
+                            (applicationContext.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
+                        val info =
+                            subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
+                        var slotIndex = 0
+                        if (info.simSlotIndex == 0) {
+                            slotIndex = 1
+                        }
+                        val subscriptionInfo =
+                            subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slotIndex)
+                        val dataSub = ISub()
+                        dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
+                    }
                 }
-                if (getActiveCard(applicationContext) < 2) {
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\nYou cannot switch the default data SIM card"
-                }
-                val subscriptionManager =
-                    (applicationContext.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
-                val info =
-                    subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
-                var slotIndex = 0
-                if (info.simSlotIndex == 0) {
-                    slotIndex = 1
-                }
-                val subscriptionInfo =
-                    subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slotIndex)
-                val dataSub = DefaultDataSubIdKit()
-                dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
-                requestBody.text =
-                    "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
             }
 
             "/wifi" -> {
-                if (Shell.isAppGrantedRoot() != true) {
+                /*if (Shell.isAppGrantedRoot() != true) {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 } else {
@@ -589,7 +589,32 @@ class ChatService : Service() {
                             getString(R.string.disable)
                         }
                     }"
+                }*/
+                if (!Shizuku.pingBinder()) {
+                    Log.e("Shizuku", "Shizuku not running")
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\nShizuku not running"
+                } else {
+                    // 请求 Shizuku 权限
+                    if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\nShizuku permission not granted"
+                    } else {
+                        val wifimanager =
+                            applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                        Log.d(TAG, "receiveHandle: " + wifimanager.isWifiEnabled)
+                        setWifi(!wifimanager.isWifiEnabled)
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\nWIFI state: ${
+                                if (wifimanager.isWifiEnabled) {
+                                    getString(R.string.enable)
+                                } else {
+                                    getString(R.string.disable)
+                                }
+                            }"
+                    }
                 }
+
             }
 
             "/hotspot" -> {
@@ -683,15 +708,22 @@ class ChatService : Service() {
             }
 
             "/data" -> {
-                if (Shell.isAppGrantedRoot() != true) {
+                if (!Shizuku.pingBinder()) {
+                    Log.e("Shizuku", "Shizuku not running")
                     requestBody.text =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
+                        "${getString(R.string.system_message_head)}\nShizuku not running"
                 } else {
-                    val resultData =
-                        "Switching mobile network status: " + !getDataEnable(
-                            applicationContext
-                        )
-                    requestBody.text = "${getString(R.string.system_message_head)}\n$resultData"
+                    // 请求 Shizuku 权限
+                    if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\nShizuku permission not granted"
+                    } else {
+                        val resultData =
+                            "Switching mobile network status: " + !getDataEnable(
+                                applicationContext
+                            )
+                        requestBody.text = "${getString(R.string.system_message_head)}\n$resultData"
+                    }
                 }
             }
 
@@ -785,46 +817,6 @@ class ChatService : Service() {
                     "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
             }
 
-            "/setdummy" -> {
-                if (Shell.isAppGrantedRoot() != true) {
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
-                } else {
-                    val commandList =
-                        requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
-                            .toTypedArray()
-                    if (commandList.size == 2) {
-                        MMKV.mmkvWithID(Const.ROOT_MMKV_ID)
-                            .putString("dummy_ip_addr", commandList[1])
-                        addDummyDevice(commandList[1])
-                    } else {
-                        if (MMKV.mmkvWithID(Const.ROOT_MMKV_ID).containsKey("dummy_ip_addr")) {
-                            val dummyIp =
-                                MMKV.mmkvWithID(Const.ROOT_MMKV_ID).getString("dummy_ip_addr", "")
-                            if (dummyIp != null) {
-                                addDummyDevice(dummyIp)
-                            }
-                        }
-                    }
-                    requestBody.text =
-                        "${applicationContext.getString(R.string.system_message_head)}\nThe virtual device IP address has been set：${
-                            MMKV.mmkvWithID(
-                                Const.ROOT_MMKV_ID
-                            ).getString("dummy_ip_addr", "")
-                        }"
-                }
-            }
-
-            "/deldummy" -> {
-                if (Shell.isAppGrantedRoot() != true) {
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
-                } else {
-                    delDummyDevice()
-                    requestBody.text =
-                        "${applicationContext.getString(R.string.system_message_head)}\nThe virtual device has been deleted."
-                }
-            }
 
             "/sendsms", "/sendsms1", "/sendsms2" -> {
                 val msgSendList =
@@ -1145,8 +1137,7 @@ class ChatService : Service() {
                         statusMMKV.remove("tether_mode")
                     }
                 }
-
-                if (hasCommand && Shell.isAppGrantedRoot() == true) {
+                if (hasCommand && Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                     when (commandValue) {
                         "/data" -> setData(
                             !getDataEnable(
