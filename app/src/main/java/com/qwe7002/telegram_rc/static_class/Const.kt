@@ -18,5 +18,6 @@ object Const {
     const val RESEND_MMKV_ID: String = "resend"
     const val SPAM_MMKV_ID: String = "spam"
     const val UPGRADE_MMKV_ID: String = "upgrade"
+    const val IMSI_MMKV_ID: String = "IMSI"
 
 }

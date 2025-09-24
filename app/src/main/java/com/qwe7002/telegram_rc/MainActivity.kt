@@ -24,6 +24,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,15 +34,18 @@ import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.data_structure.PollingJson
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
+import com.qwe7002.telegram_rc.data_structure.ScannerJson
+import com.qwe7002.telegram_rc.shizuku_kit.ShizukuIPhoneInfo
 import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
@@ -51,6 +55,8 @@ import com.qwe7002.telegram_rc.static_class.ServiceManage.isNotifyListener
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
+import com.tencent.mmkv.MMKV
+import com.topjohnwu.superuser.Shell
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -60,16 +66,14 @@ import okhttp3.Response
 import java.io.IOException
 import java.util.Objects
 import java.util.concurrent.TimeUnit
-import androidx.core.net.toUri
-import com.qwe7002.telegram_rc.shizuku_kit.ShizukuIPhoneInfo
-import com.tencent.mmkv.MMKV
-import com.topjohnwu.superuser.Shell
+
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "main_activity"
     private lateinit var preferences: MMKV
     private lateinit var proxyMMKV: MMKV
     private lateinit var writeSettingsButton: Button
+    private lateinit var dataUsageButton: Button
     private lateinit var scannerLauncher: ActivityResultLauncher<Intent>
 
     // View components
@@ -92,7 +96,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         // 初始化ActivityResultLauncher
         scannerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
@@ -147,9 +150,43 @@ class MainActivity : AppCompatActivity() {
         saveButton = findViewById(R.id.save_button)
         getIdButton = findViewById(R.id.get_id_button)
         writeSettingsButton = findViewById(R.id.write_settings_button)
+        dataUsageButton = findViewById(R.id.data_usage_button)
 
         //load config
         MMKV.initialize(applicationContext)
+        preferences = MMKV.defaultMMKV()
+        proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
+        writeSettingsButton.setOnClickListener {
+            val writeSystemIntent = Intent(
+                Settings.ACTION_MANAGE_WRITE_SETTINGS, "package:$packageName".toUri()
+            )
+            startActivity(writeSystemIntent)
+        }
+        dataUsageButton.setOnClickListener {
+            // 检查电话权限
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.READ_PHONE_STATE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // 如果没有电话权限，请求权限
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.READ_PHONE_STATE),
+                    2
+                )
+                return@setOnClickListener
+            }
+
+            // 检查数据使用情况权限
+            if (!DataUsage.hasPermission(applicationContext)) {
+                DataUsage.openUsageStatsSettings(this)
+                return@setOnClickListener
+            }
+
+            // 如果有所有必要权限，执行获取IMSI缓存的操作
+            getIMSICache()
+        }
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
         writeSettingsButton.setOnClickListener {
@@ -616,6 +653,37 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun getIMSICache() {
+        val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+        val phoneInfo = ShizukuIPhoneInfo()
+        if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            val telephonyManager =
+                checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
+            val phoneCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                telephonyManager.activeModemCount
+            } else {
+                @Suppress("DEPRECATION")
+                telephonyManager.phoneCount
+            }
+            if (phoneCount == 1) {
+                val phone = phoneInfo.getDefaultIMSIWithShizuku()
+                Log.d(TAG, "getIMSICache: "+ phone)
+                if (phone.isNotEmpty()) {
+                    imsiCache.putString("0", phone)
+                }
+                return
+            }
+            for (i in 0 until phoneCount) {
+                val phone = phoneInfo.getIMSIWithShizuku(this, i)
+                Log.d(TAG, "getIMSICache: $phone")
+                if (phone.isNotEmpty()) {
+                    imsiCache.putString(i.toString(), phone)
+                }
+            }
+            Toast.makeText(this, "Get IMSI Success", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun showPrivacyDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle(R.string.privacy_reminder_title)
@@ -682,6 +750,23 @@ class MainActivity : AppCompatActivity() {
                         displayDualSimDisplayName.isEnabled = false
                         displayDualSimDisplayName.isChecked = false
                     }
+                }
+            }
+
+            2 -> {
+                // 处理READ_PHONE_STATE权限请求结果
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // 权限已授予，继续执行数据使用权限检查
+                    if (!DataUsage.hasPermission(applicationContext)) {
+                        DataUsage.openUsageStatsSettings(this)
+                        return
+                    }
+
+                    // 如果有所有必要权限，执行获取IMSI缓存的操作
+                    getIMSICache()
+                } else {
+                    // 权限被拒绝，显示错误信息
+                    showErrorDialog(applicationContext.getString(R.string.no_permission))
                 }
             }
         }
