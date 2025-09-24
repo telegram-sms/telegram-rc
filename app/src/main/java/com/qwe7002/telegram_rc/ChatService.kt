@@ -38,6 +38,7 @@ import com.qwe7002.telegram_rc.root_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.LogManage.readLog
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network
@@ -386,6 +387,18 @@ class ChatService : Service() {
                             sim1Info += " ($phone1Number)"
                             val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
                             sim2Info += " ($phone2Number)"
+                            val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                            val phone1DataUsage = DataUsage.getDataUsageForSim(
+                                applicationContext,
+                                imsiCache.getString("0", null)
+                            )
+                            val phone2DataUsage = DataUsage.getDataUsageForSim(
+                                applicationContext,
+                                imsiCache.getString("1", null)
+                            )
+                            sim1Info += "\nSIM1 Data Usage: $phone1DataUsage"
+                            sim2Info += "\nSIM2 Data Usage: $phone2DataUsage"
+
                         }
                         // 获取SIM1信号信息
                         if (ActivityCompat.checkSelfPermission(
@@ -442,6 +455,12 @@ class ChatService : Service() {
                         ) {
                             val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
                             simInfo += " ($phone1Number)"
+                            val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                            val phone1DataUsage = DataUsage.getDataUsageForSim(
+                                applicationContext,
+                                imsiCache.getString("0", null)
+                            )
+                            simInfo += "\nData Usage: $phone1DataUsage"
                         }
                         // 获取单卡信号信息
                         if (ActivityCompat.checkSelfPermission(

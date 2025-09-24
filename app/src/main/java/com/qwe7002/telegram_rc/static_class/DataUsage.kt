@@ -2,14 +2,18 @@ package com.qwe7002.telegram_rc.static_class
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AppOpsManager
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
+import android.os.Process
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import java.util.Calendar
+
 
 object DataUsage {
     private const val TAG = "DataUsage"
@@ -61,6 +65,24 @@ object DataUsage {
         }
     }
 
+    fun hasPermission(context: Context): Boolean {
+        return try {
+            val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+            val mode: Int = appOps.checkOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                Process.myUid(), context.packageName
+            )
+            mode == AppOpsManager.MODE_ALLOWED
+        } catch (e: ClassCastException) {
+            // 处理Shizuku可能返回BinderProxy的情况
+            Log.e(TAG, "ClassCastException when checking permission", e)
+            false
+        } catch (e: Exception) {
+            Log.e(TAG, "Error when checking permission", e)
+            false
+        }
+    }
+
     /**
      * 打开应用使用统计设置页面，让用户授予权限
      */
@@ -74,12 +96,12 @@ object DataUsage {
      * 获取当前月份的开始时间戳
      */
     private fun getStartOfMonthTimestamp(): Long {
-        val calendar = java.util.Calendar.getInstance()
-        calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
-        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-        calendar.set(java.util.Calendar.MINUTE, 0)
-        calendar.set(java.util.Calendar.SECOND, 0)
-        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
         return calendar.timeInMillis
     }
 
@@ -89,7 +111,11 @@ object DataUsage {
     @SuppressLint("DefaultLocale")
     private fun formatBytes(bytes: Long): String {
         return when {
-            bytes >= 1024 * 1024 * 1024 -> String.format("%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+            bytes >= 1024 * 1024 * 1024 -> String.format(
+                "%.2f GB",
+                bytes / (1024.0 * 1024.0 * 1024.0)
+            )
+
             bytes >= 1024 * 1024 -> String.format("%.2f MB", bytes / (1024.0 * 1024.0))
             bytes >= 1024 -> String.format("%.2f KB", bytes / 1024.0)
             else -> "$bytes B"
