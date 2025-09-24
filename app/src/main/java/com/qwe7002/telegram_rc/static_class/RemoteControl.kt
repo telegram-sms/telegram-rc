@@ -7,7 +7,6 @@ import android.net.wifi.WifiManager
 import com.fitc.wifihotspot.TetherManager
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.forceStopService
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.startForegroundService
-import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
 import com.tencent.mmkv.MMKV
 
 object RemoteControl {

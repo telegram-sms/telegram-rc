@@ -8,7 +8,7 @@ import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 
 
-class DefaultDataSubIdKit {
+class ISub {
     @SuppressLint("PrivateApi")
     fun setDefaultDataSubIdWithShizuku(subId: Int) {
         try {

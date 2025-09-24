@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.forceStopService
 import com.qwe7002.telegram_rc.root_kit.ActivityManage.startForegroundService
-import com.qwe7002.telegram_rc.root_kit.Networks.setWifi
+import com.qwe7002.telegram_rc.shizuku_kit.Networks.setWifi
 import com.qwe7002.telegram_rc.static_class.Const
 import com.tencent.mmkv.MMKV
 import com.topjohnwu.superuser.Shell

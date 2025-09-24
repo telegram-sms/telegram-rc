@@ -14,7 +14,7 @@ import androidx.core.content.ContextCompat
 import com.github.sumimakito.codeauxlib.CodeauxLibPortable
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
-import com.qwe7002.telegram_rc.root_kit.Networks.setData
+import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
@@ -213,8 +213,9 @@ class SMSReceiver : BroadcastReceiver() {
         }
         Log.d(logTag, "onReceive: $isVerificationCode")
         if (!isVerificationCode && !isTrustedPhone) {
-            val blackListArray = preferences.getStringSet("block_keyword_list", setOf())?.toMutableList()
-                ?: mutableListOf()
+            val blackListArray =
+                preferences.getStringSet("block_keyword_list", setOf())?.toMutableList()
+                    ?: mutableListOf()
             for (blockListItem in blackListArray) {
                 if (blockListItem.isEmpty()) {
                     continue
@@ -222,7 +223,10 @@ class SMSReceiver : BroadcastReceiver() {
                 if (messageBody.contains(blockListItem)) {
                     val simpleDateFormat =
                         SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)
-                    val writeMessage = requestBody.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(Date(System.currentTimeMillis()))
+                    val writeMessage =
+                        requestBody.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(
+                            Date(System.currentTimeMillis())
+                        )
                     val spamMMKV = MMKV.mmkvWithID(Const.SPAM_MMKV_ID)
                     val spamSmsList =
                         spamMMKV.getStringSet("sms", setOf())?.toMutableSet()
@@ -242,15 +246,19 @@ class SMSReceiver : BroadcastReceiver() {
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS forward failed:"
         val finalRawRequestBodyText = rawRequestBodyText
-        CcSendJob.startJob(context, context.getString(R.string.receive_sms_head), finalRawRequestBodyText)
+        CcSendJob.startJob(
+            context,
+            context.getString(R.string.receive_sms_head),
+            finalRawRequestBodyText
+        )
         val finalIsFlash = (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d(logTag, e.toString())
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
-                addResendLoop(context,requestBody.text)
-                commandHandle(messageBody, dataEnable)
+                addResendLoop(context, requestBody.text)
+                commandHandle(context, messageBody, dataEnable)
             }
 
             @Throws(IOException::class)
@@ -261,7 +269,7 @@ class SMSReceiver : BroadcastReceiver() {
                     if (!finalIsFlash) {
                         SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                     }
-                    addResendLoop(context,requestBody.text)
+                    addResendLoop(context, requestBody.text)
                 } else {
                     if (!Other.isPhoneNumber(messageAddress)) {
                         writeLog(context, "[$messageAddress] Not a regular phone number.")
@@ -269,28 +277,29 @@ class SMSReceiver : BroadcastReceiver() {
                     }
                     Other.addMessageList(Other.getMessageId(result), messageAddress, slot)
                 }
-                commandHandle(messageBody, dataEnable)
+                commandHandle(context, messageBody, dataEnable)
             }
         })
     }
 
     private fun commandHandle(
+        context: Context,
         messageBody: String,
         dataEnable: Boolean
     ) {
-        if (preferences.getBoolean("root", false)) {
-            if (messageBody.lowercase(Locale.getDefault()).replace("_", "") == "/data") {
-                if (dataEnable) {
-                    setData(false)
-                }
+        //todo
+        if (messageBody.lowercase(Locale.getDefault()).replace("_", "") == "/data") {
+            if (dataEnable) {
+                setData(context, false)
             }
         }
+
     }
 
-    private fun openData(context: Context?) {
-        setData(true)
+    private fun openData(context: Context) {
+        setData(context,true)
         var loopCount = 0
-        while (!Network.checkNetworkStatus(context!!)) {
+        while (!Network.checkNetworkStatus(context)) {
             if (loopCount >= 100) {
                 break
             }
