@@ -61,6 +61,7 @@ import java.io.IOException
 import java.util.Objects
 import java.util.concurrent.TimeUnit
 import androidx.core.net.toUri
+import com.qwe7002.telegram_rc.shizuku_kit.ShizukuIPhoneInfo
 import com.tencent.mmkv.MMKV
 import com.topjohnwu.superuser.Shell
 

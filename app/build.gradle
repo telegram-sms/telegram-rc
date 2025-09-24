@@ -13,6 +13,12 @@ android {
         versionCode System.getenv("VERSION_CODE") == null ? 1 : System.getenv("VERSION_CODE").toInteger()
         versionName System.getenv("VERSION_NAME") == null ? "debug-do_not_leak" : System.getenv("VERSION_NAME")
     }
+    
+    buildFeatures {
+        buildConfig true
+        aidl true
+    }
+    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -76,7 +82,8 @@ dependencies {
 
     // Optional: APIs for creating root services. Depends on ":core"
     implementation "com.github.topjohnwu.libsu:service:${libsuVersion}"
-
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
 }
 repositories {
     mavenCentral()
