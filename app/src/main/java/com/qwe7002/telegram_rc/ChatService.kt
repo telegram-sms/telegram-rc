@@ -45,6 +45,7 @@ import com.qwe7002.telegram_rc.static_class.Network.checkNetworkStatus
 import com.qwe7002.telegram_rc.static_class.Network.getDataEnable
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
+import com.qwe7002.telegram_rc.static_class.Network.requestUpdatedCellInfo
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.getDataSimId
@@ -382,9 +383,9 @@ class ChatService : Service() {
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
-                            sim1Info += "\nSIM1 Number: $phone1Number"
+                            sim1Info += " ($phone1Number)"
                             val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
-                            sim2Info += "\nSIM2 Number: $phone2Number"
+                            sim2Info += " ($phone2Number)"
                         }
                         // 获取SIM1信号信息
                         if (ActivityCompat.checkSelfPermission(
@@ -392,7 +393,7 @@ class ChatService : Service() {
                                 Manifest.permission.ACCESS_FINE_LOCATION
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
-                            val cellInfoList1 = tm1.allCellInfo
+                            val cellInfoList1 = requestUpdatedCellInfo(applicationContext, tm1)
                             if (cellInfoList1.isNotEmpty()) {
                                 val registeredCell1 = cellInfoList1.find { it.isRegistered }
                                 if (registeredCell1 != null) {
@@ -409,7 +410,7 @@ class ChatService : Service() {
                                 Manifest.permission.ACCESS_FINE_LOCATION
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
-                            val cellInfoList2 = tm2.allCellInfo
+                            val cellInfoList2 = requestUpdatedCellInfo(applicationContext, tm2)
                             if (cellInfoList2.isNotEmpty()) {
                                 val registeredCell2 = cellInfoList2.find { it.isRegistered }
                                 if (registeredCell2 != null) {
@@ -440,7 +441,7 @@ class ChatService : Service() {
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
-                            simInfo += "\nNumber: $phone1Number"
+                            simInfo += " ($phone1Number)"
                         }
                         // 获取单卡信号信息
                         if (ActivityCompat.checkSelfPermission(
