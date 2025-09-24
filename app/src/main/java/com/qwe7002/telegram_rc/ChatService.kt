@@ -538,84 +538,6 @@ class ChatService : Service() {
                 applicationContext, 10
             )
 
-            "/datacard" -> {
-                if (!Shizuku.pingBinder()) {
-                    Log.e("Shizuku", "Shizuku not running")
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\nShizuku not running"
-                } else {
-
-                    // 请求 Shizuku 权限
-                    if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-                        requestBody.text =
-                            "${getString(R.string.system_message_head)}\nShizuku permission not granted"
-                    } else {
-                        if (getActiveCard(applicationContext) < 2) {
-                            requestBody.text =
-                                "${getString(R.string.system_message_head)}\nYou cannot switch the default data SIM card"
-                        }
-                        val subscriptionManager =
-                            (applicationContext.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
-                        val info =
-                            subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
-                        var slotIndex = 0
-                        if (info.simSlotIndex == 0) {
-                            slotIndex = 1
-                        }
-                        val subscriptionInfo =
-                            subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slotIndex)
-                        val dataSub = ISub()
-                        dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
-                        requestBody.text =
-                            "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
-                    }
-                }
-            }
-
-            "/wifi" -> {
-                /*if (Shell.isAppGrantedRoot() != true) {
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
-                } else {
-                    val wifimanager =
-                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                    Log.d(TAG, "receiveHandle: " + wifimanager.isWifiEnabled)
-                    setWifi(!wifimanager.isWifiEnabled)
-                    requestBody.text = "${getString(R.string.system_message_head)}\nWIFI state: ${
-                        if (wifimanager.isWifiEnabled) {
-                            getString(R.string.enable)
-                        } else {
-                            getString(R.string.disable)
-                        }
-                    }"
-                }*/
-                if (!Shizuku.pingBinder()) {
-                    Log.e("Shizuku", "Shizuku not running")
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\nShizuku not running"
-                } else {
-                    // 请求 Shizuku 权限
-                    if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-                        requestBody.text =
-                            "${getString(R.string.system_message_head)}\nShizuku permission not granted"
-                    } else {
-                        val wifimanager =
-                            applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                        Log.d(TAG, "receiveHandle: " + wifimanager.isWifiEnabled)
-                        setWifi(!wifimanager.isWifiEnabled)
-                        requestBody.text =
-                            "${getString(R.string.system_message_head)}\nWIFI state: ${
-                                if (wifimanager.isWifiEnabled) {
-                                    getString(R.string.enable)
-                                } else {
-                                    getString(R.string.disable)
-                                }
-                            }"
-                    }
-                }
-
-            }
-
             "/hotspot" -> {
                 if (MMKV.mmkvWithID(Const.BEACON_MMKV_ID).getBoolean("beacon_enable", false)) {
                     requestBody.text =
@@ -813,12 +735,121 @@ class ChatService : Service() {
                 }
             }
 
-            "/autoswitch" -> {
-                val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
-                val state = beacon.getBoolean("beacon_enable", false)
-                beacon.putBoolean("beacon_enable", !state)
-                requestBody.text =
-                    "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${!state}"
+            "/switch" -> {
+                if (!Shizuku.pingBinder()) {
+                    Log.e("Shizuku", "Shizuku not running")
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\nShizuku not running"
+                } else {
+                    // 请求 Shizuku 权
+                    if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\nShizuku permission not granted"
+                    } else {
+                        val commandListData =
+                            requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
+                                .toTypedArray()
+
+                        if (commandListData.size < 2) {
+                            requestBody.text =
+                                "${getString(R.string.system_message_head)}\nUsage: /switch [ autoswitch | data | wifi | datacard ] (on|off)\nPlease specify a switch type and action."
+                        } else {
+
+                            val switchType = commandListData[1].lowercase(Locale.getDefault())
+                            var action: String? = null
+                            if (commandListData.size > 2) {
+                                action = commandListData[2].lowercase(Locale.getDefault())
+                            }
+
+                            when (switchType) {
+                                "autoswitch" -> {
+                                    val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
+                                    val currentState = beacon.getBoolean("beacon_enable", false)
+                                    val newState = when (action) {
+                                        "on" -> true
+                                        "off" -> false
+                                        else -> !currentState // toggle
+                                    }
+                                    beacon.putBoolean("beacon_enable", newState)
+                                    requestBody.text =
+                                        "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${
+                                            if (newState) getString(
+                                                R.string.enable
+                                            ) else getString(R.string.disable)
+                                        }"
+                                }
+
+                                "data" -> {
+                                    val dataEnable = getDataEnable(applicationContext)
+                                    val newState = when (action) {
+                                        "on" -> true
+                                        "off" -> false
+                                        else -> !dataEnable // toggle
+                                    }
+                                    setData(newState)
+                                    requestBody.text =
+                                        "${getString(R.string.system_message_head)}\nSwitching mobile network status: ${
+                                            if (newState) getString(R.string.enable) else getString(
+                                                R.string.disable
+                                            )
+                                        }"
+                                }
+
+                                "wifi" -> {
+                                    val wifiManager =
+                                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                                    val wifiEnabled = wifiManager.isWifiEnabled
+                                    val newState = when (action) {
+                                        "on" -> true
+                                        "off" -> false
+                                        else -> !wifiEnabled // toggle
+                                    }
+                                    setWifi(newState)
+                                    requestBody.text =
+                                        "${getString(R.string.system_message_head)}\nWIFI state: ${
+                                            if (newState) getString(
+                                                R.string.enable
+                                            ) else getString(R.string.disable)
+                                        }"
+                                }
+
+                                "datacard" -> {
+                                    if (getActiveCard(applicationContext) < 2) {
+                                        requestBody.text =
+                                            "${getString(R.string.system_message_head)}\nYou cannot switch the default data SIM card"
+                                        return
+                                    }
+
+                                    val subscriptionManager =
+                                        (applicationContext.getSystemService(
+                                            TELEPHONY_SUBSCRIPTION_SERVICE
+                                        ) as SubscriptionManager)
+                                    val info =
+                                        subscriptionManager.getActiveSubscriptionInfo(
+                                            SubscriptionManager.getDefaultDataSubscriptionId()
+                                        )
+                                    var slotIndex = 0
+                                    if (info.simSlotIndex == 0) {
+                                        slotIndex = 1
+                                    }
+                                    val subscriptionInfo =
+                                        subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(
+                                            slotIndex
+                                        )
+                                    val dataSub = ISub()
+                                    dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
+                                    requestBody.text =
+                                        "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
+                                }
+
+                                else -> {
+                                    requestBody.text =
+                                        "${getString(R.string.system_message_head)}\nUnknown switch type. Available types: autoswitch, data, wifi, datacard"
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
 
