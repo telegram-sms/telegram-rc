@@ -283,7 +283,7 @@ object Network {
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE])
-    private fun requestUpdatedCellInfo(
+    fun requestUpdatedCellInfo(
         context: Context,
         telephonyManager: TelephonyManager
     ): List<CellInfo> {
@@ -303,7 +303,7 @@ object Network {
 
                     override fun onError(errorCode: Int, detail: Throwable?) {
                         Log.w(
-                            "check5GState",
+                            "requestUpdatedCellInfo",
                             "Failed to get updated cell info. Error code: $errorCode",
                             detail
                         )
