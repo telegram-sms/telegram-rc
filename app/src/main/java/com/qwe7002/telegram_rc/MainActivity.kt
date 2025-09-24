@@ -43,7 +43,7 @@ import com.google.gson.JsonParser
 import com.qwe7002.telegram_rc.data_structure.PollingJson
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
-import com.qwe7002.telegram_rc.shizuku_kit.ShizukuIPhoneInfo
+import com.qwe7002.telegram_rc.shizuku_kit.IPhoneSubInfo
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
@@ -655,7 +655,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun getIMSICache() {
         val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-        val phoneInfo = ShizukuIPhoneInfo()
+        val phoneInfo = IPhoneSubInfo()
         if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             val telephonyManager =
                 checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
