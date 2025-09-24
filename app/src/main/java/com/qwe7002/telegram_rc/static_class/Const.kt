@@ -9,8 +9,6 @@ object Const {
     @JvmField
     val JSON: MediaType = "application/json; charset=utf-8".toMediaType()
     const val RESULT_CONFIG_JSON: Int = 1
-
-    const val ROOT_MMKV_ID: String = "root"
     const val CHAT_INFO_MMKV_ID: String = "chat_info"
     const val BEACON_MMKV_ID: String = "beacon"
     const val STATUS_MMKV_ID: String = "status"
