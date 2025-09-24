@@ -30,7 +30,7 @@ import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
-import com.qwe7002.telegram_rc.root_kit.VPNHotspot
+import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.Network
@@ -499,9 +499,9 @@ class BeaconReceiverService : Service() {
         private fun toggleWifiHotspot(enable: Boolean) {
             if (config.getBoolean("useVpnHotspot", false)) {
                 if (enable) {
-                    VPNHotspot.enableVPNHotspot(wifiManager)
+                    VPNHotspot.enableVPNHotspot(applicationContext,wifiManager)
                 } else {
-                    VPNHotspot.disableVPNHotspot(wifiManager)
+                    VPNHotspot.disableVPNHotspot(applicationContext,wifiManager)
                 }
             } else {
                 val tetherMode = TetherManager.TetherMode.TETHERING_WIFI

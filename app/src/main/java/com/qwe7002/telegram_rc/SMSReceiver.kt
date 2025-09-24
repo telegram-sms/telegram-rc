@@ -290,14 +290,14 @@ class SMSReceiver : BroadcastReceiver() {
         //todo
         if (messageBody.lowercase(Locale.getDefault()).replace("_", "") == "/data") {
             if (dataEnable) {
-                setData(context, false)
+                setData(false)
             }
         }
 
     }
 
     private fun openData(context: Context) {
-        setData(context,true)
+        setData(true)
         var loopCount = 0
         while (!Network.checkNetworkStatus(context)) {
             if (loopCount >= 100) {

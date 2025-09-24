@@ -56,7 +56,6 @@ import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.tencent.mmkv.MMKV
-import com.topjohnwu.superuser.Shell
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -208,7 +207,6 @@ class MainActivity : AppCompatActivity() {
                 preferences.getBoolean("battery_monitoring_switch", false),
                 preferences.getBoolean("chat_command", false)
             )
-            Log.i("BootReceiver", Shell.getShell().isRoot.toString())
             startBeaconService(applicationContext)
             KeepAliveJob.startJob(applicationContext)
             ReSendJob.startJob(applicationContext)
@@ -452,7 +450,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         saveButton.setOnClickListener { v: View? ->
-            Log.i("BootReceiver", Shell.getShell().isRoot.toString())
             if (botTokenEditView.text.toString().isEmpty() || chatIdEditView.text.toString()
                     .isEmpty()
             ) {

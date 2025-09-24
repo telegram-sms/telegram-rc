@@ -30,10 +30,10 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
-import com.qwe7002.telegram_rc.root_kit.VPNHotspot
+import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.Const
 import com.tencent.mmkv.MMKV
-import com.topjohnwu.superuser.Shell
+import rikka.shizuku.Shizuku
 
 class BeaconActivity : AppCompatActivity() {
     private lateinit var beaconMMKV: MMKV
@@ -105,7 +105,7 @@ class BeaconActivity : AppCompatActivity() {
             dialogView.findViewById<SwitchMaterial>(R.id.beacon_use_vpn_hotspot_switch)
         disableCount.setText(beaconMMKV.getInt("disableCount", 10).toString())
         enableCount.setText(beaconMMKV.getInt("enableCount", 10).toString())
-        if(Shell.isAppGrantedRoot()==true) {
+        if(Shizuku.pingBinder()&& Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
             useVpnHotspotSwitch.isChecked = beaconMMKV.getBoolean("useVpnHotspot", false) &&
                     VPNHotspot.isVPNHotspotExist(applicationContext)
             useVpnHotspotSwitch.isEnabled =

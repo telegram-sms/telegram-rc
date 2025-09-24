@@ -8,7 +8,6 @@ import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
-import com.topjohnwu.superuser.Shell
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

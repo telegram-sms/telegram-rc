@@ -30,7 +30,7 @@ import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setWifi
-import com.qwe7002.telegram_rc.root_kit.VPNHotspot
+import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
@@ -64,7 +64,6 @@ import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.tencent.mmkv.MMKV
-import com.topjohnwu.superuser.Shell
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -324,7 +323,7 @@ class ChatService : Service() {
                     switchAp += "\n${getString(R.string.switch_ap_message)}"
                 }
 
-                if (Shell.isAppGrantedRoot() == true) {
+                if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                     if (VPNHotspot.isVPNHotspotExist(applicationContext)) {
                         switchAp += "\n${
                             getString(R.string.switch_ap_message).replace(
@@ -674,7 +673,7 @@ class ChatService : Service() {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\nAutoSwitch is enabled, please disable it first."
                 } else {
-                    if (Shell.isAppGrantedRoot() != true || !VPNHotspot.isVPNHotspotExist(
+                    if ((!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) || !VPNHotspot.isVPNHotspotExist(
                             applicationContext
                         )
                     ) {
@@ -689,7 +688,12 @@ class ChatService : Service() {
                         if (!wifiOpen) {
                             resultVpnAp =
                                 getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
-                            Thread { VPNHotspot.enableVPNHotspot(wifiManager) }.start()
+                            Thread {
+                                VPNHotspot.enableVPNHotspot(
+                                    applicationContext,
+                                    wifiManager
+                                )
+                            }.start()
                         } else {
                             statusMMKV.putBoolean("VPNHotspot", false)
                             resultVpnAp =
@@ -1151,7 +1155,7 @@ class ChatService : Service() {
                                     WIFI_SERVICE
                                 ) as WifiManager
                             )
-                            VPNHotspot.disableVPNHotspot(wifiManager)
+                            VPNHotspot.disableVPNHotspot(applicationContext, wifiManager)
                         }
                     }
                 }
