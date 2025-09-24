@@ -1342,7 +1342,6 @@ class ChatService : Service() {
         }
     }
 
-    // 移除了updateHotspotMessageId和getHotspotMessageId方法，因为现在直接使用statusMMKV操作
 
     companion object {
         private const val TAG = "chat_command"
