@@ -41,10 +41,12 @@ class BeaconActivity : AppCompatActivity() {
     private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val gson = Gson()
-            val arrayList = gson.fromJson<ArrayList<BeaconModel.BeaconModel>>(
-                intent.getStringExtra("beaconList"),
-                object : TypeToken<ArrayList<BeaconModel.BeaconModel>>() {}.type
-            )!!
+            val arrayList = intent.getStringExtra("beaconList")?.let { 
+                gson.fromJson<ArrayList<BeaconModel.BeaconModel>>(
+                    it,
+                    object : TypeToken<ArrayList<BeaconModel.BeaconModel>>() {}.type
+                )
+            } ?: ArrayList()
             flushListView(arrayList)
         }
     }
@@ -64,7 +66,7 @@ class BeaconActivity : AppCompatActivity() {
                     customBeaconAdapter = CustomBeaconAdapter(list, this@BeaconActivity)
                     beaconListview.adapter = customBeaconAdapter
                 } else {
-                    customBeaconAdapter!!.updateList(list)
+                    customBeaconAdapter?.updateList(list)
                 }
             }
         }
@@ -76,21 +78,29 @@ class BeaconActivity : AppCompatActivity() {
         beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         setContentView(R.layout.activity_beacon)
         flushListView(ArrayList())
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                flushReceiver,
-                IntentFilter("flush_beacons_list"), RECEIVER_EXPORTED
-            )
-        } else {
-            registerReceiver(
-                flushReceiver,
-                IntentFilter("flush_beacons_list")
-            )
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(
+                    flushReceiver,
+                    IntentFilter("flush_beacons_list"), RECEIVER_EXPORTED
+                )
+            } else {
+                registerReceiver(
+                    flushReceiver,
+                    IntentFilter("flush_beacons_list")
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("BeaconActivity", "Failed to register receiver", e)
         }
     }
 
     override fun onDestroy() {
-        unregisterReceiver(flushReceiver)
+        try {
+            unregisterReceiver(flushReceiver)
+        } catch (e: Exception) {
+            Log.e("BeaconActivity", "Failed to unregister receiver", e)
+        }
         super.onDestroy()
     }
 
@@ -115,8 +125,7 @@ class BeaconActivity : AppCompatActivity() {
         }
         
         // Check if we have background location permission
-        var hasBackgroundLocationPermission = true
-        hasBackgroundLocationPermission = ActivityCompat.checkSelfPermission(
+        val hasBackgroundLocationPermission = ActivityCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_BACKGROUND_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
@@ -149,8 +158,8 @@ class BeaconActivity : AppCompatActivity() {
             .setView(dialogView)
             .setPositiveButton(R.string.ok_button) { _: DialogInterface, _: Int ->
                 beaconMMKV.putBoolean("useVpnHotspot", useVpnHotspotSwitch.isChecked)
-                beaconMMKV.putInt("disableCount", disableCount.text.toString().toInt())
-                beaconMMKV.putInt("enableCount", enableCount.text.toString().toInt())
+                beaconMMKV.putInt("disableCount", disableCount.text.toString().toIntOrNull() ?: 10)
+                beaconMMKV.putInt("enableCount", enableCount.text.toString().toIntOrNull() ?: 10)
                 beaconMMKV.putBoolean("opposite", enable.isChecked)
                 LocalBroadcastManager.getInstance(this)
                     .sendBroadcast(Intent("reload_beacon_config"))
