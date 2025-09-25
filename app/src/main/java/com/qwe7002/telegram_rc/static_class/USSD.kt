@@ -24,10 +24,10 @@ object USSD {
         val TAG = "send_ussd"
         val ussd = Other.getNineKeyMapConvert(ussdRaw)
 
-        var tm: TelephonyManager? =
+        var tm: TelephonyManager =
             (context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager)
         if (subId != -1) {
-            tm = tm!!.createForSubscriptionId(subId)
+            tm = tm.createForSubscriptionId(subId)
         }
         val preferences = MMKV.defaultMMKV()
         if (ActivityCompat.checkSelfPermission(
@@ -36,10 +36,11 @@ object USSD {
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.i(TAG, "send_ussd: No permission.")
+            return
         }
 
-        val botToken = preferences.getString("bot_token", "").toString()
-        val chatId = preferences.getString("chat_id", "").toString()
+        val botToken = preferences.getString("bot_token", "") ?: ""
+        val chatId = preferences.getString("chat_id", "") ?: ""
         val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = RequestMessage()
         requestBody.chatId = chatId
@@ -51,13 +52,14 @@ object USSD {
         val call = okhttpClient.newCall(request)
         val telephonyManager = tm
         Thread {
-            var messageId = -1L
+            var messageId: Long
             try {
                 val response = call.execute()
                 messageId = Other.getMessageId(Objects.requireNonNull(response.body).string())
             } catch (e: IOException) {
                 e.printStackTrace()
                 Log.d(TAG, "send_ussd: $e")
+                return@Thread
             }
             if (ActivityCompat.checkSelfPermission(
                     context,
@@ -65,7 +67,7 @@ object USSD {
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 Handler(Looper.getMainLooper()).post {
-                    telephonyManager!!.sendUssdRequest(
+                    telephonyManager.sendUssdRequest(
                         ussd,
                         USSDCallBack(context, messageId),
                         Handler(Looper.getMainLooper())
