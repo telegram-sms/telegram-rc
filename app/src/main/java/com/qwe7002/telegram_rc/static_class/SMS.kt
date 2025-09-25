@@ -38,8 +38,8 @@ object SMS {
             return
         }
         val preferences = MMKV.defaultMMKV()
-        val trustNumber = preferences.getString("trusted_phone_number", "")!!
-        if (trustNumber.isEmpty()) {
+        val trustNumber = preferences.getString("trusted_phone_number", "")
+        if (trustNumber.isNullOrEmpty()) {
             Log.i(TAG, "The trusted number is empty.")
             return
         }
@@ -47,13 +47,21 @@ object SMS {
             Log.i(TAG, "Did not open the SMS to fall back.")
             return
         }
-        val smsManager = if (subId == -1) {
-            SmsManager.getDefault()
-        } else {
-            SmsManager.getSmsManagerForSubscriptionId(subId)
+        if (content.isNullOrEmpty()) {
+            Log.i(TAG, "The content is empty.")
+            return
         }
-        val divideContents = smsManager.divideMessage(content)
-        smsManager.sendMultipartTextMessage(trustNumber, null, divideContents, null, null)
+        try {
+            val smsManager = if (subId == -1) {
+                SmsManager.getDefault()
+            } else {
+                SmsManager.getSmsManagerForSubscriptionId(subId)
+            }
+            val divideContents = smsManager.divideMessage(content)
+            smsManager.sendMultipartTextMessage(trustNumber, null, divideContents, null, null)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send fallback SMS: ${e.message}")
+        }
     }
 
     @JvmStatic
@@ -85,8 +93,8 @@ object SMS {
             return
         }
         val preferences = MMKV.defaultMMKV()
-        val botToken = preferences.getString("bot_token", "").toString()
-        val chatId = preferences.getString("chat_id", "").toString()
+        val botToken = preferences.getString("bot_token", "") ?: ""
+        val chatId = preferences.getString("chat_id", "") ?: ""
         var requestUri = Network.getUrl(botToken, "sendMessage")
         if (privateMessageId != -1L) {
             Log.d("send_sms", "Find the message_id and switch to edit mode.")
@@ -116,14 +124,18 @@ object SMS {
         try {
             val response = call.execute()
             if (response.code != 200) {
-                throw IOException(response.code.toString())
+                writeLog(context, "Failed to send message: HTTP ${response.code}")
+                response.close()
+                return
             }
             if (privateMessageId == -1L) {
                 privateMessageId = Other.getMessageId(Objects.requireNonNull(response.body).string())
             }
-        } catch (e: IOException) {
+            response.close()
+        } catch (e: Exception) {
             Log.d("sendSMS", "sendSMS: $e")
             writeLog(context, "failed to send message:" + e.message)
+            return
         }
         val divideContents = smsManager.divideMessage(content)
         val sendReceiverList = ArrayList<PendingIntent>()
@@ -146,12 +158,18 @@ object SMS {
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         sendReceiverList.add(sentIntent)
-        smsManager.sendMultipartTextMessage(
-            sendTo,
-            null,
-            divideContents,
-            sendReceiverList,
-            null
-        )
+        try {
+            smsManager.sendMultipartTextMessage(
+                sendTo,
+                null,
+                divideContents,
+                sendReceiverList,
+                null
+            )
+        } catch (e: Exception) {
+            Log.e("sendSMS", "Failed to send SMS: ${e.message}")
+            writeLog(context, "Failed to send SMS: ${e.message}")
+            context.applicationContext.unregisterReceiver(receiver)
+        }
     }
 }
