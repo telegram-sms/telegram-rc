@@ -188,11 +188,12 @@ class MainActivity : AppCompatActivity() {
             if(Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 getIMSICache()
             }else{
-                Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
-                    if (grantResult == PackageManager.PERMISSION_GRANTED) {
-                        getIMSICache()
-                    }
-                }
+                Shizuku.requestPermission(0)
+            }
+        }
+        Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
+            if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                getIMSICache()
             }
         }
         preferences = MMKV.defaultMMKV()
