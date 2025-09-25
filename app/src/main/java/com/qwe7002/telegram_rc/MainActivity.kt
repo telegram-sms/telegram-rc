@@ -163,13 +163,11 @@ class MainActivity : AppCompatActivity() {
             startActivity(writeSystemIntent)
         }
         dataUsageButton.setOnClickListener {
-            // 检查电话权限
             if (ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.CALL_PHONE
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                // 如果没有电话权限，请求权限
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.CALL_PHONE),
@@ -178,7 +176,6 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // 检查数据使用情况权限
             if (!DataUsage.hasPermission(applicationContext)) {
                 DataUsage.openUsageStatsSettings(this)
                 return@setOnClickListener
