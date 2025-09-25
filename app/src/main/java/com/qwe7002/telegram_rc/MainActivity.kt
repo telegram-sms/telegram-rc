@@ -931,7 +931,6 @@ class MainActivity : AppCompatActivity() {
 
             R.id.set_proxy_menu_item -> {
                 val proxyDialogView = inflater.inflate(R.layout.set_proxy_layout, null)
-                val dohSwitch = findViewById<SwitchMaterial>(R.id.doh_switch)
                 val proxyEnable =
                     proxyDialogView.findViewById<SwitchMaterial>(R.id.proxy_enable_switch)
                 val proxyHost = proxyDialogView.findViewById<EditText>(R.id.proxy_host_editview)
@@ -948,16 +947,11 @@ class MainActivity : AppCompatActivity() {
                 AlertDialog.Builder(this).setTitle(R.string.proxy_dialog_title)
                     .setView(proxyDialogView)
                     .setPositiveButton(R.string.ok_button) { _: DialogInterface?, _: Int ->
-                        if (!dohSwitch.isChecked) {
-                            dohSwitch.isChecked = true
-                        }
-                        dohSwitch.isEnabled = !proxyEnable.isChecked
                         proxyMMKV.putBoolean("enabled", proxyEnable.isChecked)
                         proxyMMKV.putString("host", proxyHost.text.toString())
                         proxyMMKV.putInt("port", proxyPort.text.toString().toInt())
                         proxyMMKV.putString("username", proxyUsername.text.toString())
                         proxyMMKV.putString("password", proxyPassword.text.toString())
-                        preferences.putBoolean("doh_switch", dohSwitch.isChecked)
                         Thread {
                             KeepAliveJob.stopJob(applicationContext)
                             stopAllService(applicationContext)
