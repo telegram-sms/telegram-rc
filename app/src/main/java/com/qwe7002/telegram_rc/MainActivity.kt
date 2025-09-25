@@ -62,6 +62,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import rikka.shizuku.Shizuku
 import java.io.IOException
 import java.util.Objects
 import java.util.concurrent.TimeUnit
@@ -165,13 +166,13 @@ class MainActivity : AppCompatActivity() {
             // 检查电话权限
             if (ContextCompat.checkSelfPermission(
                     this,
-                    Manifest.permission.READ_PHONE_STATE
+                    Manifest.permission.CALL_PHONE
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 // 如果没有电话权限，请求权限
                 ActivityCompat.requestPermissions(
                     this,
-                    arrayOf(Manifest.permission.READ_PHONE_STATE),
+                    arrayOf(Manifest.permission.CALL_PHONE),
                     2
                 )
                 return@setOnClickListener
@@ -182,9 +183,20 @@ class MainActivity : AppCompatActivity() {
                 DataUsage.openUsageStatsSettings(this)
                 return@setOnClickListener
             }
+            if(!Shizuku.pingBinder()){
+                showErrorDialog("Shizuku not Running, please restart the app.")
+                return@setOnClickListener
+            }
 
-            // 如果有所有必要权限，执行获取IMSI缓存的操作
-            getIMSICache()
+            if(Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                getIMSICache()
+            }else{
+                Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
+                    if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                        getIMSICache()
+                    }
+                }
+            }
         }
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
@@ -506,7 +518,7 @@ class MainActivity : AppCompatActivity() {
             val hasIgnored = powerManager.isIgnoringBatteryOptimizations(packageName)
             if (!hasIgnored) {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                intent.setData("package:$packageName".toUri())
+                intent.data = "package:$packageName".toUri()
                 if (intent.resolveActivityInfo(
                         packageManager,
                         PackageManager.MATCH_DEFAULT_ONLY
@@ -664,7 +676,7 @@ class MainActivity : AppCompatActivity() {
             }
             if (phoneCount == 1) {
                 val phone = phoneInfo.getDefaultIMSIWithShizuku()
-                Log.d(TAG, "getIMSICache: "+ phone)
+                Log.d(TAG, "getIMSICache: $phone")
                 if (phone.isNotEmpty()) {
                     imsiCache.putString("0", phone)
                 }
