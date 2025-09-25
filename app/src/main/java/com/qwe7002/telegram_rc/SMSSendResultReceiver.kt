@@ -28,15 +28,15 @@ class SMSSendResultReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val logTag = "sms_send_receiver"
         Log.d(logTag, "Receive action: " + intent.action)
-        val extras = intent.extras!!
+        val extras = intent.extras ?: return
         val sub = extras.getInt("sub_id")
         context.unregisterReceiver(this)
         if (!preferences.contains("initialized")) {
             Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
             return
         }
-        val botToken = preferences.getString("bot_token", "").toString()
-        val chatId = preferences.getString("chat_id", "").toString()
+        val botToken = preferences.getString("bot_token", "") ?: ""
+        val chatId = preferences.getString("chat_id", "") ?: ""
         val requestBody = RequestMessage()
         requestBody.chatId = chatId
         requestBody.messageThreadId =preferences.getString("message_thread_id", "")
@@ -76,13 +76,20 @@ class SMSSendResultReceiver : BroadcastReceiver() {
 
             @Throws(IOException::class)
             override fun onResponse(call: Call, response: Response) {
-                if (response.code != 200) {
-                    writeLog(
-                        context,
-                        errorHead + response.code + " " + Objects.requireNonNull(response.body)
-                            .string()
-                    )
-                    addResendLoop(context,requestBody.text)
+                try {
+                    if (response.code != 200) {
+                        writeLog(
+                            context,
+                            errorHead + response.code + " " + Objects.requireNonNull(response.body)
+                                .string()
+                        )
+                        addResendLoop(context,requestBody.text)
+                    }
+                } catch (e: Exception) {
+                    writeLog(context, errorHead + e.message)
+                    e.printStackTrace()
+                } finally {
+                    response.close()
                 }
             }
         })

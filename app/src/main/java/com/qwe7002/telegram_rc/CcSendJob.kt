@@ -43,33 +43,36 @@ class CcSendJob : JobService() {
             title += getString(R.string.verification_code)
         }
         Thread {
+            val mmkv = MMKV.defaultMMKV()
             try {
-                val serviceListJson = MMKV.defaultMMKV().getString("CC_service_list", "[]")
+                val serviceListJson = mmkv.getString("CC_service_list", "[]") ?: "[]"
                 val gson = Gson()
-                var type = object : TypeToken<ArrayList<CcSendService>>() {}.type
+                val type = object : TypeToken<ArrayList<CcSendService>>() {}.type
                 val sendList: ArrayList<CcSendService> = gson.fromJson(serviceListJson, type)
-                val okhttpClient =
-                    Network.getOkhttpObj()
+                val okhttpClient = Network.getOkhttpObj()
                 for (item in sendList) {
                     if(item.enabled.not()) continue
                     var header: Map<String, String> = mapOf()
                     if (item.header.isNotEmpty()) {
-                        type = object : TypeToken<Map<String, String>>() {}.type
-                        header = gson.fromJson(item.header, type)
+                        val headerType = object : TypeToken<Map<String, String>>() {}.type
+                        header = gson.fromJson(item.header, headerType)
                     }
+                    val urlParameters = mapOf(
+                        "Title" to Uri.encode(title),
+                        "Message" to Uri.encode(message),
+                        "Code" to Uri.encode(verificationCode)
+                    )
+                    val bodyParameters = mapOf(
+                        "Title" to title,
+                        "Message" to message,
+                        "Code" to verificationCode
+                    )
                     when (item.method) {
                         // 0: GET, 1: POST
                         0 -> {
                             networkProgressHandle(
                                 "GET",
-                                render(
-                                    item.webhook,
-                                    mapOf(
-                                        "Title" to Uri.encode(title),
-                                        "Message" to Uri.encode(message),
-                                        "Code" to Uri.encode(verificationCode)
-                                    )
-                                ),
+                                render(item.webhook, urlParameters),
                                 null,
                                 header,
                                 okhttpClient
@@ -79,24 +82,8 @@ class CcSendJob : JobService() {
                         1 -> {
                             networkProgressHandle(
                                 "POST",
-                                render(
-                                    item.webhook,
-                                    mapOf(
-                                        "Title" to Uri.encode(title),
-                                        "Message" to Uri.encode(message),
-                                        "Code" to Uri.encode(verificationCode)
-                                    )
-                                ),
-                                render(
-                                    item.body,
-                                    mapOf(
-                                        "Title" to title,
-                                        "Message" to message,
-                                        "Code" to verificationCode
-                                    )
-                                ).toRequestBody(
-                                    Const.JSON
-                                ),
+                                render(item.webhook, urlParameters),
+                                render(item.body, bodyParameters).toRequestBody(Const.JSON),
                                 header,
                                 okhttpClient
                             )
