@@ -201,10 +201,10 @@ class BeaconReceiverService : Service() {
                     }
                 }
                 if (beaconList.isEmpty()) {
-                    Log.d(TAG, "No beacons found")
+                    //Log.d(TAG, "No beacons found")
                     return@setBeaconBatchListener
                 }
-                Log.d(TAG, "Beacons found: ${beaconList.size}")
+                //Log.d(TAG, "Beacons found: ${beaconList.size}")
                 val intent = Intent("flush_beacons_list")
                 intent.putExtra("beaconList", gson.toJson(beaconList))
                 applicationContext.sendBroadcast(intent)
@@ -291,7 +291,7 @@ class BeaconReceiverService : Service() {
 
             val switchStatus = determineSwitchStatus(foundBeacon != null, isWifiEnabled())
             if (switchStatus == STANDBY) {
-                Log.d(TAG, "processBeaconList: standby")
+                //Log.d(TAG, "processBeaconList: standby")
                 return
             }
             val message = buildMessage(switchStatus, foundBeacon)

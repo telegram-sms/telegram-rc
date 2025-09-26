@@ -32,6 +32,7 @@ import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setWifi
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
+import com.qwe7002.telegram_rc.shizuku_kit.Telephony
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
@@ -740,7 +741,6 @@ class ChatService : Service() {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\nShizuku not running"
                 } else {
-                    // 请求 Shizuku 权
                     if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                         requestBody.text =
                             "${getString(R.string.system_message_head)}\nShizuku permission not granted"
@@ -751,13 +751,17 @@ class ChatService : Service() {
 
                         if (commandListData.size < 2) {
                             requestBody.text =
-                                "${getString(R.string.system_message_head)}\nUsage: /switch [ autoswitch | data | wifi | datacard ] (on|off)\nPlease specify a switch type and action."
+                                "${getString(R.string.system_message_head)}\nUsage: /switch [ autoswitch | data | wifi | sim | datacard ]\nPlease specify a switch type and action."
                         } else {
-
                             val switchType = commandListData[1].lowercase(Locale.getDefault())
                             var action: String? = null
                             if (commandListData.size > 2) {
                                 action = commandListData[2].lowercase(Locale.getDefault())
+                            }
+                            var sim: String? = null
+                            if (switchType == "sim" && commandListData.size > 3) {
+                                sim = commandListData[3].lowercase(Locale.getDefault())
+
                             }
 
                             when (switchType) {
@@ -810,6 +814,42 @@ class ChatService : Service() {
                                                 R.string.enable
                                             ) else getString(R.string.disable)
                                         }"
+                                }
+
+                                "sim" -> {
+                                    val slot = sim?.toInt()?.minus(1)
+                                    val newState = when (action) {
+                                        "on" -> true
+                                        "off" -> false
+                                        else -> false
+                                    }
+                                    if (slot == null || slot < 0 || slot > 1) {
+                                        requestBody.text =
+                                            "${getString(R.string.system_message_head)}\nUsage: /switch sim [on|off] [0|1]\nPlease specify the SIM slot number."
+                                    } else {
+                                        val subscriptionManager =
+                                            (applicationContext.getSystemService(
+                                                TELEPHONY_SUBSCRIPTION_SERVICE
+                                            ) as SubscriptionManager)
+                                        val info = subscriptionManager.getActiveSubscriptionInfo(
+                                            SubscriptionManager.getDefaultDataSubscriptionId()
+                                        )
+                                        if (info.simSlotIndex == slot) {
+                                            //不需要切换
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nYou cannot switch the current data SIM card."
+                                        } else {
+                                            val tm = Telephony()
+                                            tm.setSimPowerState(slot, newState)
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
+                                                    if (newState) getString(
+                                                        R.string.enable
+                                                    ) else getString(R.string.disable)
+                                                }"
+                                        }
+                                    }
+
                                 }
 
                                 "datacard" -> {
