@@ -115,6 +115,7 @@ object Other {
 
     @JvmStatic
     fun getMessageId(result: String?): Long {
+        Log.d("getMessageId", "getMessageId: "+ result)
         val resultObj = JsonParser.parseString(result).asJsonObject["result"].asJsonObject
         return resultObj["message_id"].asLong
     }
