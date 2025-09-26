@@ -98,7 +98,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        // 初始化ActivityResultLauncher
         scannerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
                 if (result.resultCode == Const.RESULT_CONFIG_JSON) {
@@ -136,7 +135,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-        // 初始化视图组件
         botTokenEditView = findViewById(R.id.bot_token_editview)
         chatIdEditView = findViewById(R.id.chat_id_editview)
         trustedPhoneNumberEditView = findViewById(R.id.trusted_phone_number_editview)
@@ -183,7 +181,7 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             if (!Shizuku.pingBinder()) {
-                showErrorDialog("Shizuku not Running, please restart the app.")
+                showErrorDialog("Shizuku not Running.")
                 return@setOnClickListener
             }
 
