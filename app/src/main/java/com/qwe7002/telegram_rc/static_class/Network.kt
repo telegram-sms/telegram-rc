@@ -36,7 +36,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 object Network {
-    private const val TELEGRAM_API_DOMAIN = "api.telegram.org"
     private const val DNS_OVER_HTTP = "https://cloudflare-dns.com/dns-query"
 
     @JvmStatic
@@ -78,7 +77,8 @@ object Network {
     @JvmStatic
     @Contract(pure = true)
     fun getUrl(token: String, func: String): String {
-        return "https://$TELEGRAM_API_DOMAIN/bot$token/$func"
+        val api = MMKV.defaultMMKV().getString("api_address", "api.telegram.org")
+        return "https://$api/bot$token/$func"
     }
 
     @JvmStatic

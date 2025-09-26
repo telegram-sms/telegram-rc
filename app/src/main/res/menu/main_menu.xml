@@ -41,6 +41,11 @@
         android:title="@string/copy_notification_menu"
         app:showAsAction="never" />
     <item
+        android:id="@+id/set_api_address"
+        android:title="Set Bot API Address"
+        app:showAsAction="never"
+        tools:ignore="HardcodedText" />
+    <item
         android:id="@+id/config_qrcode_menu_item"
         android:title="@string/transfer_configuration"
         app:showAsAction="never" />
