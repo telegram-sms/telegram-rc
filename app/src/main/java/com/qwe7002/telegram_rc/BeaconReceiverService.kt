@@ -499,7 +499,7 @@ class BeaconReceiverService : Service() {
         private fun toggleWifiHotspot(enable: Boolean) {
             if (config.getBoolean("useVpnHotspot", false)) {
                 if (enable) {
-                    VPNHotspot.enableVPNHotspot(applicationContext,wifiManager)
+                    VPNHotspot.enableVPNHotspot(wifiManager)
                 } else {
                     VPNHotspot.disableVPNHotspot(wifiManager)
                 }
