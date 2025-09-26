@@ -18,6 +18,24 @@ The program's wireless hotspot feature relies on [VPNHotspot](https://github.com
 
 The user manual is not available in this program, please refer to the user manual of Telegram SMS.
 
+## Features
+
+This application allows you to remotely control your Android device via Telegram bot commands. Key features include:
+
+- Send and receive SMS messages via Telegram
+- Receive and view spam SMS messages
+- Send USSD codes and receive responses
+- Control mobile data, WiFi, and tethering
+- Switch between SIM cards for dual-SIM devices
+- Monitor beacon regions for automatic actions
+- View device information such as battery level and network status
+
+## Requirements
+
+- Android 8.0 or higher
+- [Shizuku](https://github.com/RikkaApps/Shizuku) for system-level operations
+- Telegram account with a configured bot
+
 ## Risk warning | 风险警告 | 風險警告 | リスク警告
 
 **This is a sub-version of Telegram SMS that has more experimental features. No warranty expressed or implied. Use at your own risk. You have been warned.**
