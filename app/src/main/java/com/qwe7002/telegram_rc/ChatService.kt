@@ -612,7 +612,6 @@ class ChatService : Service() {
                                 getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
                             Thread {
                                 VPNHotspot.enableVPNHotspot(
-                                    applicationContext,
                                     wifiManager
                                 )
                             }.start()

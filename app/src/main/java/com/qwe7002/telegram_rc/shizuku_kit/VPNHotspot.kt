@@ -41,7 +41,7 @@ object VPNHotspot {
     }
 
     @JvmStatic
-    fun enableVPNHotspot(context: Context, wifiManager: WifiManager) {
+    fun enableVPNHotspot(wifiManager: WifiManager) {
         if (wifiManager.isWifiEnabled) {
             disableVPNHotspot(wifiManager)
         }
@@ -80,11 +80,7 @@ object VPNHotspot {
             }
 
             val process = service.newProcess(
-                arrayOf(
-                    "sh",
-                    "-c",
-                    "dumpsys activity services | grep be.mygod.vpnhotspot/.RepeaterService"
-                ), null, null
+                arrayOf("dumpsys activity services | grep be.mygod.vpnhotspot/.RepeaterService"), null, null
             )
             val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
             val output = reader.readText()
