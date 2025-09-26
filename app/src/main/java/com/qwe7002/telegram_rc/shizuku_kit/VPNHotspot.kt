@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.content.Context
