@@ -166,6 +166,7 @@
             android:name=".QRCodeActivity"
             android:label="@string/transfer_configuration" />
         <activity android:name=".ScannerActivity" />
+        <activity android:name=".CcActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
