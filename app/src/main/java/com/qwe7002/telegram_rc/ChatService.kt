@@ -455,7 +455,7 @@ class ChatService : Service() {
                         ) {
                             val simDisplayName = getSimDisplayName(
                                 applicationContext,
-                                getActiveCard(applicationContext)
+                                0
                             )
                             if (simDisplayName == telephonyManager.simOperatorName) {
                                 simInfo = telephonyManager.simOperatorName
