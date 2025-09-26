@@ -525,7 +525,7 @@ class ChatService : Service() {
                 Log.d(TAG, "getInfo: " + requestBody.text)
             }
 
-            "/log" -> requestBody.text = getString(R.string.system_message_head) + readLog(
+            "/log" -> requestBody.text = getString(R.string.system_message_head) +"\n"+ readLog(
                 applicationContext, 10
             )
 
