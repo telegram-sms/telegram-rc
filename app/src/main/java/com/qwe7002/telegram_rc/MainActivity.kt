@@ -185,7 +185,12 @@ class MainActivity : AppCompatActivity() {
             }
 
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-                getIMSICache()
+                try {
+                    getIMSICache()
+                }catch (e: Exception){
+                    showErrorDialog(e.message.toString())
+                }
+
             } else {
                 Shizuku.requestPermission(0)
             }
@@ -293,7 +298,6 @@ class MainActivity : AppCompatActivity() {
             preferences.getBoolean("verification_code", false)
 
         dohSwitch.isChecked = preferences.getBoolean("doh_switch", true)
-        dohSwitch.isEnabled = !proxyMMKV.getBoolean("enabled", false)
         if (ContextCompat.checkSelfPermission(
                 applicationContext,
                 Manifest.permission.READ_PHONE_STATE
@@ -525,6 +529,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            if (preferences.contains("initialized") && preferences.getString(
+                    "api_address",
+                    "api.telegram.org"
+                ) != "api.telegram.org"
+            ) {
+                logout(preferences.getString("bot_token", "").toString())
+            }
+
             val progressDialog = ProgressDialog(this)
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
             progressDialog.setTitle(getString(R.string.connect_wait_title))
@@ -663,31 +675,24 @@ class MainActivity : AppCompatActivity() {
         val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
         val phoneInfo = IPhoneSubInfo()
         if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            val telephonyManager =
-                checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
-            val phoneCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                telephonyManager.activeModemCount
-            } else {
-                @Suppress("DEPRECATION")
-                telephonyManager.phoneCount
-            }
+            val phoneCount = getActiveCard(applicationContext)
             if (phoneCount == 1) {
                 val phone = phoneInfo.getDefaultIMSIWithShizuku()
                 Log.d(TAG, "getIMSICache: $phone")
                 if (phone.isNotEmpty()) {
                     imsiCache.putString("0", phone)
                 }
-                return
-            }
-            for (i in 0 until phoneCount) {
-                val subid = Other.getSubId(this, i)
-                val phone = phoneInfo.getIMSIWithShizuku(subid)
-                Log.d(TAG, "getIMSICache: $phone")
-                if (phone.isNotEmpty()) {
-                    imsiCache.putString(i.toString(), phone)
+            }else {
+                for (i in 0 until phoneCount) {
+                    val subid = Other.getSubId(this, i)
+                    val phone = phoneInfo.getIMSIWithShizuku(subid)
+                    Log.d(TAG, "getIMSICache: $phone")
+                    if (phone.isNotEmpty()) {
+                        imsiCache.putString(i.toString(), phone)
+                    }
                 }
             }
-            Toast.makeText(this, "Get IMSI Success", Toast.LENGTH_SHORT).show()
+            Snackbar.make(findViewById(R.id.data_usage_button), "Get IMSI Success", Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -910,59 +915,35 @@ class MainActivity : AppCompatActivity() {
                 }
                 return true
             }
-            R.id.set_api_address ->{
+
+            R.id.set_api_address -> {
                 val apiDialogView = inflater.inflate(R.layout.set_api_layout, null)
                 val apiAddress = apiDialogView.findViewById<EditText>(R.id.api_address_editview)
                 apiAddress.setText(preferences.getString("api_address", "api.telegram.org"))
                 val apiDialog = AlertDialog.Builder(this)
                 apiDialog.setTitle("Set API Address")
                 apiDialog.setView(apiDialogView)
-                apiDialog.setPositiveButton("OK") { dialog, _ -> {
-                    val apiAddressText = apiAddress.text.toString()
-                    if (apiAddressText.isEmpty()) {
-                        showErrorDialog("API address cannot be empty.")
-                        return@setPositiveButton
+                apiDialog.setPositiveButton("OK") { dialog, _ ->
+                    {
+                        val apiAddressText = apiAddress.text.toString()
+                        if (preferences.getString(
+                                "api_address",
+                                "api.telegram.org"
+                            ) == apiAddressText
+                        ) {
+                            return@setPositiveButton
+                        }
+                        if (apiAddressText.isEmpty()) {
+                            showErrorDialog("API address cannot be empty.")
+                            return@setPositiveButton
+                        }
+                        preferences.edit().putString("api_address", apiAddressText)
+                            .apply()
+                        if (preferences.contains("initialized") && apiAddressText != "api.telegram.org") {
+                            logout(preferences.getString("bot_token", "").toString())
+                        }
                     }
-                    val progressDialog = ProgressDialog(this)
-                    progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
-                    progressDialog.setTitle(getString(R.string.get_recent_chat_title))
-                    progressDialog.setMessage(getString(R.string.get_recent_chat_message))
-                    progressDialog.isIndeterminate = false
-                    progressDialog.setCancelable(false)
-                    progressDialog.show()
-                    val requestUri =
-                        getUrl(botTokenEditView.text.toString().trim { it <= ' ' }, "logout")
-                    var okhttpClient = getOkhttpObj()
-                    okhttpClient = okhttpClient.newBuilder().build()
-                    val requestBody = PollingJson()
-                    val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
-                    val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
-                    val call = okhttpClient.newCall(request)
-                    call.enqueue(object : Callback {
-                        override fun onFailure(call: Call, e: IOException) {
-                            progressDialog.cancel()
-                            Log.e(TAG, "onFailure: ", e)
-                        }
-                        override fun onResponse(call: Call, response: Response) {
-                            progressDialog.cancel()
-                            if(!response.isSuccessful){
-                                showErrorDialog("Logout failed.")
-                            }else {
-                                val body = response.body.string()
-                                val jsonObj = JsonParser.parseString(body).asJsonObject
-                                if (jsonObj.get("ok").asBoolean) {
-                                    preferences.edit().putString("api_address", apiAddressText).apply()
-                                    Snackbar.make(findViewById(R.id.set_api_address), "Set API address successful.", Snackbar.LENGTH_LONG).show()
-                                } else {
-                                    showErrorDialog("Set API address failed.")
-                                }
-
-                            }
-
-                        }
-                    })
-                    //todo
-                }}
+                }
                 apiDialog.setNegativeButton("Cancel", null)
                 apiDialog.show()
                 return true
@@ -1063,6 +1044,52 @@ class MainActivity : AppCompatActivity() {
             .setMessage(message)
             .setPositiveButton(android.R.string.ok, null)
             .show()
+    }
+
+    fun logout(chatId: String) {
+        val progressDialog = ProgressDialog(this)
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
+        progressDialog.setTitle(getString(R.string.get_recent_chat_title))
+        progressDialog.setMessage(getString(R.string.get_recent_chat_message))
+        progressDialog.isIndeterminate = false
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+        val requestUri = "https://api.telegram.org/bot$chatId/logout"
+        var okhttpClient = getOkhttpObj()
+        okhttpClient = okhttpClient.newBuilder().build()
+        val requestBody = PollingJson()
+        val body: RequestBody =
+            RequestBody.create(Const.JSON, Gson().toJson(requestBody))
+        val request: Request =
+            Request.Builder().url(requestUri).method("POST", body).build()
+        val call = okhttpClient.newCall(request)
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                progressDialog.cancel()
+                Log.e(TAG, "onFailure: ", e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                progressDialog.cancel()
+                if (!response.isSuccessful) {
+                    showErrorDialog("Logout failed.")
+                } else {
+                    val body = response.body.string()
+                    val jsonObj = JsonParser.parseString(body).asJsonObject
+                    if (jsonObj.get("ok").asBoolean) {
+                        Snackbar.make(
+                            findViewById(R.id.set_api_address),
+                            "Set API address successful.",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    } else {
+                        showErrorDialog("Set API address failed.")
+                    }
+
+                }
+
+            }
+        })
     }
 
     companion object {

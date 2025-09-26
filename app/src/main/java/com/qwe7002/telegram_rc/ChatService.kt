@@ -490,7 +490,7 @@ class ChatService : Service() {
                             }
                         }
 
-                        "\nSIM: $simInfo\nSIM Carrier: ${telephonyManager.simOperatorName}"
+                        "\nSIM: $simInfo"
                     }
                 }
                 val spamList =
