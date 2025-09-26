@@ -44,6 +44,7 @@ import com.qwe7002.telegram_rc.data_structure.PollingJson
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.shizuku_kit.IPhoneSubInfo
+import com.qwe7002.telegram_rc.shizuku_kit.Telephony
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
