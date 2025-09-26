@@ -118,7 +118,6 @@ object Network {
                 }
             })
             okhttp.proxy(proxy)
-            doh = true
         }
         if (doh) {
             val dohHttpClient: OkHttpClient.Builder =
