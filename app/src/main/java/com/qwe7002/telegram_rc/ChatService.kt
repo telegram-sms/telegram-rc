@@ -821,7 +821,6 @@ class ChatService : Service() {
                                             SubscriptionManager.getDefaultDataSubscriptionId()
                                         )
                                         if (info.simSlotIndex == slot) {
-                                            //不需要切换
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nYou cannot switch the current data SIM card."
                                         } else {
