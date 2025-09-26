@@ -672,13 +672,14 @@ class ChatService : Service() {
                         sendUssd(applicationContext, commandList[1], subId)
                         return
                     } else {
-                        requestBody.text = "Error"
+                       requestBody.text =
+                        "${getString(R.string.system_message_head)}\nUsage: /sendussd <USSD Code>"
                     }
                 } else {
                     Log.i(TAG, "send_ussd: No permission.")
+                    requestBody.text =
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 }
-                requestBody.text =
-                    "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.unknown_command)}"
             }
 
             "/getspamsms" -> {

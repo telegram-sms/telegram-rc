@@ -41,10 +41,17 @@ object USSD {
 
         val botToken = preferences.getString("bot_token", "") ?: ""
         val chatId = preferences.getString("chat_id", "") ?: ""
+        if (botToken.isEmpty() || chatId.isEmpty()) {
+            Log.e(TAG, "send_ussd: bot_token or chat_id is empty.")
+            return
+        }
+
         val requestUri = Network.getUrl(botToken, "sendMessage")
         val requestBody = RequestMessage()
+        requestBody.messageThreadId = preferences.getString("message_thread_id", "").toString()
         requestBody.chatId = chatId
-        requestBody.text = "${context.getString(R.string.send_ussd_head)}\n${context.getString(R.string.ussd_code_running)}"
+        requestBody.text =
+            "${context.getString(R.string.send_ussd_head)}\n${context.getString(R.string.ussd_code_running)}"
         val requestBodyRaw = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
         val okhttpClient = Network.getOkhttpObj()
