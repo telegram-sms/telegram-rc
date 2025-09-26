@@ -884,7 +884,7 @@ class ChatService : Service() {
 
                                 else -> {
                                     requestBody.text =
-                                        "${getString(R.string.system_message_head)}\nUnknown switch type. Available types: autoswitch, data, wifi, datacard"
+                                        "${getString(R.string.system_message_head)}\nUnknown switch type. Available types: autoswitch, sim, data, wifi, datacard"
                                 }
                             }
                         }
