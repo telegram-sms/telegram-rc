@@ -2,8 +2,15 @@ package com.qwe7002.telegram_rc.static_class
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.telephony.SubscriptionManager
+import android.util.Log
 import androidx.annotation.RequiresPermission
+import com.google.android.material.snackbar.Snackbar
+import com.qwe7002.telegram_rc.R
+import com.qwe7002.telegram_rc.shizuku_kit.IPhoneSubInfo
+import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
+import com.tencent.mmkv.MMKV
 
 
 object Phone {
@@ -18,5 +25,29 @@ object Phone {
             return phoneNumber
         }
         return ""
+    }
+    @JvmStatic
+    fun getIMSICache(context: Context) {
+        val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+        val phoneInfo = IPhoneSubInfo()
+        if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            val phoneCount = getActiveCard(context)
+            if (phoneCount == 1) {
+                val phone = phoneInfo.getDefaultIMSIWithShizuku()
+                Log.d("getIMSICache", "getIMSICache: $phone")
+                if (phone.isNotEmpty()) {
+                    imsiCache.putString("default", phone)
+                }
+            }else {
+                for (i in 0 until phoneCount) {
+                    val subid = Other.getSubId(context, i)
+                    val phone = phoneInfo.getIMSIWithShizuku(subid)
+                    Log.d("getIMSICache", "getIMSICache: $phone")
+                    if (phone.isNotEmpty()) {
+                        imsiCache.putString(i.toString(), phone)
+                    }
+                }
+            }
+        }
     }
 }

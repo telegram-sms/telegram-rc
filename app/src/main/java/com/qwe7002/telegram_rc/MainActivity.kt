@@ -52,6 +52,7 @@ import com.qwe7002.telegram_rc.static_class.Network.getUrl
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
+import com.qwe7002.telegram_rc.static_class.Phone.getIMSICache
 import com.qwe7002.telegram_rc.static_class.ServiceManage.isNotifyListener
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
@@ -186,7 +187,8 @@ class MainActivity : AppCompatActivity() {
 
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 try {
-                    getIMSICache()
+                    getIMSICache(this)
+                    Snackbar.make(findViewById(R.id.data_usage_button), "Get IMSI Success", Snackbar.LENGTH_LONG).show()
                 }catch (e: Exception){
                     showErrorDialog(e.message.toString())
                 }
@@ -197,7 +199,7 @@ class MainActivity : AppCompatActivity() {
         }
         Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
             if (grantResult == PackageManager.PERMISSION_GRANTED) {
-                getIMSICache()
+                getIMSICache(this)
             }
         }
         preferences = MMKV.defaultMMKV()
@@ -671,30 +673,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getIMSICache() {
-        val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-        val phoneInfo = IPhoneSubInfo()
-        if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            val phoneCount = getActiveCard(applicationContext)
-            if (phoneCount == 1) {
-                val phone = phoneInfo.getDefaultIMSIWithShizuku()
-                Log.d(TAG, "getIMSICache: $phone")
-                if (phone.isNotEmpty()) {
-                    imsiCache.putString("0", phone)
-                }
-            }else {
-                for (i in 0 until phoneCount) {
-                    val subid = Other.getSubId(this, i)
-                    val phone = phoneInfo.getIMSIWithShizuku(subid)
-                    Log.d(TAG, "getIMSICache: $phone")
-                    if (phone.isNotEmpty()) {
-                        imsiCache.putString(i.toString(), phone)
-                    }
-                }
-            }
-            Snackbar.make(findViewById(R.id.data_usage_button), "Get IMSI Success", Snackbar.LENGTH_LONG).show()
-        }
-    }
+
 
     private fun showPrivacyDialog() {
         val builder = AlertDialog.Builder(this)
@@ -773,9 +752,9 @@ class MainActivity : AppCompatActivity() {
                         DataUsage.openUsageStatsSettings(this)
                         return
                     }
-
                     // 如果有所有必要权限，执行获取IMSI缓存的操作
-                    getIMSICache()
+                    getIMSICache(this)
+                    Snackbar.make(findViewById(R.id.data_usage_button), "Get IMSI Success", Snackbar.LENGTH_LONG).show()
                 } else {
                     // 权限被拒绝，显示错误信息
                     showErrorDialog(applicationContext.getString(R.string.no_permission))
