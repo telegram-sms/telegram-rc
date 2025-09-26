@@ -49,6 +49,7 @@ import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
+import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
 import com.qwe7002.telegram_rc.static_class.ServiceManage.isNotifyListener
@@ -180,14 +181,14 @@ class MainActivity : AppCompatActivity() {
                 DataUsage.openUsageStatsSettings(this)
                 return@setOnClickListener
             }
-            if(!Shizuku.pingBinder()){
+            if (!Shizuku.pingBinder()) {
                 showErrorDialog("Shizuku not Running, please restart the app.")
                 return@setOnClickListener
             }
 
-            if(Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+            if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 getIMSICache()
-            }else{
+            } else {
                 Shizuku.requestPermission(0)
             }
         }
@@ -681,7 +682,8 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             for (i in 0 until phoneCount) {
-                val phone = phoneInfo.getIMSIWithShizuku(this, i)
+                val subid = Other.getSubId(this, i)
+                val phone = phoneInfo.getIMSIWithShizuku(subid)
                 Log.d(TAG, "getIMSICache: $phone")
                 if (phone.isNotEmpty()) {
                     imsiCache.putString(i.toString(), phone)

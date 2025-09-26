@@ -1186,7 +1186,7 @@ class ChatService : Service() {
                                     WIFI_SERVICE
                                 ) as WifiManager
                             )
-                            VPNHotspot.disableVPNHotspot(applicationContext, wifiManager)
+                            VPNHotspot.disableVPNHotspot(wifiManager)
                         }
                     }
                 }
