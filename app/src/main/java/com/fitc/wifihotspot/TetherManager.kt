@@ -56,6 +56,8 @@ class TetherManager(private val context: Context) {
         const val TETHERING_NCM = 4
         const val TETHERING_ETHERNET = 5
         const val TETHERING_WIGIG = 6
+        // VPNHotspot
+        const val TETHERING_VPN = 7
     }
 
     /**
@@ -73,7 +75,7 @@ class TetherManager(private val context: Context) {
                 Log.e(TAG, "onStartTetheringCallbackClass returned null")
                 return false
             }
-            
+
             proxy = ProxyBuilder.forClass(callbackClass)
                 .dexCache(outputDir).handler { proxy1, method, args ->
                     when (method.name) {
@@ -107,7 +109,7 @@ class TetherManager(private val context: Context) {
                 Log.e(TAG, "onStartTetheringCallbackClass returned null")
                 return false
             }
-            
+
             val method = connectivityManager.javaClass.getDeclaredMethod(
                 "startTethering",
                 Int::class.java,
@@ -135,7 +137,8 @@ class TetherManager(private val context: Context) {
 
     fun stopTethering(mode: Int) {
         try {
-            val method = connectivityManager.javaClass.getDeclaredMethod("stopTethering", Int::class.java)
+            val method =
+                connectivityManager.javaClass.getDeclaredMethod("stopTethering", Int::class.java)
             method.invoke(connectivityManager, mode)
             Log.d(TAG, "stopTethering invoked")
         } catch (e: Exception) {

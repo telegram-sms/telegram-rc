@@ -33,6 +33,7 @@ import com.qwe7002.telegram_rc.shizuku_kit.Networks.setWifi
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
 import com.qwe7002.telegram_rc.shizuku_kit.Telephony
+import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot.isVPNHotspotActive
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.Const
@@ -324,17 +325,6 @@ class ChatService : Service() {
                     switchAp += "\n${getString(R.string.switch_ap_message)}"
                 }
 
-                if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-                    if (VPNHotspot.isVPNHotspotExist(applicationContext)) {
-                        switchAp += "\n${
-                            getString(R.string.switch_ap_message).replace(
-                                "/hotspot",
-                                "/vpnhotspot"
-                            )
-                        }"
-                    }
-                    switchAp += "\n${getString(R.string.switch_data_message)}"
-                }
                 if (command == "/commandlist") {
                     requestBody.text =
                         (getString(R.string.available_command) + smsCommand + ussdCommand + switchAp).replace(
@@ -544,7 +534,16 @@ class ChatService : Service() {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\nAutoSwitch is enabled, please disable it first."
                 } else {
-                    val apStatus = isHotspotActive(applicationContext)
+                    var apStatus: Boolean
+                    if (statusMMKV.getInt(
+                            "tether_mode",
+                            -1
+                        ) != TetherManager.TetherMode.TETHERING_VPN
+                    ) {
+                        apStatus = isHotspotActive(applicationContext)
+                    } else {
+                        apStatus = isVPNHotspotActive()
+                    }
                     var resultAp: String
                     if (!apStatus) {
                         resultAp =
@@ -556,24 +555,52 @@ class ChatService : Service() {
                         if (commandListData.size == 2) {
                             tetherMode =
                                 when (commandListData[1].lowercase(Locale.getDefault())) {
+                                    "wifi" -> TetherManager.TetherMode.TETHERING_WIFI
                                     "bluetooth" -> TetherManager.TetherMode.TETHERING_BLUETOOTH
                                     "usb" -> TetherManager.TetherMode.TETHERING_USB
                                     "nic" -> TetherManager.TetherMode.TETHERING_ETHERNET
-                                    else -> TetherManager.TetherMode.TETHERING_WIFI
+                                    "vpn" -> TetherManager.TetherMode.TETHERING_VPN
+                                    else -> -1
                                 }
                         }
-                        statusMMKV.putInt("tether_mode", tetherMode)
-                        enableHotspot(applicationContext, tetherMode)
-                        Thread.sleep(500)
-                        val hotspotIp = Network.getHotspotIpAddress(tetherMode)
-                        resultAp += "\nGateway IP: $hotspotIp"
-
-                        // 如果获取到的IP是Unknown，则标记需要在消息发送后更新IP地址
-                        if (hotspotIp == "Unknown") {
-                            statusMMKV.putBoolean("hotspot_ip_update_needed", true)
-                            statusMMKV.putInt("hotspot_tether_mode", tetherMode)
+                        if (tetherMode == -1) {
+                            resultAp =
+                                "${getString(R.string.system_message_head)}\nUsage: /hotspot [wifi|bluetooth|usb|nic|vpn]"
                         } else {
-                            statusMMKV.putBoolean("hotspot_ip_update_needed", false)
+                            statusMMKV.putInt("tether_mode", tetherMode)
+                            if (tetherMode != TetherManager.TetherMode.TETHERING_VPN) {
+                                enableHotspot(applicationContext, tetherMode)
+                                val hotspotIp = Network.getHotspotIpAddress(tetherMode)
+                                resultAp += "\nGateway IP: $hotspotIp"
+                                statusMMKV.putBoolean(
+                                    "hotspot_ip_update_needed",
+                                    hotspotIp == "Unknown"
+                                )
+                            } else {
+                                if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                                    resultAp =
+                                        getString(R.string.no_permission)
+                                } else {
+                                    if (!VPNHotspot.isVPNHotspotExist(
+                                            applicationContext
+                                        )
+                                    ) {
+                                        resultAp = "VPNHotspot not found"
+                                    } else {
+                                        val wifiManager =
+                                            applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                                        val vpnHotspotStatus =
+                                            statusMMKV.getBoolean("tether", false)
+                                        if (!vpnHotspotStatus) {
+                                            Thread {
+                                                VPNHotspot.enableVPNHotspot(
+                                                    wifiManager
+                                                )
+                                            }.start()
+                                        }
+                                    }
+                                }
+                            }
                         }
                     } else {
                         statusMMKV.putBoolean("tether", false)
@@ -588,48 +615,6 @@ class ChatService : Service() {
                         applicationContext
                     )
                     requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
-                }
-            }
-
-            "/vpnhotspot" -> {
-                if (MMKV.mmkvWithID(Const.BEACON_MMKV_ID).getBoolean("beacon_enable", false)) {
-                    requestBody.text =
-                        "${getString(R.string.system_message_head)}\nAutoSwitch is enabled, please disable it first."
-                } else {
-                    if ((!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) || !VPNHotspot.isVPNHotspotExist(
-                            applicationContext
-                        )
-                    ) {
-                        requestBody.text =
-                            "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
-
-                    } else {
-                        val wifiManager =
-                            applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                        val wifiOpen = statusMMKV.getBoolean("VPNHotspot", false)
-                        var resultVpnAp: String
-                        if (!wifiOpen) {
-                            resultVpnAp =
-                                getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
-                            Thread {
-                                VPNHotspot.enableVPNHotspot(
-                                    wifiManager
-                                )
-                            }.start()
-                        } else {
-                            statusMMKV.putBoolean("VPNHotspot", false)
-                            resultVpnAp =
-                                getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
-                        }
-                        resultVpnAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
-                            applicationContext
-                        ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
-                            applicationContext
-                        )
-
-                        requestBody.text =
-                            "${getString(R.string.system_message_head)}\n$resultVpnAp"
-                    }
                 }
             }
 
@@ -672,8 +657,8 @@ class ChatService : Service() {
                         sendUssd(applicationContext, commandList[1], subId)
                         return
                     } else {
-                       requestBody.text =
-                        "${getString(R.string.system_message_head)}\nUsage: /sendussd <USSD Code>"
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\nUsage: /sendussd <USSD Code>"
                     }
                 } else {
                     Log.i(TAG, "send_ussd: No permission.")
@@ -1107,7 +1092,7 @@ class ChatService : Service() {
                             val hotspotMessageId = messageObj["message_id"].asLong
                             statusMMKV.putLong("hotspot_message_id", hotspotMessageId)
                             val tetherMode = statusMMKV.getInt(
-                                "hotspot_tether_mode",
+                                "tether_mode",
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
                             val editThread = Thread {
@@ -1199,17 +1184,29 @@ class ChatService : Service() {
                             editThread.start()
                         }
                     }
-
                     // 处理热点关闭逻辑
                     if (!statusMMKV.getBoolean("tether", false)) {
-                        disableHotspot(
-                            applicationContext,
-                            statusMMKV.getInt(
+                        if (statusMMKV.getInt(
                                 "tether_mode",
                                 TetherManager.TetherMode.TETHERING_WIFI
+                            ) == TetherManager.TetherMode.TETHERING_VPN
+                        ) {
+                            val wifiManager = checkNotNull(
+                                applicationContext.getSystemService(
+                                    WIFI_SERVICE
+                                ) as WifiManager
                             )
-                        )
-                        statusMMKV.remove("tether_mode")
+                            VPNHotspot.disableVPNHotspot(wifiManager)
+                        } else {
+                            disableHotspot(
+                                applicationContext,
+                                statusMMKV.getInt(
+                                    "tether_mode",
+                                    TetherManager.TetherMode.TETHERING_WIFI
+                                )
+                            )
+                            statusMMKV.remove("tether_mode")
+                        }
                     }
                 }
                 if (hasCommand && Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
@@ -1219,15 +1216,6 @@ class ChatService : Service() {
                                 applicationContext
                             )
                         )
-
-                        "/vpnhotspot" -> if (!statusMMKV.getBoolean("VPNHotspot", false)) {
-                            val wifiManager = checkNotNull(
-                                applicationContext.getSystemService(
-                                    WIFI_SERVICE
-                                ) as WifiManager
-                            )
-                            VPNHotspot.disableVPNHotspot(wifiManager)
-                        }
                     }
                 }
 
