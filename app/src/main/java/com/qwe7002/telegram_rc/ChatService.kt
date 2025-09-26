@@ -469,7 +469,7 @@ class ChatService : Service() {
                             val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
                             val phone1DataUsage = DataUsage.getDataUsageForSim(
                                 applicationContext,
-                                imsiCache.getString("0", null)
+                                imsiCache.getString("default", null)
                             )
                             simInfo += "\nData Usage: $phone1DataUsage"
                         }
@@ -525,7 +525,7 @@ class ChatService : Service() {
                 Log.d(TAG, "getInfo: " + requestBody.text)
             }
 
-            "/log" -> requestBody.text = getString(R.string.system_message_head) +"\n"+ readLog(
+            "/log" -> requestBody.text = getString(R.string.system_message_head) + "\n" + readLog(
                 applicationContext, 10
             )
 
@@ -811,7 +811,7 @@ class ChatService : Service() {
                                     }
                                     if (slot == null || slot < 0 || slot > 1) {
                                         requestBody.text =
-                                            "${getString(R.string.system_message_head)}\nUsage: /switch sim [on|off] [0|1]\nPlease specify the SIM slot number."
+                                            "${getString(R.string.system_message_head)}\nUsage: /switch sim [on|off] [1|2]\nPlease specify the SIM slot number."
                                     } else {
                                         val subscriptionManager =
                                             (applicationContext.getSystemService(
@@ -834,6 +834,7 @@ class ChatService : Service() {
                                                     ) else getString(R.string.disable)
                                                 }"
                                         }
+                                        Phone.getIMSICache(this@ChatService)
                                     }
 
                                 }
