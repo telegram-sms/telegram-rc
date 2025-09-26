@@ -80,7 +80,7 @@ import java.util.Objects
 import java.util.concurrent.TimeUnit
 
 
-@Suppress("DEPRECATION", "ClassName", "NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+@Suppress("DEPRECATION", "ClassName")
 class ChatService : Service() {
     // global object
     private lateinit var okhttpClient: OkHttpClient
