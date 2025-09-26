@@ -9,7 +9,7 @@ import androidx.annotation.RequiresPermission
 object Phone {
     @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
     @JvmStatic
-    public fun getPhoneNumber(context: Context, slot: Int): String {
+    fun getPhoneNumber(context: Context, slot: Int): String {
         val sm =
             context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
         val list = sm.activeSubscriptionInfoList

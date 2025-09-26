@@ -17,7 +17,7 @@ object VPNHotspot {
     private const val TAG = "VPNHotspot"
 
     @JvmStatic
-    fun disableVPNHotspot(context: Context, wifiManager: WifiManager) {
+    fun disableVPNHotspot(wifiManager: WifiManager) {
         MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("VPNHotspot", false)
         forceStopService("be.mygod.vpnhotspot")
         Networks.setWifi(false)
@@ -43,7 +43,7 @@ object VPNHotspot {
     @JvmStatic
     fun enableVPNHotspot(context: Context, wifiManager: WifiManager) {
         if (wifiManager.isWifiEnabled) {
-            disableVPNHotspot(context, wifiManager)
+            disableVPNHotspot(wifiManager)
         }
         MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("VPNHotspot", true)
         Networks.setWifi(true)

@@ -501,7 +501,7 @@ class BeaconReceiverService : Service() {
                 if (enable) {
                     VPNHotspot.enableVPNHotspot(applicationContext,wifiManager)
                 } else {
-                    VPNHotspot.disableVPNHotspot(applicationContext,wifiManager)
+                    VPNHotspot.disableVPNHotspot(wifiManager)
                 }
             } else {
                 val tetherMode = TetherManager.TetherMode.TETHERING_WIFI

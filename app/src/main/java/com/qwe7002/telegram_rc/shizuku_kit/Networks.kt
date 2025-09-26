@@ -9,7 +9,6 @@ import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.lang.Compiler.command
 
 
 object Networks {
@@ -65,11 +64,7 @@ object Networks {
                 return CommandResult(false, "", "Shizuku service not available")
             }
 
-            // 执行 shell 命令
-            //val process = Runtime.getRuntime().exec(command) // 或使用 Shizuku 的 shell 执行
             val process = service.newProcess(command, null, null)
-            // 注意: 对于高权限命令，使用 service.newProcess() 或类似方法
-
             // 读取输出（示例）
             val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
             var line: String?
