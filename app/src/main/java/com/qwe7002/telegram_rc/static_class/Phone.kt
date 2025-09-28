@@ -26,6 +26,7 @@ object Phone {
         }
         return ""
     }
+
     @JvmStatic
     fun getIMSICache(context: Context) {
         val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
@@ -34,17 +35,18 @@ object Phone {
             val phoneCount = getActiveCard(context)
             if (phoneCount == 1) {
                 val phone = phoneInfo.getDefaultIMSIWithShizuku()
+
                 Log.d("getIMSICache", "getIMSICache: $phone")
                 if (phone.isNotEmpty()) {
-                    imsiCache.putString("default", phone)
+                    imsiCache.putString(getPhoneNumber(context, 0), phone)
                 }
-            }else {
+            } else {
                 for (i in 0 until phoneCount) {
                     val subid = Other.getSubId(context, i)
                     val phone = phoneInfo.getIMSIWithShizuku(subid)
                     Log.d("getIMSICache", "getIMSICache: $phone")
                     if (phone.isNotEmpty()) {
-                        imsiCache.putString(i.toString(), phone)
+                        imsiCache.putString(getPhoneNumber(context, i), phone)
                     }
                 }
             }
