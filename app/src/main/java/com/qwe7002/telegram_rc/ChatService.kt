@@ -1347,8 +1347,12 @@ class ChatService : Service() {
                     }
                 } else {
                     writeLog(applicationContext, "response code:" + response.code)
+                    try {
+                        Thread.sleep(5000L)
+                    } catch (e: InterruptedException) {
+                        e.printStackTrace()
+                    }
                 }
-
             }
         }
     }
