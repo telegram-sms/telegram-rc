@@ -10,8 +10,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
@@ -24,14 +22,15 @@ import android.os.PowerManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Observer
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.Battery
+import com.qwe7002.telegram_rc.static_class.BeaconDataRepository
 import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Notify
@@ -60,6 +59,11 @@ class BeaconReceiverService : Service() {
     private lateinit var wakelock: PowerManager.WakeLock
     private lateinit var config: MMKV
     private val flushReceiverLock = ReentrantLock()
+    
+    // Observer for beacon data
+    private val beaconDataObserver = Observer<ArrayList<BeaconModel.BeaconModel>> { beaconList ->
+        processBeaconList(beaconList)
+    }
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -98,10 +102,10 @@ class BeaconReceiverService : Service() {
         okhttpClient = Network.getOkhttpObj()
 
         initializeWakeLock()
-        registerReloadConfigReceiver()
         loadPreferences()
         initializeBeaconScanner()
-        registerFlushReceiver()
+        // Observe beacon data from repository
+        BeaconDataRepository.beaconList.observeForever(beaconDataObserver)
         scanner.start()
     }
 
@@ -131,22 +135,6 @@ class BeaconReceiverService : Service() {
         wakelock.setReferenceCounted(false)
         if (!wakelock.isHeld) {
             wakelock.acquire()
-        }
-    }
-
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun registerReloadConfigReceiver() {
-        val intentFilter = IntentFilter("reload_beacon_config")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(reloadConfigReceiver, intentFilter, RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(reloadConfigReceiver, intentFilter)
-        }
-    }
-
-    private val reloadConfigReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            // Reload configuration if needed
         }
     }
 
@@ -205,55 +193,14 @@ class BeaconReceiverService : Service() {
                     return@setBeaconBatchListener
                 }
                 //Log.d(TAG, "Beacons found: ${beaconList.size}")
-                val intent = Intent("flush_beacons_list")
-                intent.putExtra("beaconList", gson.toJson(beaconList))
-                applicationContext.sendBroadcast(intent)
+                BeaconDataRepository.updateBeaconList(ArrayList(beaconList))
             }
             .build()
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun registerFlushReceiver() {
-        val intentFilter = IntentFilter("flush_beacons_list")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(flushReceiver, intentFilter, RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(flushReceiver, intentFilter)
-        }
-    }
-
-    private val flushReceiver = object : BroadcastReceiver() {
-
-        override fun onReceive(context: Context, intent: Intent) {
-            flushReceiverLock.lock()
-            try {
-                processBeaconList(intent)
-            } catch (e: Exception) {
-                when (e) {
-                    is IllegalArgumentException -> {
-                        Log.e(TAG, "Invalid beacon list data: ${e.message} for intent ${intent.action}")
-                    }
-                    is IllegalStateException -> {
-                        Log.e(TAG, "Beacon processing in illegal state: ${e.message} for intent ${intent.action}")
-                    }
-                    is IOException -> {
-                        Log.e(TAG, "IO error processing beacon list: ${e.message} for intent ${intent.action}")
-                    }
-                    is InterruptedException -> {
-                        Log.e(TAG, "Interrupted while processing beacon list: ${e.message} for intent ${intent.action}")
-                        Thread.currentThread().interrupt()
-                    }
-                    else -> {
-                        Log.e(TAG, "Error processing beacon list: ${e.message} for intent ${intent.action}", e)
-                    }
-                }
-                resetCounters()
-            } finally {
-                flushReceiverLock.unlock()
-            }
-        }
-
-        private fun processBeaconList(intent: Intent) {
+    private fun processBeaconList(beaconList: ArrayList<BeaconModel.BeaconModel>) {
+        flushReceiverLock.lock()
+        try {
             if (!config.getBoolean("beacon_enable", false)) {
                 resetCounters()
                 Log.d(TAG, "processBeaconList: disable")
@@ -284,8 +231,7 @@ class BeaconReceiverService : Service() {
                 return
             }
 
-            val beacons = parseBeaconList(intent.getStringExtra("beaconList"))
-            val foundBeacon = findMatchingBeacon(beacons, listenBeaconList)
+            val foundBeacon = findMatchingBeacon(beaconList, listenBeaconList)
 
             updateCounters(foundBeacon != null)
 
@@ -409,147 +355,157 @@ class BeaconReceiverService : Service() {
                     }
                 }
             })
-        }
-
-        private fun resetCounters() {
-            config.remove("notFoundCount")
-            config.remove("detectCount")
-        }
-
-        private fun isWifiEnabled(): Boolean {
-            return if (config.getBoolean("useVpnHotspot", false)) {
-                VPNHotspot.isVPNHotspotActive()
-            } else {
-                RemoteControl.isHotspotActive(applicationContext)
-            }
-        }
-
-        private fun isBluetoothEnabled(): Boolean {
-            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-            return bluetoothAdapter?.isEnabled == true
-        }
-
-        private fun parseBeaconList(beaconListJson: String?): List<BeaconModel.BeaconModel> {
-            return if (beaconListJson != null) {
-                Gson().fromJson(
-                    beaconListJson,
-                    object : TypeToken<List<BeaconModel.BeaconModel>>() {}.type
-                )
-            } else {
-                emptyList()
-            }
-        }
-
-        private fun findMatchingBeacon(
-            beacons: List<BeaconModel.BeaconModel>,
-            listenBeaconList: Set<String>
-        ): BeaconModel.BeaconModel? {
-            return beacons.find { beacon ->
-                listenBeaconList.contains(beaconItemName(beacon.uuid, beacon.major, beacon.minor))
-            }
-        }
-
-        private fun updateCounters(foundBeacon: Boolean) {
-            if (foundBeacon) {
-                config.putInt("notFoundCount", 0)
-                config.putInt("detectCount", config.getInt("detectCount", 0) + 1)
-            } else {
-                config.putInt("detectCount", 0)
-                config.putInt("notFoundCount", config.getInt("notFoundCount", 0) + 1)
-            }
-        }
-
-        private fun determineSwitchStatus(foundBeacon: Boolean, wifiEnabled: Boolean): Int {
-            val opposite = config.getBoolean("opposite", false)
-            // 确保配置值至少为1，避免无效的计数阈值
-            val enableCount = maxOf(1, config.getInt("enableCount", 10))
-            val disableCount = maxOf(1, config.getInt("disableCount", 10))
-
-            return if (wifiEnabled && foundBeacon) {
-                val detectCount = config.getInt("detectCount", 0)
-                if (!opposite && detectCount >= disableCount) {
-                    resetCounters()
-                    toggleWifiHotspot(false)
-                    DISABLE_AP
-                } else if (opposite && detectCount >= enableCount) {
-                    resetCounters()
-                    toggleWifiHotspot(true)
-                    ENABLE_AP
-                } else {
-                    STANDBY
+        } catch (e: Exception) {
+            when (e) {
+                is IllegalArgumentException -> {
+                    Log.e(TAG, "Invalid beacon list data: ${e.message}")
                 }
-            } else if (!wifiEnabled && !foundBeacon) {
-                val notFoundCount = config.getInt("notFoundCount", 0)
-                if (!opposite && notFoundCount >= enableCount) {
-                    resetCounters()
-                    toggleWifiHotspot(true)
-                    ENABLE_AP
-                } else if (opposite && notFoundCount >= disableCount) {
-                    resetCounters()
-                    toggleWifiHotspot(false)
-                    DISABLE_AP
-                } else {
-                    STANDBY
+                is IllegalStateException -> {
+                    Log.e(TAG, "Beacon processing in illegal state: ${e.message}")
                 }
+                is IOException -> {
+                    Log.e(TAG, "IO error processing beacon list: ${e.message}")
+                }
+                is InterruptedException -> {
+                    Log.e(TAG, "Interrupted while processing beacon list: ${e.message}")
+                    Thread.currentThread().interrupt()
+                }
+                else -> {
+                    Log.e(TAG, "Error processing beacon list: ${e.message}", e)
+                }
+            }
+            resetCounters()
+        } finally {
+            flushReceiverLock.unlock()
+        }
+    }
+
+    private fun resetCounters() {
+        config.remove("notFoundCount")
+        config.remove("detectCount")
+    }
+
+    private fun isWifiEnabled(): Boolean {
+        return if (config.getBoolean("useVpnHotspot", false)) {
+            VPNHotspot.isVPNHotspotActive()
+        } else {
+            RemoteControl.isHotspotActive(applicationContext)
+        }
+    }
+
+    private fun isBluetoothEnabled(): Boolean {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        return bluetoothAdapter?.isEnabled == true
+    }
+
+    private fun findMatchingBeacon(
+        beacons: ArrayList<BeaconModel.BeaconModel>,
+        listenBeaconList: Set<String>
+    ): BeaconModel.BeaconModel? {
+        return beacons.find { beacon ->
+            listenBeaconList.contains(beaconItemName(beacon.uuid, beacon.major, beacon.minor))
+        }
+    }
+
+    private fun updateCounters(foundBeacon: Boolean) {
+        if (foundBeacon) {
+            config.putInt("notFoundCount", 0)
+            config.putInt("detectCount", config.getInt("detectCount", 0) + 1)
+        } else {
+            config.putInt("detectCount", 0)
+            config.putInt("notFoundCount", config.getInt("notFoundCount", 0) + 1)
+        }
+    }
+
+    private fun determineSwitchStatus(foundBeacon: Boolean, wifiEnabled: Boolean): Int {
+        val opposite = config.getBoolean("opposite", false)
+        // 确保配置值至少为1，避免无效的计数阈值
+        val enableCount = maxOf(1, config.getInt("enableCount", 10))
+        val disableCount = maxOf(1, config.getInt("disableCount", 10))
+
+        return if (wifiEnabled && foundBeacon) {
+            val detectCount = config.getInt("detectCount", 0)
+            if (!opposite && detectCount >= disableCount) {
+                resetCounters()
+                toggleWifiHotspot(false)
+                DISABLE_AP
+            } else if (opposite && detectCount >= enableCount) {
+                resetCounters()
+                toggleWifiHotspot(true)
+                ENABLE_AP
             } else {
                 STANDBY
             }
-        }
-
-        private fun toggleWifiHotspot(enable: Boolean) {
-            if (config.getBoolean("useVpnHotspot", false)) {
-                if (enable) {
-                    VPNHotspot.enableVPNHotspot(wifiManager)
-                } else {
-                    VPNHotspot.disableVPNHotspot(wifiManager)
-                }
+        } else if (!wifiEnabled && !foundBeacon) {
+            val notFoundCount = config.getInt("notFoundCount", 0)
+            if (!opposite && notFoundCount >= enableCount) {
+                resetCounters()
+                toggleWifiHotspot(true)
+                ENABLE_AP
+            } else if (opposite && notFoundCount >= disableCount) {
+                resetCounters()
+                toggleWifiHotspot(false)
+                DISABLE_AP
             } else {
-                val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
-                if (enable) {
-                    RemoteControl.enableHotspot(applicationContext, tetherMode)
-                } else {
-                    RemoteControl.disableHotspot(applicationContext, tetherMode)
-                }
+                STANDBY
+            }
+        } else {
+            STANDBY
+        }
+    }
+
+    private fun toggleWifiHotspot(enable: Boolean) {
+        if (config.getBoolean("useVpnHotspot", false)) {
+            if (enable) {
+                VPNHotspot.enableVPNHotspot(wifiManager)
+            } else {
+                VPNHotspot.disableVPNHotspot(wifiManager)
+            }
+        } else {
+            val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
+            if (enable) {
+                RemoteControl.enableHotspot(applicationContext, tetherMode)
+            } else {
+                RemoteControl.disableHotspot(applicationContext, tetherMode)
             }
         }
+    }
 
 
-        private fun buildMessage(switchStatus: Int, foundBeacon: BeaconModel.BeaconModel?): String {
-            val beaconStatus = if (foundBeacon != null) {
-                val distance = foundBeacon.distance.toInt().toString()
-                "\nBeacon Distance: $distance meter"
-            } else {
-                "\nBeacon Not Found."
-            }
-            if (switchStatus == ENABLE_AP) {
-                Thread.sleep(300)
-            }
-            return when (switchStatus) {
-                ENABLE_AP -> {
-                    val hotspotIp = Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)
-                    val ipText = if (hotspotIp == "Unknown") {
-                        // 标记需要更新IP地址
-                        config.putBoolean("need_update_hotspot_ip", true)
-                        "Gateway IP: Unknown"
-                    } else {
-                        config.putBoolean("need_update_hotspot_ip", false)
-                        "Gateway IP: $hotspotIp"
-                    }
-                    "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
-                        getString(
-                            R.string.action_success
-                        )
-                    }\n$ipText$beaconStatus"
+    private fun buildMessage(switchStatus: Int, foundBeacon: BeaconModel.BeaconModel?): String {
+        val beaconStatus = if (foundBeacon != null) {
+            val distance = foundBeacon.distance.toInt().toString()
+            "\nBeacon Distance: $distance meter"
+        } else {
+            "\nBeacon Not Found."
+        }
+        if (switchStatus == ENABLE_AP) {
+            Thread.sleep(300)
+        }
+        return when (switchStatus) {
+            ENABLE_AP -> {
+                val hotspotIp = Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)
+                val ipText = if (hotspotIp == "Unknown") {
+                    // 标记需要更新IP地址
+                    config.putBoolean("need_update_hotspot_ip", true)
+                    "Gateway IP: Unknown"
+                } else {
+                    config.putBoolean("need_update_hotspot_ip", false)
+                    "Gateway IP: $hotspotIp"
                 }
-                DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
+                "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
                     getString(
                         R.string.action_success
                     )
-                }$beaconStatus"
-                else -> ""
+                }\n$ipText$beaconStatus"
             }
+            DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
+                getString(
+                    R.string.action_success
+                )
+            }$beaconStatus"
+            else -> ""
         }
-
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
@@ -557,9 +513,9 @@ class BeaconReceiverService : Service() {
         if (hasLocationPermissions()) {
             scanner.stop()
         }
+        // Remove observer
+        BeaconDataRepository.beaconList.removeObserver(beaconDataObserver)
         wakelock.release()
-        unregisterReceiver(flushReceiver)
-        unregisterReceiver(reloadConfigReceiver)
         stopForeground(true)
         super.onDestroy()
     }
