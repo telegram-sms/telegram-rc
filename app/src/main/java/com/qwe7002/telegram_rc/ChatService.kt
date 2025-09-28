@@ -307,7 +307,6 @@ class ChatService : Service() {
                 if (getActiveCard(applicationContext) == 2) {
                     smsCommand = "\n${getString(R.string.sendsms_dual)}"
                 }
-                smsCommand += "\n${getString(R.string.get_spam_sms)}"
 
                 var ussdCommand = ""
                 if (ActivityCompat.checkSelfPermission(
