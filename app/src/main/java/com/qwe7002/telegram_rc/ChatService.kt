@@ -395,11 +395,11 @@ class ChatService : Service() {
                             val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
                             val phone1DataUsage = DataUsage.getDataUsageForSim(
                                 applicationContext,
-                                imsiCache.getString("0", null)
+                                imsiCache.getString(phone1Number, null)
                             )
                             val phone2DataUsage = DataUsage.getDataUsageForSim(
                                 applicationContext,
-                                imsiCache.getString("1", null)
+                                imsiCache.getString(phone2Number, null)
                             )
                             sim1Info += "\nSIM1 Data Usage: $phone1DataUsage"
                             sim2Info += "\nSIM2 Data Usage: $phone2DataUsage"
@@ -473,7 +473,7 @@ class ChatService : Service() {
                             val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
                             val phone1DataUsage = DataUsage.getDataUsageForSim(
                                 applicationContext,
-                                imsiCache.getString("default", null)
+                                imsiCache.getString(phone1Number, null)
                             )
                             simInfo += "\nData Usage: $phone1DataUsage"
                         }
@@ -779,7 +779,6 @@ class ChatService : Service() {
                                                     ) else getString(R.string.disable)
                                                 }"
                                         }
-                                        Phone.getIMSICache(this@ChatService)
                                     }
 
                                 }
