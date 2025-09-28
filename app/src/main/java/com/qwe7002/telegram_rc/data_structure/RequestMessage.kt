@@ -23,5 +23,8 @@ class RequestMessage {
 
     @SerializedName(value = "reply_markup")
     lateinit var keyboardMarkup: KeyboardMarkup
+
+    @SerializedName(value = "disable_notification")
+    var disableNotification: Boolean = false
 }
 
