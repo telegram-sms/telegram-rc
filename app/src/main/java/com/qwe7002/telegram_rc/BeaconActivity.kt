@@ -2,13 +2,9 @@ package com.qwe7002.telegram_rc
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.DialogInterface
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -25,12 +21,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.lifecycle.Observer
 import com.google.android.material.switchmaterial.SwitchMaterial
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
+import com.qwe7002.telegram_rc.static_class.BeaconDataRepository
 import com.qwe7002.telegram_rc.static_class.Const
 import com.tencent.mmkv.MMKV
 import rikka.shizuku.Shizuku
@@ -38,16 +33,14 @@ import rikka.shizuku.Shizuku
 class BeaconActivity : AppCompatActivity() {
     private lateinit var beaconMMKV: MMKV
     private var customBeaconAdapter: CustomBeaconAdapter? = null
-    private val flushReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val gson = Gson()
-            val arrayList = intent.getStringExtra("beaconList")?.let { 
-                gson.fromJson<ArrayList<BeaconModel.BeaconModel>>(
-                    it,
-                    object : TypeToken<ArrayList<BeaconModel.BeaconModel>>() {}.type
-                )
-            } ?: ArrayList()
-            flushListView(arrayList)
+    private val beaconListObserver = Observer<ArrayList<BeaconModel.BeaconModel>> { arrayList ->
+        flushListView(arrayList)
+    }
+
+    private val reloadConfigObserver = Observer<Boolean> { reload ->
+        if (reload == true) {
+            // Reload configuration if needed
+            BeaconDataRepository.resetReloadConfig()
         }
     }
 
@@ -72,35 +65,18 @@ class BeaconActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         setContentView(R.layout.activity_beacon)
         flushListView(ArrayList())
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(
-                    flushReceiver,
-                    IntentFilter("flush_beacons_list"), RECEIVER_EXPORTED
-                )
-            } else {
-                registerReceiver(
-                    flushReceiver,
-                    IntentFilter("flush_beacons_list")
-                )
-            }
-        } catch (e: Exception) {
-            Log.e("BeaconActivity", "Failed to register receiver", e)
-        }
+        
+        // Observe beacon list updates
+        BeaconDataRepository.beaconList.observe(this, beaconListObserver)
+        BeaconDataRepository.reloadConfig.observe(this, reloadConfigObserver)
     }
 
     override fun onDestroy() {
-        try {
-            unregisterReceiver(flushReceiver)
-        } catch (e: Exception) {
-            Log.e("BeaconActivity", "Failed to unregister receiver", e)
-        }
         super.onDestroy()
     }
 
@@ -161,8 +137,7 @@ class BeaconActivity : AppCompatActivity() {
                 beaconMMKV.putInt("disableCount", disableCount.text.toString().toIntOrNull() ?: 10)
                 beaconMMKV.putInt("enableCount", enableCount.text.toString().toIntOrNull() ?: 10)
                 beaconMMKV.putBoolean("opposite", enable.isChecked)
-                LocalBroadcastManager.getInstance(this)
-                    .sendBroadcast(Intent("reload_beacon_config"))
+                BeaconDataRepository.triggerReloadConfig()
             }.show()
     }
 
