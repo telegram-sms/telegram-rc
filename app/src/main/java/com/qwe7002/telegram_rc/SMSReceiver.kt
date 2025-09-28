@@ -30,8 +30,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.Objects
 
@@ -212,6 +210,7 @@ class SMSReceiver : BroadcastReceiver() {
             }
         }
         Log.d(logTag, "onReceive: $isVerificationCode")
+        var silentSend = false
         if (!isVerificationCode && !isTrustedPhone) {
             val blackListArray =
                 preferences.getStringSet("block_keyword_list", setOf())?.toMutableList()
@@ -221,36 +220,26 @@ class SMSReceiver : BroadcastReceiver() {
                     continue
                 }
                 if (messageBody.contains(blockListItem)) {
-                    val simpleDateFormat =
-                        SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)
-                    val writeMessage =
-                        requestBody.text + "\n" + context.getString(R.string.time) + simpleDateFormat.format(
-                            Date(System.currentTimeMillis())
-                        )
-                    val spamMMKV = MMKV.mmkvWithID(Const.SPAM_MMKV_ID)
-                    val spamSmsList =
-                        spamMMKV.getStringSet("sms", setOf())?.toMutableSet()
-                            ?: mutableSetOf()
-                    spamSmsList.add(writeMessage)
-                    spamMMKV.putStringSet("sms", spamSmsList)
-                    Log.i(logTag, "Detected message contains blacklist keywords, add spam list")
-                    return
+                    Log.i(logTag, "Detected message contains blacklist keywords, Silent send.")
+                    silentSend = true
                 }
             }
         }
 
-
+        requestBody.disableNotification = silentSend
         val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
         val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send SMS forward failed:"
         val finalRawRequestBodyText = rawRequestBodyText
-        CcSendJob.startJob(
-            context,
-            context.getString(R.string.receive_sms_head),
-            finalRawRequestBodyText
-        )
+        if (!silentSend) {
+            CcSendJob.startJob(
+                context,
+                context.getString(R.string.receive_sms_head),
+                finalRawRequestBodyText
+            )
+        }
         val finalIsFlash = (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -258,7 +247,7 @@ class SMSReceiver : BroadcastReceiver() {
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 addResendLoop(context, requestBody.text)
-                commandHandle(context, messageBody, dataEnable)
+                commandHandle(messageBody, dataEnable)
             }
 
             @Throws(IOException::class)
@@ -277,17 +266,15 @@ class SMSReceiver : BroadcastReceiver() {
                     }
                     Other.addMessageList(Other.getMessageId(result), messageAddress, slot)
                 }
-                commandHandle(context, messageBody, dataEnable)
+                commandHandle(messageBody, dataEnable)
             }
         })
     }
 
     private fun commandHandle(
-        context: Context,
         messageBody: String,
         dataEnable: Boolean
     ) {
-        //todo
         if (messageBody.lowercase(Locale.getDefault()).replace("_", "") == "/data") {
             if (dataEnable) {
                 setData(false)

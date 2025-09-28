@@ -326,12 +326,12 @@ class ChatService : Service() {
                 }
 
                 var switch = ""
-                if (Shizuku.pingBinder()&&Shizuku.checkSelfPermission()==PackageManager.PERMISSION_GRANTED){
+                if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                     switch = "\n/switch - Toggle setting switch"
                 }
                 if (command == "/commandlist") {
                     requestBody.text =
-                        (getString(R.string.available_command) + smsCommand + ussdCommand + switchAp+switch).replace(
+                        (getString(R.string.available_command) + smsCommand + ussdCommand + switchAp + switch).replace(
                             "/",
                             ""
                         )
@@ -497,10 +497,6 @@ class ChatService : Service() {
                         "\nSIM: $simInfo"
                     }
                 }
-                val spamList =
-                    MMKV.mmkvWithID(Const.SPAM_MMKV_ID).decodeStringSet("sms", setOf())?.toList()
-                        ?: ArrayList()
-                val spamCount = "\n${getString(R.string.spam_count_title)}${spamList.size}"
 
                 var isHotspotRunning = ""
                 if (Settings.System.canWrite(applicationContext)) {
@@ -525,7 +521,7 @@ class ChatService : Service() {
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
-                    ) + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + spamCount + cardInfo
+                    ) + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus  + cardInfo
                 Log.d(TAG, "getInfo: " + requestBody.text)
             }
 
@@ -668,60 +664,6 @@ class ChatService : Service() {
                     Log.i(TAG, "send_ussd: No permission.")
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
-                }
-            }
-
-            "/getspamsms" -> {
-                val spamSmsList =
-                    MMKV.mmkvWithID(Const.SPAM_MMKV_ID).getStringSet("sms", setOf())?.toMutableSet()
-                        ?: mutableSetOf()
-                if (spamSmsList.isEmpty()) {
-                    requestBody.text =
-                        "${applicationContext.getString(R.string.system_message_head)}\n${
-                            getString(R.string.no_spam_history)
-                        }"
-                } else {
-                    Thread {
-                        if (checkNetworkStatus(applicationContext)) {
-                            for (item in spamSmsList) {
-                                val sendSmsRequestBody =
-                                    RequestMessage()
-                                sendSmsRequestBody.chatId = chatID
-                                sendSmsRequestBody.text = item
-                                val requestUri = getUrl(
-                                    botToken, "sendMessage"
-                                )
-                                val requestBodyJson = Gson().toJson(sendSmsRequestBody)
-                                val body: RequestBody =
-                                    requestBodyJson.toRequestBody(Const.JSON)
-                                val requestObj: Request =
-                                    Request.Builder().url(requestUri).method("POST", body).build()
-                                val call = okhttpClient.newCall(requestObj)
-                                call.enqueue(object : Callback {
-                                    override fun onFailure(call: Call, e: IOException) {
-                                        e.printStackTrace()
-                                    }
-
-                                    @Throws(IOException::class)
-                                    override fun onResponse(call: Call, response: Response) {
-                                        Log.d(
-                                            TAG,
-                                            "onResponse: " + Objects.requireNonNull(response.body)
-                                                .string()
-                                        )
-                                    }
-                                })
-                                val reSendListLocal =
-                                    MMKV.mmkvWithID(Const.SPAM_MMKV_ID).getStringSet("sms", setOf())
-                                        ?.toMutableSet() ?: mutableSetOf()
-                                reSendListLocal.remove(item)
-                                MMKV.mmkvWithID(Const.SPAM_MMKV_ID)
-                                    .putStringSet("sms", reSendListLocal)
-                            }
-                        }
-                        writeLog(applicationContext, "Send spam message is complete.")
-                    }.start()
-                    return
                 }
             }
 
