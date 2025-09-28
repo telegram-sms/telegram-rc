@@ -1347,23 +1347,6 @@ class ChatService : Service() {
                     }
                 } else {
                     writeLog(applicationContext, "response code:" + response.code)
-                    if (response.code == 401) {
-                        var result: String
-                        try {
-                            result = Objects.requireNonNull(response.body).string()
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                            continue
-                        }
-                        val resultObj = JsonParser.parseString(result).asJsonObject
-                        val resultMessage =
-                            "${getString(R.string.system_message_head)}\n${getString(R.string.error_stop_message)}\n${
-                                getString(R.string.error_message_head)
-                            }${resultObj["description"].asString}\nCode: ${response.code}"
-                        sendFallbackSMS(applicationContext, resultMessage, -1)
-                        stopAllService(applicationContext)
-                        break
-                    }
                 }
 
             }
