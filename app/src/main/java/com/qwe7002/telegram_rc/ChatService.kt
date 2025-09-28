@@ -325,15 +325,19 @@ class ChatService : Service() {
                     switchAp += "\n${getString(R.string.switch_ap_message)}"
                 }
 
+                var switch = ""
+                if (Shizuku.pingBinder()&&Shizuku.checkSelfPermission()==PackageManager.PERMISSION_GRANTED){
+                    switch = "\n/switch - Toggle setting switch"
+                }
                 if (command == "/commandlist") {
                     requestBody.text =
-                        (getString(R.string.available_command) + smsCommand + ussdCommand + switchAp).replace(
+                        (getString(R.string.available_command) + smsCommand + ussdCommand + switchAp+switch).replace(
                             "/",
                             ""
                         )
                 } else {
                     val resultString =
-                        "${getString(R.string.system_message_head)}\n${getString(R.string.available_command)}$smsCommand$ussdCommand$switchAp"
+                        "${getString(R.string.system_message_head)}\n${getString(R.string.available_command)}$smsCommand$ussdCommand$switchAp$switch"
                     requestBody.text = resultString
                 }
             }
