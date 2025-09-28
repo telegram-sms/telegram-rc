@@ -21,6 +21,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicInteger
 
 class CcSendJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
@@ -142,12 +143,7 @@ class CcSendJob : JobService() {
             try {
                 val jobScheduler =
                     context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
-                synchronized(jobIdLock) {
-                    JOBID_counter += 1
-                }
-                val jobId = synchronized(jobIdLock) {
-                    JOBID_counter
-                }
+                val jobId = JOB_ID_GENERATOR.getAndIncrement()
                 val jobInfoBuilder = JobInfo.Builder(
                     jobId,
                     ComponentName(context.packageName, CcSendJob::class.java.getName())
@@ -169,27 +165,29 @@ class CcSendJob : JobService() {
         }
 
         fun startJob(context: Context, title: String, message: String) {
-            val jobScheduler =
-                context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
-            synchronized(jobIdLock) {
-                JOBID_counter += 1
+            try {
+                val jobScheduler =
+                    context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+                val jobId = JOB_ID_GENERATOR.getAndIncrement()
+                val jobInfoBuilder = JobInfo.Builder(
+                    jobId,
+                    ComponentName(context.packageName, CcSendJob::class.java.getName())
+                )
+                    .setPersisted(true)
+                val extras = PersistableBundle()
+                extras.putString("title", title)
+                extras.putString("message", message)
+                jobInfoBuilder.setExtras(extras)
+                jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                val result = jobScheduler.schedule(jobInfoBuilder.build())
+                if (result <= 0) {
+                    Log.e("CCSend", "Failed to schedule job, result code: $result")
+                }
+            } catch (e: Exception) {
+                Log.e("CCSend", "Failed to start job", e)
             }
-            val jobId = synchronized(jobIdLock) {
-                JOBID_counter
-            }
-            val jobInfoBuilder = JobInfo.Builder(
-                jobId,
-                ComponentName(context.packageName, CcSendJob::class.java.getName())
-            )
-                .setPersisted(true)
-            val extras = PersistableBundle()
-            extras.putString("title", title)
-            extras.putString("message", message)
-            jobInfoBuilder.setExtras(extras)
-            jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            jobScheduler.schedule(jobInfoBuilder.build())
-
         }
+        
         fun render(template: String, values: Map<String, String>): String {
             var result = template
             for ((key, value) in values) {
@@ -197,12 +195,12 @@ class CcSendJob : JobService() {
             }
             return result
         }
+        
         val options: ArrayList<String> = arrayListOf(
             "GET",
             "POST"
         )
 
-        var JOBID_counter: Int = 100
-        private val jobIdLock = Any()
+        private val JOB_ID_GENERATOR = AtomicInteger(100)
     }
 }
