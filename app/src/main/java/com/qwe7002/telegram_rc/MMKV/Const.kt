@@ -14,7 +14,6 @@ object Const {
     const val STATUS_MMKV_ID: String = "status"
     const val PROXY_MMKV_ID: String = "proxy"
     const val RESEND_MMKV_ID: String = "resend"
-    const val SPAM_MMKV_ID: String = "spam"
     const val UPGRADE_MMKV_ID: String = "upgrade"
     const val IMSI_MMKV_ID: String = "IMSI"
     const val DATA_PLAN_MMKV_ID: String = "data_plan"
