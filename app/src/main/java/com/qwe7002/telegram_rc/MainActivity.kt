@@ -153,9 +153,7 @@ class MainActivity : AppCompatActivity() {
         getIdButton = findViewById(R.id.get_id_button)
         writeSettingsButton = findViewById(R.id.write_settings_button)
         dataUsageButton = findViewById(R.id.data_usage_button)
-        if(DataUsage.hasPermission(applicationContext)){
-            dataUsageButton.text = "Refresh IMSI cache"
-        }
+
         //load config
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
@@ -672,6 +670,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if(DataUsage.hasPermission(applicationContext)){
+            dataUsageButton.text = "Refresh IMSI cache"
+        }
+
         val backStatus = setPermissionBack
         setPermissionBack = false
         if (backStatus) {

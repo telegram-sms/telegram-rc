@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+    <RadioGroup
+        android:id="@+id/data_plan_radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/daily_plan_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Daily Plan (Billing cycle resets every day)" />
+
+        <RadioButton
+            android:id="@+id/monthly_plan_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Monthly Plan (Billing cycle resets on a specific day each month)" />
+
+    </RadioGroup>
+
+    <LinearLayout
+        android:id="@+id/billing_cycle_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Billing Cycle Start Day"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <NumberPicker
+            android:id="@+id/billing_cycle_picker"
+            android:layout_width="wrap_content"
+            android:layout_height="120dp"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select the day of the month when your billing cycle starts"
+            android:textSize="12sp"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/darker_gray" />
+
+    </LinearLayout>
+
+</LinearLayout>
