@@ -38,7 +38,7 @@ class BeaconActivity : AppCompatActivity() {
     }
 
     private val reloadConfigObserver = Observer<Boolean> { reload ->
-        if (reload == true) {
+        if (reload) {
             // Reload configuration if needed
             BeaconDataRepository.resetReloadConfig()
         }
