@@ -57,6 +57,8 @@ class BeaconReceiverService : Service() {
     private lateinit var wakelock: PowerManager.WakeLock
     private lateinit var preferences: MMKV
     private lateinit var beaconConfig: MMKV
+    private var detectCount = 0
+    private var notFoundCount = 0
     private val flushReceiverLock = ReentrantLock()
 
     // Observer for beacon data
@@ -395,8 +397,8 @@ class BeaconReceiverService : Service() {
     }
 
     private fun resetCounters() {
-        beaconConfig.remove("notFoundCount")
-        beaconConfig.remove("detectCount")
+        detectCount = 0
+        notFoundCount = 0
     }
 
     private fun isWifiEnabled(): Boolean {
@@ -423,11 +425,11 @@ class BeaconReceiverService : Service() {
 
     private fun updateCounters(foundBeacon: Boolean) {
         if (foundBeacon) {
-            beaconConfig.putInt("notFoundCount", 0)
-            beaconConfig.putInt("detectCount", beaconConfig.getInt("detectCount", 0) + 1)
+            notFoundCount = 0
+            detectCount++
         } else {
-            beaconConfig.putInt("detectCount", 0)
-            beaconConfig.putInt("notFoundCount", beaconConfig.getInt("notFoundCount", 0) + 1)
+            detectCount = 0
+            notFoundCount++
         }
     }
 
@@ -438,7 +440,6 @@ class BeaconReceiverService : Service() {
         val disableCount = maxOf(1, beaconConfig.getInt("disableCount", 10))
 
         return if (wifiEnabled && foundBeacon) {
-            val detectCount = beaconConfig.getInt("detectCount", 0)
             if (!opposite && detectCount >= disableCount) {
                 resetCounters()
                 toggleWifiHotspot(false)
@@ -451,7 +452,6 @@ class BeaconReceiverService : Service() {
                 STANDBY
             }
         } else if (!wifiEnabled && !foundBeacon) {
-            val notFoundCount = beaconConfig.getInt("notFoundCount", 0)
             if (!opposite && notFoundCount >= enableCount) {
                 resetCounters()
                 toggleWifiHotspot(true)
