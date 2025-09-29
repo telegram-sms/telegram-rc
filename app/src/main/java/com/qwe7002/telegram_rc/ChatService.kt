@@ -404,7 +404,6 @@ class ChatService : Service() {
                             sim2Info += "\nSIM2 Data Usage: $phone2DataUsage"
 
                         }
-                        // 获取SIM1信号信息
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
                                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -420,8 +419,6 @@ class ChatService : Service() {
                                 }
                             }
                         }
-
-                        // 获取SIM2信号信息
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
                                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -476,7 +473,6 @@ class ChatService : Service() {
                             )
                             simInfo += "\nData Usage: $phone1DataUsage"
                         }
-                        // 获取单卡信号信息
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
                                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -606,7 +602,6 @@ class ChatService : Service() {
                         statusMMKV.putBoolean("tether", false)
                         resultAp =
                             getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
-                        // 清除标记
                         statusMMKV.putBoolean("hotspot_ip_update_needed", false)
                     }
                     resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
