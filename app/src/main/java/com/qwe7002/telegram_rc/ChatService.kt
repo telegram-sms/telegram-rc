@@ -3,6 +3,7 @@ package com.qwe7002.telegram_rc
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
@@ -503,7 +504,7 @@ class ChatService : Service() {
                         getString(R.string.disable)
                     }
                 }
-                val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID);
+                val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
                 var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
                 beaconStatus += if (beacon.getBoolean("beacon_enable", false)) {
                     if (!ServiceManage.hasLocationPermissions(applicationContext)) {
@@ -610,6 +611,53 @@ class ChatService : Service() {
                     ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
                         applicationContext
                     )
+                    if (DataUsage.hasPermission(applicationContext)) {
+                        if (ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.READ_PHONE_STATE
+                            ) == PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.READ_PHONE_NUMBERS
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val subscriptionManager =
+                                (applicationContext.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
+                            val info =
+                                subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
+                            val phone1Number =
+                                Phone.getPhoneNumber(applicationContext, info.simSlotIndex)
+                            val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                            val phone1DataUsage = DataUsage.getDataUsageForSim(
+                                applicationContext,
+                                imsiCache.getString(phone1Number, null)
+                            )
+                            if (getActiveCard(applicationContext) == 2) {
+                                resultAp += "\n${getString(R.string.current_data_card)}: SIM" + (info.simSlotIndex + 1)
+                            }
+                            resultAp += "\nData Usage: $phone1DataUsage"
+                            if (ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val subId = getSubId(applicationContext, info.simSlotIndex)
+                                val telephonyManager =
+                                    applicationContext.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+                                val tm = telephonyManager.createForSubscriptionId(subId)
+                                val cellInfoList = requestUpdatedCellInfo(applicationContext, tm)
+                                if (cellInfoList.isNotEmpty()) {
+                                    val registeredCell = cellInfoList.find { it.isRegistered }
+                                    if (registeredCell != null) {
+                                        val cellDetails =
+                                            ArfcnConverter.getCellInfoDetails(registeredCell)
+                                        resultAp += "\nSignal: $cellDetails"
+                                    }
+                                }
+                            }
+                        }
+
+                    }
                     requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
                 }
             }
@@ -783,29 +831,29 @@ class ChatService : Service() {
                                     if (getActiveCard(applicationContext) < 2) {
                                         requestBody.text =
                                             "${getString(R.string.system_message_head)}\nYou cannot switch the default data SIM card"
-                                        return
-                                    }
+                                    } else {
 
-                                    val subscriptionManager =
-                                        (applicationContext.getSystemService(
-                                            TELEPHONY_SUBSCRIPTION_SERVICE
-                                        ) as SubscriptionManager)
-                                    val info =
-                                        subscriptionManager.getActiveSubscriptionInfo(
-                                            SubscriptionManager.getDefaultDataSubscriptionId()
-                                        )
-                                    var slotIndex = 0
-                                    if (info.simSlotIndex == 0) {
-                                        slotIndex = 1
+                                        val subscriptionManager =
+                                            (applicationContext.getSystemService(
+                                                TELEPHONY_SUBSCRIPTION_SERVICE
+                                            ) as SubscriptionManager)
+                                        val info =
+                                            subscriptionManager.getActiveSubscriptionInfo(
+                                                SubscriptionManager.getDefaultDataSubscriptionId()
+                                            )
+                                        var slotIndex = 0
+                                        if (info.simSlotIndex == 0) {
+                                            slotIndex = 1
+                                        }
+                                        val subscriptionInfo =
+                                            subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(
+                                                slotIndex
+                                            )
+                                        val dataSub = ISub()
+                                        dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
+                                        requestBody.text =
+                                            "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
                                     }
-                                    val subscriptionInfo =
-                                        subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(
-                                            slotIndex
-                                        )
-                                    val dataSub = ISub()
-                                    dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
-                                    requestBody.text =
-                                        "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
                                 }
 
                                 else -> {

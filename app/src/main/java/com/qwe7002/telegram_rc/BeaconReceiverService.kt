@@ -175,7 +175,6 @@ class BeaconReceiverService : Service() {
                             }
                         }
                     }
-
                 }
                 requestBody.messageThreadId = messageThreadId
 
