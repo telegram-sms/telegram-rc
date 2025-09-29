@@ -56,20 +56,20 @@ class BeaconReceiverService : Service() {
     private lateinit var scanner: IScanner
     private lateinit var wakelock: PowerManager.WakeLock
     private lateinit var preferences: MMKV
-    private lateinit var config: MMKV
+    private lateinit var beaconConfig: MMKV
     private val flushReceiverLock = ReentrantLock()
 
     // Observer for beacon data
     private val beaconDataObserver = Observer<ArrayList<BeaconModel.BeaconModel>> { beaconList ->
         flushReceiverLock.lock()
         try {
-            if (!config.getBoolean("beacon_enable", false)) {
+            if (!beaconConfig.getBoolean("beacon_enable", false)) {
                 resetCounters()
                 Log.d(TAG, "processBeaconList: disable")
                 return@Observer
             }
 
-            if (getBatteryLevel() < 25 && !isWifiEnabled() && !config.getBoolean(
+            if (getBatteryLevel() < 25 && !isWifiEnabled() && !beaconConfig.getBoolean(
                     "opposite",
                     false
                 )
@@ -79,7 +79,7 @@ class BeaconReceiverService : Service() {
                 return@Observer
             }
 
-            val listenBeaconList = config.decodeStringSet("address", emptySet()) ?: emptySet()
+            val listenBeaconList = beaconConfig.decodeStringSet("address", emptySet()) ?: emptySet()
             if (listenBeaconList.isEmpty()) {
                 resetCounters()
                 Log.i(TAG, "Watchlist is empty")
@@ -138,7 +138,7 @@ class BeaconReceiverService : Service() {
                     Log.d(TAG, "onResponse: $responseString")
                     try {
                         // 如果需要更新热点IP地址，则启动更新线程
-                        if (config.getBoolean("need_update_hotspot_ip", false)) {
+                        if (beaconConfig.getBoolean("need_update_hotspot_ip", false)) {
                             // 获取messageId
                             val messageId = Other.getMessageId(responseString)
 
@@ -219,7 +219,7 @@ class BeaconReceiverService : Service() {
                                         Log.e(TAG, "Failed to update hotspot IP message", e)
                                     } finally {
                                         // 更新完成后清除标记
-                                        config.putBoolean("need_update_hotspot_ip", false)
+                                        beaconConfig.putBoolean("need_update_hotspot_ip", false)
                                     }
                                 }
                             }
@@ -337,7 +337,7 @@ class BeaconReceiverService : Service() {
 
     private fun loadPreferences() {
         preferences = MMKV.defaultMMKV()
-        config = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
+        beaconConfig = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         chatId = preferences.getString("chat_id", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
     }
@@ -395,12 +395,12 @@ class BeaconReceiverService : Service() {
     }
 
     private fun resetCounters() {
-        config.remove("notFoundCount")
-        config.remove("detectCount")
+        beaconConfig.remove("notFoundCount")
+        beaconConfig.remove("detectCount")
     }
 
     private fun isWifiEnabled(): Boolean {
-        return if (config.getBoolean("useVpnHotspot", false)) {
+        return if (beaconConfig.getBoolean("useVpnHotspot", false)) {
             VPNHotspot.isVPNHotspotActive()
         } else {
             RemoteControl.isHotspotActive(applicationContext)
@@ -423,22 +423,22 @@ class BeaconReceiverService : Service() {
 
     private fun updateCounters(foundBeacon: Boolean) {
         if (foundBeacon) {
-            config.putInt("notFoundCount", 0)
-            config.putInt("detectCount", config.getInt("detectCount", 0) + 1)
+            beaconConfig.putInt("notFoundCount", 0)
+            beaconConfig.putInt("detectCount", beaconConfig.getInt("detectCount", 0) + 1)
         } else {
-            config.putInt("detectCount", 0)
-            config.putInt("notFoundCount", config.getInt("notFoundCount", 0) + 1)
+            beaconConfig.putInt("detectCount", 0)
+            beaconConfig.putInt("notFoundCount", beaconConfig.getInt("notFoundCount", 0) + 1)
         }
     }
 
     private fun determineSwitchStatus(foundBeacon: Boolean, wifiEnabled: Boolean): Int {
-        val opposite = config.getBoolean("opposite", false)
+        val opposite = beaconConfig.getBoolean("opposite", false)
         // 确保配置值至少为1，避免无效的计数阈值
-        val enableCount = maxOf(1, config.getInt("enableCount", 10))
-        val disableCount = maxOf(1, config.getInt("disableCount", 10))
+        val enableCount = maxOf(1, beaconConfig.getInt("enableCount", 10))
+        val disableCount = maxOf(1, beaconConfig.getInt("disableCount", 10))
 
         return if (wifiEnabled && foundBeacon) {
-            val detectCount = config.getInt("detectCount", 0)
+            val detectCount = beaconConfig.getInt("detectCount", 0)
             if (!opposite && detectCount >= disableCount) {
                 resetCounters()
                 toggleWifiHotspot(false)
@@ -451,7 +451,7 @@ class BeaconReceiverService : Service() {
                 STANDBY
             }
         } else if (!wifiEnabled && !foundBeacon) {
-            val notFoundCount = config.getInt("notFoundCount", 0)
+            val notFoundCount = beaconConfig.getInt("notFoundCount", 0)
             if (!opposite && notFoundCount >= enableCount) {
                 resetCounters()
                 toggleWifiHotspot(true)
@@ -469,7 +469,7 @@ class BeaconReceiverService : Service() {
     }
 
     private fun toggleWifiHotspot(enable: Boolean) {
-        if (config.getBoolean("useVpnHotspot", false)) {
+        if (beaconConfig.getBoolean("useVpnHotspot", false)) {
             if (enable) {
                 VPNHotspot.enableVPNHotspot(wifiManager)
             } else {
@@ -501,10 +501,10 @@ class BeaconReceiverService : Service() {
                 val hotspotIp = Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)
                 val ipText = if (hotspotIp == "Unknown") {
                     // 标记需要更新IP地址
-                    config.putBoolean("need_update_hotspot_ip", true)
+                    beaconConfig.putBoolean("need_update_hotspot_ip", true)
                     "Gateway IP: Unknown"
                 } else {
-                    config.putBoolean("need_update_hotspot_ip", false)
+                    beaconConfig.putBoolean("need_update_hotspot_ip", false)
                     "Gateway IP: $hotspotIp"
                 }
                 "${getString(R.string.system_message_head)}\n${getString(R.string.enable_wifi)}${
