@@ -14,6 +14,7 @@ import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.content.PermissionChecker
 import com.google.gson.Gson
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.SMSSendResultReceiver
 import com.qwe7002.telegram_rc.data_structure.RequestMessage

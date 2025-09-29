@@ -7,7 +7,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.util.Log
-import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku

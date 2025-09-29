@@ -1,10 +1,8 @@
 package com.qwe7002.telegram_rc.static_class
 
 import android.content.Context
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
-import android.net.wifi.WifiManager
 import com.fitc.wifihotspot.TetherManager
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 
 object RemoteControl {

@@ -32,10 +32,8 @@ import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
-import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
-import org.json.JSONArray
-import org.json.JSONObject
 
 class CcActivity : AppCompatActivity() {
     private lateinit var listAdapter: ArrayAdapter<CcSendService>

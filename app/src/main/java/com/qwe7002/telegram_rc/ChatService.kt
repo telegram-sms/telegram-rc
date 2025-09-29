@@ -36,12 +36,11 @@ import com.qwe7002.telegram_rc.shizuku_kit.Telephony
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot.isVPNHotspotActive
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
-import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.LogManage.readLog
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network
-import com.qwe7002.telegram_rc.static_class.Network.checkNetworkStatus
 import com.qwe7002.telegram_rc.static_class.Network.getDataEnable
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
@@ -60,10 +59,8 @@ import com.qwe7002.telegram_rc.static_class.Phone
 import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isHotspotActive
-import com.qwe7002.telegram_rc.static_class.SMS.sendFallbackSMS
 import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage
-import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.tencent.mmkv.MMKV
 import okhttp3.Call

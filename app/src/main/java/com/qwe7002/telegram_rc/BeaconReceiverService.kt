@@ -30,7 +30,7 @@ import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.BeaconDataRepository
-import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other

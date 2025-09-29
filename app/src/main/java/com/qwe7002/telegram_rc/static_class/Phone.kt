@@ -6,8 +6,7 @@ import android.content.pm.PackageManager
 import android.telephony.SubscriptionManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import com.google.android.material.snackbar.Snackbar
-import com.qwe7002.telegram_rc.R
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.shizuku_kit.IPhoneSubInfo
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.tencent.mmkv.MMKV

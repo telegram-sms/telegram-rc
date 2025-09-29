@@ -12,11 +12,16 @@ import android.os.Process
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.qwe7002.telegram_rc.MMKV.DataPlanManager
 import java.util.Calendar
 
 
 object DataUsage {
     private const val TAG = "DataUsage"
+    
+    init {
+        DataPlanManager.initialize()
+    }
 
     /**
      * 获取指定SIM卡的数据使用量
@@ -41,8 +46,8 @@ object DataUsage {
             val networkStatsManager =
                 context.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
 
-            // 查询从月初到现在的数据使用情况
-            val startTime = getStartOfMonthTimestamp()
+            // 根据数据计划类型查询数据使用情况
+            val startTime = getDataPlanStartTime()
             val endTime = System.currentTimeMillis()
 
             // 使用null作为subscriberId来避免SecurityException，这会返回所有移动网络的数据
@@ -93,15 +98,48 @@ object DataUsage {
     }
 
     /**
-     * 获取当前月份的开始时间戳
+     * 根据数据计划类型获取计费周期开始时间戳
      */
-    private fun getStartOfMonthTimestamp(): Long {
+    private fun getDataPlanStartTime(): Long {
         val calendar = Calendar.getInstance()
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
+        
+        when (DataPlanManager.getDataPlanType()) {
+            DataPlanManager.DATA_PLAN_TYPE_DAILY -> {
+                // 日租卡：从当天0点开始
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+            }
+            DataPlanManager.DATA_PLAN_TYPE_MONTHLY -> {
+                // 月租卡：从计费周期开始日开始
+                val billingCycleStart = DataPlanManager.getBillingCycleStart()
+                val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
+                
+                if (currentDay >= billingCycleStart) {
+                    // 如果当前日期大于等于计费周期开始日，则从本月该日开始
+                    calendar.set(Calendar.DAY_OF_MONTH, billingCycleStart)
+                } else {
+                    // 如果当前日期小于计费周期开始日，则从上个月该日开始
+                    calendar.add(Calendar.MONTH, -1)
+                    calendar.set(Calendar.DAY_OF_MONTH, billingCycleStart)
+                }
+                
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+            }
+            else -> {
+                // 默认：从月初开始
+                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+            }
+        }
+        
         return calendar.timeInMillis
     }
 

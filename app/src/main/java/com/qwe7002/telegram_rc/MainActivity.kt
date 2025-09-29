@@ -24,7 +24,10 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
+import android.widget.LinearLayout
+import android.widget.NumberPicker
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,13 +46,12 @@ import com.google.gson.JsonParser
 import com.qwe7002.telegram_rc.data_structure.PollingJson
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
-import com.qwe7002.telegram_rc.shizuku_kit.IPhoneSubInfo
-import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.MMKV.DataPlanManager
 import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
-import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
 import com.qwe7002.telegram_rc.static_class.Phone.getIMSICache
@@ -94,7 +96,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var saveButton: Button
     private lateinit var getIdButton: Button
 
-    @SuppressLint("BatteryLife", "QueryPermissionsNeeded")
+    @SuppressLint("BatteryLife", "QueryPermissionsNeeded", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -151,17 +153,22 @@ class MainActivity : AppCompatActivity() {
         getIdButton = findViewById(R.id.get_id_button)
         writeSettingsButton = findViewById(R.id.write_settings_button)
         dataUsageButton = findViewById(R.id.data_usage_button)
-
+        if(DataUsage.hasPermission(applicationContext)){
+            dataUsageButton.text = "Refresh IMSI cache"
+        }
         //load config
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
+        DataPlanManager.initialize() // 初始化数据计划管理器
         writeSettingsButton.setOnClickListener {
             val writeSystemIntent = Intent(
                 Settings.ACTION_MANAGE_WRITE_SETTINGS, "package:$packageName".toUri()
             )
             startActivity(writeSystemIntent)
         }
+
+
         dataUsageButton.setOnClickListener {
             if (ContextCompat.checkSelfPermission(
                     this,
@@ -188,8 +195,12 @@ class MainActivity : AppCompatActivity() {
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 try {
                     getIMSICache(this)
-                    Snackbar.make(findViewById(R.id.data_usage_button), "Get IMSI Success", Snackbar.LENGTH_LONG).show()
-                }catch (e: Exception){
+                    Snackbar.make(
+                        findViewById(R.id.data_usage_button),
+                        "Get IMSI Success",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                } catch (e: Exception) {
                     showErrorDialog(e.message.toString())
                 }
 
@@ -674,7 +685,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     private fun showPrivacyDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle(R.string.privacy_reminder_title)
@@ -754,7 +764,11 @@ class MainActivity : AppCompatActivity() {
                     }
                     // 如果有所有必要权限，执行获取IMSI缓存的操作
                     getIMSICache(this)
-                    Snackbar.make(findViewById(R.id.data_usage_button), "Get IMSI Success", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(
+                        findViewById(R.id.data_usage_button),
+                        "Get IMSI Success",
+                        Snackbar.LENGTH_LONG
+                    ).show()
                 } else {
                     // 权限被拒绝，显示错误信息
                     showErrorDialog(applicationContext.getString(R.string.no_permission))
@@ -883,6 +897,11 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     showErrorDialog("Uninitialized.")
                 }
+                return true
+            }
+
+            R.id.set_data_plan_menu_item -> {
+                showDataPlanDialog()
                 return true
             }
 
@@ -1069,6 +1088,68 @@ class MainActivity : AppCompatActivity() {
 
             }
         })
+    }
+
+    private fun showDataPlanDialog() {
+        DataPlanManager.initialize()
+
+        val dialogView = layoutInflater.inflate(R.layout.data_plan_dialog, null)
+        val dailyRadioButton = dialogView.findViewById<RadioButton>(R.id.daily_plan_radio)
+        val monthlyRadioButton = dialogView.findViewById<RadioButton>(R.id.monthly_plan_radio)
+        val billingCyclePicker = dialogView.findViewById<NumberPicker>(R.id.billing_cycle_picker)
+        val billingCycleLayout = dialogView.findViewById<LinearLayout>(R.id.billing_cycle_layout)
+
+        // 设置NumberPicker
+        billingCyclePicker.minValue = 1
+        billingCyclePicker.maxValue = 31
+        billingCyclePicker.value = DataPlanManager.getBillingCycleStart()
+
+        // 根据当前设置选择RadioButton
+        when (DataPlanManager.getDataPlanType()) {
+            DataPlanManager.DATA_PLAN_TYPE_DAILY -> {
+                dailyRadioButton.isChecked = true
+                billingCycleLayout.visibility = View.GONE
+            }
+
+            DataPlanManager.DATA_PLAN_TYPE_MONTHLY -> {
+                monthlyRadioButton.isChecked = true
+                billingCycleLayout.visibility = View.VISIBLE
+            }
+        }
+
+        // 设置RadioButton监听器
+        val radioGroup = dialogView.findViewById<RadioGroup>(R.id.data_plan_radio_group)
+        radioGroup.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.daily_plan_radio -> {
+                    billingCycleLayout.visibility = View.GONE
+                }
+
+                R.id.monthly_plan_radio -> {
+                    billingCycleLayout.visibility = View.VISIBLE
+                }
+            }
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Set Data Plan")
+            .setView(dialogView)
+            .setPositiveButton("OK") { _, _ ->
+                // 保存设置
+                if (dailyRadioButton.isChecked) {
+                    DataPlanManager.setDataPlanType(DataPlanManager.DATA_PLAN_TYPE_DAILY)
+                } else {
+                    DataPlanManager.setDataPlanType(DataPlanManager.DATA_PLAN_TYPE_MONTHLY)
+                    DataPlanManager.setBillingCycleStart(billingCyclePicker.value)
+                }
+                Snackbar.make(
+                    findViewById(R.id.data_usage_button),
+                    "Data plan settings saved",
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     companion object {

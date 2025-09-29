@@ -26,7 +26,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.BeaconDataRepository
-import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 import rikka.shizuku.Shizuku
 

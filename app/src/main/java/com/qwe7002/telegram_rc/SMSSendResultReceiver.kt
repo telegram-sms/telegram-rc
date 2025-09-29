@@ -8,7 +8,7 @@ import android.telephony.SmsManager
 import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
-import com.qwe7002.telegram_rc.static_class.Const
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.Network

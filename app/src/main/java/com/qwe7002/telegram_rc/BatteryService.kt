@@ -12,7 +12,6 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import com.fitc.wifihotspot.TetherManager
-import com.qwe7002.telegram_rc.static_class.Const
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.RemoteControl

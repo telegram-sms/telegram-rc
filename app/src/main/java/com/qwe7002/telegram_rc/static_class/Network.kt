@@ -19,6 +19,7 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
