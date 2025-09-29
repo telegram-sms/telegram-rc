@@ -20,6 +20,9 @@ object Phone {
             context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
         val list = sm.activeSubscriptionInfoList
         if (list != null && !list.isEmpty()) {
+            if (list.size <= slot) {
+                return list[0]!!.number
+            }
             val phoneNumber = list[slot]!!.number
             return phoneNumber
         }

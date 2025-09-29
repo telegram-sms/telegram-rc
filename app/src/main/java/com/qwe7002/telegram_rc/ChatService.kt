@@ -371,35 +371,37 @@ class ChatService : Service() {
                             sim2Info =
                                 telephonyManager.simOperatorName + "\nSIM2 Alias: " + sim2Display
                         }
-                        if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.READ_PHONE_STATE
-                            ) == PackageManager.PERMISSION_GRANTED &&
-                            ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.READ_PHONE_NUMBERS
-                            ) == PackageManager.PERMISSION_GRANTED &&
-                            ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.READ_SMS
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
-                            sim1Info += " ($phone1Number)"
-                            val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
-                            sim2Info += " ($phone2Number)"
-                            val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-                            val phone1DataUsage = DataUsage.getDataUsageForSim(
-                                applicationContext,
-                                imsiCache.getString(phone1Number, null)
-                            )
-                            val phone2DataUsage = DataUsage.getDataUsageForSim(
-                                applicationContext,
-                                imsiCache.getString(phone2Number, null)
-                            )
-                            sim1Info += "\nSIM1 Data Usage: $phone1DataUsage"
-                            sim2Info += "\nSIM2 Data Usage: $phone2DataUsage"
+                        if (DataUsage.hasPermission(applicationContext)) {
+                            if (ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.READ_PHONE_STATE
+                                ) == PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.READ_PHONE_NUMBERS
+                                ) == PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.READ_SMS
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
+                                sim1Info += " ($phone1Number)"
+                                val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
+                                sim2Info += " ($phone2Number)"
+                                val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                                val phone1DataUsage = DataUsage.getDataUsageForSim(
+                                    applicationContext,
+                                    imsiCache.getString(phone1Number, null)
+                                )
+                                val phone2DataUsage = DataUsage.getDataUsageForSim(
+                                    applicationContext,
+                                    imsiCache.getString(phone2Number, null)
+                                )
+                                sim1Info += "\nSIM1 Data Usage: $phone1DataUsage"
+                                sim2Info += "\nSIM2 Data Usage: $phone2DataUsage"
 
+                            }
                         }
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
@@ -437,38 +439,40 @@ class ChatService : Service() {
                         ) + "\nSIM1: " + sim1Info + "\nSIM2: " + sim2Info
                     } else {
                         var simInfo = ""
-                        if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.READ_PHONE_STATE
-                            ) == PackageManager.PERMISSION_GRANTED &&
-                            ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.READ_PHONE_NUMBERS
-                            ) == PackageManager.PERMISSION_GRANTED &&
-                            ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.READ_SMS
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            val simDisplayName = getSimDisplayName(
-                                applicationContext,
-                                0
-                            )
-                            if (simDisplayName == telephonyManager.simOperatorName) {
-                                simInfo = telephonyManager.simOperatorName
-                            } else {
-                                simInfo =
-                                    telephonyManager.simOperatorName + "\nSIM Alias: " + simDisplayName
-                            }
+                        if (DataUsage.hasPermission(applicationContext)) {
+                            if (ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.READ_PHONE_STATE
+                                ) == PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.READ_PHONE_NUMBERS
+                                ) == PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.READ_SMS
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val simDisplayName = getSimDisplayName(
+                                    applicationContext,
+                                    0
+                                )
+                                if (simDisplayName == telephonyManager.simOperatorName) {
+                                    simInfo = telephonyManager.simOperatorName
+                                } else {
+                                    simInfo =
+                                        telephonyManager.simOperatorName + "\nSIM Alias: " + simDisplayName
+                                }
 
-                            val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
-                            simInfo += " ($phone1Number)"
-                            val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-                            val phone1DataUsage = DataUsage.getDataUsageForSim(
-                                applicationContext,
-                                imsiCache.getString(phone1Number, null)
-                            )
-                            simInfo += "\nData Usage: $phone1DataUsage"
+                                val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
+                                simInfo += " ($phone1Number)"
+                                val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                                val phone1DataUsage = DataUsage.getDataUsageForSim(
+                                    applicationContext,
+                                    imsiCache.getString(phone1Number, null)
+                                )
+                                simInfo += "\nData Usage: $phone1DataUsage"
+                            }
                         }
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
@@ -513,7 +517,7 @@ class ChatService : Service() {
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
-                    ) + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus  + cardInfo
+                    ) + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + cardInfo
                 Log.d(TAG, "getInfo: " + requestBody.text)
             }
 
