@@ -569,6 +569,7 @@ class ChatService : Service() {
                             statusMMKV.putInt("tether_mode", tetherMode)
                             if (tetherMode != TetherManager.TetherMode.TETHERING_VPN) {
                                 enableHotspot(applicationContext, tetherMode)
+                                Thread.sleep(300)
                                 val hotspotIp = Network.getHotspotIpAddress(tetherMode)
                                 resultAp += "\nGateway IP: $hotspotIp"
                                 statusMMKV.putBoolean(
