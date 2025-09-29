@@ -1,34 +1,55 @@
 package com.qwe7002.telegram_rc
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.qwe7002.telegram_rc.data_structure.LogAdapter
 import com.qwe7002.telegram_rc.static_class.LogManage
 import kotlin.concurrent.thread
 
-@Suppress("DEPRECATION")
 class LogcatActivity : AppCompatActivity() {
-    private lateinit var logcatTextview: TextView
+    private lateinit var logRecyclerView: RecyclerView
+    private lateinit var logAdapter: LogAdapter
     private val line = 100
+    private var refreshThread: Thread? = null
+    private var isRefreshing = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_logcat)
-        logcatTextview = findViewById(R.id.logcat_textview)
-        this.setTitle(R.string.logcat)
-        logcatTextview.text = LogManage.readLog(applicationContext, line)
-        logcatTextview.gravity = Gravity.BOTTOM
-        thread {
-            while (true) {
+        setTitle(R.string.logcat)
+        
+        logRecyclerView = findViewById(R.id.log_recycler_view)
+        logRecyclerView.layoutManager = LinearLayoutManager(this)
+        
+        logAdapter = LogAdapter(emptyList())
+        logRecyclerView.adapter = logAdapter
+        
+        loadLogs()
+        
+        startRefreshThread()
+    }
+
+    private fun startRefreshThread() {
+        isRefreshing = true
+        refreshThread = thread {
+            while (isRefreshing) {
                 runOnUiThread {
-                    logcatTextview.text = LogManage.readLog(applicationContext, line)
+                    loadLogs()
                 }
-                Thread.sleep(500)
+                Thread.sleep(1000)
             }
         }
+    }
+
+    private fun loadLogs() {
+        val logs = LogManage.readLog(this, line)
+        val logList = logs.split("\n").filter { it.isNotBlank() }.reversed()
+        logAdapter.updateLogs(logList)
+        logRecyclerView.scrollToPosition(0)
     }
 
     public override fun onPause() {
@@ -37,7 +58,12 @@ class LogcatActivity : AppCompatActivity() {
 
     public override fun onResume() {
         super.onResume()
-        logcatTextview.text = LogManage.readLog(applicationContext, line)
+        loadLogs()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        isRefreshing = false
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -46,10 +72,13 @@ class LogcatActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        LogManage.resetLogFile()
-        return true
+        return when (item.itemId) {
+            R.id.action_clear_logs -> {
+                LogManage.resetLogFile()
+                loadLogs()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
-
 }
-
-
