@@ -11,7 +11,6 @@ import android.annotation.SuppressLint
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.wifi.WifiManager
@@ -53,13 +52,13 @@ class BeaconReceiverService : Service() {
     private lateinit var wifiManager: WifiManager
     private lateinit var okhttpClient: OkHttpClient
     private lateinit var chatId: String
-    private lateinit var requestUrl: String
     private lateinit var messageThreadId: String
     private lateinit var scanner: IScanner
     private lateinit var wakelock: PowerManager.WakeLock
+    private lateinit var preferences: MMKV
     private lateinit var config: MMKV
     private val flushReceiverLock = ReentrantLock()
-    
+
     // Observer for beacon data
     private val beaconDataObserver = Observer<ArrayList<BeaconModel.BeaconModel>> { beaconList ->
         flushReceiverLock.lock()
@@ -70,8 +69,7 @@ class BeaconReceiverService : Service() {
                 return@Observer
             }
 
-            val batteryInfo = getBatteryInfo()
-            if (!batteryInfo.isCharging && batteryInfo.batteryLevel < 25 && !isWifiEnabled() && !config.getBoolean(
+            if (getBatteryLevel() < 25 && !isWifiEnabled() && !config.getBoolean(
                     "opposite",
                     false
                 )
@@ -118,6 +116,7 @@ class BeaconReceiverService : Service() {
 
             val requestBodyJson = gson.toJson(requestBody)
             val body = requestBodyJson.toRequestBody(Const.JSON)
+            val requestUrl = Network.getUrl(preferences.getString("bot_token", "")!!, "SendMessage")
             val request = Request.Builder().url(requestUrl).method("POST", body).build()
             okhttpClient.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
@@ -126,49 +125,51 @@ class BeaconReceiverService : Service() {
                         Resend.addResendLoop(applicationContext, requestBody.text)
                         e.printStackTrace()
                     } catch (ioException: Exception) {
-                        Log.e(TAG, "Error in onFailure handler: ${ioException.message}", ioException)
+                        Log.e(
+                            TAG,
+                            "Error in onFailure handler: ${ioException.message}",
+                            ioException
+                        )
                     }
                 }
 
                 override fun onResponse(call: Call, response: Response) {
+                    val responseString = response.body.string()
+                    Log.d(TAG, "onResponse: $responseString")
                     try {
-                        val responseString = response.body.string()
-                        Log.d(TAG, "onResponse: $responseString")
-
                         // 如果需要更新热点IP地址，则启动更新线程
                         if (config.getBoolean("need_update_hotspot_ip", false)) {
                             // 获取messageId
                             val messageId = Other.getMessageId(responseString)
 
                             val updateThread = Thread {
-                                // 等待初始消息发送完成
-                                try {
-                                    Thread.sleep(2000)
-                                } catch (e: InterruptedException) {
-                                    Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
-                                    return@Thread
-                                }
-
                                 // 尝试多次获取IP地址
                                 var newIp = "Unknown"
                                 val maxRetries = 10
                                 val retryDelay = 1000L
                                 for (i in 1..maxRetries) {
                                     try {
-                                        newIp = Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)
+                                        newIp =
+                                            Network.getHotspotIpAddress(TetherManager.TetherMode.TETHERING_WIFI)
                                         if (newIp != "Unknown") {
                                             break
                                         }
                                         Thread.sleep(retryDelay)
                                     } catch (e: InterruptedException) {
-                                        Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
+                                        Log.w(
+                                            TAG,
+                                            "Hotspot IP update thread interrupted: ${e.message}"
+                                        )
                                         return@Thread
                                     } catch (e: Exception) {
                                         Log.e(TAG, "Error getting hotspot IP address: ${e.message}")
                                         // 继续重试
                                     }
                                     if (i == maxRetries) {
-                                        Log.w(TAG, "Failed to get hotspot IP after $maxRetries attempts")
+                                        Log.w(
+                                            TAG,
+                                            "Failed to get hotspot IP after $maxRetries attempts"
+                                        )
                                     }
                                 }
 
@@ -181,21 +182,35 @@ class BeaconReceiverService : Service() {
 
                                     // 构建更新后的消息内容
                                     val originalMessage = requestBody.text
-                                    editRequest.text = originalMessage.replace("Gateway IP: Unknown", "Gateway IP: $newIp")
+                                    editRequest.text = originalMessage.replace(
+                                        "Gateway IP: Unknown",
+                                        "Gateway IP: $newIp"
+                                    )
 
                                     val gson = Gson()
                                     val requestBodyRaw = gson.toJson(editRequest)
                                     val body = requestBodyRaw.toRequestBody(Const.JSON)
-                                    val requestUri = Network.getUrl(config.getString("bot_token", "")!!, "editMessageText")
-                                    val request = Request.Builder().url(requestUri).method("POST", body).build()
+                                    val requestUri = Network.getUrl(
+                                        preferences.getString("bot_token", "")!!,
+                                        "editMessageText"
+                                    )
+                                    val request =
+                                        Request.Builder().url(requestUri).method("POST", body)
+                                            .build()
 
                                     try {
                                         val client = Network.getOkhttpObj()
                                         val editResponse = client.newCall(request).execute()
                                         try {
-                                            Log.d(TAG, "Hotspot IP update result: ${editResponse.code}")
+                                            Log.d(
+                                                TAG,
+                                                "Hotspot IP update result: ${editResponse.code}"
+                                            )
                                             if (editResponse.code != 200) {
-                                                Log.e(TAG, "Failed to update hotspot IP message. Status code: ${editResponse.code}")
+                                                Log.e(
+                                                    TAG,
+                                                    "Failed to update hotspot IP message. Status code: ${editResponse.code}"
+                                                )
                                             }
                                         } finally {
                                             editResponse.close()
@@ -223,16 +238,20 @@ class BeaconReceiverService : Service() {
                 is IllegalArgumentException -> {
                     Log.e(TAG, "Invalid beacon list data: ${e.message}")
                 }
+
                 is IllegalStateException -> {
                     Log.e(TAG, "Beacon processing in illegal state: ${e.message}")
                 }
+
                 is IOException -> {
                     Log.e(TAG, "IO error processing beacon list: ${e.message}")
                 }
+
                 is InterruptedException -> {
                     Log.e(TAG, "Interrupted while processing beacon list: ${e.message}")
                     Thread.currentThread().interrupt()
                 }
+
                 else -> {
                     Log.e(TAG, "Error processing beacon list: ${e.message}", e)
                 }
@@ -317,9 +336,8 @@ class BeaconReceiverService : Service() {
     }
 
     private fun loadPreferences() {
-        val preferences = MMKV.defaultMMKV()
+        preferences = MMKV.defaultMMKV()
         config = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
-        requestUrl = Network.getUrl(preferences.getString("bot_token", "")!!, "SendMessage")
         chatId = preferences.getString("chat_id", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
     }
@@ -476,7 +494,7 @@ class BeaconReceiverService : Service() {
             "\nBeacon Not Found."
         }
         if (switchStatus == ENABLE_AP) {
-            Thread.sleep(300)
+            Thread.sleep(500)
         }
         return when (switchStatus) {
             ENABLE_AP -> {
@@ -495,11 +513,13 @@ class BeaconReceiverService : Service() {
                     )
                 }\n$ipText$beaconStatus"
             }
+
             DISABLE_AP -> "${getString(R.string.system_message_head)}\n${getString(R.string.disable_wifi)}${
                 getString(
                     R.string.action_success
                 )
             }$beaconStatus"
+
             else -> ""
         }
     }
@@ -516,26 +536,11 @@ class BeaconReceiverService : Service() {
         super.onDestroy()
     }
 
-    private fun getBatteryInfo(): BatteryInfo {
+    private fun getBatteryLevel(): Int {
         val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
         val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        val intent = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val batteryStatus = registerReceiver(null, intent)!!
-        val isCharging = when (batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1)) {
-            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> true
-            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> {
-                when (batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)) {
-                    BatteryManager.BATTERY_PLUGGED_AC, BatteryManager.BATTERY_PLUGGED_USB, BatteryManager.BATTERY_PLUGGED_WIRELESS -> true
-                    else -> false
-                }
-            }
-
-            else -> false
-        }
-        return BatteryInfo(batteryLevel, isCharging)
+        return batteryLevel
     }
-
-    data class BatteryInfo(val batteryLevel: Int, val isCharging: Boolean)
 
     companion object {
         private const val STANDBY = -1
