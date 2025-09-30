@@ -109,12 +109,12 @@ class ChatService : Service() {
             @SerializedName(value = "inline_keyboard")
             lateinit var inlineKeyboard: ArrayList<ArrayList<InlineKeyboardButton>>
 
+            @Suppress("unused")
             val oneTimeKeyboard: Boolean = true
         }
 
         class InlineKeyboardButton {
             lateinit var text: String
-
             @SerializedName(value = "callback_data")
             lateinit var callbackData: String
         }
