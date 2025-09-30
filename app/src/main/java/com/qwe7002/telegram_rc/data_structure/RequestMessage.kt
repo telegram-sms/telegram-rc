@@ -1,6 +1,7 @@
 package com.qwe7002.telegram_rc.data_structure
 
 import com.google.gson.annotations.SerializedName
+import com.qwe7002.telegram_rc.ChatService
 import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.KeyboardMarkup
 
 @Suppress("unused")
@@ -22,7 +23,7 @@ class RequestMessage {
     var messageThreadId: String? = null
 
     @SerializedName(value = "reply_markup")
-    lateinit var keyboardMarkup: KeyboardMarkup
+    lateinit var keyboardMarkup: ChatService.ReplyMarkupKeyboard.KeyboardMarkup
 
     @SerializedName(value = "disable_notification")
     var disableNotification: Boolean = false
