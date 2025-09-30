@@ -16,6 +16,7 @@ import com.qwe7002.telegram_rc.MMKV.DataPlanManager
 import java.util.Calendar
 
 
+@Suppress("DEPRECATION")
 object DataUsage {
     private const val TAG = "DataUsage"
     

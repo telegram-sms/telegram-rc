@@ -22,11 +22,9 @@ import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.annotations.SerializedName
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.data_structure.PollingJson
-import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard
-import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.InlineKeyboardButton
-import com.qwe7002.telegram_rc.data_structure.ReplyMarkupKeyboard.KeyboardMarkup
 import com.qwe7002.telegram_rc.data_structure.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
@@ -94,6 +92,33 @@ class ChatService : Service() {
     private lateinit var mainThread: Thread
     private var terminalThread = false
 
+    object ReplyMarkupKeyboard {
+        fun getInlineKeyboardObj(
+            text: String,
+            callbackData: String
+        ): ArrayList<InlineKeyboardButton> {
+            val button = InlineKeyboardButton()
+            button.text = text
+            button.callbackData = callbackData
+            val buttonArraylist = ArrayList<InlineKeyboardButton>()
+            buttonArraylist.add(button)
+            return buttonArraylist
+        }
+
+        class KeyboardMarkup {
+            @SerializedName(value = "inline_keyboard")
+            lateinit var inlineKeyboard: ArrayList<ArrayList<InlineKeyboardButton>>
+
+            val oneTimeKeyboard: Boolean = true
+        }
+
+        class InlineKeyboardButton {
+            lateinit var text: String
+
+            @SerializedName(value = "callback_data")
+            lateinit var callbackData: String
+        }
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = getNotificationObj(
@@ -979,8 +1004,8 @@ class ChatService : Service() {
 
                 SEND_SMS_STATUS.WAITING_TO_SEND_STATUS -> {
                     sendStatusMMKV.putString("content", requestMsg)
-                    val keyboardMarkup = KeyboardMarkup()
-                    val inlineKeyboardButtons = ArrayList<ArrayList<InlineKeyboardButton>>()
+                    val keyboardMarkup = ReplyMarkupKeyboard.KeyboardMarkup()
+                    val inlineKeyboardButtons = ArrayList<ArrayList<ReplyMarkupKeyboard.InlineKeyboardButton>>()
                     inlineKeyboardButtons.add(
                         ReplyMarkupKeyboard.getInlineKeyboardObj(
                             applicationContext.getString(
