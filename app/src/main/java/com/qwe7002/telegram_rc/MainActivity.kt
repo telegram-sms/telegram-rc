@@ -43,8 +43,8 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import com.qwe7002.telegram_rc.data_structure.PollingJson
-import com.qwe7002.telegram_rc.data_structure.RequestMessage
+import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
+import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager

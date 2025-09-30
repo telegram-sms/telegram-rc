@@ -24,8 +24,8 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.data_structure.PollingJson
-import com.qwe7002.telegram_rc.data_structure.RequestMessage
+import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
+import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData

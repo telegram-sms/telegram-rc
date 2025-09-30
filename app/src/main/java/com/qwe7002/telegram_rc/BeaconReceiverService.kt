@@ -29,7 +29,7 @@ import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
-import com.qwe7002.telegram_rc.data_structure.RequestMessage
+import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.BeaconDataRepository
@@ -41,8 +41,6 @@ import com.qwe7002.telegram_rc.static_class.Network.requestUpdatedCellInfo
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
-import com.qwe7002.telegram_rc.static_class.Other.getDataSimId
-import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Phone
 import com.qwe7002.telegram_rc.static_class.RemoteControl

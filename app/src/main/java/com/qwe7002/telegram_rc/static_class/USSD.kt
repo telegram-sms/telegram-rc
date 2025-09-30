@@ -12,7 +12,7 @@ import com.google.gson.Gson
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.USSDCallBack
-import com.qwe7002.telegram_rc.data_structure.RequestMessage
+import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.tencent.mmkv.MMKV
 import okhttp3.Request
 import okhttp3.RequestBody
