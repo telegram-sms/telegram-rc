@@ -668,6 +668,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    @SuppressLint("SetTextI18n")
     override fun onResume() {
         super.onResume()
         if(DataUsage.hasPermission(applicationContext)){
