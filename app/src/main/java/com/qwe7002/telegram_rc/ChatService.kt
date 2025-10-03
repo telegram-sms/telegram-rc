@@ -547,7 +547,7 @@ class ChatService : Service() {
                         val batteryInfoSys = BatteryHealth.getBatteryHealthFromSysfs()
                         var healthSys = ""
                         if (batteryInfoSys.isSuccess) {
-                            healthSys = "(" + batteryInfoSys.healthRatio + "%)"
+                            healthSys = " (" + batteryInfoSys.healthRatio + "%)"
                         }
                         batteryHealth =
                             "\nBattery Health: " + batteryInfoSys.healthStatus + healthSys + " (Cycle Count: ${batteryInfoSys.cycleCount}, Temperature: ${batteryInfoSys.temperature}℃)"
