@@ -27,6 +27,7 @@ import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
+import com.qwe7002.telegram_rc.shizuku_kit.BatteryHealth
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setWifi
@@ -115,6 +116,7 @@ class ChatService : Service() {
 
         class InlineKeyboardButton {
             lateinit var text: String
+
             @SerializedName(value = "callback_data")
             lateinit var callbackData: String
         }
@@ -539,10 +541,22 @@ class ChatService : Service() {
                 } else {
                     getString(R.string.disable)
                 }
+                var batteryHealth = ""
+                if (Shizuku.pingBinder()) {
+                    if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                        val batteryInfoSys = BatteryHealth.getBatteryHealthFromSysfs()
+                        var healthSys = ""
+                        if (batteryInfoSys.isSuccess) {
+                            healthSys = "(" + batteryInfoSys.healthRatio + "%)"
+                        }
+                        batteryHealth =
+                            "\nBattery Health: " + batteryInfoSys.healthStatus + healthSys + " (Cycle Count: ${batteryInfoSys.cycleCount}, Temperature: ${batteryInfoSys.temperature}℃)"
+                    }
+                }
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
-                    ) + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + cardInfo
+                    ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + cardInfo
                 Log.d(TAG, "getInfo: " + requestBody.text)
             }
 
@@ -1005,7 +1019,8 @@ class ChatService : Service() {
                 SEND_SMS_STATUS.WAITING_TO_SEND_STATUS -> {
                     sendStatusMMKV.putString("content", requestMsg)
                     val keyboardMarkup = ReplyMarkupKeyboard.KeyboardMarkup()
-                    val inlineKeyboardButtons = ArrayList<ArrayList<ReplyMarkupKeyboard.InlineKeyboardButton>>()
+                    val inlineKeyboardButtons =
+                        ArrayList<ArrayList<ReplyMarkupKeyboard.InlineKeyboardButton>>()
                     inlineKeyboardButtons.add(
                         ReplyMarkupKeyboard.getInlineKeyboardObj(
                             applicationContext.getString(
