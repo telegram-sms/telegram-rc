@@ -107,6 +107,7 @@ object BatteryHealth {
      * @param filePath 文件路径
      * @return 文件内容
      */
+    @Suppress("SameParameterValue")
     private fun readSysfsFileString(filePath: String): String {
         val commandResult = executeCommand(arrayOf("cat", filePath))
         return if (commandResult.isSuccess) {
