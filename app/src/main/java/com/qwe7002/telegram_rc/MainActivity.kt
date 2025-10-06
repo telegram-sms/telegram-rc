@@ -192,7 +192,8 @@ class MainActivity : AppCompatActivity() {
 
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 try {
-                    getIMSICache(this)
+                    Log.d(TAG, "onCreate: ")
+                    getIMSICache(applicationContext)
                     Snackbar.make(
                         findViewById(R.id.data_usage_button),
                         "Get IMSI Success",
@@ -208,6 +209,7 @@ class MainActivity : AppCompatActivity() {
         }
         Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
             if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "onCreate: ")
                 getIMSICache(this)
             }
         }
