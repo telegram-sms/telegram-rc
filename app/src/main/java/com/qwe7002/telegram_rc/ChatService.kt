@@ -3,14 +3,18 @@ package com.qwe7002.telegram_rc
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.WifiLock
+import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
+import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.provider.Settings
@@ -62,6 +66,7 @@ import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.tencent.mmkv.MMKV
+import moe.shizuku.server.IShizukuService
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -70,7 +75,10 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import rikka.shizuku.Shizuku
+import java.io.BufferedReader
 import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.TimeUnit
@@ -545,13 +553,99 @@ class ChatService : Service() {
                 if (Shizuku.pingBinder()) {
                     if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                         val batteryInfoSys = BatteryHealth.getBatteryHealthFromSysfs()
-                        var healthSys = ""
+                        var healthSys: String
                         if (batteryInfoSys.isSuccess) {
                             healthSys = " (" + batteryInfoSys.healthRatio + "%)"
                             batteryHealth =
                                 "\nBattery Health: " + batteryInfoSys.healthStatus + healthSys + " (Cycle Count: ${batteryInfoSys.cycleCount}, Temperature: ${batteryInfoSys.temperature}℃)"
+                        } else {
+                            // Check if we have BATTERY_STATS permission, if not, try to grant it via Shizuku
+                            if (checkSelfPermission(Manifest.permission.BATTERY_STATS) != PackageManager.PERMISSION_GRANTED) {
+                                // Try to grant BATTERY_STATS permission using Shizuku shell command
+                                if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                                    try {
+                                        val service: IShizukuService? =
+                                            IShizukuService.Stub.asInterface(Shizuku.getBinder())
+                                        if (service != null) {
+                                            val command = arrayOf(
+                                                "pm",
+                                                "grant",
+                                                packageName,
+                                                Manifest.permission.BATTERY_STATS
+                                            )
+                                            val process = service.newProcess(command, null, null)
+                                            val inputStream = ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
+                                            val errorStream = ParcelFileDescriptor.AutoCloseInputStream(process.errorStream)
+                                            val reader =
+                                                BufferedReader(InputStreamReader(inputStream))
+                                            val errorReader =
+                                                BufferedReader(InputStreamReader(errorStream))
+
+                                            process.waitFor()
+                                            val output = reader.readText()
+                                            val errorOutput = errorReader.readText()
+
+                                            if (output.isNotEmpty()) {
+                                                Log.i(TAG, "BATTERY_STATS grant output: $output")
+                                            }
+
+                                            if (errorOutput.isNotEmpty()) {
+                                                Log.e(
+                                                    TAG,
+                                                    "BATTERY_STATS grant error: $errorOutput"
+                                                )
+                                            }
+
+                                            if (process.exitValue() == 0) {
+                                                Log.i(
+                                                    TAG,
+                                                    "Successfully granted BATTERY_STATS permission via Shizuku"
+                                                )
+                                            } else {
+                                                Log.e(
+                                                    TAG,
+                                                    "Failed to grant BATTERY_STATS permission via Shizuku"
+                                                )
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            TAG,
+                                            "Error granting BATTERY_STATS permission: ${e.message}",
+                                            e
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
+                }
+                if(batteryHealth.isEmpty()&&checkSelfPermission(Manifest.permission.BATTERY_STATS)==PackageManager.PERMISSION_GRANTED){
+                    val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                    val batteryStatus = applicationContext.registerReceiver(null, intentFilter)
+                    
+                    val batteryHealthValue = batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) ?: -1
+                    val batteryHealthString = when (batteryHealthValue) {
+                        BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
+                        BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheat"
+                        BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
+                        BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over voltage"
+                        BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Unspecified failure"
+                        BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
+                        else -> "Unknown"
+                    }
+
+                    val cycleCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        val count = batteryStatus?.getIntExtra(BatteryManager.EXTRA_CYCLE_COUNT, -1) ?: -1
+                        "Cycle Count: $count, "
+                    } else {
+                        ""
+                    }
+                    val batteryTemperature =
+                        batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
+                    
+                    batteryHealth =
+                        "\nBattery Health: $batteryHealthString ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
                 }
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
@@ -864,7 +958,7 @@ class ChatService : Service() {
                                             } catch (e: Exception) {
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
-                                            } catch (_:NoSuchMethodError){
+                                            } catch (_: NoSuchMethodError) {
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: Shizuku is not available"
                                             }
@@ -903,7 +997,7 @@ class ChatService : Service() {
                                         } catch (e: Exception) {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
-                                        } catch (_:NoSuchMethodError){
+                                        } catch (_: NoSuchMethodError) {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Shizuku is not available"
                                         }
