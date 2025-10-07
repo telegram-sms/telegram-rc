@@ -26,32 +26,45 @@ object BatteryHealth {
             Log.e(TAG, "Shizuku permission not granted")
             return BatteryHealthInfo(0, 0, 0.0, 0, "",0.0, false, "Shizuku permission not granted")
         }
-
-        return try {
-            val chargeFullDesign =
-                readSysfsFile("/sys/class/power_supply/battery/charge_full_design")
-            val chargeFull = readSysfsFile("/sys/class/power_supply/battery/charge_full")
-            val cycleCount = readSysfsFile("/sys/class/power_supply/battery/cycle_count")
-            val healthStatus = readSysfsFileString("/sys/class/power_supply/battery/health")
-            val temperature = readSysfsFile("/sys/class/power_supply/battery/temp")
-            if (chargeFullDesign > 0) {
-                val healthRatio = (chargeFull.toDouble() / chargeFullDesign.toDouble()) * 100
-                BatteryHealthInfo(
-                    chargeFullDesign,
-                    chargeFull,
-                    healthRatio,
-                    cycleCount,
-                    healthStatus.trim().replace("\n",""),
-                    temperature.toDouble() / 10.0,
-                    true,
-                    ""
-                )
-            } else {
-                BatteryHealthInfo(0, 0, 0.0, 0, "", 0.0,false, "Invalid charge_full_design value")
+        if(Shizuku.getUid()!=0){
+            Log.e(TAG, "root permission not granted")
+            return BatteryHealthInfo(0, 0, 0.0, 0, "",0.0, false, "root permission not granted")
+        }else {
+            return try {
+                val chargeFullDesign =
+                    readSysfsFile("/sys/class/power_supply/battery/charge_full_design")
+                val chargeFull = readSysfsFile("/sys/class/power_supply/battery/charge_full")
+                val cycleCount = readSysfsFile("/sys/class/power_supply/battery/cycle_count")
+                val healthStatus = readSysfsFileString("/sys/class/power_supply/battery/health")
+                val temperature = readSysfsFile("/sys/class/power_supply/battery/temp")
+                if (chargeFullDesign > 0) {
+                    val healthRatio = (chargeFull.toDouble() / chargeFullDesign.toDouble()) * 100
+                    BatteryHealthInfo(
+                        chargeFullDesign,
+                        chargeFull,
+                        healthRatio,
+                        cycleCount,
+                        healthStatus.trim().replace("\n", ""),
+                        temperature.toDouble() / 10.0,
+                        true,
+                        ""
+                    )
+                } else {
+                    BatteryHealthInfo(
+                        0,
+                        0,
+                        0.0,
+                        0,
+                        "",
+                        0.0,
+                        false,
+                        "Invalid charge_full_design value"
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception occurred: ${e.message}", e)
+                BatteryHealthInfo(0, 0, 0.0, 0, "", 0.0, false, e.message ?: "Unknown error")
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Exception occurred: ${e.message}", e)
-            BatteryHealthInfo(0, 0, 0.0, 0, "", 0.0,false, e.message ?: "Unknown error")
         }
     }
 

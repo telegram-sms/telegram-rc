@@ -548,9 +548,9 @@ class ChatService : Service() {
                         var healthSys = ""
                         if (batteryInfoSys.isSuccess) {
                             healthSys = " (" + batteryInfoSys.healthRatio + "%)"
+                            batteryHealth =
+                                "\nBattery Health: " + batteryInfoSys.healthStatus + healthSys + " (Cycle Count: ${batteryInfoSys.cycleCount}, Temperature: ${batteryInfoSys.temperature}℃)"
                         }
-                        batteryHealth =
-                            "\nBattery Health: " + batteryInfoSys.healthStatus + healthSys + " (Cycle Count: ${batteryInfoSys.cycleCount}, Temperature: ${batteryInfoSys.temperature}℃)"
                     }
                 }
                 requestBody.text =
@@ -852,14 +852,22 @@ class ChatService : Service() {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nYou cannot switch the current data SIM card."
                                         } else {
-                                            val tm = Telephony()
-                                            tm.setSimPowerState(slot, newState)
-                                            requestBody.text =
-                                                "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
-                                                    if (newState) getString(
-                                                        R.string.enable
-                                                    ) else getString(R.string.disable)
-                                                }"
+                                            try {
+                                                val tm = Telephony()
+                                                tm.setSimPowerState(slot, newState)
+                                                requestBody.text =
+                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
+                                                        if (newState) getString(
+                                                            R.string.enable
+                                                        ) else getString(R.string.disable)
+                                                    }"
+                                            } catch (e: Exception) {
+                                                requestBody.text =
+                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
+                                            } catch (_:NoSuchMethodError){
+                                                requestBody.text =
+                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: Shizuku is not available"
+                                            }
                                         }
                                     }
 
@@ -887,10 +895,18 @@ class ChatService : Service() {
                                             subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(
                                                 slotIndex
                                             )
-                                        val dataSub = ISub()
-                                        dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
-                                        requestBody.text =
-                                            "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
+                                        try {
+                                            val dataSub = ISub()
+                                            dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
+                                        } catch (e: Exception) {
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
+                                        } catch (_:NoSuchMethodError){
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Shizuku is not available"
+                                        }
                                     }
                                 }
 

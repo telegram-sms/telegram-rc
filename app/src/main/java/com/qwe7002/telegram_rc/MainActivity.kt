@@ -201,6 +201,8 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 } catch (e: Exception) {
                     showErrorDialog(e.message.toString())
+                } catch (_: NoSuchMethodError) {
+                    showErrorDialog("The current device does not support obtaining IMSI.")
                 }
 
             } else {
@@ -210,7 +212,18 @@ class MainActivity : AppCompatActivity() {
         Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
             if (grantResult == PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "onCreate: ")
-                getIMSICache(this)
+                try {
+                    getIMSICache(applicationContext)
+                    Snackbar.make(
+                        findViewById(R.id.data_usage_button),
+                        "Get IMSI Success",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                } catch (e: Exception) {
+                    showErrorDialog(e.message.toString())
+                } catch (_: NoSuchMethodError) {
+                    showErrorDialog("The current device does not support obtaining IMSI.")
+                }
             }
         }
         preferences = MMKV.defaultMMKV()
@@ -673,7 +686,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     override fun onResume() {
         super.onResume()
-        if(DataUsage.hasPermission(applicationContext)){
+        if (DataUsage.hasPermission(applicationContext)) {
             dataUsageButton.text = "Refresh IMSI cache"
         }
 
