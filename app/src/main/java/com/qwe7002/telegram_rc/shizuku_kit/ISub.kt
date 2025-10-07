@@ -3,13 +3,13 @@ package com.qwe7002.telegram_rc.shizuku_kit
 import android.annotation.SuppressLint
 import android.os.IBinder
 import android.util.Log
+import android.os.ParcelFileDescriptor
 import com.android.internal.telephony.ISub
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 import java.io.BufferedReader
-import java.io.InputStream
 import java.io.InputStreamReader
 
 
@@ -40,9 +40,16 @@ class ISub {
             null,
             null
         )
-        val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
-        val errorReader = BufferedReader(InputStreamReader(process.errorStream as InputStream?))
-
+        val reader = BufferedReader(
+            InputStreamReader(
+                ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
+            )
+        )
+        val errorReader = BufferedReader(
+            InputStreamReader(
+                ParcelFileDescriptor.AutoCloseInputStream(process.errorStream)
+            )
+        )
         process.waitFor()
         val output = reader.readText()
         val errorOutput = errorReader.readText()
@@ -54,8 +61,6 @@ class ISub {
         if (errorOutput.isNotEmpty()) {
             Log.e(TAG, "Command error: $errorOutput")
         }
-
-        process.exitValue() == 0
     }
 
 }

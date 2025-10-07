@@ -2,6 +2,7 @@ package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.os.IBinder
 import android.content.Context
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import com.android.internal.telephony.ITelephony
 import moe.shizuku.server.IShizukuService
@@ -9,7 +10,6 @@ import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 import java.io.BufferedReader
-import java.io.InputStream
 import java.io.InputStreamReader
 
 class Telephony {
@@ -76,8 +76,16 @@ class Telephony {
             null,
             null
         )
-        val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
-        val errorReader = BufferedReader(InputStreamReader(process.errorStream as InputStream?))
+        val reader = BufferedReader(
+            InputStreamReader(
+                ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
+            )
+        )
+        val errorReader = BufferedReader(
+            InputStreamReader(
+                ParcelFileDescriptor.AutoCloseInputStream(process.errorStream)
+            )
+        )
 
         process.waitFor()
         val output = reader.readText()

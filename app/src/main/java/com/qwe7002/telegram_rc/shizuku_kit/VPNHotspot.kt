@@ -6,13 +6,13 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
 import java.io.BufferedReader
-import java.io.InputStream
 import java.io.InputStreamReader
 
 object VPNHotspot {
@@ -83,7 +83,11 @@ object VPNHotspot {
             val process = service.newProcess(
                 arrayOf("dumpsys activity services | grep be.mygod.vpnhotspot/.RepeaterService"), null, null
             )
-            val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
+            val reader = BufferedReader(
+                InputStreamReader(
+                    ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
+                )
+            )
             val output = reader.readText()
             process.waitFor()
 
@@ -134,8 +138,16 @@ object VPNHotspot {
                     "$packageName/$serviceName"
                 ), null, null
             )
-            val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
-            val errorReader = BufferedReader(InputStreamReader(process.errorStream as InputStream?))
+            val reader = BufferedReader(
+                InputStreamReader(
+                    ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
+                )
+            )
+            val errorReader = BufferedReader(
+                InputStreamReader(
+                    ParcelFileDescriptor.AutoCloseInputStream(process.errorStream)
+                )
+            )
 
             process.waitFor()
             val output = reader.readText()
@@ -176,8 +188,16 @@ object VPNHotspot {
             }
 
             val process = service.newProcess(arrayOf("am", "force-stop", packageName), null, null)
-            val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
-            val errorReader = BufferedReader(InputStreamReader(process.errorStream as InputStream?))
+            val reader = BufferedReader(
+                InputStreamReader(
+                    ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
+                )
+            )
+            val errorReader = BufferedReader(
+                InputStreamReader(
+                    ParcelFileDescriptor.AutoCloseInputStream(process.errorStream)
+                )
+            )
 
             process.waitFor()
             val output = reader.readText()

@@ -395,16 +395,16 @@ class ChatService : Service() {
                         var sim1Info: String
                         var sim2Info: String
                         if (sim1Display == tm1.simOperatorName) {
-                            sim1Info = telephonyManager.simOperatorName
+                            sim1Info = tm1.simOperatorName
                         } else {
                             sim1Info =
-                                telephonyManager.simOperatorName + "\nSIM1 Alias: " + sim1Display
+                                tm1.simOperatorName + "\nSIM1 Alias: " + sim1Display
                         }
                         if (sim2Display == tm2.simOperatorName) {
-                            sim2Info = telephonyManager.simOperatorName
+                            sim2Info = tm2.simOperatorName
                         } else {
                             sim2Info =
-                                telephonyManager.simOperatorName + "\nSIM2 Alias: " + sim2Display
+                                tm2.simOperatorName + "\nSIM2 Alias: " + sim2Display
                         }
                         if (DataUsage.hasPermission(applicationContext)) {
                             if (ActivityCompat.checkSelfPermission(
@@ -965,6 +965,10 @@ class ChatService : Service() {
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (_: NoSuchMethodError) {
+                                                Log.e(
+                                                    "ChatService",
+                                                    "setSimPowerState not supported"
+                                                )
                                                 try {
                                                     val tm = Telephony()
                                                     tm.setSimPowerStateFallBack(slot, newState)
@@ -1018,6 +1022,7 @@ class ChatService : Service() {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (_: NoSuchMethodError) {
+                                            Log.e("Shizuku", "Switching default data SIM failed: Method is not available")
                                             //try fallback
                                             try {
                                                 val dataSub = ISub()
@@ -1026,7 +1031,8 @@ class ChatService : Service() {
                                                 )
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
-                                            } catch (_: Exception) {
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Method is not available"
                                             }
