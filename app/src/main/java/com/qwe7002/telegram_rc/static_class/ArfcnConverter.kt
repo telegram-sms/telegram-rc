@@ -144,8 +144,7 @@ object ArfcnConverter {
             102 to Pair(795000, 845000), // 5925-6425 MHz, 完全修正
             104 to Pair(845000, 875000)  // 6425-7125 MHz, 完全修正
         )
-        // 按范围大小排序，优先匹配更小的范围
-        ranges.entries.sortedBy { it.value.second - it.value.first }.associate { it.key to it.value }
+        ranges.entries.sortedByDescending { it.value.second - it.value.first }.associate { it.key to it.value }
     }
 
 
