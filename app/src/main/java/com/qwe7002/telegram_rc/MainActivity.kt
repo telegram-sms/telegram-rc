@@ -6,10 +6,13 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -67,6 +70,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.shizuku.Shizuku
 import java.io.IOException
 import java.util.Objects
@@ -97,10 +101,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var saveButton: Button
     private lateinit var getIdButton: Button
 
-    @SuppressLint("BatteryLife", "QueryPermissionsNeeded", "SetTextI18n")
+    @SuppressLint("BatteryLife", "QueryPermissionsNeeded", "SetTextI18n", "PrivateApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        // Add this once early (e.g. in Application.onCreate)
         scannerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
                 if (result.resultCode == Const.RESULT_CONFIG_JSON) {

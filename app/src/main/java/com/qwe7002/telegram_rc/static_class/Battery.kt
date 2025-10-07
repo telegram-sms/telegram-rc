@@ -1,12 +1,20 @@
 package com.qwe7002.telegram_rc.static_class
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.BATTERY_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.BatteryManager
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import com.qwe7002.telegram_rc.R
+import moe.shizuku.server.IShizukuService
+import org.lsposed.hiddenapibypass.HiddenApiBypass
+import rikka.shizuku.Shizuku
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 object Battery {
     fun getBatteryInfo(context: Context): String {
@@ -41,4 +49,60 @@ object Battery {
         }
         return batteryStringBuilder.toString()
     }
+
+    @SuppressLint("PrivateApi")
+    fun getBatteryCapacity(context: Context): Double {
+        HiddenApiBypass.addHiddenApiExemptions("")
+        val ppClass = Class.forName("com.android.internal.os.PowerProfile")
+        val ctor = ppClass.getDeclaredConstructor(Context::class.java).apply { isAccessible = true }
+        val pp = ctor.newInstance(context)
+        val mAh = HiddenApiBypass.invoke(ppClass, pp, "getBatteryCapacity") as Double
+        return mAh
+    }
+
+    @JvmStatic
+    fun getLearnedBatteryCapacity(): String? {
+        if (!Shizuku.pingBinder()) {
+            Log.e("Battery", "Shizuku is not running")
+            return null
+        }
+
+        if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+            Log.e("Battery", "Shizuku permission not granted")
+            return null
+        }
+
+        return try {
+            val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
+            if (service == null) {
+                Log.e("Battery", "Shizuku service not available")
+                return null
+            }
+
+            val process = service.newProcess(arrayOf("dumpsys", "batterystats"), null, null)
+            val reader = BufferedReader(
+                InputStreamReader(
+                    ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
+                )
+            )
+            var line: String?
+            var learnedCapacity: String? = null
+
+            while (reader.readLine().also { line = it } != null) {
+                if (line != null && line.contains("Max learned battery capacity: ")) {
+                    learnedCapacity = line.trim()
+                    learnedCapacity = learnedCapacity.replace("Max learned battery capacity: ", "")
+                    learnedCapacity = learnedCapacity.replace(" mAh", "")
+                    break
+                }
+            }
+
+            process.waitFor()
+            learnedCapacity
+        } catch (e: Exception) {
+            Log.e("Battery", "Exception occurred: ${e.message}", e)
+            null
+        }
+    }
+
 }

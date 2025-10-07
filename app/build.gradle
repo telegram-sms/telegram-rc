@@ -13,7 +13,10 @@ android {
         versionCode System.getenv("VERSION_CODE") == null ? 1 : System.getenv("VERSION_CODE").toInteger()
         versionName System.getenv("VERSION_NAME") == null ? "debug-do_not_leak" : System.getenv("VERSION_NAME")
     }
-    
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
     buildFeatures {
         buildConfig true
         aidl true
@@ -76,6 +79,7 @@ dependencies {
     implementation 'com.tencent:mmkv:2.2.3'
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
+    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
 }
 repositories {
     mavenCentral()

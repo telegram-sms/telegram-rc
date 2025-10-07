@@ -3,7 +3,6 @@ package com.qwe7002.telegram_rc
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
@@ -28,9 +27,9 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import com.qwe7002.telegram_rc.shizuku_kit.BatteryHealth
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
@@ -77,7 +76,6 @@ import okhttp3.Response
 import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.Locale
 import java.util.Objects
@@ -637,7 +635,6 @@ class ChatService : Service() {
                         BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
                         else -> "Unknown"
                     }
-
                     val cycleCount =
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             val count =
@@ -649,9 +646,14 @@ class ChatService : Service() {
                         }
                     val batteryTemperature =
                         batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
-
+                    val healthRatio = Battery.getLearnedBatteryCapacity()
+                        ?.let { (it.toDouble() / Battery.getBatteryCapacity(applicationContext)) * 100 }
+                    Log.d(TAG, "getLearnedBatteryCapacity: "+Battery.getLearnedBatteryCapacity())
+                    Log.d(TAG, "getBatteryCapacity: "+Battery.getBatteryCapacity(applicationContext))
                     batteryHealth =
-                        "\nBattery Health: $batteryHealthString ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
+                        "\nBattery Health: $batteryHealthString (${
+                            if (healthRatio != null) "%.2f".format(healthRatio) else "N/A"
+                        }%) ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
                 }
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
@@ -1022,7 +1024,10 @@ class ChatService : Service() {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (_: NoSuchMethodError) {
-                                            Log.e("Shizuku", "Switching default data SIM failed: Method is not available")
+                                            Log.e(
+                                                "Shizuku",
+                                                "Switching default data SIM failed: Method is not available"
+                                            )
                                             //try fallback
                                             try {
                                                 val dataSub = ISub()
