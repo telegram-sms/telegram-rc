@@ -4,8 +4,13 @@ import android.annotation.SuppressLint
 import android.os.IBinder
 import android.util.Log
 import com.android.internal.telephony.ISub
+import moe.shizuku.server.IShizukuService
+import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 
 
 class ISub {
@@ -20,6 +25,37 @@ class ISub {
         } catch (e: Exception) {
             Log.e("setDefaultDataSubId", "Call failed: " + e.message)
         }
+    }
+
+    fun setDefaultDataSubIdFallback(subId: Int) {
+        val TAG = "setDefaultDataSubId"
+        val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
+        if (service == null) {
+            Log.e(TAG, "Shizuku service not available")
+            return
+        }
+
+        val process = service.newProcess(
+            arrayOf("service", "call", "isub", "31", "i32", subId.toString()),
+            null,
+            null
+        )
+        val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
+        val errorReader = BufferedReader(InputStreamReader(process.errorStream as InputStream?))
+
+        process.waitFor()
+        val output = reader.readText()
+        val errorOutput = errorReader.readText()
+
+        if (output.isNotEmpty()) {
+            Log.i(TAG, "Command output: $output")
+        }
+
+        if (errorOutput.isNotEmpty()) {
+            Log.e(TAG, "Command error: $errorOutput")
+        }
+
+        process.exitValue() == 0
     }
 
 }

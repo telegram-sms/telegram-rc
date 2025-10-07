@@ -574,8 +574,10 @@ class ChatService : Service() {
                                                 Manifest.permission.BATTERY_STATS
                                             )
                                             val process = service.newProcess(command, null, null)
-                                            val inputStream = ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
-                                            val errorStream = ParcelFileDescriptor.AutoCloseInputStream(process.errorStream)
+                                            val inputStream =
+                                                ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
+                                            val errorStream =
+                                                ParcelFileDescriptor.AutoCloseInputStream(process.errorStream)
                                             val reader =
                                                 BufferedReader(InputStreamReader(inputStream))
                                             val errorReader =
@@ -620,11 +622,12 @@ class ChatService : Service() {
                         }
                     }
                 }
-                if(batteryHealth.isEmpty()&&checkSelfPermission(Manifest.permission.BATTERY_STATS)==PackageManager.PERMISSION_GRANTED){
+                if (batteryHealth.isEmpty() && checkSelfPermission(Manifest.permission.BATTERY_STATS) == PackageManager.PERMISSION_GRANTED) {
                     val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
                     val batteryStatus = applicationContext.registerReceiver(null, intentFilter)
-                    
-                    val batteryHealthValue = batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) ?: -1
+
+                    val batteryHealthValue =
+                        batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) ?: -1
                     val batteryHealthString = when (batteryHealthValue) {
                         BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
                         BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheat"
@@ -635,15 +638,18 @@ class ChatService : Service() {
                         else -> "Unknown"
                     }
 
-                    val cycleCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                        val count = batteryStatus?.getIntExtra(BatteryManager.EXTRA_CYCLE_COUNT, -1) ?: -1
-                        "Cycle Count: $count, "
-                    } else {
-                        ""
-                    }
+                    val cycleCount =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            val count =
+                                batteryStatus?.getIntExtra(BatteryManager.EXTRA_CYCLE_COUNT, -1)
+                                    ?: -1
+                            "Cycle Count: $count, "
+                        } else {
+                            ""
+                        }
                     val batteryTemperature =
                         batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
-                    
+
                     batteryHealth =
                         "\nBattery Health: $batteryHealthString ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
                 }
@@ -959,8 +965,20 @@ class ChatService : Service() {
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (_: NoSuchMethodError) {
-                                                requestBody.text =
-                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: Shizuku is not available"
+                                                try {
+                                                    val tm = Telephony()
+                                                    tm.setSimPowerStateFallBack(slot, newState)
+                                                    requestBody.text =
+                                                        "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
+                                                            if (newState) getString(
+                                                                R.string.enable
+                                                            ) else getString(R.string.disable)
+                                                        }"
+                                                } catch (e: Exception) {
+                                                    e.printStackTrace()
+                                                    requestBody.text =
+                                                        "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
+                                                }
                                             }
                                         }
                                     }
@@ -991,15 +1009,27 @@ class ChatService : Service() {
                                             )
                                         try {
                                             val dataSub = ISub()
-                                            dataSub.setDefaultDataSubIdWithShizuku(subscriptionInfo.subscriptionId)
+                                            dataSub.setDefaultDataSubIdWithShizuku(
+                                                subscriptionInfo.subscriptionId
+                                            )
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
                                         } catch (e: Exception) {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (_: NoSuchMethodError) {
-                                            requestBody.text =
-                                                "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Shizuku is not available"
+                                            //try fallback
+                                            try {
+                                                val dataSub = ISub()
+                                                dataSub.setDefaultDataSubIdFallback(
+                                                    subscriptionInfo.subscriptionId
+                                                )
+                                                requestBody.text =
+                                                    "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
+                                            } catch (_: Exception) {
+                                                requestBody.text =
+                                                    "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Method is not available"
+                                            }
                                         }
                                     }
                                 }
@@ -1017,7 +1047,8 @@ class ChatService : Service() {
 
             "/sendsms", "/sendsms1", "/sendsms2" -> {
                 val msgSendList =
-                    requestMsg.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                    requestMsg.split("\n".toRegex()).dropLastWhile { it.isEmpty() }
+                        .toTypedArray()
                 if (msgSendList.size > 2) {
                     val msgSendTo = getSendPhoneNumber(
                         msgSendList[1]
@@ -1091,9 +1122,14 @@ class ChatService : Service() {
                 }
 
                 requestBody.text =
-                    "${applicationContext.getString(R.string.system_message_head)}\n${getString(R.string.unknown_command)}"
+                    "${applicationContext.getString(R.string.system_message_head)}\n${
+                        getString(
+                            R.string.unknown_command
+                        )
+                    }"
             }
         }
+
         if (hasCommand) {
             setSmsSendStatusStandby()
         }
@@ -1104,7 +1140,8 @@ class ChatService : Service() {
             if (sendSlotTemp != -1) {
                 dualSim = "SIM" + (sendSlotTemp + 1) + " "
             }
-            val head = "[" + dualSim + applicationContext.getString(R.string.send_sms_head) + "]"
+            val head =
+                "[" + dualSim + applicationContext.getString(R.string.send_sms_head) + "]"
             var resultSend = getString(R.string.failed_to_get_information)
             Log.d(TAG, "Sending mode status: ${sendStatusMMKV.getInt("status", -1)}")
 
@@ -1119,7 +1156,10 @@ class ChatService : Service() {
                     if (isPhoneNumber(tempTo)) {
                         sendStatusMMKV.putString("to", tempTo)
                         resultSend = getString(R.string.enter_content)
-                        sendStatusMMKV.putInt("status", SEND_SMS_STATUS.WAITING_TO_SEND_STATUS)
+                        sendStatusMMKV.putInt(
+                            "status",
+                            SEND_SMS_STATUS.WAITING_TO_SEND_STATUS
+                        )
                     } else {
                         setSmsSendStatusStandby()
                         resultSend = getString(R.string.unable_get_phone_number)
@@ -1159,10 +1199,14 @@ class ChatService : Service() {
         }
 
         val requestUri = getUrl(botToken, "sendMessage")
+
         val gson = Gson()
-        val body: RequestBody = gson.toJson(requestBody).toRequestBody(Const.JSON)
+        val body
+                : RequestBody = gson.toJson(requestBody).toRequestBody(Const.JSON)
         Log.d(TAG, "receive_handle: " + gson.toJson(requestBody))
-        val sendRequest: Request = Request.Builder().url(requestUri).method("POST", body).build()
+        val sendRequest
+
+                : Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(sendRequest)
         val errorHead = "Send reply failed:"
         call.enqueue(object : Callback {
@@ -1186,7 +1230,10 @@ class ChatService : Service() {
                 }
 
                 if (response.code != 200) {
-                    writeLog(applicationContext, errorHead + response.code + " " + responseString)
+                    writeLog(
+                        applicationContext,
+                        errorHead + response.code + " " + responseString
+                    )
                     try {
                         response.close()
                     } catch (e: Exception) {
@@ -1238,7 +1285,10 @@ class ChatService : Service() {
                                 try {
                                     Thread.sleep(2000)
                                 } catch (e: InterruptedException) {
-                                    Log.w(TAG, "Hotspot IP update thread interrupted: ${e.message}")
+                                    Log.w(
+                                        TAG,
+                                        "Hotspot IP update thread interrupted: ${e.message}"
+                                    )
                                     return@Thread
                                 }
 
@@ -1260,7 +1310,10 @@ class ChatService : Service() {
                                         )
                                         return@Thread
                                     } catch (e: Exception) {
-                                        Log.e(TAG, "Error getting hotspot IP address: ${e.message}")
+                                        Log.e(
+                                            TAG,
+                                            "Error getting hotspot IP address: ${e.message}"
+                                        )
                                         // 继续重试
                                     }
                                     if (i == maxRetries) {
@@ -1287,7 +1340,8 @@ class ChatService : Service() {
 
                                     val gson = Gson()
                                     val requestBodyRaw = gson.toJson(editRequest)
-                                    val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+                                    val body: RequestBody =
+                                        requestBodyRaw.toRequestBody(Const.JSON)
                                     val requestUri = getUrl(botToken, "editMessageText")
                                     val request: Request =
                                         Request.Builder().url(requestUri).method("POST", body)
@@ -1448,7 +1502,8 @@ class ChatService : Service() {
                 val requestBody = PollingJson()
                 requestBody.offset = chatInfoMMKV.getLong("offset", 0L)
                 requestBody.timeout = timeout
-                val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
+                val body: RequestBody =
+                    RequestBody.create(Const.JSON, Gson().toJson(requestBody))
                 val request: Request =
                     Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClientNew.newCall(request)

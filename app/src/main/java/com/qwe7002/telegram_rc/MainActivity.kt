@@ -55,6 +55,7 @@ import com.qwe7002.telegram_rc.static_class.Network.getUrl
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
 import com.qwe7002.telegram_rc.static_class.Phone.getIMSICache
+import com.qwe7002.telegram_rc.static_class.Phone.getIMSICacheFallback
 import com.qwe7002.telegram_rc.static_class.ServiceManage.isNotifyListener
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
@@ -202,7 +203,18 @@ class MainActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     showErrorDialog(e.message.toString())
                 } catch (_: NoSuchMethodError) {
-                    showErrorDialog("The current device does not support obtaining IMSI.")
+                    //fallback
+                    try {
+                        getIMSICacheFallback(applicationContext)
+                        Snackbar.make(
+                            findViewById(R.id.data_usage_button),
+                            "Get IMSI Success",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
+                    }
                 }
 
             } else {
@@ -222,7 +234,18 @@ class MainActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     showErrorDialog(e.message.toString())
                 } catch (_: NoSuchMethodError) {
-                    showErrorDialog("The current device does not support obtaining IMSI.")
+                    //fallback
+                    try {
+                        getIMSICacheFallback(applicationContext)
+                        Snackbar.make(
+                            findViewById(R.id.data_usage_button),
+                            "Get IMSI Success",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
+                    }
                 }
             }
         }
@@ -780,13 +803,32 @@ class MainActivity : AppCompatActivity() {
                         DataUsage.openUsageStatsSettings(this)
                         return
                     }
-                    // 如果有所有必要权限，执行获取IMSI缓存的操作
-                    getIMSICache(this)
-                    Snackbar.make(
-                        findViewById(R.id.data_usage_button),
-                        "Get IMSI Success",
-                        Snackbar.LENGTH_LONG
-                    ).show()
+                    if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                        try {
+                            Log.d(TAG, "onCreate: ")
+                            getIMSICache(applicationContext)
+                            Snackbar.make(
+                                findViewById(R.id.data_usage_button),
+                                "Get IMSI Success",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        } catch (e: Exception) {
+                            showErrorDialog(e.message.toString())
+                        } catch (_: NoSuchMethodError) {
+                            //fallback
+                            try {
+                                getIMSICacheFallback(applicationContext)
+                                Snackbar.make(
+                                    findViewById(R.id.data_usage_button),
+                                    "Get IMSI Success",
+                                    Snackbar.LENGTH_LONG
+                                ).show()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
+                            }
+                        }
+                    }
                 } else {
                     // 权限被拒绝，显示错误信息
                     showErrorDialog(applicationContext.getString(R.string.no_permission))
