@@ -1,8 +1,8 @@
-package com.qwe7002.telegram_rc.Room
+package com.qwe7002.telegram_rc.database
 
 import android.content.Context
 import android.util.Log
-import com.qwe7002.telegram_rc.Room.YellowPage.AppDatabase
+import com.qwe7002.telegram_rc.database.YellowPage.AppDatabase
 import kotlinx.coroutines.runBlocking
 
 object YellowPage {

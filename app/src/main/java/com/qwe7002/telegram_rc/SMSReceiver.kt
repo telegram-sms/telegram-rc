@@ -1,6 +1,5 @@
 package com.qwe7002.telegram_rc
 
-import com.qwe7002.telegram_rc.Room.YellowPage.checkPhoneNumberInDatabaseBlocking
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -17,6 +16,7 @@ import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
 import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.database.YellowPage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
@@ -95,7 +95,7 @@ class SMSReceiver : BroadcastReceiver() {
         val messageAddress = messages[0]!!.originatingAddress!!
         // Check if the phone number exists in our database
         val organizationInfo =
-            checkPhoneNumberInDatabaseBlocking(context.applicationContext, messageAddress)
+            YellowPage.checkPhoneNumberInDatabaseBlocking(context.applicationContext, messageAddress)
         var messageAddressString = messageAddress
 
         if (organizationInfo != null) {

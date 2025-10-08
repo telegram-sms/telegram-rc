@@ -1,4 +1,4 @@
-package com.qwe7002.telegram_rc.Room.YellowPage
+package com.qwe7002.telegram_rc.database.YellowPage
 
 import androidx.room.Dao
 import androidx.room.Insert
