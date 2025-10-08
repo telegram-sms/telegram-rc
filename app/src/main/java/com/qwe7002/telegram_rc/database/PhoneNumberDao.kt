@@ -18,4 +18,7 @@ interface PhoneNumberDao {
 
     @Query("DELETE FROM phone_numbers WHERE organization_id = :organizationId")
     suspend fun deletePhoneNumbersForOrganization(organizationId: Long)
+
+    @Query("SELECT * FROM phone_numbers WHERE phone_number = :phoneNumber")
+    suspend fun getPhoneNumbersByPhoneNumber(phoneNumber: String): List<PhoneNumber>
 }

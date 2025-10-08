@@ -60,6 +60,8 @@ android {
     namespace 'com.qwe7002.telegram_rc'
 }
 
+
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
@@ -67,8 +69,8 @@ dependencies {
     //noinspection GradleDependency
     implementation 'androidx.browser:browser:1.8.0'
     implementation 'com.squareup.okio:okio:3.16.0'
-    implementation "com.squareup.okhttp3:okhttp:5.1.0"
-    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.1.0"
+    implementation "com.squareup.okhttp3:okhttp:5.2.0"
+    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.2.0"
     implementation 'org.conscrypt:conscrypt-android:2.5.3'
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
@@ -77,17 +79,18 @@ dependencies {
     //noinspection GradleDependency
     implementation "androidx.core:core-ktx:1.13.1"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.0'
-    implementation 'com.tencent:mmkv:2.2.3'
+    implementation 'com.tencent:mmkv:2.2.4'
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
     
     // Room database dependencies
-    implementation "androidx.room:room-runtime:2.6.1"
-    implementation "androidx.room:room-ktx:2.6.1"
-    kapt "androidx.room:room-compiler:2.6.1"
+    implementation "androidx.room:room-runtime:2.8.1"
+    implementation "androidx.room:room-ktx:2.8.1"
+    kapt "androidx.room:room-compiler:2.8.1"
 }
 repositories {
+    google()
     mavenCentral()
 }
 

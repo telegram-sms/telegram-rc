@@ -1,5 +1,6 @@
 package com.qwe7002.telegram_rc
 
+import YellowPage.checkPhoneNumberInDatabaseBlocking
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -95,6 +96,14 @@ class SMSReceiver : BroadcastReceiver() {
 
         val messageBody = messageBodyBuilder.toString()
         val messageAddress = messages[0]!!.originatingAddress!!
+        // Check if the phone number exists in our database
+        val organizationInfo =
+            checkPhoneNumberInDatabaseBlocking(context.applicationContext, messageAddress)
+        var messageAddressString = messageAddress
+
+        if (organizationInfo != null) {
+            messageAddressString = messageAddressString + " [${organizationInfo}]"
+        }
         val trustedPhoneNumber = preferences.getString("trusted_phone_number", "")!!
         var isTrustedPhone = false
         if (trustedPhoneNumber.isNotEmpty()) {
@@ -105,18 +114,9 @@ class SMSReceiver : BroadcastReceiver() {
         requestBody.chatId = chatId
         requestBody.messageThreadId = preferences.getString("message_thread_id", "")
         var messageBodyHtml = messageBody
-        var messageHead = "[" + dualSim + context.getString(R.string.receive_sms_head) + "]\n" +
-                context.getString(R.string.from) + messageAddress + "\n" +
+        val messageHead = "[" + dualSim + context.getString(R.string.receive_sms_head) + "]\n" +
+                context.getString(R.string.from) + messageAddressString + "\n" +
                 context.getString(R.string.content)
-
-        // Check if the phone number exists in our database
-        val organizationInfo =
-            checkPhoneNumberInDatabaseBlocking(context.applicationContext, messageAddress)
-        if (organizationInfo != null) {
-            messageHead = "[${dualSim}${context.getString(R.string.receive_sms_head)}]\n" +
-                    context.getString(R.string.from) + messageAddress + "[$organizationInfo]" + "\n" +
-                    context.getString(R.string.content)
-        }
 
         var rawRequestBodyText: String = messageHead + messageBody
         var isVerificationCode = false
@@ -284,29 +284,6 @@ class SMSReceiver : BroadcastReceiver() {
         })
     }
 
-    private fun checkPhoneNumberInDatabaseBlocking(context: Context, phoneNumber: String): String? {
-        return try {
-            runBlocking {
-                val db = AppDatabase.getDatabase(context)
-                //todo 从号码中检查
-                val organizations = db.organizationDao().getOrganizationsWithPhoneNumbers().first()
-
-                // Look for the phone number in all organizations
-                for (orgWithNumbers in organizations) {
-                    for (phone in orgWithNumbers.phoneNumbers) {
-                        if (phone.phoneNumber == phoneNumber) {
-                            // Found a match
-                            return@runBlocking orgWithNumbers.organization.organization
-                        }
-                    }
-                }
-                null
-            }
-        } catch (e: Exception) {
-            Log.e("SMSReceiver", "Error checking phone number in database", e)
-            null
-        }
-    }
 
     private fun commandHandle(
         messageBody: String,

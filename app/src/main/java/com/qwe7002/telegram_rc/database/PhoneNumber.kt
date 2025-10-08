@@ -22,7 +22,7 @@ data class PhoneNumber(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     
-    @ColumnInfo(name = "organization_id", index = true)
+    @ColumnInfo(name = "organization_id")
     val organizationId: Long,
     
     @ColumnInfo(name = "phone_number")
