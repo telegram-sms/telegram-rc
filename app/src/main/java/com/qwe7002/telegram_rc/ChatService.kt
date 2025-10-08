@@ -651,9 +651,9 @@ class ChatService : Service() {
                     Log.d(TAG, "getLearnedBatteryCapacity: "+Battery.getLearnedBatteryCapacity())
                     Log.d(TAG, "getBatteryCapacity: "+Battery.getBatteryCapacity(applicationContext))
                     batteryHealth =
-                        "\nBattery Health: $batteryHealthString (${
-                            if (healthRatio != null) "%.2f".format(healthRatio) else "N/A"
-                        }%) ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
+                        "\nBattery Health: $batteryHealthString${
+                            if (healthRatio != null) " (${"%.2f".format(healthRatio)}%)" else ""
+                        } ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
                 }
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
