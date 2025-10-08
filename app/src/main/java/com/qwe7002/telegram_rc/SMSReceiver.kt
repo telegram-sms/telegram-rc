@@ -1,6 +1,6 @@
 package com.qwe7002.telegram_rc
 
-import YellowPage.checkPhoneNumberInDatabaseBlocking
+import com.qwe7002.telegram_rc.Room.YellowPage.checkPhoneNumberInDatabaseBlocking
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -17,7 +17,6 @@ import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.database.AppDatabase
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
@@ -26,8 +25,6 @@ import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request

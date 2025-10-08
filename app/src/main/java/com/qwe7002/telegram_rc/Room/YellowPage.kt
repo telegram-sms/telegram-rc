@@ -1,6 +1,8 @@
+package com.qwe7002.telegram_rc.Room
+
 import android.content.Context
 import android.util.Log
-import com.qwe7002.telegram_rc.database.AppDatabase
+import com.qwe7002.telegram_rc.Room.YellowPage.AppDatabase
 import kotlinx.coroutines.runBlocking
 
 object YellowPage {
@@ -8,7 +10,7 @@ object YellowPage {
     fun checkPhoneNumberInDatabaseBlocking(context: Context, phoneNumber: String): String? {
         return try {
             runBlocking {
-                val db = AppDatabase.getDatabase(context)
+                val db = AppDatabase.Companion.getDatabase(context)
                 val phoneNumbers = db.phoneNumberDao().getPhoneNumbersByPhoneNumber(phoneNumber)
                 if (phoneNumbers.isNotEmpty()) {
                     val organization =

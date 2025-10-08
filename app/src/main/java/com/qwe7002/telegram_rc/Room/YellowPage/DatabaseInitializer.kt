@@ -1,4 +1,4 @@
-package com.qwe7002.telegram_rc.database
+package com.qwe7002.telegram_rc.Room.YellowPage
 
 import android.content.Context
 import androidx.room.migration.Migration
@@ -17,7 +17,7 @@ object DatabaseInitializer {
 
     fun initializeDatabase(context: Context) {
         val db = AppDatabase.getDatabase(context)
-        
+
         // Pre-populate with Huawei data as requested
         populateWithInitialData(db)
     }

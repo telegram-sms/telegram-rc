@@ -1,4 +1,4 @@
-package com.qwe7002.telegram_rc.database
+package com.qwe7002.telegram_rc.Room.YellowPage
 
 import android.content.Context
 import androidx.room.Database
@@ -23,7 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "app_database"
+                    "com.qwe7002.telegram_rc.Room.YellowPage"
                 ).build()
                 INSTANCE = instance
                 instance

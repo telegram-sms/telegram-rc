@@ -1,4 +1,4 @@
-package com.qwe7002.telegram_rc.database
+package com.qwe7002.telegram_rc.Room.YellowPage
 
 import androidx.room.Embedded
 import androidx.room.Relation
