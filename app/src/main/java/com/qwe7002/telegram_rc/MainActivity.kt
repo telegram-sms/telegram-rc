@@ -51,6 +51,7 @@ import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager
+import com.qwe7002.telegram_rc.database.DatabaseInitializer
 import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
@@ -105,6 +106,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        
+        // Initialize database
+        DatabaseInitializer.initializeDatabase(this)
+        
         // Add this once early (e.g. in Application.onCreate)
         scannerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
