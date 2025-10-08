@@ -2,7 +2,12 @@ package com.qwe7002.telegram_rc.database
 
 import android.content.Context
 import android.util.Log
-import com.qwe7002.telegram_rc.database.YellowPage.AppDatabase
+import com.qwe7002.telegram_rc.database.yellowpage.AppDatabase
+import com.qwe7002.telegram_rc.database.yellowpage.Organization
+import com.qwe7002.telegram_rc.database.yellowpage.PhoneNumber
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 object YellowPage {
@@ -23,6 +28,31 @@ object YellowPage {
         } catch (e: Exception) {
             Log.e("SMSReceiver", "Error checking phone number in database", e)
             null
+        }
+    }
+
+    fun addPhoneNumberToDatabase(
+        context: Context,
+        phoneNumbers: List<String>,
+        organization: String,
+        url: String
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.Companion.getDatabase(context)
+            val organizationDao = db.organizationDao()
+            val phoneNumberDao = db.phoneNumberDao()
+            val orgId = organizationDao.insertOrganization(
+                Organization(
+                    organization = organization,
+                    url = url
+                )
+            )
+            phoneNumberDao.insertPhoneNumbers(phoneNumbers.map {
+                PhoneNumber(
+                    organizationId = orgId,
+                    phoneNumber = it
+                )
+            })
         }
     }
 }
