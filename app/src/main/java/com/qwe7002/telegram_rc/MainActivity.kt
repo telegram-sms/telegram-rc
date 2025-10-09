@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
     private val TAG = "main_activity"
     private lateinit var preferences: MMKV
     private lateinit var proxyMMKV: MMKV
+    private lateinit var shizukuMMKV: MMKV
     private lateinit var writeSettingsButton: Button
     private lateinit var dataUsageButton: Button
     private lateinit var scannerLauncher: ActivityResultLauncher<Intent>
@@ -101,6 +102,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        startActivity(Intent(this, SettingsActivity::class.java))
         scannerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
                 if (result.resultCode == Const.RESULT_CONFIG_JSON) {
@@ -159,6 +161,7 @@ class MainActivity : AppCompatActivity() {
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
+        shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
         DataPlanManager.initialize() // 初始化数据计划管理器
         writeSettingsButton.setOnClickListener {
             val writeSystemIntent = Intent(
@@ -204,6 +207,8 @@ class MainActivity : AppCompatActivity() {
                     showErrorDialog(e.message.toString())
                 } catch (_: NoSuchMethodError) {
                     //fallback
+                    Log.i(TAG, "onCreate: Shizuku fallback")
+                    MMKV.defaultMMKV().putBoolean("shizuku_fallback", true)
                     try {
                         getIMSICacheFallback(applicationContext)
                         Snackbar.make(
@@ -219,34 +224,6 @@ class MainActivity : AppCompatActivity() {
 
             } else {
                 Shizuku.requestPermission(0)
-            }
-        }
-        Shizuku.addRequestPermissionResultListener { requestCode, grantResult ->
-            if (grantResult == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "onCreate: ")
-                try {
-                    getIMSICache(applicationContext)
-                    Snackbar.make(
-                        findViewById(R.id.data_usage_button),
-                        "Get IMSI Success",
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                } catch (e: Exception) {
-                    showErrorDialog(e.message.toString())
-                } catch (_: NoSuchMethodError) {
-                    //fallback
-                    try {
-                        getIMSICacheFallback(applicationContext)
-                        Snackbar.make(
-                            findViewById(R.id.data_usage_button),
-                            "Get IMSI Success",
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
-                    }
-                }
             }
         }
         preferences = MMKV.defaultMMKV()
@@ -527,6 +504,9 @@ class MainActivity : AppCompatActivity() {
             if (!preferences.getBoolean("privacy_dialog_agree", false)) {
                 showPrivacyDialog()
                 return@setOnClickListener
+            }
+            if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                Shizuku.requestPermission(0)
             }
             var permissionList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 arrayOf(
@@ -812,10 +792,11 @@ class MainActivity : AppCompatActivity() {
                                 "Get IMSI Success",
                                 Snackbar.LENGTH_LONG
                             ).show()
+                            shizukuMMKV.putBoolean("shizuku_fallback", false)
                         } catch (e: Exception) {
                             showErrorDialog(e.message.toString())
                         } catch (_: NoSuchMethodError) {
-                            //fallback
+                            shizukuMMKV.putBoolean("shizuku_fallback", true)
                             try {
                                 getIMSICacheFallback(applicationContext)
                                 Snackbar.make(

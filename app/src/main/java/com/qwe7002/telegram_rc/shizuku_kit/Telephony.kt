@@ -5,6 +5,8 @@ import android.content.Context
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import com.android.internal.telephony.ITelephony
+import com.qwe7002.telegram_rc.MMKV.Const
+import com.tencent.mmkv.MMKV
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
@@ -51,6 +53,7 @@ class Telephony {
     }
 
     fun setSimPowerStateFallBack(slotIndex: Int, powerUp: Boolean): Boolean {
+        val shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
         val TAG = "setSimPowerStateFallBack"
         val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
         if (service == null) {
@@ -67,7 +70,7 @@ class Telephony {
                 "service",
                 "call",
                 "phone",
-                "185",
+                shizukuMMKV.getString("setSimPowerState","185"),
                 "i32",
                 slotIndex.toString(),
                 "i32",

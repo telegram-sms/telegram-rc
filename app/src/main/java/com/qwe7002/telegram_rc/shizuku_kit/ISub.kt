@@ -5,6 +5,8 @@ import android.os.IBinder
 import android.util.Log
 import android.os.ParcelFileDescriptor
 import com.android.internal.telephony.ISub
+import com.qwe7002.telegram_rc.MMKV.Const
+import com.tencent.mmkv.MMKV
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
@@ -28,6 +30,7 @@ class ISub {
     }
 
     fun setDefaultDataSubIdFallback(subId: Int) {
+        val shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
         val TAG = "setDefaultDataSubId"
         val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
         if (service == null) {
@@ -36,7 +39,7 @@ class ISub {
         }
 
         val process = service.newProcess(
-            arrayOf("service", "call", "isub", "31", "i32", subId.toString()),
+            arrayOf("service", "call", "isub", shizukuMMKV.getString("setDefaultDataSubId", "31"), "i32", subId.toString()),
             null,
             null
         )

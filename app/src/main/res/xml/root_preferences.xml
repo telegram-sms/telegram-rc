@@ -1,0 +1,37 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="SIM Information">
+
+        <EditTextPreference
+            app:enabled="false"
+            app:key="imsi_info"
+            app:title="IMSI Information" />
+
+    </PreferenceCategory>
+
+
+    <PreferenceCategory app:title="com.android.internal.telephony.IPhoneSubInfo">
+        <EditTextPreference
+            app:key="getSubscriberId"
+            app:title="getSubscriberId Method ID"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="getSubscriberIdForSubscriber"
+            app:title="getSubscriberIdForSubscriber Method ID"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+    <PreferenceCategory app:title="com.android.internal.telephony.ISub">
+        <EditTextPreference
+            app:key="setDefaultDataSubId"
+            app:title="setDefaultDataSubId Method ID"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="com.android.internal.telephony.ITelephony">
+        <EditTextPreference
+            app:key="setSimPowerState"
+            app:title="setSimPowerState Method ID"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

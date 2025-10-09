@@ -4,6 +4,8 @@ import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import com.android.internal.telephony.IPhoneSubInfo
+import com.qwe7002.telegram_rc.MMKV.Const
+import com.tencent.mmkv.MMKV
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
@@ -38,6 +40,7 @@ class IPhoneSubInfo {
 
     fun getDefaultIMSIFallbackWithShizuku(): String {
         val TAG = "getDefaultIMSIFallback"
+        val shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
         val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
         if (service == null) {
             Log.e(TAG, "Shizuku service not available")
@@ -48,7 +51,7 @@ class IPhoneSubInfo {
                 "service",
                 "call",
                 "iphonesubinfo",
-                "8",
+                shizukuMMKV.getString("getSubscriberId","8"),
                 "s16",
                 "com.android.shell",
             ),
@@ -80,6 +83,7 @@ class IPhoneSubInfo {
     }
 
     fun getIMSIFallbackWithShizuku(subid: Int): String {
+        val shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
         val TAG = "getIMSIFallback"
         val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
         if (service == null) {
@@ -91,7 +95,7 @@ class IPhoneSubInfo {
                 "service",
                 "call",
                 "iphonesubinfo",
-                "10",
+                shizukuMMKV.getString("getSubscriberIdForSubscriber","10"),
                 "i32",
                 subid.toString(),
                 "s16",
