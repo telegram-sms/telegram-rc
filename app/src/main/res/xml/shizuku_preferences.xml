@@ -1,5 +1,11 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory app:title="Device Information">
 
+        <EditTextPreference
+            app:enabled="false"
+            app:key="device"
+            app:title="Device" />
+    </PreferenceCategory>
     <PreferenceCategory app:title="SIM Information">
 
         <EditTextPreference

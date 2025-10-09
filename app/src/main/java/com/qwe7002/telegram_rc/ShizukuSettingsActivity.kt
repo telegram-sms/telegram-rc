@@ -20,28 +20,20 @@ class ShizukuSettingsActivity : AppCompatActivity() {
                 .replace(R.id.settings, SettingsFragment())
                 .commit()
         }
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            setPreferencesFromResource(R.xml.root_preferences, rootKey)
+            setPreferencesFromResource(R.xml.shizuku_preferences, rootKey)
             setupPreferences()
         }
 
         private fun setupPreferences() {
+            val device =findPreference<EditTextPreference>("device")
+            device?.summary = android.os.Build.MODEL
             val shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
             val imsiMMKV = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-            
-            // Set default values for Shizuku method IDs
-            if (shizukuMMKV.getString("getSubscriberId", "") == "") {
-                shizukuMMKV.putString("getSubscriberId", "8")
-            }
-            
-            if (shizukuMMKV.getString("getSubscriberIdForSubscriber", "") == "") {
-                shizukuMMKV.putString("getSubscriberIdForSubscriber", "10")
-            }
-            
+
             // Setup IMSI preference
             val imsiPreference = findPreference<EditTextPreference>("imsi_info")
             imsiPreference?.summary = "Loading..."
