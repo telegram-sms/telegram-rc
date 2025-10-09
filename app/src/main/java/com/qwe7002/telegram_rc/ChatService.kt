@@ -282,7 +282,7 @@ class ChatService : Service() {
 
         val fromId = fromObj["id"].asString
         if (chatID != fromId) {
-            writeLog(applicationContext, "Chat ID[$fromId] not allow")
+            writeLog(applicationContext, "Chat ID [$fromId] not allow")
             return
         }
 
