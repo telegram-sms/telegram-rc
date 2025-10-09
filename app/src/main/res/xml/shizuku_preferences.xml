@@ -1,10 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory app:title="Device Information">
-
+        <EditTextPreference
+            app:enabled="false"
+            app:key="manufacturer"
+            app:title="Manufacturer" />
         <EditTextPreference
             app:enabled="false"
             app:key="device"
             app:title="Device" />
+        <Preference
+            app:key="fetch_github_fallback"
+            app:title="Fetch Fallback Parameters"
+            app:summary="Try to fetch fallback parameters from GitHub" />
     </PreferenceCategory>
     <PreferenceCategory app:title="SIM Information">
 
@@ -12,7 +20,6 @@
             app:enabled="false"
             app:key="imsi_info"
             app:title="IMSI Information" />
-
     </PreferenceCategory>
 
 
