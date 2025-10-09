@@ -102,7 +102,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        startActivity(Intent(this, SettingsActivity::class.java))
         scannerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
                 if (result.resultCode == Const.RESULT_CONFIG_JSON) {
@@ -196,7 +195,6 @@ class MainActivity : AppCompatActivity() {
 
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 try {
-                    Log.d(TAG, "onCreate: ")
                     getIMSICache(applicationContext)
                     Snackbar.make(
                         findViewById(R.id.data_usage_button),
@@ -208,7 +206,7 @@ class MainActivity : AppCompatActivity() {
                 } catch (_: NoSuchMethodError) {
                     //fallback
                     Log.i(TAG, "onCreate: Shizuku fallback")
-                    MMKV.defaultMMKV().putBoolean("shizuku_fallback", true)
+                    MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID).putBoolean("shizuku_fallback", true)
                     try {
                         getIMSICacheFallback(applicationContext)
                         Snackbar.make(
@@ -870,6 +868,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
+        val shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
+        val shizukuMenuItem = menu.findItem(R.id.set_shizuku_menu_item)
+        if (shizukuMenuItem != null) {
+            shizukuMenuItem.isVisible = shizukuMMKV.getBoolean("shizuku_fallback", false)
+        }
         return true
     }
 
@@ -1000,6 +1003,11 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
+            R.id.set_shizuku_menu_item -> {
+                startActivity(Intent(this, ShizukuSettingsActivity::class.java))
+                return true
+            }
+
             R.id.spam_sms_keyword_edittext -> {
                 startActivity(Intent(this, SpamActivity::class.java))
                 return true
@@ -1047,13 +1055,13 @@ class MainActivity : AppCompatActivity() {
             }
 
             R.id.user_manual_menu_item -> fileName =
-                "/guide/" + applicationContext.getString(R.string.Lang) + "/user-manual"
+                "/guide/user-manual"
 
             R.id.privacy_policy_menu_item -> fileName =
-                "/guide/${applicationContext.getString(R.string.Lang)}/privacy-policy"
+                "/guide/privacy-policy"
 
             R.id.question_and_answer_menu_item -> fileName =
-                "/guide/" + applicationContext.getString(R.string.Lang) + "/Q&A"
+                "/guide/Q&A"
 
             R.id.donate_menu_item -> fileName = "/donate"
         }

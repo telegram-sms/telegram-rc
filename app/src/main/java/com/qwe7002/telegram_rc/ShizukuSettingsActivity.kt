@@ -1,13 +1,15 @@
 package com.qwe7002.telegram_rc
 
 import android.os.Bundle
+import android.text.InputFilter
+import android.text.InputType
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.EditTextPreference
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 
-class SettingsActivity : AppCompatActivity() {
+class ShizukuSettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +51,37 @@ class SettingsActivity : AppCompatActivity() {
             val getSubscriberIdForSubscriberPreference = findPreference<EditTextPreference>("getSubscriberIdForSubscriber")
             val setDefaultDataSubIdPreference = findPreference<EditTextPreference>("setDefaultDataSubId")
             val setSimPowerStatePreference = findPreference<EditTextPreference>("setSimPowerState")
+            
+            // Set input type and filters for Shizuku preferences to only allow digits
+            val digitsFilter = InputFilter { source, start, end, dest, dstart, dend ->
+                for (i in start until end) {
+                    if (!Character.isDigit(source[i])) {
+                        return@InputFilter ""
+                    }
+                }
+                null
+            }
+            
+            getSubscriberIdPreference?.setOnBindEditTextListener { editText ->
+                editText.inputType = InputType.TYPE_CLASS_NUMBER
+                editText.filters = arrayOf(digitsFilter)
+            }
+            
+            getSubscriberIdForSubscriberPreference?.setOnBindEditTextListener { editText ->
+                editText.inputType = InputType.TYPE_CLASS_NUMBER
+                editText.filters = arrayOf(digitsFilter)
+            }
+            
+            setDefaultDataSubIdPreference?.setOnBindEditTextListener { editText ->
+                editText.inputType = InputType.TYPE_CLASS_NUMBER
+                editText.filters = arrayOf(digitsFilter)
+            }
+            
+            setSimPowerStatePreference?.setOnBindEditTextListener { editText ->
+                editText.inputType = InputType.TYPE_CLASS_NUMBER
+                editText.filters = arrayOf(digitsFilter)
+            }
+            
             // Set current values
             getSubscriberIdPreference?.text = shizukuMMKV.getString("getSubscriberId", "8")
             getSubscriberIdForSubscriberPreference?.text = shizukuMMKV.getString("getSubscriberIdForSubscriber", "10")
@@ -91,7 +124,7 @@ class SettingsActivity : AppCompatActivity() {
                         if (it.isNotEmpty()) {
                             for (key in allKeys) {
                                 val imsi = imsiMMKV.getString(key, "")
-                                imsiInfo.append("Slot $key: $imsi\n")
+                                imsiInfo.append("$key: $imsi\n")
                             }
                         } else {
                             imsiInfo.append("No IMSI information available")
@@ -100,10 +133,12 @@ class SettingsActivity : AppCompatActivity() {
 
                     activity?.runOnUiThread {
                         imsiPreference?.summary = imsiInfo.toString().trim()
+                        imsiPreference?.text = ""
                     }
                 } catch (e: Exception) {
                     activity?.runOnUiThread {
                         imsiPreference?.summary = "Error loading IMSI: ${e.message}"
+                        imsiPreference?.text = ""
                     }
                 }
             }.start()

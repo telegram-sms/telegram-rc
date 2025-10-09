@@ -86,7 +86,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="DataExtractionRules,GoogleAppIndexingWarning">
         <activity
-            android:name=".SettingsActivity"
+            android:name=".ShizukuSettingsActivity"
             android:exported="false"
             android:label="Shizuku Fallback Settings" />
 
