@@ -9,7 +9,7 @@ buildscript {
             url = uri("https://maven.pkg.github.com/agap/luch")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_ACCESS_KEY")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
             }
         }
 
@@ -29,7 +29,7 @@ allprojects {
             url = uri("https://maven.pkg.github.com/agap/luch")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_ACCESS_KEY")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
             }
         }
     }
