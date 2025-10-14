@@ -109,8 +109,7 @@ object SMS {
         }
         val dualSim = Other.getDualSimCardDisplay(
             context,
-            slot,
-            preferences.getBoolean("display_dual_sim_display_name", false)
+            slot
         )
         val sendContent = "[$dualSim${context.getString(R.string.send_sms_head)}]\n${context.getString(R.string.to)}$sendTo\n${context.getString(R.string.content)}$content"
         requestBody.text = "$sendContent\n${context.getString(R.string.status)}${context.getString(R.string.sending)}"

@@ -67,8 +67,7 @@ class SMSReceiver : BroadcastReceiver() {
         val slot = intentSlot
         val dualSim = Other.getDualSimCardDisplay(
             context,
-            intentSlot,
-            preferences.getBoolean("display_dual_sim_display_name", false)
+            intentSlot
         )
 
         val pdus = (extras["pdus"] as Array<*>?)!!

@@ -78,8 +78,7 @@ class CallReceiver : BroadcastReceiver() {
                 requestBody.messageThreadId = preferences.getString("message_thread_id", "") ?: ""
                 val dualSim = Other.getDualSimCardDisplay(
                     context,
-                    stateMMKV.getInt("incoming_slot", -1),
-                    preferences.getBoolean("display_dual_sim_display_name", false)
+                    stateMMKV.getInt("incoming_slot", -1)
                 )
                 requestBody.text = "[$dualSim${context.getString(R.string.missed_call_head)}]\n${context.getString(R.string.Incoming_number)}$incomingNumber"
                 CcSendJob.startJob(context, context.getString(R.string.missed_call_head), requestBody.text)

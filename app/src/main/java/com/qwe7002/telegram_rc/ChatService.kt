@@ -214,8 +214,7 @@ class ChatService : Service() {
                 )
                 val dualSim = getDualSimCardDisplay(
                     applicationContext,
-                    slot,
-                    preferences.getBoolean("display_dual_sim_display_name", false)
+                    slot
                 )
                 val sendContent =
                     "[$dualSim${applicationContext.getString(R.string.send_sms_head)}]\n${

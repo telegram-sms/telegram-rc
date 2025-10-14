@@ -63,17 +63,13 @@ object Other {
     }
 
     @JvmStatic
-    fun getDualSimCardDisplay(context: Context, slot: Int, showName: Boolean): String {
+    fun getDualSimCardDisplay(context: Context, slot: Int): String {
         var dualSim = ""
         if (slot == -1) {
             return dualSim
         }
         if (getActiveCard(context) >= 2) {
-            var result = ""
-            if (showName) {
-                result = "(" + getSimDisplayName(context, slot) + ")"
-            }
-            dualSim = "SIM" + (slot + 1) + result + " "
+            dualSim = "SIM" + (slot + 1) + " "
         }
         return dualSim
     }

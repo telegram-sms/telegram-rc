@@ -238,58 +238,6 @@ object ArfcnConverter {
     }
 
     /**
-     * 将频率(MHz)转换为NR-ARFCN
-     */
-    fun frequencyToNrArfcn(frequency: Double): Int {
-        return when {
-            frequency in 0.0..3000.0 -> {
-                (frequency * 1000 / 5).toInt()
-            }
-            frequency in 3000.0..24250.0 -> {
-                (600000 + (frequency - 3000) * 1000 / 15).toInt()
-            }
-            frequency in 24250.0..100000.0 -> {
-                (2016667 + (frequency - 24250) * 1000 / 60).toInt()
-            }
-            else -> -1
-        }
-    }
-
-    /**
-     * 将NR-ARFCN转换为频率(MHz)
-     */
-    fun nrArfcnToFrequency(arfcn: Int): Double {
-        return when {
-            arfcn in 0..599999 -> {
-                arfcn * 0.005
-            }
-            arfcn in 600000..2016666 -> {
-                3000.0 + (arfcn - 600000) * 0.015
-            }
-            arfcn in 2016667..3279167 -> {
-                24250.0 + (arfcn - 2016667) * 0.060
-            }
-            else -> -1.0
-        }
-    }
-
-    /**
-     * 将频率(MHz)转换为EARFCN
-     */
-    fun frequencyToEarfcn(frequency: Double, isUplink: Boolean = true): Int {
-        // 这是一个简化的实现，实际的转换需要考虑具体的频段
-        return (frequency * 10 - (if (isUplink) 19200 else 21100)).toInt()
-    }
-
-    /**
-     * 将EARFCN转换为频率(MHz)
-     */
-    fun earfcnToFrequency(earfcn: Int): Double {
-        // 简化的实现，实际应该根据具体频段进行计算
-        return (earfcn / 10.0) + 1920.0
-    }
-
-    /**
      * 从CellInfo获取信号强度和频段信息
      */
     fun getCellInfoDetails(cellInfo: CellInfo): String {
@@ -318,6 +266,7 @@ object ArfcnConverter {
                     val arfcn = try {
                         cellIdentity.javaClass.getMethod("getNrarfcn").invoke(cellIdentity) as Int
                     } catch (e: Exception) {
+                        e.printStackTrace()
                         Int.MAX_VALUE
                     }
                     Log.d(TAG, "getCellInfoDetails NR: ARFCN=$arfcn")
@@ -334,6 +283,7 @@ object ArfcnConverter {
                             cellSignalStrength.javaClass.getMethod("getRsrp").invoke(cellSignalStrength) as Int
                         }
                     } catch (e: Exception) {
+                        e.printStackTrace()
                         Int.MAX_VALUE
                     }
 

@@ -94,7 +94,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dohSwitch: SwitchMaterial
     private lateinit var chargerStatusSwitch: SwitchMaterial
     private lateinit var verificationCodeSwitch: SwitchMaterial
-    private lateinit var displayDualSimDisplayNameSwitch: SwitchMaterial
     private lateinit var saveButton: Button
     private lateinit var getIdButton: Button
 
@@ -150,7 +149,6 @@ class MainActivity : AppCompatActivity() {
         dohSwitch = findViewById(R.id.doh_switch)
         chargerStatusSwitch = findViewById(R.id.charger_status_switch)
         verificationCodeSwitch = findViewById(R.id.verification_code_switch)
-        displayDualSimDisplayNameSwitch = findViewById(R.id.display_dual_sim_switch)
         saveButton = findViewById(R.id.save_button)
         getIdButton = findViewById(R.id.get_id_button)
         writeSettingsButton = findViewById(R.id.write_settings_button)
@@ -251,19 +249,6 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        var displayDualSimDisplayName =
-            preferences.getBoolean("display_dual_sim_display_name", false)
-        if (ContextCompat.checkSelfPermission(
-                applicationContext,
-                Manifest.permission.READ_PHONE_STATE
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            if (getActiveCard(applicationContext) < 2) {
-                displayDualSimDisplayNameSwitch.isEnabled = false
-                displayDualSimDisplayName = false
-            }
-            displayDualSimDisplayNameSwitch.isChecked = displayDualSimDisplayName
-        }
 
         botTokenEditView.setText(botTokenSave)
         chatIdEditView.setText(chatIdSave)
@@ -322,41 +307,6 @@ class MainActivity : AppCompatActivity() {
             preferences.getBoolean("verification_code", false)
 
         dohSwitch.isChecked = preferences.getBoolean("doh_switch", true)
-        if (ContextCompat.checkSelfPermission(
-                applicationContext,
-                Manifest.permission.READ_PHONE_STATE
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            val tm = checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
-            val phoneCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                tm.activeModemCount
-            } else {
-                @Suppress("DEPRECATION")
-                tm.phoneCount
-            }
-            if (phoneCount <= 1) {
-                displayDualSimDisplayNameSwitch.visibility = View.GONE
-            }
-        }
-        displayDualSimDisplayNameSwitch.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(
-                    applicationContext,
-                    Manifest.permission.READ_PHONE_STATE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                displayDualSimDisplayNameSwitch.isChecked = false
-                ActivityCompat.requestPermissions(
-                    this@MainActivity,
-                    arrayOf(Manifest.permission.READ_PHONE_STATE),
-                    1
-                )
-            } else {
-                if (getActiveCard(applicationContext) < 2) {
-                    displayDualSimDisplayNameSwitch.isEnabled = false
-                    displayDualSimDisplayNameSwitch.isChecked = false
-                }
-            }
-        }
 
         chatIdEditView.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
@@ -641,10 +591,6 @@ class MainActivity : AppCompatActivity() {
                         batteryMonitoringSwitch.isChecked
                     )
                     preferences.putBoolean("charger_status", chargerStatusSwitch.isChecked)
-                    preferences.putBoolean(
-                        "display_dual_sim_display_name",
-                        displayDualSimDisplayNameSwitch.isChecked
-                    )
                     preferences.putBoolean("verification_code", verificationCodeSwitch.isChecked)
                     preferences.putBoolean("doh_switch", dohSwitch.isChecked)
                     preferences.putBoolean("initialized", true)
