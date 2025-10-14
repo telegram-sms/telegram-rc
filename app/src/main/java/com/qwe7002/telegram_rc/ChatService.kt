@@ -98,6 +98,7 @@ class ChatService : Service() {
     private lateinit var sendStatusMMKV: MMKV
     private lateinit var mainThread: Thread
     private var terminalThread = false
+    private var offset = 0L
 
     object ReplyMarkupKeyboard {
         fun getInlineKeyboardObj(
@@ -164,7 +165,8 @@ class ChatService : Service() {
 
     private fun receiveHandle(resultObj: JsonObject) {
         val updateId = resultObj["update_id"].asLong
-        chatInfoMMKV.putLong("offset", updateId + 1)
+        //chatInfoMMKV.putLong("offset", updateId + 1)
+        offset = updateId + 1
         var messageType = ""
         val requestBody = RequestMessage()
         requestBody.chatId = chatID
@@ -648,8 +650,11 @@ class ChatService : Service() {
                         batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
                     val healthRatio = Battery.getLearnedBatteryCapacity()
                         ?.let { (it.toDouble() / Battery.getBatteryCapacity(applicationContext)) * 100 }
-                    Log.d(TAG, "getLearnedBatteryCapacity: "+Battery.getLearnedBatteryCapacity())
-                    Log.d(TAG, "getBatteryCapacity: "+Battery.getBatteryCapacity(applicationContext))
+                    Log.d(TAG, "getLearnedBatteryCapacity: " + Battery.getLearnedBatteryCapacity())
+                    Log.d(
+                        TAG,
+                        "getBatteryCapacity: " + Battery.getBatteryCapacity(applicationContext)
+                    )
                     batteryHealth =
                         "\nBattery Health: $batteryHealthString${
                             if (healthRatio != null) " (${"%.2f".format(healthRatio)}%)" else ""
@@ -1511,7 +1516,7 @@ class ChatService : Service() {
                     botToken, "getUpdates"
                 )
                 val requestBody = PollingJson()
-                requestBody.offset = chatInfoMMKV.getLong("offset", 0L)
+                requestBody.offset = offset
                 requestBody.timeout = timeout
                 val body: RequestBody =
                     RequestBody.create(Const.JSON, Gson().toJson(requestBody))
