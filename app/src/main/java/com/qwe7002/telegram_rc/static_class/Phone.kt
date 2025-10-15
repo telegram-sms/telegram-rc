@@ -3,6 +3,7 @@ package com.qwe7002.telegram_rc.static_class
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.telephony.SubscriptionManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
@@ -13,18 +14,30 @@ import com.tencent.mmkv.MMKV
 
 
 object Phone {
-    @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
+    @RequiresPermission(allOf = [Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_PHONE_NUMBERS])
     @JvmStatic
     fun getPhoneNumber(context: Context, slot: Int): String {
-        val sm =
+        val subscriptionManager =
             context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
-        val list = sm.activeSubscriptionInfoList
-        if (list != null && !list.isEmpty()) {
-            if (list.size <= slot) {
-                return list[0]!!.number
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val subID = Other.getSubId(context, slot)
+            return if (subID >= 0) {
+                subscriptionManager.getPhoneNumber(subID)
+            } else {
+                subscriptionManager.getPhoneNumber(SubscriptionManager.DEFAULT_SUBSCRIPTION_ID)
             }
-            val phoneNumber = list[slot]!!.number
-            return phoneNumber
+        } else {
+            val list = subscriptionManager.activeSubscriptionInfoList
+            if (list != null && list.isNotEmpty()) {
+                if (list.size <= slot) {
+                    val info = list.getOrNull(0)
+                    @Suppress("DEPRECATION")
+                    return info?.number ?: ""
+                }
+                val info = list.getOrNull(slot)
+                @Suppress("DEPRECATION")
+                return info?.number ?: ""
+            }
         }
         return ""
     }
@@ -41,7 +54,7 @@ object Phone {
                 Log.i("getIMSICache", "getIMSICache: $phone")
                 if (phone.isNotEmpty()) {
                     imsiCache.putString(getPhoneNumber(context, 0), phone)
-                }else{
+                } else {
                     throw Exception("Permission denied")
                 }
             } else {
@@ -51,15 +64,16 @@ object Phone {
                     Log.i("getIMSICache", "getIMSICache: $phone")
                     if (phone.isNotEmpty()) {
                         imsiCache.putString(getPhoneNumber(context, i), phone)
-                    }else{
+                    } else {
                         throw Exception("Permission denied")
                     }
                 }
             }
-        }else{
+        } else {
             throw Exception("Permission denied")
         }
     }
+
     @JvmStatic
     fun getIMSICacheFallback(context: Context) {
         val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
@@ -72,7 +86,7 @@ object Phone {
                 Log.i("getIMSICache", "getIMSICache: $phone")
                 if (phone.isNotEmpty()) {
                     imsiCache.putString(getPhoneNumber(context, 0), phone)
-                }else{
+                } else {
                     throw Exception("Permission denied")
                 }
             } else {
@@ -82,12 +96,12 @@ object Phone {
                     Log.i("getIMSICache", "getIMSICache: $phone")
                     if (phone.isNotEmpty()) {
                         imsiCache.putString(getPhoneNumber(context, i), phone)
-                    }else{
+                    } else {
                         throw Exception("Permission denied")
                     }
                 }
             }
-        }else{
+        } else {
             throw Exception("Permission denied")
         }
     }
