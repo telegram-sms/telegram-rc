@@ -14,7 +14,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.telephony.TelephonyManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -43,17 +42,15 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
-import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager
+import com.qwe7002.telegram_rc.data_structure.ScannerJson
+import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
+import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.static_class.DataUsage
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
-import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
 import com.qwe7002.telegram_rc.static_class.Phone.getIMSICache
 import com.qwe7002.telegram_rc.static_class.Phone.getIMSICacheFallback
@@ -202,9 +199,9 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 } catch (e: Exception) {
                     showErrorDialog(e.message.toString())
-                } catch (_: NoSuchMethodError) {
-                    //fallback
-                    Log.i(TAG, "onCreate: Shizuku fallback")
+                } catch (e: NoSuchMethodError) {
+                    e.printStackTrace()
+                    writeLog(applicationContext, "The current device does not support Shizuku direct access, try using ADB shell to access.")
                     MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID).putBoolean("shizuku_fallback", true)
                     try {
                         getIMSICacheFallback(applicationContext)
