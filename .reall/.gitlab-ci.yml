@@ -17,9 +17,10 @@ build:
     before_script:
       - apk --update --no-cache add git openssl bash curl wget
       - apk add --no-cache binutils
+      - extras ndk
       - wget https://github.com/tcnksm/ghr/releases/download/v0.16.2/ghr_v0.16.2_linux_amd64.tar.gz
       - tar -zxvf ghr_v0.16.2_linux_amd64.tar.gz
-      - extras ndk
+
     only:
         - master
     script:
