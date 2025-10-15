@@ -49,7 +49,11 @@ class LogcatActivity : AppCompatActivity() {
         val logs = LogManage.readLog(this, line)
         val logList = logs.split("\n").filter { it.isNotBlank() }.reversed()
         logAdapter.updateLogs(logList)
-        logRecyclerView.scrollToPosition(0)
+        // Only scroll to top if user is at the top or this is the initial load
+        val layoutManager = logRecyclerView.layoutManager as LinearLayoutManager
+        if (layoutManager.findFirstVisibleItemPosition() == 0) {
+            logRecyclerView.scrollToPosition(0)
+        }
     }
 
     public override fun onPause() {

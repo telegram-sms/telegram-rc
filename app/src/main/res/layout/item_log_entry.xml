@@ -2,14 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:padding="4dp">
 
     <TextView
         android:id="@+id/log_timestamp"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:textStyle="bold"
         android:textColor="@color/timestamp_color"
         android:fontFamily="monospace"
@@ -17,9 +16,9 @@
 
     <TextView
         android:id="@+id/log_message"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="2"
+        android:layout_marginTop="2dp"
         android:fontFamily="monospace"
         android:textColor="@color/text_color"
         android:textSize="12sp" />
