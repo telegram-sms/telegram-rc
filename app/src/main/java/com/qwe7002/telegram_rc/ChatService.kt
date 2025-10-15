@@ -334,10 +334,7 @@ class ChatService : Service() {
 
         when (command) {
             "/help", "/start", "/commandlist" -> {
-                var smsCommand = "\n${getString(R.string.sendsms)}"
-                if (getActiveCard(applicationContext) == 2) {
-                    smsCommand = "\n${getString(R.string.sendsms_dual)}"
-                }
+                val smsCommand = "\n${getString(R.string.sendsms)}"
 
                 var ussdCommand = ""
                 if (ActivityCompat.checkSelfPermission(
@@ -346,9 +343,6 @@ class ChatService : Service() {
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
                     ussdCommand = "\n${getString(R.string.send_ussd_command)}"
-                    if (getActiveCard(applicationContext) == 2) {
-                        ussdCommand = "\n${getString(R.string.send_ussd_dual_command)}"
-                    }
                 }
                 var switchAp = ""
                 if (Settings.System.canWrite(applicationContext)) {
@@ -826,27 +820,33 @@ class ChatService : Service() {
                 }
             }
 
-            "/sendussd", "/sendussd1", "/sendussd2" -> {
+            "/sendussd" -> {
                 if (ActivityCompat.checkSelfPermission(
                         this,
                         Manifest.permission.CALL_PHONE
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
-                    var subId = -1
-                    if (getActiveCard(applicationContext) == 2) {
-                        if (command == "/sendussd2") {
-                            subId = getSubId(applicationContext, 1)
-                        }
-                    }
                     val commandList =
                         requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
                             .toTypedArray()
-                    if (commandList.size == 2) {
-                        sendUssd(applicationContext, commandList[1], subId)
-                        return
-                    } else {
-                        requestBody.text =
-                            "${getString(R.string.system_message_head)}\nUsage: /sendussd <USSD Code>"
+                    var subId = -1
+                    if (getActiveCard(applicationContext) == 2) {
+                        if(commandList.size == 3){
+                            subId = getSubId(applicationContext, commandList[1].toInt() - 1)
+                            sendUssd(applicationContext, commandList[2], subId)
+                            return
+                        }else{
+                            requestBody.text =
+                                "${getString(R.string.system_message_head)}\nUsage: /sendussd <SIM> <USSD Code>"
+                        }
+                    }else {
+                        if (commandList.size == 2) {
+                            sendUssd(applicationContext, commandList[1], subId)
+                            return
+                        } else {
+                            requestBody.text =
+                                "${getString(R.string.system_message_head)}\nUsage: /sendussd <USSD Code>"
+                        }
                     }
                 } else {
                     Log.i(TAG, "send_ussd: No permission.")
@@ -1060,66 +1060,75 @@ class ChatService : Service() {
             }
 
 
-            "/sendsms", "/sendsms1", "/sendsms2" -> {
+            "/sendsms" -> {
                 val msgSendList =
                     requestMsg.split("\n".toRegex()).dropLastWhile { it.isEmpty() }
                         .toTypedArray()
-                if (msgSendList.size > 2) {
-                    val msgSendTo = getSendPhoneNumber(
-                        msgSendList[1]
-                    )
-                    if (isPhoneNumber(msgSendTo)) {
-                        val msgSendContent = StringBuilder()
-                        var i = 2
-                        while (i < msgSendList.size) {
-                            if (msgSendList.size != 3 && i != 2) {
-                                msgSendContent.append("\n")
-                            }
-                            msgSendContent.append(msgSendList[i])
-                            ++i
-                        }
-                        if (getActiveCard(applicationContext) == 1) {
-                            sendSMS(
-                                applicationContext,
-                                msgSendTo,
-                                msgSendContent.toString(),
-                                -1,
-                                -1
-                            )
-                            return
-                        }
-                        var sendSlot = -1
-                        if (getActiveCard(applicationContext) > 1) {
-                            sendSlot = 0
-                            if (command == "/sendsms2") {
-                                sendSlot = 1
-                            }
-                        }
-                        val subId = getSubId(
-                            applicationContext, sendSlot
-                        )
-                        if (subId != -1) {
-                            sendSMS(
-                                applicationContext,
-                                msgSendTo,
-                                msgSendContent.toString(),
-                                sendSlot,
-                                subId
-                            )
-                            return
+                val commandRaw = msgSendList[0]
+                val command = commandRaw.split(" ").toTypedArray()
+                var sendSlot = -1
+                if (getActiveCard(applicationContext) > 1) {
+                    if (command.size < 2) {
+                        sendSlot = -3
+                    } else {
+                        sendSlot = when (command[1]) {
+                            "1" -> 0
+                            "2" -> 1
+                            else -> -2
                         }
                     }
-                } else {
-                    hasCommand = false
-                    sendStatusMMKV.putInt("status", SEND_SMS_STATUS.PHONE_INPUT_STATUS)
-                    var sendSlot = -1
-                    if (getActiveCard(applicationContext) > 1) {
-                        sendSlot = 0
-                        if (command == "/sendsms2") {
-                            sendSlot = 1
+                }
+                when (sendSlot) {
+                    -3 -> requestBody.text =
+                        "${getString(R.string.system_message_head)}\nPlease specify the SIM card number to send the message"
+                    -2 -> requestBody.text =
+                        "${getString(R.string.system_message_head)}\nInvalid SIM card number"
+                    else -> {
+                        if (msgSendList.size > 2) {
+                            val msgSendTo = getSendPhoneNumber(
+                                msgSendList[1]
+                            )
+                            if (isPhoneNumber(msgSendTo)) {
+                                val msgSendContent = StringBuilder()
+                                var i = 2
+                                while (i < msgSendList.size) {
+                                    if (msgSendList.size != 3 && i != 2) {
+                                        msgSendContent.append("\n")
+                                    }
+                                    msgSendContent.append(msgSendList[i])
+                                    ++i
+                                }
+                                if (getActiveCard(applicationContext) == 1) {
+                                    sendSMS(
+                                        applicationContext,
+                                        msgSendTo,
+                                        msgSendContent.toString(),
+                                        -1,
+                                        -1
+                                    )
+                                    return
+                                }
+
+                                val subId = getSubId(
+                                    applicationContext, sendSlot
+                                )
+                                if (subId != -1) {
+                                    sendSMS(
+                                        applicationContext,
+                                        msgSendTo,
+                                        msgSendContent.toString(),
+                                        sendSlot,
+                                        subId
+                                    )
+                                    return
+                                }
+                            }
+                        } else {
+                            hasCommand = false
+                            sendStatusMMKV.putInt("status", SEND_SMS_STATUS.PHONE_INPUT_STATUS)
+                            sendStatusMMKV.putInt("slot", sendSlot)
                         }
                     }
-                    sendStatusMMKV.putInt("slot", sendSlot)
                 }
                 requestBody.text =
                     "[${applicationContext.getString(R.string.send_sms_head)}]\n${getString(R.string.failed_to_get_information)}"
