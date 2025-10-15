@@ -1,5 +1,6 @@
 package com.qwe7002.telegram_rc.data_structure
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -40,6 +41,7 @@ class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<Lo
 
     override fun getItemCount(): Int = logEntries.size
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateLogs(newLogs: List<String>) {
         logEntries = newLogs
         notifyDataSetChanged()
@@ -69,6 +71,7 @@ class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<Lo
             format.parse(timestamp.replace(Regex("[zZ]$"), ""))
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }

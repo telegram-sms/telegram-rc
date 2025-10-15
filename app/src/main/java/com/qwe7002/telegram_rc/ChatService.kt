@@ -970,7 +970,9 @@ class ChatService : Service() {
                                             } catch (e: Exception) {
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
-                                            } catch (_: NoSuchMethodError) {
+                                            } catch (e: NoSuchMethodError) {
+                                                e.printStackTrace()
+                                                writeLog(applicationContext, "The current device does not support Shizuku direct access, try using ADB shell to access.")
                                                 Log.e(
                                                     "ChatService",
                                                     "setSimPowerState not supported"
@@ -1027,12 +1029,9 @@ class ChatService : Service() {
                                         } catch (e: Exception) {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
-                                        } catch (_: NoSuchMethodError) {
-                                            Log.e(
-                                                "Shizuku",
-                                                "Switching default data SIM failed: Method is not available"
-                                            )
-                                            //try fallback
+                                        } catch (e: NoSuchMethodError) {
+                                            e.printStackTrace()
+                                            writeLog(applicationContext, "The current device does not support Shizuku direct access, try using ADB shell to access.")
                                             try {
                                                 val dataSub = ISub()
                                                 dataSub.setDefaultDataSubIdFallback(

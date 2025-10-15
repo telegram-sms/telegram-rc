@@ -49,6 +49,7 @@ import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager
 import com.qwe7002.telegram_rc.static_class.DataUsage
+import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
@@ -721,7 +722,10 @@ class MainActivity : AppCompatActivity() {
                             shizukuMMKV.putBoolean("shizuku_fallback", false)
                         } catch (e: Exception) {
                             showErrorDialog(e.message.toString())
-                        } catch (_: NoSuchMethodError) {
+                            writeLog(applicationContext, e.message.toString())
+                        } catch (e: NoSuchMethodError) {
+                            e.printStackTrace()
+                            writeLog(applicationContext, "The current device does not support Shizuku direct access, try using ADB shell to access.")
                             shizukuMMKV.putBoolean("shizuku_fallback", true)
                             try {
                                 getIMSICacheFallback(applicationContext)
@@ -733,6 +737,7 @@ class MainActivity : AppCompatActivity() {
                             } catch (e: Exception) {
                                 e.printStackTrace()
                                 showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
+                                writeLog(applicationContext, "The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
                             }
                         }
                     }

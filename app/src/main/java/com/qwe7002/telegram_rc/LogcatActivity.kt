@@ -14,7 +14,7 @@ class LogcatActivity : AppCompatActivity() {
     private lateinit var logRecyclerView: RecyclerView
     private lateinit var logAdapter: LogAdapter
     private val line = 100
-    private var refreshThread: Thread? = null
+    private lateinit var refreshThread: Thread
     private var isRefreshing = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
