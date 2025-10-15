@@ -69,9 +69,9 @@ dependencies {
     implementation 'com.google.android.material:material:1.13.0'
     //noinspection GradleDependency
     implementation 'androidx.browser:browser:1.8.0'
-    implementation 'com.squareup.okio:okio:3.16.0'
-    implementation "com.squareup.okhttp3:okhttp:5.2.0"
-    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.2.0"
+    implementation 'com.squareup.okio:okio:3.16.2'
+    implementation "com.squareup.okhttp3:okhttp:5.2.1"
+    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.2.1"
     implementation 'org.conscrypt:conscrypt-android:2.5.3'
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
@@ -79,8 +79,9 @@ dependencies {
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.6'
     //noinspection GradleDependency
     implementation "androidx.core:core-ktx:1.13.1"
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.20'
     implementation 'com.tencent:mmkv:2.2.4'
+    //Shizuku
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
@@ -89,6 +90,7 @@ dependencies {
     implementation "androidx.room:room-runtime:2.8.2"
     implementation "androidx.room:room-ktx:2.8.2"
     implementation 'androidx.preference:preference-ktx:1.2.1'
+    //noinspection KaptUsageInsteadOfKsp
     kapt "androidx.room:room-compiler:2.8.2"
 }
 repositories {
