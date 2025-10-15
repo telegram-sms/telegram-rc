@@ -698,25 +698,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             1 -> {
-                val displayDualSimDisplayName =
-                    findViewById<SwitchMaterial>(R.id.display_dual_sim_switch)
-                if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    val telephonyManager =
-                        checkNotNull(getSystemService(TELEPHONY_SERVICE) as TelephonyManager)
-                    val phoneCount = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        telephonyManager.activeModemCount
-                    } else {
-                        @Suppress("DEPRECATION")
-                        telephonyManager.phoneCount
-                    }
-                    if (phoneCount <= 1 || getActiveCard(
-                            applicationContext
-                        ) < 2
-                    ) {
-                        displayDualSimDisplayName.isEnabled = false
-                        displayDualSimDisplayName.isChecked = false
-                    }
-                }
+                Log.d(TAG, "onRequestPermissionsResult: 1")
             }
 
             2 -> {
