@@ -4,15 +4,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
-        maven {
-            url = uri("https://maven.pkg.github.com/agap/luch")
-            credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
-            }
-        }
-
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.13.0'
