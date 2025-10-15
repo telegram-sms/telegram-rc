@@ -46,21 +46,19 @@ class BeaconActivity : AppCompatActivity() {
 
     fun flushListView(arrayList: ArrayList<BeaconModel.BeaconModel>) {
         val beaconListview = findViewById<ListView>(R.id.beacon_listview)
-        if (arrayList.isNotEmpty()) {
-            val list = ArrayList<BeaconModel.BeaconModel>()
-            for (beacon in arrayList) {
-                if (beacon.distance < 200.0) {
-                    list.add(beacon)
-                }
+        val list = ArrayList<BeaconModel.BeaconModel>()
+        for (beacon in arrayList) {
+            if (beacon.distance < 200.0) {
+                list.add(beacon)
             }
+        }
 
-            runOnUiThread {
-                if (customBeaconAdapter == null) {
-                    customBeaconAdapter = CustomBeaconAdapter(list, this@BeaconActivity)
-                    beaconListview.adapter = customBeaconAdapter
-                } else {
-                    customBeaconAdapter?.updateList(list)
-                }
+        runOnUiThread {
+            if (customBeaconAdapter == null) {
+                customBeaconAdapter = CustomBeaconAdapter(list, this@BeaconActivity)
+                beaconListview.adapter = customBeaconAdapter
+            } else {
+                customBeaconAdapter?.updateList(list)
             }
         }
     }
@@ -174,34 +172,45 @@ class BeaconActivity : AppCompatActivity() {
 
         @SuppressLint("SetTextI18n")
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val inflater = LayoutInflater.from(context)
-            @SuppressLint("ViewHolder", "InflateParams") val view =
-                inflater.inflate(R.layout.item_beacon, null)
+            val view: View
+            val holder: ViewHolder
 
-            val titleView = view.findViewById<TextView>(R.id.beacon_title_textview)
-            val addressView = view.findViewById<TextView>(R.id.beacon_address_textview)
-            val infoView = view.findViewById<TextView>(R.id.beacon_info_textview)
-            val checkBoxView = view.findViewById<CheckBox>(R.id.beacon_select_checkbox)
+            if (convertView == null) {
+                val inflater = LayoutInflater.from(context)
+                view = inflater.inflate(R.layout.item_beacon, parent, false)
+                
+                holder = ViewHolder()
+                holder.titleView = view.findViewById(R.id.beacon_title_textview)
+                holder.addressView = view.findViewById(R.id.beacon_address_textview)
+                holder.infoView = view.findViewById(R.id.beacon_info_textview)
+                holder.checkBoxView = view.findViewById(R.id.beacon_select_checkbox)
+                
+                view.tag = holder
+            } else {
+                view = convertView
+                holder = view.tag as ViewHolder
+            }
+
             val beacon = list[position]
-            titleView.text = beacon.uuid
-            addressView.text =
+            holder.titleView?.text = beacon.uuid
+            holder.addressView?.text =
                 "Major: " + beacon.major + " Minor: " + beacon.minor + " Rssi: " + beacon.rssi + " dBm"
-            infoView.text = "Distance: " + beacon.distance.toInt() + " meters"
-            if (listenList.contains(
-                    BeaconModel.beaconItemName(
+            holder.infoView?.text = "Distance: " + beacon.distance.toInt() + " meters"
+            
+            val beaconItemName = BeaconModel.beaconItemName(
                         beacon.uuid,
                         beacon.major,
                         beacon.minor
                     )
-                )
-            ) {
-                checkBoxView.isChecked = true
-            }
-            checkBoxView.setOnClickListener {
-                val address = BeaconModel.beaconItemName(beacon.uuid, beacon.major, beacon.minor)
+            
+            holder.checkBoxView?.setOnCheckedChangeListener(null)
+            holder.checkBoxView?.isChecked = listenList.contains(beaconItemName)
+            holder.checkBoxView?.setTag(beaconItemName)
+            holder.checkBoxView?.setOnCheckedChangeListener { buttonView, isChecked ->
+                val address = buttonView.tag as String
                 val listenListTemp =
                     beaconMMKV.decodeStringSet("address", setOf()).orEmpty().toMutableList()
-                if (checkBoxView.isChecked) {
+                if (isChecked) {
                     if (!listenListTemp.contains(address)) {
                         listenListTemp.add(address)
                     }
@@ -215,7 +224,12 @@ class BeaconActivity : AppCompatActivity() {
 
             return view
         }
+        
+        internal class ViewHolder {
+            var titleView: TextView? = null
+            var addressView: TextView? = null
+            var infoView: TextView? = null
+            var checkBoxView: CheckBox? = null
+        }
     }
-
-
 }
