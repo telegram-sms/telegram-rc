@@ -164,9 +164,6 @@ class ChatService : Service() {
 
 
     private fun receiveHandle(resultObj: JsonObject) {
-        val updateId = resultObj["update_id"].asLong
-        //chatInfoMMKV.putLong("offset", updateId + 1)
-        offset = updateId + 1
         var messageType = ""
         val requestBody = RequestMessage()
         requestBody.chatId = chatID
@@ -288,11 +285,15 @@ class ChatService : Service() {
         }
 
         var command = ""
-        var requestMsg = ""
+        var requestMsg: String?
         if (messageObj != null && messageObj.has("text")) {
             requestMsg = messageObj["text"].asString
+        }else{
+            Log.e(TAG, "Text is null")
+            writeLog(applicationContext, "Command message text is null")
+            return
         }
-        if (messageObj != null && messageObj.has("reply_to_message")) {
+        if (messageObj.has("reply_to_message")) {
             val saveItemString = chatInfoMMKV.getString(
                 messageObj["reply_to_message"].asJsonObject["message_id"].asString,
                 null
@@ -310,7 +311,7 @@ class ChatService : Service() {
             }
         }
         var hasCommand = false
-        if (messageObj != null && messageObj.has("entities")) {
+        if (messageObj.has("entities")) {
             val tempCommand: String
             val tempCommandLowercase: String
             val entitiesArr = messageObj["entities"].asJsonArray
@@ -831,15 +832,15 @@ class ChatService : Service() {
                             .toTypedArray()
                     var subId = -1
                     if (getActiveCard(applicationContext) == 2) {
-                        if(commandList.size == 3){
+                        if (commandList.size == 3) {
                             subId = getSubId(applicationContext, commandList[1].toInt() - 1)
                             sendUssd(applicationContext, commandList[2], subId)
                             return
-                        }else{
+                        } else {
                             requestBody.text =
                                 "${getString(R.string.system_message_head)}\nUsage: /sendussd <SIM> <USSD Code>"
                         }
-                    }else {
+                    } else {
                         if (commandList.size == 2) {
                             sendUssd(applicationContext, commandList[1], subId)
                             return
@@ -972,7 +973,10 @@ class ChatService : Service() {
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (e: NoSuchMethodError) {
                                                 e.printStackTrace()
-                                                writeLog(applicationContext, "The current device does not support Shizuku direct access, try using ADB shell to access.")
+                                                writeLog(
+                                                    applicationContext,
+                                                    "The current device does not support Shizuku direct access, try using ADB shell to access."
+                                                )
                                                 Log.e(
                                                     "ChatService",
                                                     "setSimPowerState not supported"
@@ -1031,7 +1035,10 @@ class ChatService : Service() {
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (e: NoSuchMethodError) {
                                             e.printStackTrace()
-                                            writeLog(applicationContext, "The current device does not support Shizuku direct access, try using ADB shell to access.")
+                                            writeLog(
+                                                applicationContext,
+                                                "The current device does not support Shizuku direct access, try using ADB shell to access."
+                                            )
                                             try {
                                                 val dataSub = ISub()
                                                 dataSub.setDefaultDataSubIdFallback(
@@ -1080,8 +1087,10 @@ class ChatService : Service() {
                 when (sendSlot) {
                     -3 -> requestBody.text =
                         "${getString(R.string.system_message_head)}\nPlease specify the SIM card number to send the message"
+
                     -2 -> requestBody.text =
                         "${getString(R.string.system_message_head)}\nInvalid SIM card number"
+
                     else -> {
                         if (msgSendList.size > 2) {
                             val msgSendTo = getSendPhoneNumber(
@@ -1552,13 +1561,27 @@ class ChatService : Service() {
                         result = response.body.string()
                     } catch (e: IOException) {
                         e.printStackTrace()
+                        writeLog(
+                            applicationContext,
+                            "Connection to the Telegram API service failed"
+                        )
                         continue
                     }
+                    Log.d(TAG, "run: $result")
                     val resultObj = JsonParser.parseString(result).asJsonObject
                     if (resultObj["ok"].asBoolean) {
                         val resultArray = resultObj["result"].asJsonArray
                         for (item in resultArray) {
+                            if (item.asJsonObject.has("update_id")) {
+                                offset = item.asJsonObject["update_id"].asLong + 1
+                            }
                             receiveHandle(item.asJsonObject)
+                        }
+                    }else{
+                        if(resultObj.has("description")){
+                            writeLog(applicationContext, "Error Code: ${resultObj["error_code"]}, ${resultObj["description"]}")
+                        }else{
+                            writeLog(applicationContext, "response code:" + response.code)
                         }
                     }
                 } else {
