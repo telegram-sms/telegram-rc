@@ -13,11 +13,11 @@ import java.util.concurrent.TimeUnit
 
 
 class KeepAliveJob : JobService() {
-
+    private val TAG = this::class.java.simpleName
     override fun onStartJob(params: JobParameters?): Boolean {
         try {
             if (params == null) {
-                Log.e("KeepAliveJob", "onStartJob: params is null")
+                Log.e(TAG, "onStartJob: params is null")
                 return false
             }
             
@@ -31,16 +31,16 @@ class KeepAliveJob : JobService() {
                 )
                 ServiceManage.startBeaconService(applicationContext)
             }
-            Log.d("telegram-rc", "startJob: Try to pull up the service")
+            Log.d(TAG, "startJob: Try to pull up the service")
             this.jobFinished(params, false)
             startJob(applicationContext)
         } catch (e: Exception) {
-            Log.e("KeepAliveJob", "Error in onStartJob", e)
+            Log.e(TAG, "Error in onStartJob", e)
             if (params != null) {
                 try {
                     this.jobFinished(params, false)
-                } catch (finishException: Exception) {
-                    Log.e("KeepAliveJob", "Error finishing job", finishException)
+                } catch (exception: Exception) {
+                    Log.e(TAG, "Error finishing job", exception)
                 }
             }
             return false
