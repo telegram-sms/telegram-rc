@@ -21,13 +21,14 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class ReSendJob : JobService() {
+    private val logTag = this::class.simpleName
     private lateinit var requestUri: String
     private val tableName: String = "resend_list"
     private lateinit var resendMMKV:MMKV
     private lateinit var preferences: MMKV
     override fun onStartJob(params: JobParameters?): Boolean {
         if (params == null) {
-            Log.e("ReSendJob", "onStartJob: params is null")
+            Log.e(logTag, "onStartJob: params is null")
             return false
         }
         
@@ -55,13 +56,13 @@ class ReSendJob : JobService() {
                         LogManage.writeLog(applicationContext, "The resend failure message is complete.")
                     }
                 } catch (e: Exception) {
-                    Log.e("ReSendJob", "Error in resend job", e)
+                    Log.e(logTag, "Error in resend job", e)
                 } finally {
                     jobFinished(params, false)
                 }
             }.start()
         } catch (e: Exception) {
-            Log.e("ReSendJob", "Failed to start resend job", e)
+            Log.e(logTag, "Failed to start resend job", e)
             return false
         }
         return true

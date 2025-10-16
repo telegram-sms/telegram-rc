@@ -72,7 +72,7 @@ import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
-    private val TAG = "main_activity"
+    private val logTag = this::class.java.simpleName
     private lateinit var preferences: MMKV
     private lateinit var proxyMMKV: MMKV
     private lateinit var shizukuMMKV: MMKV
@@ -353,7 +353,7 @@ class MainActivity : AppCompatActivity() {
             val errorHead = "Get chat ID failed:"
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.e(TAG, "onFailure: ", e)
+                    Log.e(logTag, "onFailure: ", e)
                     progressDialog.cancel()
                     val errorMessage = errorHead + e.message
                     writeLog(applicationContext, errorMessage)
@@ -538,7 +538,7 @@ class MainActivity : AppCompatActivity() {
             val errorHead = "Send message failed: "
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.e(TAG, "onFailure: ", e)
+                    Log.e(logTag, "onFailure: ", e)
                     progressDialog.cancel()
                     val errorMessage = errorHead + e.message
                     writeLog(applicationContext, errorMessage)
@@ -559,7 +559,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     if (newBotToken != botTokenSave) {
                         Log.i(
-                            TAG,
+                            logTag,
                             "onResponse: The current bot token does not match the saved bot token, clearing the message database."
                         )
                         MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID).clear()
@@ -667,7 +667,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 customTabsIntent.launchUrl(applicationContext, uri)
             } catch (e: ActivityNotFoundException) {
-                Log.e(TAG, "show_privacy_dialog: ", e)
+                Log.e(logTag, "show_privacy_dialog: ", e)
                 showErrorDialog("Browser not found.")
             }
         }
@@ -687,7 +687,7 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             0 -> {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "No camera permissions.")
+                    Log.d(logTag, "No camera permissions.")
                     showErrorDialog(applicationContext.getString(R.string.no_camera_permission))
                     return
                 }
@@ -696,7 +696,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             1 -> {
-                Log.d(TAG, "onRequestPermissionsResult: 1")
+                Log.d(logTag, "onRequestPermissionsResult: 1")
             }
 
             2 -> {
@@ -709,7 +709,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                         try {
-                            Log.d(TAG, "onCreate: ")
+                            Log.d(logTag, "onCreate: ")
                             getIMSICache(applicationContext)
                             Snackbar.make(
                                 findViewById(R.id.data_usage_button),
@@ -819,7 +819,7 @@ class MainActivity : AppCompatActivity() {
                     packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
                     versionName = packageInfo.versionName.toString()
                 } catch (e: PackageManager.NameNotFoundException) {
-                    Log.e(TAG, "onOptionsItemSelected: ", e)
+                    Log.e(logTag, "onOptionsItemSelected: ", e)
                 }
                 val builder = AlertDialog.Builder(this)
                 builder.setTitle(R.string.about_title)
@@ -862,7 +862,7 @@ class MainActivity : AppCompatActivity() {
                         Manifest.permission.ACCESS_COARSE_LOCATION
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    Log.d(TAG, "No permissions.")
+                    Log.d(logTag, "No permissions.")
                     showErrorDialog("No permission.")
                     return false
                 }
@@ -1009,7 +1009,7 @@ class MainActivity : AppCompatActivity() {
         try {
             customTabsIntent.launchUrl(this, uri)
         } catch (e: ActivityNotFoundException) {
-            Log.e(TAG, "onOptionsItemSelected: ", e)
+            Log.e(logTag, "onOptionsItemSelected: ", e)
             showErrorDialog("Browser not found.")
         }
         return true
@@ -1043,7 +1043,7 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 progressDialog.cancel()
-                Log.e(TAG, "onFailure: ", e)
+                Log.e(logTag, "onFailure: ", e)
             }
 
             override fun onResponse(call: Call, response: Response) {

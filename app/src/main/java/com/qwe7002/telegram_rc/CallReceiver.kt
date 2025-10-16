@@ -28,7 +28,8 @@ import java.util.Objects
 
 class CallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d("call_receiver", "Receive action: " + intent.action)
+        val logTag = this::class.java.simpleName
+        Log.d(logTag, "Receive action: " + intent.action)
         stateMMKV = MMKV.mmkvWithID(Const.STATUS_MMKV_ID)
         when (Objects.requireNonNull(intent.action)) {
             "android.intent.action.PHONE_STATE" -> {
@@ -55,19 +56,20 @@ class CallReceiver : BroadcastReceiver() {
 
         @Deprecated("Deprecated in Java")
         override fun onCallStateChanged(nowState: Int, nowIncomingNumber: String) {
+            val logTag = this::class.java.simpleName
             if (stateMMKV.getInt("incoming_last_status", TelephonyManager.CALL_STATE_IDLE) == TelephonyManager.CALL_STATE_RINGING
                 && nowState == TelephonyManager.CALL_STATE_IDLE
             ) {
                 val incomingNumber = stateMMKV.getString("incoming_number", "")
                 // 检查电话号码是否为空
                 if (incomingNumber.isNullOrEmpty()) {
-                    Log.i("call_status_listener", "Incoming number is empty")
+                    Log.i(logTag, "Incoming number is empty")
                     return
                 }
                 
                 val preferences = MMKV.defaultMMKV()
                 if (!preferences.contains("initialized")) {
-                    Log.i("call_status_listener", "Uninitialized, Phone receiver is deactivated.")
+                    Log.i(logTag, "Uninitialized, Phone receiver is deactivated.")
                     return
                 }
                 val botToken = preferences.getString("bot_token", "") ?: ""

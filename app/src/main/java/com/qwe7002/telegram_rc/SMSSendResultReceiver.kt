@@ -26,7 +26,7 @@ import java.util.Objects
 class SMSSendResultReceiver : BroadcastReceiver() {
     private var preferences = MMKV.defaultMMKV()
     override fun onReceive(context: Context, intent: Intent) {
-        val logTag = "sms_send_receiver"
+        val logTag = this::class.java.simpleName
         Log.d(logTag, "Receive action: " + intent.action)
         val extras = intent.extras ?: return
         val sub = extras.getInt("sub_id")

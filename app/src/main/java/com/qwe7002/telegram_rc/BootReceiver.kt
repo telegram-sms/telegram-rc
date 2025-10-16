@@ -11,7 +11,7 @@ import com.tencent.mmkv.MMKV
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val TAG = this::class.java.simpleName
+        val logTag = this::class.java.simpleName
         try {
             MMKV.initialize(context)
             val preferences = MMKV.defaultMMKV()
@@ -33,12 +33,12 @@ class BootReceiver : BroadcastReceiver() {
             try {
                 MMKV.mmkvWithID(Const.STATUS_MMKV_ID).clear()
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to clear status MMKV: ${e.message}")
+                Log.w(logTag, "Failed to clear status MMKV: ${e.message}")
             }
             
-            Log.d(TAG, "BootReceiver finished processing.")
+            Log.d(logTag, "BootReceiver finished processing.")
         } catch (e: Exception) {
-            Log.e(TAG, "Error in BootReceiver: ${e.message}", e)
+            Log.e(logTag, "Error in BootReceiver: ${e.message}", e)
         }
     }
 }

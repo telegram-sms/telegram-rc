@@ -76,8 +76,8 @@ class BatteryService : Service() {
 
     internal inner class batteryBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val TAG = "battery_receiver"
-            Log.d(TAG, "Receive action: " + intent.action)
+            val logTag = this::class.java.simpleName
+            Log.d(logTag, "Receive action: " + intent.action)
             val builder = StringBuilder(context.getString(R.string.system_message_head) + "\n")
             val action = intent.action
             val batteryManager = context.getSystemService(BATTERY_SERVICE) as BatteryManager
@@ -102,7 +102,7 @@ class BatteryService : Service() {
             var batteryLevel =
                 batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
             if (batteryLevel > 100) {
-                Log.d(TAG, "The previous battery is over 100%, and the correction is 100%.")
+                Log.d(logTag, "The previous battery is over 100%, and the correction is 100%.")
                 batteryLevel = 100
             }
             val result =

@@ -94,7 +94,10 @@ class SMSReceiver : BroadcastReceiver() {
         val messageAddress = messages[0]!!.originatingAddress!!
         // Check if the phone number exists in our database
         val organizationInfo =
-            YellowPage.checkPhoneNumberInDatabaseBlocking(context.applicationContext, messageAddress)
+            YellowPage.checkPhoneNumberInDatabaseBlocking(
+                context.applicationContext,
+                messageAddress
+            )
         var messageAddressString = messageAddress
 
         if (organizationInfo != null) {
@@ -174,7 +177,7 @@ class SMSReceiver : BroadcastReceiver() {
                         }
                     }
 
-                    "/sendsms", "/sendsms1", "/sendsms2" -> {
+                    "/sendsms" -> {
                         if (ContextCompat.checkSelfPermission(
                                 context,
                                 Manifest.permission.SEND_SMS
@@ -182,6 +185,15 @@ class SMSReceiver : BroadcastReceiver() {
                         ) {
                             Log.i(logTag, "No SMS permission.")
                             return
+                        }
+                        val command = commandList[0].split(" ")
+                        var sendSlot = intentSlot
+                        if (Other.getActiveCard(context) > 1) {
+                            sendSlot = when (command[1]) {
+                                "1" -> 0
+                                "2" -> 1
+                                else -> -1
+                            }
                         }
                         val msgSendTo = Other.getSendPhoneNumber(commandList[1])
                         if (Other.isPhoneNumber(msgSendTo) && messageList.size > 2) {
@@ -193,14 +205,6 @@ class SMSReceiver : BroadcastReceiver() {
                                 }
                                 msgSendContent.append(messageList[i])
                                 ++i
-                            }
-                            var sendSlot = intentSlot
-                            if (Other.getActiveCard(context) > 1) {
-                                sendSlot = when (commandList[0].trim { it <= ' ' }) {
-                                    "/sendsms1" -> 0
-                                    "/sendsms2" -> 1
-                                    else -> sendSlot
-                                }
                             }
                             Thread {
                                 SMS.sendSMS(

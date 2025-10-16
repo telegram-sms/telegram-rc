@@ -80,7 +80,7 @@ class NotifyActivity : AppCompatActivity() {
     }
 
     internal class AppAdapter(private val context: Context?) : BaseAdapter(), Filterable {
-        val TAG: String = "notify_activity"
+        private val logTag: String = this::class.java.simpleName
         private var listenList: List<String>
         var appInfoList: List<applicationInfo> = ArrayList()
         var viewAppInfoList: List<applicationInfo> = ArrayList()
@@ -178,7 +178,7 @@ class NotifyActivity : AppCompatActivity() {
                 } else {
                     listenListTemp.remove(packageName)
                 }
-                Log.d(TAG, "notify_listen_list: $listenListTemp")
+                Log.d(logTag, "notify_listen_list: $listenListTemp")
                 MMKV.defaultMMKV().encode("notify_listen_list", listenListTemp.toSet())
                 listenList = listenListTemp
             }

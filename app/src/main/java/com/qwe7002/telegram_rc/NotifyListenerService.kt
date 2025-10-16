@@ -24,7 +24,7 @@ import java.io.IOException
 import java.util.Objects
 
 class NotifyListenerService : NotificationListenerService() {
-    private val logTag: String = "notification_receiver"
+    private val logTag = this::class.java.simpleName
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
