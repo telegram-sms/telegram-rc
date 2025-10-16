@@ -24,7 +24,7 @@ import java.io.IOException
 
 
 class BatteryNetworkJob : JobService() {
-
+    val TAG = this::class.java.simpleName
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("BatteryNetworkJob", "onStartJob: ")
         
@@ -36,7 +36,6 @@ class BatteryNetworkJob : JobService() {
         val extras = params.extras
         val message: String = extras.getString("message", "") ?: ""
         val action: String? = extras.getString("action", null)
-        val TAG = "network_handle"
         
         MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()

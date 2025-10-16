@@ -14,6 +14,7 @@ import java.io.File
  * Created by jonro on 19/03/2018.
  **/
 class TetherManager(private val context: Context) {
+    private val TAG = this::class.java.simpleName
     private val connectivityManager: ConnectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -156,9 +157,5 @@ class TetherManager(private val context: Context) {
             Log.e(TAG, "OnStartTetheringCallbackClass error: $e")
             null
         }
-    }
-
-    companion object {
-        private val TAG = TetherManager::class.java.simpleName
     }
 }

@@ -68,7 +68,7 @@ class BeaconActivity : AppCompatActivity() {
         beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         setContentView(R.layout.activity_beacon)
         flushListView(ArrayList())
-        
+
         // Observe beacon list updates
         BeaconDataRepository.beaconList.observe(this, beaconListObserver)
         BeaconDataRepository.reloadConfig.observe(this, reloadConfigObserver)
@@ -89,7 +89,7 @@ class BeaconActivity : AppCompatActivity() {
             dialogView.findViewById<SwitchMaterial>(R.id.beacon_use_vpn_hotspot_switch)
         disableCount.setText(beaconMMKV.getInt("disableCount", 10).toString())
         enableCount.setText(beaconMMKV.getInt("enableCount", 10).toString())
-        if(Shizuku.pingBinder()&& Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+        if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
             useVpnHotspotSwitch.isChecked = beaconMMKV.getBoolean("useVpnHotspot", false) &&
                     VPNHotspot.isVPNHotspotExist(applicationContext)
             useVpnHotspotSwitch.isEnabled =
@@ -97,7 +97,7 @@ class BeaconActivity : AppCompatActivity() {
                     applicationContext
                 )
         }
-        
+
         // Check if we have background location permission
         val hasBackgroundLocationPermission = ActivityCompat.checkSelfPermission(
             this,
@@ -111,16 +111,28 @@ class BeaconActivity : AppCompatActivity() {
                 .setMessage("Background location permission is required for beacon monitoring to work properly in the background")
                 .setPositiveButton(R.string.ok_button) { _: DialogInterface, _: Int ->
                     // Continue with configuration
-                    showBeaconConfigurationDialog(dialogView, enable, disableCount, enableCount, useVpnHotspotSwitch)
+                    showBeaconConfigurationDialog(
+                        dialogView,
+                        enable,
+                        disableCount,
+                        enableCount,
+                        useVpnHotspotSwitch
+                    )
                 }
                 .setNegativeButton(android.R.string.cancel) { _: DialogInterface, _: Int -> }
                 .show()
         } else {
-            showBeaconConfigurationDialog(dialogView, enable, disableCount, enableCount, useVpnHotspotSwitch)
+            showBeaconConfigurationDialog(
+                dialogView,
+                enable,
+                disableCount,
+                enableCount,
+                useVpnHotspotSwitch
+            )
         }
         return true
     }
-    
+
     private fun showBeaconConfigurationDialog(
         dialogView: View,
         enable: SwitchMaterial,
@@ -178,13 +190,13 @@ class BeaconActivity : AppCompatActivity() {
             if (convertView == null) {
                 val inflater = LayoutInflater.from(context)
                 view = inflater.inflate(R.layout.item_beacon, parent, false)
-                
+
                 holder = ViewHolder()
                 holder.titleView = view.findViewById(R.id.beacon_title_textview)
                 holder.addressView = view.findViewById(R.id.beacon_address_textview)
                 holder.infoView = view.findViewById(R.id.beacon_info_textview)
                 holder.checkBoxView = view.findViewById(R.id.beacon_select_checkbox)
-                
+
                 view.tag = holder
             } else {
                 view = convertView
@@ -192,21 +204,21 @@ class BeaconActivity : AppCompatActivity() {
             }
 
             val beacon = list[position]
-            holder.titleView?.text = beacon.uuid
-            holder.addressView?.text =
+            holder.titleView.text = beacon.uuid
+            holder.addressView.text =
                 "Major: " + beacon.major + " Minor: " + beacon.minor + " Rssi: " + beacon.rssi + " dBm"
-            holder.infoView?.text = "Distance: " + beacon.distance.toInt() + " meters"
-            
+            holder.infoView.text = "Distance: " + beacon.distance.toInt() + " meters"
+
             val beaconItemName = BeaconModel.beaconItemName(
-                        beacon.uuid,
-                        beacon.major,
-                        beacon.minor
-                    )
-            
-            holder.checkBoxView?.setOnCheckedChangeListener(null)
-            holder.checkBoxView?.isChecked = listenList.contains(beaconItemName)
-            holder.checkBoxView?.setTag(beaconItemName)
-            holder.checkBoxView?.setOnCheckedChangeListener { buttonView, isChecked ->
+                beacon.uuid,
+                beacon.major,
+                beacon.minor
+            )
+
+            holder.checkBoxView.setOnCheckedChangeListener(null)
+            holder.checkBoxView.isChecked = listenList.contains(beaconItemName)
+            holder.checkBoxView.tag = beaconItemName
+            holder.checkBoxView.setOnCheckedChangeListener { buttonView, isChecked ->
                 val address = buttonView.tag as String
                 val listenListTemp =
                     beaconMMKV.decodeStringSet("address", setOf()).orEmpty().toMutableList()
@@ -224,12 +236,12 @@ class BeaconActivity : AppCompatActivity() {
 
             return view
         }
-        
+
         internal class ViewHolder {
-            var titleView: TextView? = null
-            var addressView: TextView? = null
-            var infoView: TextView? = null
-            var checkBoxView: CheckBox? = null
+            lateinit var titleView: TextView
+            lateinit var addressView: TextView
+            lateinit var infoView: TextView
+            lateinit var checkBoxView: CheckBox
         }
     }
 }

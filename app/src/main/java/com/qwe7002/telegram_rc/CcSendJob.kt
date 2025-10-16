@@ -24,11 +24,12 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 
 class CcSendJob : JobService() {
+    private val TAG = this::class.java.simpleName
     override fun onStartJob(params: JobParameters?): Boolean {
-        Log.d("CCSend", "startJob: Trying to send message.")
+        Log.d(TAG, "startJob: Trying to send message.")
         
         if (params == null) {
-            Log.e("CCSend", "onStartJob: params is null")
+            Log.e(TAG, "onStartJob: params is null")
             return false
         }
         
@@ -92,15 +93,15 @@ class CcSendJob : JobService() {
                     }
                 }
                 if (sendList.isNotEmpty()) {
-                    LogManage.writeLog(applicationContext, "The resend failure message is complete.")
+                    LogManage.writeLog(applicationContext, "The Cc message is complete.")
                 }
             } catch (e: Exception) {
-                Log.e("CCSend", "Error in CcSend job", e)
+                Log.e(TAG, "Error in CcSend job", e)
             } finally {
                 try {
                     jobFinished(params, false)
                 } catch (e: Exception) {
-                    Log.e("CCSend", "Error finishing job", e)
+                    Log.e(TAG, "Error finishing job", e)
                 }
             }
         }.start()
@@ -128,7 +129,7 @@ class CcSendJob : JobService() {
         try {
             val response = call.execute()
             if (response.code == 200) {
-                Log.i("networkProgressHandle", "networkProgressHandle: Message sent successfully.")
+                Log.i(TAG, "networkProgressHandle: Message sent successfully.")
             }else{
                 LogManage.writeLog(applicationContext, "Send message failed: " + response.code + " " + response.body.string())
             }
@@ -139,6 +140,7 @@ class CcSendJob : JobService() {
     }
 
     companion object {
+        private val TAG = this::class.java.simpleName
         fun startJob(context: Context, title: String, message: String, verificationCode: String) {
             try {
                 val jobScheduler =
@@ -157,10 +159,10 @@ class CcSendJob : JobService() {
                 jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 val result = jobScheduler.schedule(jobInfoBuilder.build())
                 if (result <= 0) {
-                    Log.e("CCSend", "Failed to schedule job, result code: $result")
+                    Log.e(TAG, "Failed to schedule job, result code: $result")
                 }
             } catch (e: Exception) {
-                Log.e("CCSend", "Failed to start job", e)
+                Log.e(TAG, "Failed to start job", e)
             }
         }
 
@@ -181,10 +183,10 @@ class CcSendJob : JobService() {
                 jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 val result = jobScheduler.schedule(jobInfoBuilder.build())
                 if (result <= 0) {
-                    Log.e("CCSend", "Failed to schedule job, result code: $result")
+                    Log.e(TAG, "Failed to schedule job, result code: $result")
                 }
             } catch (e: Exception) {
-                Log.e("CCSend", "Failed to start job", e)
+                Log.e(TAG, "Failed to start job", e)
             }
         }
         
