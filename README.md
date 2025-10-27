@@ -10,13 +10,11 @@ A robot running on your Android device.
 
 Please visit [https://reall.uk](https://reall.uk) to submit and discuss issues regarding this project.
 
-You can follow the Telegram channel [Telegram SMS 更新日志 (tg_sms_changelog)](https://t.me/tg_sms_changelog) for the latest news. (Simplified Chinese only)
+You can follow the Telegram channel [Telegram SMS 更新日志](https://t.me/tg_sms_changelog) for the latest news. (Simplified Chinese only)
 
-[Download](https://github.com/telegram-sms/telegram_remote_control/releases)
+[Download](https://github.com/telegram-sms/telegram-rc/releases)
 
 The program's wireless hotspot feature relies on [VPNHotspot](https://github.com/Mygod/VPNHotspot/) and requires dependent software to be installed for use.
-
-The user manual is not available in this program, please refer to the user manual of Telegram SMS.
 
 ## Features
 
@@ -29,12 +27,27 @@ This application allows you to remotely control your Android device via Telegram
 - Switch between SIM cards for dual-SIM devices
 - Monitor beacon regions for automatic actions
 - View device information such as battery level and network status
+- Manage phone calls and call logs
+- Control device settings via Shizuku integration
+- Scan QR codes and barcodes
+- Database management for contacts and organizations
 
 ## Requirements
 
 - Android 8.0 or higher
 - [Shizuku](https://github.com/RikkaApps/Shizuku) for system-level operations
 - Telegram account with a configured bot
+
+## Shizuku Integration
+
+This application extensively uses Shizuku to access system-level APIs without requiring root access. Features that depend on Shizuku include:
+
+- Telephony operations (sending SMS, querying call logs)
+- Network management (data connection, mobile network settings)
+- Battery and system information retrieval
+- VPN and hotspot control
+
+For Shizuku setup instructions, please refer to the [Shizuku documentation](https://shizuku.rikka.app/guide/setup/).
 
 ## Risk warning | 风险警告 | 風險警告 | リスク警告
 
@@ -65,6 +78,7 @@ This APP uses the following open source libraries:
 - [CodeauxLib](https://gist.github.com/SumiMakito/59992fd15a865c3b9709b8e2c3bc9cf1)
 - [MMKV](https://github.com/Tencent/MMKV)
 - [code-scanner](https://github.com/yuriy-budiyev/code-scanner)
+- [AwesomeQRCode](https://github.com/SumiMakito/AwesomeQRCode)
 
 The creation of this APP would not be possible without help from the following people:
 
@@ -85,7 +99,6 @@ This APP uses the following public DNS service:
 ## Buy me a cup of coffee to help maintain this project further?
 
 - [via Github](https://get.telegram-sms.com/donate/github)
-- [via Paypal](https://get.telegram-sms.com/donate/paypal)
 - [via Bitcoin](bitcoin:17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae) (**17wmCCzy7hSSENnRBfUBMUSi7kdHYePrae**)
 
 Your donation will make me work better for this project.
