@@ -33,7 +33,7 @@ build:
         - chmod +x ./gradlew
         - ./gradlew assembleRelease
         - git push --set-upstream https://${GITHUB_ACCESS_KEY}@github.com/${OWNER}/${REPO}.git HEAD:refs/heads/${CI_COMMIT_REF_NAME}
-        - ghr_v0.16.2_linux_amd64/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date "+%Y%m%d%H%M")" "./app/build/outputs/apk/release/app-release.apk"
+        - ghr_v0.16.2_linux_amd64/ghr -t "${GITHUB_ACCESS_KEY}" -u "${OWNER}" -r "${REPO}" -c ${CI_COMMIT_REF_NAME} --prerelease "$(date "+%Y%m%d%H%M")-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}" "./app/build/outputs/apk/release/app-release.apk"
     artifacts:
         paths:
             - app/build/outputs/apk/release/app-release.apk
