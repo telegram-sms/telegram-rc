@@ -19,7 +19,7 @@ import com.tencent.mmkv.MMKV
 import java.util.Objects
 
 class BatteryService : Service() {
-    private lateinit var batteryReceiver: batteryBroadcastReceiver
+    private lateinit var batteryReceiver: BatteryBroadcastReceiver
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification =
@@ -49,7 +49,7 @@ class BatteryService : Service() {
         MMKV.initialize(applicationContext)
         val preferences = MMKV.defaultMMKV()
         val chargerStatus = preferences.getBoolean("charger_status", false)
-        batteryReceiver = batteryBroadcastReceiver()
+        batteryReceiver = BatteryBroadcastReceiver()
         val filter = IntentFilter()
         filter.addAction(Intent.ACTION_BATTERY_OKAY)
         filter.addAction(Intent.ACTION_BATTERY_LOW)
@@ -74,7 +74,7 @@ class BatteryService : Service() {
     }
 
 
-    internal inner class batteryBroadcastReceiver : BroadcastReceiver() {
+    internal inner class BatteryBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val logTag = this::class.java.simpleName
             Log.d(logTag, "Receive action: " + intent.action)

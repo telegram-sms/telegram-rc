@@ -24,7 +24,6 @@ import java.io.IOException
 
 
 class BatteryNetworkJob : JobService() {
-    private val logTag = this::class.java.simpleName
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.d("BatteryNetworkJob", "onStartJob: ")
         
@@ -62,7 +61,7 @@ class BatteryNetworkJob : JobService() {
         ) {
             requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = chatInfoMMKV.getLong("batteryLastReceiveMessageId", 0L)
-            Log.d(logTag, "onReceive: edit_mode")
+            Log.d(this::class.java.simpleName, "onReceive: edit_mode")
         }
         
         chatInfoMMKV.putLong("batteryLastReceiveTime", System.currentTimeMillis())

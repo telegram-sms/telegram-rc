@@ -32,7 +32,7 @@ import rikka.shizuku.Shizuku
 
 class BeaconActivity : AppCompatActivity() {
     private lateinit var beaconMMKV: MMKV
-    private var customBeaconAdapter: CustomBeaconAdapter? = null
+    private lateinit var customBeaconAdapter: CustomBeaconAdapter
     private val beaconListObserver = Observer<ArrayList<BeaconModel.BeaconModel>> { arrayList ->
         flushListView(arrayList)
     }
@@ -54,12 +54,7 @@ class BeaconActivity : AppCompatActivity() {
         }
 
         runOnUiThread {
-            if (customBeaconAdapter == null) {
-                customBeaconAdapter = CustomBeaconAdapter(list, this@BeaconActivity)
-                beaconListview.adapter = customBeaconAdapter
-            } else {
-                customBeaconAdapter?.updateList(list)
-            }
+            customBeaconAdapter.updateList(list)
         }
     }
 
