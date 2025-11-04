@@ -37,6 +37,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.transition.Visibility
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
@@ -201,7 +202,10 @@ class MainActivity : AppCompatActivity() {
                     showErrorDialog(e.message.toString())
                 } catch (e: NoSuchMethodError) {
                     e.printStackTrace()
-                    writeLog(applicationContext, "The current device does not support Shizuku direct access, try using ADB shell to access.")
+                    writeLog(
+                        applicationContext,
+                        "The current device does not support Shizuku direct access, try using ADB shell to access."
+                    )
                     MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID).putBoolean("shizuku_fallback", true)
                     try {
                         getIMSICacheFallback(applicationContext)
@@ -222,6 +226,9 @@ class MainActivity : AppCompatActivity() {
         }
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
+        if (Build.VERSION.SDK_INT > 36) {
+            writeSettingsButton.visibility = View.GONE
+        }
         writeSettingsButton.setOnClickListener {
             val writeSystemIntent = Intent(
                 Settings.ACTION_MANAGE_WRITE_SETTINGS, "package:$packageName".toUri()
@@ -722,7 +729,10 @@ class MainActivity : AppCompatActivity() {
                             writeLog(applicationContext, e.message.toString())
                         } catch (e: NoSuchMethodError) {
                             e.printStackTrace()
-                            writeLog(applicationContext, "The current device does not support Shizuku direct access, try using ADB shell to access.")
+                            writeLog(
+                                applicationContext,
+                                "The current device does not support Shizuku direct access, try using ADB shell to access."
+                            )
                             shizukuMMKV.putBoolean("shizuku_fallback", true)
                             try {
                                 getIMSICacheFallback(applicationContext)
@@ -734,7 +744,10 @@ class MainActivity : AppCompatActivity() {
                             } catch (e: Exception) {
                                 e.printStackTrace()
                                 showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
-                                writeLog(applicationContext, "The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
+                                writeLog(
+                                    applicationContext,
+                                    "The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card."
+                                )
                             }
                         }
                     }

@@ -59,6 +59,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import rikka.shizuku.Shizuku
 import java.io.IOException
 import java.util.concurrent.locks.ReentrantLock
 
@@ -559,6 +560,16 @@ class BeaconReceiverService : Service() {
     }
 
     private fun toggleWifiHotspot(enable: Boolean) {
+        if(Build.VERSION.SDK_INT>=36){
+            if(!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED){
+                Log.d(this::class.java.simpleName, "toggleWifiHotspot: shizuku Not work")
+                 return
+            }
+            if(!RemoteControl.isDeltaExist(applicationContext)){
+                Log.d(this::class.java.simpleName, "toggleWifiHotspot: Delta Not Install")
+                return
+            }
+        }
         if (beaconConfig.getBoolean("useVpnHotspot", false)) {
             if (enable) {
                 VPNHotspot.enableVPNHotspot(wifiManager)

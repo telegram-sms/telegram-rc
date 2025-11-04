@@ -58,6 +58,7 @@ import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Other.isPhoneNumber
 import com.qwe7002.telegram_rc.static_class.Phone
+import com.qwe7002.telegram_rc.static_class.RemoteControl
 import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
 import com.qwe7002.telegram_rc.static_class.RemoteControl.isHotspotActive
@@ -288,7 +289,7 @@ class ChatService : Service() {
         var requestMsg: String?
         if (messageObj != null && messageObj.has("text")) {
             requestMsg = messageObj["text"].asString
-        }else{
+        } else {
             Log.e(TAG, "Text is null")
             writeLog(applicationContext, "Command message text is null")
             return
@@ -692,51 +693,55 @@ class ChatService : Service() {
                             tetherMode =
                                 when (commandListData[1].lowercase(Locale.getDefault())) {
                                     "wifi" -> TetherManager.TetherMode.TETHERING_WIFI
-                                    "bluetooth" -> TetherManager.TetherMode.TETHERING_BLUETOOTH
-                                    "usb" -> TetherManager.TetherMode.TETHERING_USB
-                                    "nic" -> TetherManager.TetherMode.TETHERING_ETHERNET
                                     "vpn" -> TetherManager.TetherMode.TETHERING_VPN
                                     else -> -1
                                 }
                         }
                         if (tetherMode == -1) {
                             resultAp =
-                                "${getString(R.string.system_message_head)}\nUsage: /hotspot [wifi|bluetooth|usb|nic|vpn]"
+                                "${getString(R.string.system_message_head)}\nUsage: /hotspot [wifi|vpn]"
+
                         } else {
                             statusMMKV.putInt("tether_mode", tetherMode)
                             if (tetherMode != TetherManager.TetherMode.TETHERING_VPN) {
-                                enableHotspot(applicationContext, tetherMode)
-                                Thread.sleep(300)
-                                val hotspotIp = Network.getHotspotIpAddress(tetherMode)
-                                resultAp += "\nGateway IP: $hotspotIp"
-                                statusMMKV.putBoolean(
-                                    "hotspot_ip_update_needed",
-                                    hotspotIp == "Unknown"
-                                )
-                            } else {
                                 if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                                     resultAp =
                                         getString(R.string.no_permission)
                                 } else {
-                                    if (!VPNHotspot.isVPNHotspotExist(
-                                            applicationContext
+                                    if(RemoteControl.isDeltaExist(applicationContext)) {
+                                        enableHotspot(applicationContext, tetherMode)
+                                        Thread.sleep(300)
+                                        val hotspotIp = Network.getHotspotIpAddress(tetherMode)
+                                        resultAp += "\nGateway IP: $hotspotIp"
+                                        statusMMKV.putBoolean(
+                                            "hotspot_ip_update_needed",
+                                            hotspotIp == "Unknown"
                                         )
-                                    ) {
-                                        resultAp = "VPNHotspot not found"
-                                    } else {
-                                        val wifiManager =
-                                            applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                                        val vpnHotspotStatus =
-                                            statusMMKV.getBoolean("tether", false)
-                                        if (!vpnHotspotStatus) {
-                                            Thread {
-                                                VPNHotspot.enableVPNHotspot(
-                                                    wifiManager
-                                                )
-                                            }.start()
-                                        }
+                                    }else{
+                                        resultAp =
+                                            "Delta not found"
                                     }
                                 }
+                            } else {
+                                if (!VPNHotspot.isVPNHotspotExist(
+                                        applicationContext
+                                    )
+                                ) {
+                                    resultAp = "VPNHotspot not found"
+                                } else {
+                                    val wifiManager =
+                                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                                    val vpnHotspotStatus =
+                                        statusMMKV.getBoolean("tether", false)
+                                    if (!vpnHotspotStatus) {
+                                        Thread {
+                                            VPNHotspot.enableVPNHotspot(
+                                                wifiManager
+                                            )
+                                        }.start()
+                                    }
+                                }
+
                             }
                         }
                     } else {
@@ -1577,10 +1582,13 @@ class ChatService : Service() {
                             }
                             receiveHandle(item.asJsonObject)
                         }
-                    }else{
-                        if(resultObj.has("description")){
-                            writeLog(applicationContext, "Error Code: ${resultObj["error_code"]}, ${resultObj["description"]}")
-                        }else{
+                    } else {
+                        if (resultObj.has("description")) {
+                            writeLog(
+                                applicationContext,
+                                "Error Code: ${resultObj["error_code"]}, ${resultObj["description"]}"
+                            )
+                        } else {
                             writeLog(applicationContext, "response code:" + response.code)
                         }
                     }
