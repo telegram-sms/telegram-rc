@@ -12,7 +12,7 @@ variables:
 
 
 build:
-    image: alvrme/alpine-android:android-34-jdk17
+    image: alvrme/alpine-android:android-36-jdk17
     stage: build
     before_script:
       - apk --update --no-cache add git openssl bash curl wget
