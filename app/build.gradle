@@ -2,15 +2,21 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+subprojects {
+    plugins.withId("com.android.base") {
+        plugins.apply('dev.rikka.tools.refine')
+    }
+}
+
 android {
     //noinspection GradleDependency
-    compileSdk 34
+    compileSdk 36
     //noinspection GrDeprecatedAPIUsage
     defaultConfig {
         applicationId "com.qwe7002.telegram_rc"
         minSdkVersion 29
         //noinspection OldTargetApi
-        targetSdkVersion 34
+        targetSdkVersion 36
         versionCode System.getenv("VERSION_CODE") == null ? 1 : System.getenv("VERSION_CODE").toInteger()
         versionName System.getenv("VERSION_NAME") == null ? "debug-do_not_leak" : System.getenv("VERSION_NAME")
     }
@@ -70,8 +76,8 @@ dependencies {
     //noinspection GradleDependency
     implementation 'androidx.browser:browser:1.8.0'
     implementation 'com.squareup.okio:okio:3.16.2'
-    implementation "com.squareup.okhttp3:okhttp:5.2.1"
-    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.2.1"
+    implementation "com.squareup.okhttp3:okhttp:5.3.0"
+    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.3.0"
     implementation 'org.conscrypt:conscrypt-android:2.5.3'
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
@@ -80,28 +86,23 @@ dependencies {
     //noinspection GradleDependency
     implementation "androidx.core:core-ktx:1.13.1"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.20'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
     implementation 'com.tencent:mmkv:2.2.4'
     //Shizuku
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
-    
+    annotationProcessor 'dev.rikka.tools.refine:annotation-processor:4.4.0'
+    compileOnly 'dev.rikka.tools.refine:annotation:4.4.0'
+    implementation("dev.rikka.tools.refine:runtime:4.4.0")
     // Room database dependencies
-    implementation "androidx.room:room-runtime:2.8.2"
-    implementation "androidx.room:room-ktx:2.8.2"
+    implementation libs.androidx.room.runtime
+    implementation "androidx.room:room-ktx:2.8.3"
     implementation 'androidx.preference:preference-ktx:1.2.1'
     //noinspection KaptUsageInsteadOfKsp
-    kapt "androidx.room:room-compiler:2.8.2"
+    kapt "androidx.room:room-compiler:2.8.3"
 }
 repositories {
     google()
     mavenCentral()
-}
-
-tasks.register('copy_language_pack', Copy) {
-    from 'language_pack/'
-    into 'src/main/res/'
-    exclude '**/README.md'
-    include '**/*'
 }

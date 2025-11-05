@@ -708,19 +708,14 @@ class ChatService : Service() {
                                     resultAp =
                                         getString(R.string.no_permission)
                                 } else {
-                                    if(RemoteControl.isDeltaExist(applicationContext)) {
-                                        enableHotspot(applicationContext, tetherMode)
-                                        Thread.sleep(300)
-                                        val hotspotIp = Network.getHotspotIpAddress(tetherMode)
-                                        resultAp += "\nGateway IP: $hotspotIp"
-                                        statusMMKV.putBoolean(
-                                            "hotspot_ip_update_needed",
-                                            hotspotIp == "Unknown"
-                                        )
-                                    }else{
-                                        resultAp =
-                                            "Delta not found"
-                                    }
+                                    enableHotspot(applicationContext, tetherMode)
+                                    Thread.sleep(300)
+                                    val hotspotIp = Network.getHotspotIpAddress(tetherMode)
+                                    resultAp += "\nGateway IP: $hotspotIp"
+                                    statusMMKV.putBoolean(
+                                        "hotspot_ip_update_needed",
+                                        hotspotIp == "Unknown"
+                                    )
                                 }
                             } else {
                                 if (!VPNHotspot.isVPNHotspotExist(

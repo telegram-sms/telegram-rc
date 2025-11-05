@@ -89,7 +89,7 @@ class BeaconReceiverService : Service() {
             try {
                 if (!beaconConfig.getBoolean("beacon_enable", false)) {
                     resetCounters()
-                    Log.d(logTag, "processBeaconList: disable")
+                    //Log.d(logTag, "processBeaconList: disable")
                     return@Observer
                 }
 
@@ -564,10 +564,6 @@ class BeaconReceiverService : Service() {
             if(!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED){
                 Log.d(this::class.java.simpleName, "toggleWifiHotspot: shizuku Not work")
                  return
-            }
-            if(!RemoteControl.isDeltaExist(applicationContext)){
-                Log.d(this::class.java.simpleName, "toggleWifiHotspot: Delta Not Install")
-                return
             }
         }
         if (beaconConfig.getBoolean("useVpnHotspot", false)) {
