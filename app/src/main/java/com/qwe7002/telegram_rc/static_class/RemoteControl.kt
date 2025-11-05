@@ -13,7 +13,7 @@ object RemoteControl {
     @JvmStatic
     fun enableHotspot(context: Context, mode: Int) {
         MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", true)
-        if (Build.VERSION.SDK_INT < 36) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val manager = TetherManager(context)
             manager.startTethering(mode, null)
         } else {
@@ -24,7 +24,7 @@ object RemoteControl {
     @JvmStatic
     fun disableHotspot(context: Context, mode: Int) {
         MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", false)
-        if (Build.VERSION.SDK_INT < 36) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val manager = TetherManager(context)
             manager.stopTethering(mode)
         } else {
