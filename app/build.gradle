@@ -2,11 +2,6 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
-subprojects {
-    plugins.withId("com.android.base") {
-        plugins.apply('dev.rikka.tools.refine')
-    }
-}
 
 android {
     //noinspection GradleDependency
@@ -16,7 +11,7 @@ android {
         applicationId "com.qwe7002.telegram_rc"
         minSdkVersion 29
         //noinspection OldTargetApi
-        targetSdkVersion 36
+        targetSdkVersion 34
         versionCode System.getenv("VERSION_CODE") == null ? 1 : System.getenv("VERSION_CODE").toInteger()
         versionName System.getenv("VERSION_NAME") == null ? "debug-do_not_leak" : System.getenv("VERSION_NAME")
     }
@@ -92,11 +87,9 @@ dependencies {
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
-    annotationProcessor 'dev.rikka.tools.refine:annotation-processor:4.4.0'
-    compileOnly 'dev.rikka.tools.refine:annotation:4.4.0'
-    implementation("dev.rikka.tools.refine:runtime:4.4.0")
+
     // Room database dependencies
-    implementation libs.androidx.room.runtime
+    runtimeOnly("androidx.room:room-runtime:2.8.3")
     implementation "androidx.room:room-ktx:2.8.3"
     implementation 'androidx.preference:preference-ktx:1.2.1'
     //noinspection KaptUsageInsteadOfKsp
