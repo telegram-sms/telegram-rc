@@ -58,10 +58,9 @@ import com.qwe7002.telegram_rc.static_class.Other.getSimDisplayName
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Other.isPhoneNumber
 import com.qwe7002.telegram_rc.static_class.Phone
-import com.qwe7002.telegram_rc.static_class.RemoteControl
-import com.qwe7002.telegram_rc.static_class.RemoteControl.disableHotspot
-import com.qwe7002.telegram_rc.static_class.RemoteControl.enableHotspot
-import com.qwe7002.telegram_rc.static_class.RemoteControl.isHotspotActive
+import com.qwe7002.telegram_rc.static_class.Hotspot.disableHotspot
+import com.qwe7002.telegram_rc.static_class.Hotspot.enableHotspot
+import com.qwe7002.telegram_rc.static_class.Hotspot.isHotspotActive
 import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd

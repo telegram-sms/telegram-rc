@@ -14,7 +14,7 @@ import android.util.Log
 import com.fitc.wifihotspot.TetherManager
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
-import com.qwe7002.telegram_rc.static_class.RemoteControl
+import com.qwe7002.telegram_rc.static_class.Hotspot
 import com.tencent.mmkv.MMKV
 import java.util.Objects
 
@@ -85,8 +85,8 @@ class BatteryService : Service() {
                 Intent.ACTION_BATTERY_OKAY -> builder.append(context.getString(R.string.low_battery_status_end))
                 Intent.ACTION_BATTERY_LOW -> {
                     builder.append(context.getString(R.string.battery_low))
-                    if (RemoteControl.isHotspotActive(context)) {
-                        RemoteControl.disableHotspot(
+                    if (Hotspot.isHotspotActive(context)) {
+                        Hotspot.disableHotspot(
                             context,
                             TetherManager.TetherMode.TETHERING_WIFI
                         )

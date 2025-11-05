@@ -44,7 +44,7 @@ import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Phone
-import com.qwe7002.telegram_rc.static_class.RemoteControl
+import com.qwe7002.telegram_rc.static_class.Hotspot
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.CoroutineScope
@@ -496,7 +496,7 @@ class BeaconReceiverService : Service() {
         return if (beaconConfig.getBoolean("useVpnHotspot", false)) {
             VPNHotspot.isVPNHotspotActive()
         } else {
-            RemoteControl.isHotspotActive(applicationContext)
+            Hotspot.isHotspotActive(applicationContext)
         }
     }
 
@@ -575,9 +575,9 @@ class BeaconReceiverService : Service() {
         } else {
             val tetherMode = TetherManager.TetherMode.TETHERING_WIFI
             if (enable) {
-                RemoteControl.enableHotspot(applicationContext, tetherMode)
+                Hotspot.enableHotspot(applicationContext, tetherMode)
             } else {
-                RemoteControl.disableHotspot(applicationContext, tetherMode)
+                Hotspot.disableHotspot(applicationContext, tetherMode)
             }
         }
     }

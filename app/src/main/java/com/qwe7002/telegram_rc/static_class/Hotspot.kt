@@ -1,15 +1,13 @@
 package com.qwe7002.telegram_rc.static_class
 
 import android.content.Context
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.os.Build
 import com.fitc.wifihotspot.TetherManager
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.shizuku_kit.TetheringManagerShizuku
 import com.tencent.mmkv.MMKV
 
-object RemoteControl {
+object Hotspot {
     @JvmStatic
     fun enableHotspot(context: Context, mode: Int) {
         MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", true)
