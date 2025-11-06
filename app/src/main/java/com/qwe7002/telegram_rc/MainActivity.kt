@@ -37,7 +37,6 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.transition.Visibility
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
@@ -908,8 +907,8 @@ class MainActivity : AppCompatActivity() {
                 val apiDialog = AlertDialog.Builder(this)
                 apiDialog.setTitle("Set API Address")
                 apiDialog.setView(apiDialogView)
-                apiDialog.setPositiveButton("OK") { dialog, _ ->
-                    {
+                apiDialog.setPositiveButton("OK") { _, _ ->
+                    run {
                         val apiAddressText = apiAddress.text.toString()
                         if (preferences.getString(
                                 "api_address",
