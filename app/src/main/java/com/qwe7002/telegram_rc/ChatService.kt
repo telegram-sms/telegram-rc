@@ -675,42 +675,42 @@ class ChatService : Service() {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\nAutoSwitch is enabled, please disable it first."
                 } else {
-                    val apStatus: Boolean = if (statusMMKV.getInt(
-                            "tether_mode",
-                            -1
-                        ) != TetherManager.TetherMode.TETHERING_VPN
-                    ) {
-                        isHotspotActive(applicationContext)
+                    if ((Build.VERSION.SDK_INT >= 36) && (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED)) {
+                        requestBody.text =
+                            "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                     } else {
-                        isVPNHotspotActive()
-                    }
-                    var resultAp: String
-                    if (!apStatus) {
-                        resultAp =
-                            getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
-                        val commandListData =
-                            requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
-                                .toTypedArray()
-                        var tetherMode = TetherManager.TetherMode.TETHERING_WIFI
-                        if (commandListData.size == 2) {
-                            tetherMode =
-                                when (commandListData[1].lowercase(Locale.getDefault())) {
-                                    "wifi" -> TetherManager.TetherMode.TETHERING_WIFI
-                                    "vpn" -> TetherManager.TetherMode.TETHERING_VPN
-                                    else -> -1
-                                }
-                        }
-                        if (tetherMode == -1) {
-                            resultAp =
-                                "${getString(R.string.system_message_head)}\nUsage: /hotspot [wifi|vpn]"
-
+                        val apStatus: Boolean = if (statusMMKV.getInt(
+                                "tether_mode",
+                                -1
+                            ) != TetherManager.TetherMode.TETHERING_VPN
+                        ) {
+                            isHotspotActive(applicationContext)
                         } else {
-                            statusMMKV.putInt("tether_mode", tetherMode)
-                            if (tetherMode != TetherManager.TetherMode.TETHERING_VPN) {
-                                if ((Build.VERSION.SDK_INT >= 36) && (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED)) {
-                                    resultAp =
-                                        getString(R.string.no_permission)
-                                } else {
+                            isVPNHotspotActive()
+                        }
+                        var resultAp: String
+                        if (!apStatus) {
+                            resultAp =
+                                getString(R.string.enable_wifi) + applicationContext.getString(R.string.action_success)
+                            val commandListData =
+                                requestMsg.split(" ".toRegex()).dropLastWhile { it.isEmpty() }
+                                    .toTypedArray()
+                            var tetherMode = TetherManager.TetherMode.TETHERING_WIFI
+                            if (commandListData.size == 2) {
+                                tetherMode =
+                                    when (commandListData[1].lowercase(Locale.getDefault())) {
+                                        "wifi" -> TetherManager.TetherMode.TETHERING_WIFI
+                                        "vpn" -> TetherManager.TetherMode.TETHERING_VPN
+                                        else -> -1
+                                    }
+                            }
+                            if (tetherMode == -1) {
+                                resultAp =
+                                    "${getString(R.string.system_message_head)}\nUsage: /hotspot [wifi|vpn]"
+
+                            } else {
+                                statusMMKV.putInt("tether_mode", tetherMode)
+                                if (tetherMode != TetherManager.TetherMode.TETHERING_VPN) {
                                     enableHotspot(applicationContext, tetherMode)
                                     Thread.sleep(300)
                                     val hotspotIp = Network.getHotspotIpAddress(tetherMode)
@@ -719,93 +719,96 @@ class ChatService : Service() {
                                         "hotspot_ip_update_needed",
                                         hotspotIp == "Unknown"
                                     )
-                                }
-                            } else {
-                                if (!VPNHotspot.isVPNHotspotExist(
-                                        applicationContext
-                                    )
-                                ) {
-                                    resultAp = "VPNHotspot not found"
                                 } else {
-                                    val wifiManager =
-                                        applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                                    val vpnHotspotStatus =
-                                        statusMMKV.getBoolean("tether", false)
-                                    if (!vpnHotspotStatus) {
-                                        Thread {
-                                            VPNHotspot.enableVPNHotspot(
-                                                wifiManager
-                                            )
-                                        }.start()
+                                    if (!VPNHotspot.isVPNHotspotExist(
+                                            applicationContext
+                                        )
+                                    ) {
+                                        resultAp = "VPNHotspot not found"
+                                    } else {
+                                        val wifiManager =
+                                            applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                                        val vpnHotspotStatus =
+                                            statusMMKV.getBoolean("tether", false)
+                                        if (!vpnHotspotStatus) {
+                                            Thread {
+                                                VPNHotspot.enableVPNHotspot(
+                                                    wifiManager
+                                                )
+                                            }.start()
+                                        }
                                     }
-                                }
 
+                                }
                             }
-                        }
-                    } else {
-                        if ((Build.VERSION.SDK_INT >= 36) && (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED)) {
-                            resultAp =
-                                getString(R.string.no_permission)
                         } else {
                             statusMMKV.putBoolean("tether", false)
                             resultAp =
-                                getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
+                                getString(R.string.disable_wifi) + applicationContext.getString(
+                                    R.string.action_success
+                                )
                             statusMMKV.putBoolean("hotspot_ip_update_needed", false)
+
                         }
-                    }
-                    resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
-                        applicationContext
-                    ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
-                        applicationContext
-                    )
-                    if (DataUsage.hasPermission(applicationContext)) {
-                        if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.READ_PHONE_STATE
-                            ) == PackageManager.PERMISSION_GRANTED &&
-                            ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.READ_PHONE_NUMBERS
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            val subscriptionManager =
-                                (applicationContext.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
-                            val info =
-                                subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
-                            val phone1Number =
-                                Phone.getPhoneNumber(applicationContext, info.simSlotIndex)
-                            val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-                            val phone1DataUsage = DataUsage.getDataUsageForSim(
-                                applicationContext,
-                                imsiCache.getString(phone1Number, null)
-                            )
-                            if (getActiveCard(applicationContext) == 2) {
-                                resultAp += "\n${getString(R.string.current_data_card)}: SIM" + (info.simSlotIndex + 1)
-                            }
-                            resultAp += "\nData Usage: $phone1DataUsage"
+                        resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
+                            applicationContext
+                        ) + "\n" + getString(R.string.current_network_connection_status) + Network.getNetworkType(
+                            applicationContext
+                        )
+                        if (DataUsage.hasPermission(applicationContext)) {
                             if (ActivityCompat.checkSelfPermission(
                                     applicationContext,
-                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                    Manifest.permission.READ_PHONE_STATE
+                                ) == PackageManager.PERMISSION_GRANTED &&
+                                ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.READ_PHONE_NUMBERS
                                 ) == PackageManager.PERMISSION_GRANTED
                             ) {
-                                val subId = getSubId(applicationContext, info.simSlotIndex)
-                                val telephonyManager =
-                                    applicationContext.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-                                val tm = telephonyManager.createForSubscriptionId(subId)
-                                val cellInfoList = requestUpdatedCellInfo(applicationContext, tm)
-                                if (cellInfoList.isNotEmpty()) {
-                                    val registeredCell = cellInfoList.find { it.isRegistered }
-                                    if (registeredCell != null) {
-                                        val cellDetails =
-                                            ArfcnConverter.getCellInfoDetails(registeredCell)
-                                        resultAp += "\nSignal: $cellDetails"
+                                val subscriptionManager =
+                                    (applicationContext.getSystemService(
+                                        TELEPHONY_SUBSCRIPTION_SERVICE
+                                    ) as SubscriptionManager)
+                                val info =
+                                    subscriptionManager.getActiveSubscriptionInfo(
+                                        SubscriptionManager.getDefaultDataSubscriptionId()
+                                    )
+                                val phone1Number =
+                                    Phone.getPhoneNumber(applicationContext, info.simSlotIndex)
+                                val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                                val phone1DataUsage = DataUsage.getDataUsageForSim(
+                                    applicationContext,
+                                    imsiCache.getString(phone1Number, null)
+                                )
+                                if (getActiveCard(applicationContext) == 2) {
+                                    resultAp += "\n${getString(R.string.current_data_card)}: SIM" + (info.simSlotIndex + 1)
+                                }
+                                resultAp += "\nData Usage: $phone1DataUsage"
+                                if (ActivityCompat.checkSelfPermission(
+                                        applicationContext,
+                                        Manifest.permission.ACCESS_FINE_LOCATION
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    val subId = getSubId(applicationContext, info.simSlotIndex)
+                                    val telephonyManager =
+                                        applicationContext.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+                                    val tm = telephonyManager.createForSubscriptionId(subId)
+                                    val cellInfoList =
+                                        requestUpdatedCellInfo(applicationContext, tm)
+                                    if (cellInfoList.isNotEmpty()) {
+                                        val registeredCell = cellInfoList.find { it.isRegistered }
+                                        if (registeredCell != null) {
+                                            val cellDetails =
+                                                ArfcnConverter.getCellInfoDetails(registeredCell)
+                                            resultAp += "\nSignal: $cellDetails"
+                                        }
                                     }
                                 }
                             }
-                        }
 
+                        }
+                        requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
                     }
-                    requestBody.text = "${getString(R.string.system_message_head)}\n$resultAp"
                 }
             }
 
