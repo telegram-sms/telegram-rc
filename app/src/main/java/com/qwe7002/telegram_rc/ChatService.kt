@@ -1254,14 +1254,15 @@ class ChatService : Service() {
 
             @Throws(IOException::class)
             override fun onResponse(call: Call, response: Response) {
-                // 安全地获取响应体内容
                 val responseString = try {
                     val body = response.body
                     body.string()
                 } catch (e: IOException) {
+                    e.printStackTrace()
                     writeLog(applicationContext, "Failed to read response body: ${e.message}")
                     return
                 } catch (e: NullPointerException) {
+                    e.printStackTrace()
                     writeLog(applicationContext, "Response body is null: ${e.message}")
                     return
                 }
@@ -1283,10 +1284,12 @@ class ChatService : Service() {
                 try {
                     resultObj = JsonParser.parseString(responseString).asJsonObject
                 } catch (e: Exception) {
+                    e.printStackTrace()
                     writeLog(applicationContext, "Failed to parse response JSON: ${e.message}")
                     try {
                         response.close()
                     } catch (e2: Exception) {
+                        e2.printStackTrace()
                         Log.w(TAG, "Failed to close response: ${e2.message}")
                     }
                     return
@@ -1301,13 +1304,12 @@ class ChatService : Service() {
                     try {
                         sendStatusMMKV.putLong("message_id", getMessageId(responseString))
                     } catch (e: Exception) {
+                        e.printStackTrace()
                         Log.e(TAG, "Failed to get message ID: ${e.message}")
                     }
                 }
 
-                // 合并/hotspot条件判断，并处理需要更新IP地址的情况
                 if (commandValue == "/hotspot" && resultObj.has("result")) {
-                    // 如果需要更新热点IP地址，则启动更新线程
                     if (statusMMKV.getBoolean("hotspot_ip_update_needed", false)) {
                         val messageObj = resultObj["result"].asJsonObject
                         if (messageObj.has("message_id")) {
@@ -1318,7 +1320,6 @@ class ChatService : Service() {
                                 TetherManager.TetherMode.TETHERING_WIFI
                             )
                             val editThread = Thread {
-                                // 等待初始消息发送完成
                                 try {
                                     Thread.sleep(2000)
                                 } catch (e: InterruptedException) {
@@ -1354,6 +1355,10 @@ class ChatService : Service() {
                                         // 继续重试
                                     }
                                     if (i == maxRetries) {
+                                        writeLog(
+                                            applicationContext,
+                                            "Failed to get hotspot IP after $maxRetries attempts"
+                                        )
                                         Log.e(
                                             TAG,
                                             "Failed to get hotspot IP after $maxRetries attempts"
