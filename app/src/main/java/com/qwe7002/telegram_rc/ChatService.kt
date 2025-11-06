@@ -61,6 +61,7 @@ import com.qwe7002.telegram_rc.static_class.Phone
 import com.qwe7002.telegram_rc.static_class.Hotspot.disableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.enableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.isHotspotActive
+import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
@@ -605,6 +606,7 @@ class ChatService : Service() {
                                             }
                                         }
                                     } catch (e: Exception) {
+                                        writeLog(applicationContext, e.message.toString())
                                         Log.e(
                                             TAG,
                                             "Error granting BATTERY_STATS permission: ${e.message}",
@@ -670,15 +672,14 @@ class ChatService : Service() {
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\nAutoSwitch is enabled, please disable it first."
                 } else {
-                    var apStatus: Boolean
-                    if (statusMMKV.getInt(
+                    val apStatus: Boolean = if (statusMMKV.getInt(
                             "tether_mode",
                             -1
                         ) != TetherManager.TetherMode.TETHERING_VPN
                     ) {
-                        apStatus = isHotspotActive(applicationContext)
+                        isHotspotActive(applicationContext)
                     } else {
-                        apStatus = isVPNHotspotActive()
+                        isVPNHotspotActive()
                     }
                     var resultAp: String
                     if (!apStatus) {
@@ -703,7 +704,7 @@ class ChatService : Service() {
                         } else {
                             statusMMKV.putInt("tether_mode", tetherMode)
                             if (tetherMode != TetherManager.TetherMode.TETHERING_VPN) {
-                                if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                                if ((Build.VERSION.SDK_INT >= 36) && (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED)) {
                                     resultAp =
                                         getString(R.string.no_permission)
                                 } else {
@@ -739,10 +740,15 @@ class ChatService : Service() {
                             }
                         }
                     } else {
-                        statusMMKV.putBoolean("tether", false)
-                        resultAp =
-                            getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
-                        statusMMKV.putBoolean("hotspot_ip_update_needed", false)
+                        if ((Build.VERSION.SDK_INT >= 36) && (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED)) {
+                            resultAp =
+                                getString(R.string.no_permission)
+                        }else {
+                            statusMMKV.putBoolean("tether", false)
+                            resultAp =
+                                getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
+                            statusMMKV.putBoolean("hotspot_ip_update_needed", false)
+                        }
                     }
                     resultAp += "\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
