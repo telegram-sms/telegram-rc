@@ -67,7 +67,7 @@ object TetheringManagerShizuku {
             
             val tetheringManagerClass = Class.forName("android.net.TetheringManager")
             
-            // Try to find and use the constructor with Supplier parameter (Android 11+)
+            // Try to find and use the constructor with Supplier parameter
             try {
                 val supplierClass = Class.forName("java.util.function.Supplier")
                 val constructor = tetheringManagerClass.getDeclaredConstructor(
