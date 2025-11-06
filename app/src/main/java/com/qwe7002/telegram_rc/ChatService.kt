@@ -1594,11 +1594,11 @@ class ChatService : Service() {
                                 "Error Code: ${resultObj["error_code"]}, ${resultObj["description"]}"
                             )
                         } else {
-                            writeLog(applicationContext, "response code:" + response.code)
+                            writeLog(applicationContext, "Error response code:" + response.code)
                         }
                     }
                 } else {
-                    writeLog(applicationContext, "response code:" + response.code)
+                    writeLog(applicationContext, "Error response code:" + response.code)
                     try {
                         Thread.sleep(5000L)
                     } catch (e: InterruptedException) {
