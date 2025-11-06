@@ -82,14 +82,13 @@ class BeaconReceiverService : Service() {
     // Observer for beacon data
     @SuppressLint("MissingPermission")
     private val beaconDataObserver =
-        Observer<ArrayList<BeaconModel.BeaconModel>> @androidx.annotation.RequiresPermission(
-            android.Manifest.permission.READ_PHONE_STATE
+        Observer<ArrayList<BeaconModel.BeaconModel>> @RequiresPermission(
+            Manifest.permission.READ_PHONE_STATE
         ) { beaconList ->
             flushReceiverLock.lock()
             try {
                 if (!beaconConfig.getBoolean("beacon_enable", false)) {
                     resetCounters()
-                    //Log.d(logTag, "processBeaconList: disable")
                     return@Observer
                 }
 

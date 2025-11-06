@@ -8,6 +8,7 @@ import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
+import rikka.shizuku.Shizuku
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -26,19 +27,20 @@ class BootReceiver : BroadcastReceiver() {
                     preferences.getBoolean("chat_command", false)
                 )
                 ServiceManage.startBeaconService(context)
+                if(!Shizuku.pingBinder()){
+                    MMKV.mmkvWithID(Const.BEACON_MMKV_ID).putBoolean("beacon_enable", false)
+                    LogManage.writeLog(context, "Shizuku not connected, Beacon service disabled.")
+                }
                 KeepAliveJob.startJob(context)
                 ReSendJob.startJob(context)
             }
-            
-            try {
-                MMKV.mmkvWithID(Const.STATUS_MMKV_ID).clear()
-            } catch (e: Exception) {
-                Log.w(logTag, "Failed to clear status MMKV: ${e.message}")
-            }
+
+            MMKV.mmkvWithID(Const.STATUS_MMKV_ID).clear()
+            LogManage.writeLog(context, "Cleared status MMKV")
             
             Log.d(logTag, "BootReceiver finished processing.")
         } catch (e: Exception) {
-            Log.e(logTag, "Error in BootReceiver: ${e.message}", e)
+            LogManage.writeLog(context, "Error in BootReceiver: ${e.message}")
         }
     }
 }
