@@ -226,7 +226,7 @@ class MainActivity : AppCompatActivity() {
         }
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
-        if (Build.VERSION.SDK_INT > 36) {
+        if (Build.VERSION.SDK_INT >= 36) {
             writeSettingsButton.visibility = View.GONE
         }
         writeSettingsButton.setOnClickListener {
