@@ -17,6 +17,7 @@ import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.provider.Settings
+import android.telecom.StatusHints
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -327,7 +328,7 @@ class ChatService : Service() {
                 command = tempCommandLowercase
                 if (tempCommandLowercase.contains("@")) {
                     val commandAtLocation = tempCommandLowercase.indexOf("@")
-                    command = tempCommandLowercase.substring(0, commandAtLocation)
+                    command = tempCommandLowercase.take(commandAtLocation)
                 }
             }
         }
@@ -655,10 +656,13 @@ class ChatService : Service() {
                             if (healthRatio != null) " (${"%.2f".format(healthRatio)}%)" else ""
                         } ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
                 }
+                val shizukuStatus =
+                    "Shizuku Status: " + if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) "Enabled" else "Disabled"
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
-                    ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + cardInfo
+                    ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + cardInfo + shizukuStatus
+
                 Log.d(TAG, "getInfo: " + requestBody.text)
             }
 
@@ -742,7 +746,7 @@ class ChatService : Service() {
                         if ((Build.VERSION.SDK_INT >= 36) && (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED)) {
                             resultAp =
                                 getString(R.string.no_permission)
-                        }else {
+                        } else {
                             statusMMKV.putBoolean("tether", false)
                             resultAp =
                                 getString(R.string.disable_wifi) + applicationContext.getString(R.string.action_success)
