@@ -25,10 +25,10 @@ import java.io.IOException
 
 class BatteryNetworkJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
-        Log.d("BatteryNetworkJob", "onStartJob: ")
+        Log.d(this::class.simpleName, "onStartJob: ")
         
         if (params == null) {
-            Log.e("BatteryNetworkJob", "onStartJob: params is null")
+            Log.e(this::class.simpleName, "onStartJob: params is null")
             return false
         }
         

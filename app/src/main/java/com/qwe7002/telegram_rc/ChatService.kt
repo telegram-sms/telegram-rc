@@ -187,7 +187,7 @@ class ChatService : Service() {
 
         // 提前返回，避免后续处理空对象
         if (messageObj == null && messageType != "callback_query") {
-            Log.i(this::class.simpleName, "receive_handle: message object is null and not a callback query")
+            Log.i(this::class.java.simpleName, "receive_handle: message object is null and not a callback query")
             return
         }
 
@@ -198,7 +198,7 @@ class ChatService : Service() {
         ) {
             // 确保callbackData已初始化
             if (callbackData == null) {
-                Log.e(this::class.simpleName, "Callback data is null")
+                Log.e(this::class.java.simpleName, "Callback data is null")
                 return
             }
             val slot = sendStatusMMKV.getInt("slot", -1)
@@ -257,7 +257,7 @@ class ChatService : Service() {
         if (messageObj != null && messageObj.has("from")) {
             fromObj = messageObj["from"].asJsonObject
             if (!messageTypeIsPrivate && fromObj["is_bot"].asBoolean) {
-                Log.i(this::class.simpleName, "receive_handle: receive from bot.")
+                Log.i(this::class.java.simpleName, "receive_handle: receive from bot.")
                 return
             }
         }
@@ -266,7 +266,7 @@ class ChatService : Service() {
                 fromTopicId = messageObj["message_thread_id"].asString
             }
             if (messageThreadId != fromTopicId) {
-                Log.i(this::class.simpleName, "Topic ID[$fromTopicId] not allow.")
+                Log.i(this::class.java.simpleName, "Topic ID[$fromTopicId] not allow.")
                 return
             }
         }
@@ -275,7 +275,7 @@ class ChatService : Service() {
         }
 
         if (fromObj == null) {
-            Log.e(this::class.simpleName, "From object is null")
+            Log.e(this::class.java.simpleName, "From object is null")
             return
         }
 
@@ -290,7 +290,7 @@ class ChatService : Service() {
         if (messageObj != null && messageObj.has("text")) {
             requestMsg = messageObj["text"].asString
         } else {
-            Log.e(this::class.simpleName, "Text is null")
+            Log.e(this::class.java.simpleName, "Text is null")
             writeLog(applicationContext, "Command message text is null")
             return
         }
@@ -332,7 +332,7 @@ class ChatService : Service() {
                 }
             }
         }
-        Log.d(this::class.simpleName, "Command: $command")
+        Log.d(this::class.java.simpleName, "Command: $command")
 
         when (command) {
             "/help", "/start", "/commandlist" -> {
@@ -583,24 +583,24 @@ class ChatService : Service() {
                                             val errorOutput = errorReader.readText()
 
                                             if (output.isNotEmpty()) {
-                                                Log.i(this::class.simpleName, "BATTERY_STATS grant output: $output")
+                                                Log.i(this::class.java.simpleName, "BATTERY_STATS grant output: $output")
                                             }
 
                                             if (errorOutput.isNotEmpty()) {
                                                 Log.e(
-                                                    this::class.simpleName,
+                                                    this::class.java.simpleName,
                                                     "BATTERY_STATS grant error: $errorOutput"
                                                 )
                                             }
 
                                             if (process.exitValue() == 0) {
                                                 Log.i(
-                                                    this::class.simpleName,
+                                                    this::class.java.simpleName,
                                                     "Successfully granted BATTERY_STATS permission via Shizuku"
                                                 )
                                             } else {
                                                 Log.e(
-                                                    this::class.simpleName,
+                                                    this::class.java.simpleName,
                                                     "Failed to grant BATTERY_STATS permission via Shizuku"
                                                 )
                                             }
@@ -608,7 +608,7 @@ class ChatService : Service() {
                                     } catch (e: Exception) {
                                         writeLog(applicationContext, e.message.toString())
                                         Log.e(
-                                            this::class.simpleName,
+                                            this::class.java.simpleName,
                                             "Error granting BATTERY_STATS permission: ${e.message}",
                                             e
                                         )
@@ -646,9 +646,9 @@ class ChatService : Service() {
                         batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
                     val healthRatio = Battery.getLearnedBatteryCapacity()
                         ?.let { (it.toDouble() / Battery.getBatteryCapacity(applicationContext)) * 100 }
-                    Log.d(this::class.simpleName, "getLearnedBatteryCapacity: " + Battery.getLearnedBatteryCapacity())
+                    Log.d(this::class.java.simpleName, "getLearnedBatteryCapacity: " + Battery.getLearnedBatteryCapacity())
                     Log.d(
-                        this::class.simpleName,
+                        this::class.java.simpleName,
                         "getBatteryCapacity: " + Battery.getBatteryCapacity(applicationContext)
                     )
                     batteryHealth =
@@ -663,7 +663,7 @@ class ChatService : Service() {
                         applicationContext
                     ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + cardInfo + shizukuStatus
 
-                Log.d(this::class.simpleName, "getInfo: " + requestBody.text)
+                Log.d(this::class.java.simpleName, "getInfo: " + requestBody.text)
             }
 
             "/log" -> requestBody.text = getString(R.string.system_message_head) + "\n" + readLog(
@@ -861,7 +861,7 @@ class ChatService : Service() {
                         }
                     }
                 } else {
-                    Log.i(this::class.simpleName, "send_ussd: No permission.")
+                    Log.i(this::class.java.simpleName, "send_ussd: No permission.")
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 }
@@ -1157,7 +1157,7 @@ class ChatService : Service() {
                 if (!messageTypeIsPrivate && sendStatusMMKV.getInt("status", -1) == -1) {
                     if (messageType != "supergroup" || messageThreadId.isEmpty()) {
                         Log.i(
-                            this::class.simpleName,
+                            this::class.java.simpleName,
                             "receive_handle: The conversation is not Private and does not prompt an error."
                         )
                         return
@@ -1177,7 +1177,7 @@ class ChatService : Service() {
             setSmsSendStatusStandby()
         }
         if (!hasCommand && sendStatusMMKV.getInt("status", -1) != -1) {
-            Log.i(this::class.simpleName, "receive_handle: Enter the interactive SMS sending mode.")
+            Log.i(this::class.java.simpleName, "receive_handle: Enter the interactive SMS sending mode.")
             var dualSim = ""
             val sendSlotTemp = sendStatusMMKV.getInt("slot", -1)
             if (sendSlotTemp != -1) {
@@ -1186,7 +1186,7 @@ class ChatService : Service() {
             val head =
                 "[" + dualSim + applicationContext.getString(R.string.send_sms_head) + "]"
             var resultSend = getString(R.string.failed_to_get_information)
-            Log.d(this::class.simpleName, "Sending mode status: ${sendStatusMMKV.getInt("status", -1)}")
+            Log.d(this::class.java.simpleName, "Sending mode status: ${sendStatusMMKV.getInt("status", -1)}")
 
             when (sendStatusMMKV.getInt("status", -1)) {
                 SEND_SMS_STATUS.PHONE_INPUT_STATUS -> {
@@ -1246,7 +1246,7 @@ class ChatService : Service() {
         val gson = Gson()
         val body
                 : RequestBody = gson.toJson(requestBody).toRequestBody(Const.JSON)
-        Log.d(this::class.simpleName, "receive_handle: " + gson.toJson(requestBody))
+        Log.d(this::class.java.simpleName, "receive_handle: " + gson.toJson(requestBody))
         val sendRequest
 
                 : Request = Request.Builder().url(requestUri).method("POST", body).build()
@@ -1281,7 +1281,7 @@ class ChatService : Service() {
                     try {
                         response.close()
                     } catch (e: Exception) {
-                        Log.w(this::class.simpleName, "Failed to close response: ${e.message}")
+                        Log.w(this::class.java.simpleName, "Failed to close response: ${e.message}")
                     }
                     return
                 }
@@ -1296,7 +1296,7 @@ class ChatService : Service() {
                         response.close()
                     } catch (e2: Exception) {
                         e2.printStackTrace()
-                        Log.w(this::class.simpleName, "Failed to close response: ${e2.message}")
+                        Log.w(this::class.java.simpleName, "Failed to close response: ${e2.message}")
                     }
                     return
                 }
@@ -1311,7 +1311,7 @@ class ChatService : Service() {
                         sendStatusMMKV.putLong("message_id", getMessageId(responseString))
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Log.e(this::class.simpleName, "Failed to get message ID: ${e.message}")
+                        Log.e(this::class.java.simpleName, "Failed to get message ID: ${e.message}")
                     }
                 }
 
@@ -1330,7 +1330,7 @@ class ChatService : Service() {
                                     Thread.sleep(2000)
                                 } catch (e: InterruptedException) {
                                     Log.w(
-                                        this::class.simpleName,
+                                        this::class.java.simpleName,
                                         "Hotspot IP update thread interrupted: ${e.message}"
                                     )
                                     return@Thread
@@ -1349,13 +1349,13 @@ class ChatService : Service() {
                                         Thread.sleep(retryDelay)
                                     } catch (e: InterruptedException) {
                                         Log.w(
-                                            this::class.simpleName,
+                                            this::class.java.simpleName,
                                             "Hotspot IP update thread interrupted: ${e.message}"
                                         )
                                         return@Thread
                                     } catch (e: Exception) {
                                         Log.e(
-                                            this::class.simpleName,
+                                            this::class.java.simpleName,
                                             "Error getting hotspot IP address: ${e.message}"
                                         )
                                         // 继续重试
@@ -1366,7 +1366,7 @@ class ChatService : Service() {
                                             "Failed to get hotspot IP after $maxRetries attempts"
                                         )
                                         Log.e(
-                                            this::class.simpleName,
+                                            this::class.java.simpleName,
                                             "Failed to get hotspot IP after $maxRetries attempts"
                                         )
                                     }
@@ -1400,12 +1400,12 @@ class ChatService : Service() {
                                         val editResponse = client.newCall(request).execute()
                                         try {
                                             Log.d(
-                                                this::class.simpleName,
+                                                this::class.java.simpleName,
                                                 "Hotspot IP update result: ${editResponse.code}"
                                             )
                                             if (editResponse.code != 200) {
                                                 Log.e(
-                                                    this::class.simpleName,
+                                                    this::class.java.simpleName,
                                                     "Failed to update hotspot IP message. Status code: ${editResponse.code}"
                                                 )
                                             }
@@ -1413,7 +1413,7 @@ class ChatService : Service() {
                                             editResponse.close()
                                         }
                                     } catch (e: Exception) {
-                                        Log.e(this::class.simpleName, "Failed to update hotspot IP message", e)
+                                        Log.e(this::class.java.simpleName, "Failed to update hotspot IP message", e)
                                     } finally {
                                         // 更新完成后清除标记
                                         statusMMKV.putBoolean("hotspot_ip_update_needed", false)
@@ -1463,7 +1463,7 @@ class ChatService : Service() {
                 try {
                     response.close()
                 } catch (e: Exception) {
-                    Log.w(this::class.simpleName, "Failed to close response: ${e.message}")
+                    Log.w(this::class.java.simpleName, "Failed to close response: ${e.message}")
                 }
             }
         })
@@ -1531,10 +1531,10 @@ class ChatService : Service() {
     internal inner class threadMainRunnable : Runnable {
 
         override fun run() {
-            Log.d(this::class.simpleName, "run: thread main start")
+            Log.d(this::class.java.simpleName, "run: thread main start")
             while (true) {
                 if (terminalThread) {
-                    Log.d(this::class.simpleName, "run: thread Stop")
+                    Log.d(this::class.java.simpleName, "run: thread Stop")
                     terminalThread = false
                     break
                 }
@@ -1583,7 +1583,7 @@ class ChatService : Service() {
                         )
                         continue
                     }
-                    Log.d(this::class.simpleName, "run: $result")
+                    Log.d(this::class.java.simpleName, "run: $result")
                     val resultObj = JsonParser.parseString(result).asJsonObject
                     if (resultObj["ok"].asBoolean) {
                         val resultArray = resultObj["result"].asJsonArray
