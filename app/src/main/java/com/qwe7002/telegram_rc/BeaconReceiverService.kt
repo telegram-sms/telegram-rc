@@ -122,7 +122,7 @@ class BeaconReceiverService : Service() {
 
                 val switchStatus = determineSwitchStatus(foundBeacon != null, isWifiEnabled())
                 if (switchStatus == STANDBY) {
-                    //Log.d(TAG, "processBeaconList: standby")
+                    Log.d(logTag, "processBeaconList: standby")
                     return@Observer
                 }
                 
@@ -156,7 +156,7 @@ class BeaconReceiverService : Service() {
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             val subscriptionManager =
-                                (applicationContext.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
+                                (applicationContext.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
                             val info =
                                 subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
                             val phone1Number =
