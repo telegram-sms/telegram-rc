@@ -252,8 +252,6 @@ class BeaconReceiverService : Service() {
                                                     logTag,
                                                     "Error getting hotspot IP address: ${e.message}"
                                                 )
-                                                LogManage.writeLog(applicationContext, "Error getting hotspot IP address: ${e.message}")
-                                                // 继续重试
                                             }
                                             if (i == maxRetries) {
                                                 Log.w(
