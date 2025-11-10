@@ -472,19 +472,34 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.NEARBY_WIFI_DEVICES,
-                    Manifest.permission.POST_NOTIFICATIONS
+                    Manifest.permission.POST_NOTIFICATIONS,
+                    Manifest.permission.BLUETOOTH_SCAN
                 )
             } else {
-                arrayOf(
-                    Manifest.permission.READ_SMS,
-                    Manifest.permission.SEND_SMS,
-                    Manifest.permission.RECEIVE_SMS,
-                    Manifest.permission.CALL_PHONE,
-                    Manifest.permission.READ_PHONE_STATE,
-                    Manifest.permission.READ_CALL_LOG,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    arrayOf(
+                        Manifest.permission.READ_SMS,
+                        Manifest.permission.SEND_SMS,
+                        Manifest.permission.RECEIVE_SMS,
+                        Manifest.permission.CALL_PHONE,
+                        Manifest.permission.READ_PHONE_STATE,
+                        Manifest.permission.READ_CALL_LOG,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.BLUETOOTH_SCAN
+                    )
+                } else {
+                    arrayOf(
+                        Manifest.permission.READ_SMS,
+                        Manifest.permission.SEND_SMS,
+                        Manifest.permission.RECEIVE_SMS,
+                        Manifest.permission.CALL_PHONE,
+                        Manifest.permission.READ_PHONE_STATE,
+                        Manifest.permission.READ_CALL_LOG,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 val permissionArrayList =
