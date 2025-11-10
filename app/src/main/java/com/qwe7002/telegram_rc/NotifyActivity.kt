@@ -6,6 +6,8 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
@@ -18,19 +20,31 @@ import android.widget.ProgressBar
 import android.widget.SearchView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 import java.util.Locale
 
 class NotifyActivity : AppCompatActivity() {
     private lateinit var appAdapter: AppAdapter
 
-    private fun scanAppList(packageManager: PackageManager): List<applicationInfo> {
-        val appInfoList: MutableList<applicationInfo> = ArrayList()
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.notify_menu, menu)
+        return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+
+        }
+        return false
+    }
+
+    private fun scanAppList(packageManager: PackageManager): List<ApplicationInfo> {
+        val appInfoList: MutableList<ApplicationInfo> = ArrayList()
         try {
             val packageInfoList = packageManager.getInstalledPackages(0)
             for (i in packageInfoList.indices) {
                 val packageInfo = packageInfoList[i]
-                val appInfo = applicationInfo()
+                val appInfo = ApplicationInfo()
                 if (packageInfo.packageName == applicationContext.packageName) {
                     continue
                 }
@@ -82,13 +96,13 @@ class NotifyActivity : AppCompatActivity() {
     internal class AppAdapter(private val context: Context?) : BaseAdapter(), Filterable {
         private val logTag: String = this::class.java.simpleName
         private var listenList: List<String>
-        var appInfoList: List<applicationInfo> = ArrayList()
-        var viewAppInfoList: List<applicationInfo> = ArrayList()
+        var appInfoList: List<ApplicationInfo> = ArrayList()
+        var viewAppInfoList: List<ApplicationInfo> = ArrayList()
         @Suppress("UNCHECKED_CAST")
         private val filter: Filter = object : Filter() {
             override fun performFiltering(constraint: CharSequence): FilterResults {
                 val results = FilterResults()
-                val list: MutableList<applicationInfo> = ArrayList()
+                val list: MutableList<ApplicationInfo> = ArrayList()
                 for (appInfoItem in appInfoList) {
                     if (appInfoItem.appName.lowercase(Locale.getDefault()).contains(
                             constraint.toString().lowercase(
@@ -105,18 +119,17 @@ class NotifyActivity : AppCompatActivity() {
             }
 
             override fun publishResults(constraint: CharSequence, results: FilterResults) {
-                viewAppInfoList = results.values as ArrayList<applicationInfo>
+                viewAppInfoList = results.values as ArrayList<ApplicationInfo>
                 notifyDataSetChanged()
             }
         }
 
         init {
-            //this.listenList = Paper.book("system_config").read("notify_listen_list", ArrayList())!!
             this.listenList = MMKV.defaultMMKV()
                 .getStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
         }
 
-        var data: List<applicationInfo>
+        var data: List<ApplicationInfo>
             get() = appInfoList
             set(appsInfoList) {
                 this.appInfoList = appsInfoList
@@ -135,7 +148,7 @@ class NotifyActivity : AppCompatActivity() {
             if (viewAppInfoList.isNotEmpty()) {
                 return viewAppInfoList[position]
             }
-            return applicationInfo()
+            return ApplicationInfo()
         }
 
         override fun getItemId(position: Int): Long {
@@ -144,10 +157,10 @@ class NotifyActivity : AppCompatActivity() {
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
             var view = convertView
-            val viewHolderObject: holder
+            val viewHolderObject: Holder
             val appInfo = viewAppInfoList[position]
             if (view == null) {
-                viewHolderObject = holder()
+                viewHolderObject = Holder()
                 view =
                     LayoutInflater.from(context).inflate(R.layout.item_app_info, parent, false)
                 viewHolderObject.appIcon = view.findViewById(R.id.app_icon_imageview)
@@ -157,7 +170,7 @@ class NotifyActivity : AppCompatActivity() {
                 viewHolderObject.appCheckbox = view.findViewById(R.id.select_checkbox)
                 view.tag = viewHolderObject
             } else {
-                viewHolderObject = view.tag as holder
+                viewHolderObject = view.tag as Holder
             }
             viewHolderObject.appIcon.setImageDrawable(appInfo.appIcon)
             viewHolderObject.appName.text = appInfo.appName
@@ -165,10 +178,8 @@ class NotifyActivity : AppCompatActivity() {
             viewHolderObject.appCheckbox.isChecked =
                 listenList.contains(appInfo.packageName)
             viewHolderObject.appCheckbox.setOnClickListener {
-                val itemInfo = getItem(position) as applicationInfo
+                val itemInfo = getItem(position) as ApplicationInfo
                 val packageName = itemInfo.packageName
-                /*val listenListTemp: MutableList<String> =
-                    Paper.book("system_config").read("notify_listen_list", ArrayList())!!*/
                 val listenListTemp: MutableList<String> = MMKV.defaultMMKV()
                     .getStringSet("notify_listen_list", setOf())?.toMutableList() ?: mutableListOf()
                 if (viewHolderObject.appCheckbox.isChecked) {
@@ -189,15 +200,16 @@ class NotifyActivity : AppCompatActivity() {
             return filter
         }
 
-        internal class holder {
+        internal class Holder {
             lateinit var appIcon: ImageView
             lateinit var appName: TextView
             lateinit var packageName: TextView
             lateinit var appCheckbox: CheckBox
         }
+
     }
 
-    internal class applicationInfo {
+    internal class ApplicationInfo {
         lateinit var appIcon: Drawable
         lateinit var packageName: String
         lateinit var appName: String
