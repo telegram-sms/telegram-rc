@@ -42,7 +42,11 @@ class NotifyListenerService : NotificationListenerService() {
             Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
             return
         }
-        if (packageName == "com.android.server.telecom" && preferences.getBoolean("xiaomi_auto_answer", false)) {
+        if (packageName == "com.android.server.telecom" && preferences.getBoolean(
+                "xiaomi_auto_answer",
+                false
+            )
+        ) {
             if (title.startsWith("小爱帮你接了个")) {
                 requestBody.text =
                     "${getString(R.string.receive_notification_title)}\n${
@@ -52,11 +56,10 @@ class NotifyListenerService : NotificationListenerService() {
             } else {
                 LogManage.writeLog(
                     applicationContext,
-                    "The number has been called multiple times and the notification has been collapsed."
+                    "The number [${title}] has been called multiple times and the notification has been collapsed."
                 )
                 return
             }
-
         } else {
             val listenList: List<String> =
                 preferences.decodeStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
