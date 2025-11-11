@@ -1,6 +1,7 @@
 package com.qwe7002.telegram_rc
 
 import android.content.Context
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -19,6 +20,7 @@ import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.SearchView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
@@ -31,11 +33,36 @@ class NotifyActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.notify_menu, menu)
         return true
     }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-
+            R.id.action_notify_settings -> {
+                showXiaomiAutoAnswerSettingDialog()
+                return true
+            }
         }
         return false
+    }
+
+    private fun showXiaomiAutoAnswerSettingDialog() {
+        val preferences = MMKV.defaultMMKV()
+        val isEnabled = preferences.getBoolean("xiaomi_auto_answer", false)
+        var notify = "Enable"
+        if(!isEnabled){
+             notify = "Disable"
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Xiaomi automatic answering settings")
+            .setMessage("Monitor Xiao Ai’s classmate’s automatic call push notification: $notify")
+            .setPositiveButton("Enable") { _: DialogInterface, _: Int ->
+                preferences.putBoolean("xiaomi_auto_answer", true)
+            }
+            .setNegativeButton("Disable") { _: DialogInterface, _: Int ->
+                preferences.putBoolean("xiaomi_auto_answer", false)
+            }
+            .setNeutralButton("Cancel", null)
+            .setCancelable(true)
+            .show()
     }
 
     private fun scanAppList(packageManager: PackageManager): List<ApplicationInfo> {
@@ -98,6 +125,7 @@ class NotifyActivity : AppCompatActivity() {
         private var listenList: List<String>
         var appInfoList: List<ApplicationInfo> = ArrayList()
         var viewAppInfoList: List<ApplicationInfo> = ArrayList()
+
         @Suppress("UNCHECKED_CAST")
         private val filter: Filter = object : Filter() {
             override fun performFiltering(constraint: CharSequence): FilterResults {

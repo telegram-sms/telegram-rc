@@ -42,7 +42,7 @@ class NotifyListenerService : NotificationListenerService() {
             Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
             return
         }
-        if (packageName == "com.android.server.telecom") {
+        if (packageName == "com.android.server.telecom" && preferences.getBoolean("xiaomi_auto_answer", false)) {
             if (title.startsWith("小爱帮你接了个")) {
                 requestBody.text =
                     "${getString(R.string.receive_notification_title)}\n${
