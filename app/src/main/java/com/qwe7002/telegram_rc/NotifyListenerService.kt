@@ -25,7 +25,7 @@ import java.util.Objects
 
 class NotifyListenerService : NotificationListenerService() {
     private val logTag = this::class.java.simpleName
-
+    var appNameList: MutableMap<String, String> = HashMap()
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
         Log.d(logTag, "onNotificationPosted: $packageName")
@@ -122,8 +122,4 @@ class NotifyListenerService : NotificationListenerService() {
         return super.onBind(intent)
     }
 
-
-    companion object {
-        var appNameList: MutableMap<String, String> = HashMap()
-    }
 }
