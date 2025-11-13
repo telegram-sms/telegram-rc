@@ -113,7 +113,7 @@ class BatteryNetworkJob : JobService() {
 
             val jobInfoBuilder = JobInfo.Builder(
                 11,
-                ComponentName(context.packageName, BatteryNetworkJob::class.java.getName())
+                ComponentName(context.packageName, BatteryNetworkJob::class.java.name)
             )
                 .setPersisted(true)
             val extras = PersistableBundle()
