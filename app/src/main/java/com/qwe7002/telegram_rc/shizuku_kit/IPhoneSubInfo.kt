@@ -21,19 +21,12 @@ class IPhoneSubInfo {
     }
 
     fun getDefaultIMSIWithShizuku(): String {
-        val subInfo = getIPhoneSubInfo()
-
-        if (subInfo == null) {
-            return ""
-        }
+        val subInfo = getIPhoneSubInfo() ?: return ""
         return subInfo.getSubscriberId("com.android.shell")
     }
 
     fun getIMSIWithShizuku(subid: Int): String {
-        val subInfo = getIPhoneSubInfo()
-        if (subInfo == null) {
-            return ""
-        }
+        val subInfo = getIPhoneSubInfo() ?: return ""
 
         return subInfo.getSubscriberIdForSubscriber(subid, "com.android.shell", null)
     }
