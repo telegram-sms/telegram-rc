@@ -93,7 +93,7 @@ class BeaconReceiverService : Service() {
                     return@Observer
                 }
 
-                if (getBatteryLevel() < 25 && !isWifiEnabled() && !beaconConfig.getBoolean(
+                if (getBatteryLevel() < 25 && !isHotspotEnabled() && !beaconConfig.getBoolean(
                         "opposite",
                         false
                     )
@@ -121,7 +121,7 @@ class BeaconReceiverService : Service() {
 
                 updateCounters(foundBeacon != null)
 
-                val switchStatus = determineSwitchStatus(foundBeacon != null, isWifiEnabled())
+                val switchStatus = determineSwitchStatus(foundBeacon != null, isHotspotEnabled())
                 if (switchStatus == STANDBY) {
                     //Log.d(TAG, "processBeaconList: standby")
                     return@Observer
@@ -492,7 +492,7 @@ class BeaconReceiverService : Service() {
         notFoundCount = 0
     }
 
-    private fun isWifiEnabled(): Boolean {
+    private fun isHotspotEnabled(): Boolean {
         return if (beaconConfig.getBoolean("useVpnHotspot", false)) {
             VPNHotspot.isVPNHotspotActive()
         } else {
