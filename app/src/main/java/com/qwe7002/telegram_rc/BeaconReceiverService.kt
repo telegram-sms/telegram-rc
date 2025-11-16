@@ -82,8 +82,8 @@ class BeaconReceiverService : Service() {
     // Observer for beacon data
     @SuppressLint("MissingPermission")
     private val beaconDataObserver =
-        Observer<ArrayList<BeaconModel.BeaconModel>> @androidx.annotation.RequiresPermission(
-            android.Manifest.permission.READ_PHONE_STATE
+        Observer<ArrayList<BeaconModel.BeaconModel>> @RequiresPermission(
+            Manifest.permission.READ_PHONE_STATE
         ) { beaconList ->
             flushReceiverLock.lock()
             try {
@@ -91,6 +91,12 @@ class BeaconReceiverService : Service() {
                     resetCounters()
                     //Log.d(logTag, "processBeaconList: disable")
                     return@Observer
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+                    if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                        Log.e(logTag, "Shizuku not available")
+                        return@Observer
+                    }
                 }
 
                 if (getBatteryLevel() < 25 && !isHotspotEnabled() && !beaconConfig.getBoolean(
@@ -126,26 +132,26 @@ class BeaconReceiverService : Service() {
                     //Log.d(TAG, "processBeaconList: standby")
                     return@Observer
                 }
-                
+
                 // Use coroutine to handle network operations off the main thread
                 serviceScope.launch {
                     val message = buildMessage(switchStatus, foundBeacon)
                     Log.d(logTag, "processBeaconList: $message")
                     val requestBody = RequestMessage()
                     requestBody.chatId = chatId
-                    
+
                     // Get battery info and network type asynchronously
                     val batteryInfo = Battery.getBatteryInfo(applicationContext)
                     val networkType = withContext(Dispatchers.IO) {
                         Network.getNetworkType(applicationContext)
                     }
-                    
+
                     requestBody.text = "$message\n${getString(R.string.current_battery_level)}${
                         batteryInfo
                     }\n${getString(R.string.current_network_connection_status)}${
                         networkType
                     }"
-                    
+
                     if (DataUsage.hasPermission(applicationContext)) {
                         if (ActivityCompat.checkSelfPermission(
                                 applicationContext,
@@ -157,7 +163,7 @@ class BeaconReceiverService : Service() {
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             val subscriptionManager =
-                                (applicationContext.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
+                                (applicationContext.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
                             val info =
                                 subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
                             val phone1Number =
@@ -167,7 +173,7 @@ class BeaconReceiverService : Service() {
                                 applicationContext,
                                 imsiCache.getString(phone1Number, null)
                             )
-                            if(getActiveCard(applicationContext) == 2){
+                            if (getActiveCard(applicationContext) == 2) {
                                 requestBody.text += "\n${getString(R.string.current_data_card)}: SIM" + (info.simSlotIndex + 1)
                             }
                             requestBody.text += "\nData Usage: $phone1DataUsage"
@@ -180,12 +186,12 @@ class BeaconReceiverService : Service() {
                                 val telephonyManager =
                                     applicationContext.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
                                 val tm = telephonyManager.createForSubscriptionId(subId)
-                                
+
                                 // Execute cell info request on IO thread
                                 val cellInfoList = withContext(Dispatchers.IO) {
                                     requestUpdatedCellInfo(applicationContext, tm)
                                 }
-                                
+
                                 if (cellInfoList.isNotEmpty()) {
                                     val registeredCell = cellInfoList.find { it.isRegistered }
                                     if (registeredCell != null) {
@@ -246,14 +252,20 @@ class BeaconReceiverService : Service() {
                                                     logTag,
                                                     "Hotspot IP update thread interrupted: ${e.message}"
                                                 )
-                                                LogManage.writeLog(applicationContext, "Hotspot IP update thread interrupted: ${e.message}")
+                                                LogManage.writeLog(
+                                                    applicationContext,
+                                                    "Hotspot IP update thread interrupted: ${e.message}"
+                                                )
                                                 return@Thread
                                             } catch (e: Exception) {
                                                 Log.e(
                                                     logTag,
                                                     "Error getting hotspot IP address: ${e.message}"
                                                 )
-                                                LogManage.writeLog(applicationContext, "Error getting hotspot IP address: ${e.message}")
+                                                LogManage.writeLog(
+                                                    applicationContext,
+                                                    "Error getting hotspot IP address: ${e.message}"
+                                                )
                                                 // 继续重试
                                             }
                                             if (i == maxRetries) {
@@ -261,7 +273,10 @@ class BeaconReceiverService : Service() {
                                                     logTag,
                                                     "Failed to get hotspot IP after $maxRetries attempts"
                                                 )
-                                                LogManage.writeLog(applicationContext, "Failed to get hotspot IP after $maxRetries attempts")
+                                                LogManage.writeLog(
+                                                    applicationContext,
+                                                    "Failed to get hotspot IP after $maxRetries attempts"
+                                                )
                                             }
                                         }
 
@@ -287,7 +302,8 @@ class BeaconReceiverService : Service() {
                                                 "editMessageText"
                                             )
                                             val request =
-                                                Request.Builder().url(requestUri).method("POST", body)
+                                                Request.Builder().url(requestUri)
+                                                    .method("POST", body)
                                                     .build()
 
                                             try {
@@ -308,10 +324,17 @@ class BeaconReceiverService : Service() {
                                                     editResponse.close()
                                                 }
                                             } catch (e: Exception) {
-                                                Log.e(logTag, "Failed to update hotspot IP message", e)
+                                                Log.e(
+                                                    logTag,
+                                                    "Failed to update hotspot IP message",
+                                                    e
+                                                )
                                             } finally {
                                                 // 更新完成后清除标记
-                                                beaconConfig.putBoolean("need_update_hotspot_ip", false)
+                                                beaconConfig.putBoolean(
+                                                    "need_update_hotspot_ip",
+                                                    false
+                                                )
                                             }
                                         }
                                     }
@@ -560,10 +583,10 @@ class BeaconReceiverService : Service() {
     }
 
     private fun toggleWifiHotspot(enable: Boolean) {
-        if(Build.VERSION.SDK_INT>=36){
-            if(!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED){
+        if (Build.VERSION.SDK_INT >= 36) {
+            if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                 Log.d(this::class.java.simpleName, "toggleWifiHotspot: shizuku Not work")
-                 return
+                return
             }
         }
         if (beaconConfig.getBoolean("useVpnHotspot", false)) {
