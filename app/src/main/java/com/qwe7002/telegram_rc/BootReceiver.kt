@@ -9,6 +9,7 @@ import android.os.Build
 import android.util.Log
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
+import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
 import rikka.shizuku.Shizuku
@@ -43,6 +44,7 @@ class BootReceiver : BroadcastReceiver() {
                 if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                     MMKV.mmkvWithID(Const.BEACON_MMKV_ID).putBoolean("beacon_enable", false)
                     LogManage.writeLog(context, "Shizuku not available, beacon disabled.")
+                    Notify.sendMessage(context, "BootReceiver", "Shizuku not available, Beacon disabled.")
                 }
             }
             Log.d(logTag, "BootReceiver finished processing.")
