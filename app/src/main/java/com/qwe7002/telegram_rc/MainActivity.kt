@@ -37,7 +37,6 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.transition.Visibility
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
@@ -76,7 +75,6 @@ class MainActivity : AppCompatActivity() {
     private val logTag = this::class.java.simpleName
     private lateinit var preferences: MMKV
     private lateinit var proxyMMKV: MMKV
-    private lateinit var shizukuMMKV: MMKV
     private lateinit var writeSettingsButton: Button
     private lateinit var dataUsageButton: Button
     private lateinit var scannerLauncher: ActivityResultLauncher<Intent>
@@ -157,7 +155,6 @@ class MainActivity : AppCompatActivity() {
         MMKV.initialize(applicationContext)
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
-        shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
         DataPlanManager.initialize() // 初始化数据计划管理器
         writeSettingsButton.setOnClickListener {
             val writeSystemIntent = Intent(
@@ -206,7 +203,6 @@ class MainActivity : AppCompatActivity() {
                         applicationContext,
                         "The current device does not support Shizuku direct access, try using ADB shell to access."
                     )
-                    MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID).putBoolean("shizuku_fallback", true)
                     try {
                         getIMSICacheFallback(applicationContext)
                         Snackbar.make(
@@ -738,7 +734,6 @@ class MainActivity : AppCompatActivity() {
                                 "Get IMSI Success",
                                 Snackbar.LENGTH_LONG
                             ).show()
-                            shizukuMMKV.putBoolean("shizuku_fallback", false)
                         } catch (e: Exception) {
                             showErrorDialog(e.message.toString())
                             writeLog(applicationContext, e.message.toString())
@@ -748,7 +743,6 @@ class MainActivity : AppCompatActivity() {
                                 applicationContext,
                                 "The current device does not support Shizuku direct access, try using ADB shell to access."
                             )
-                            shizukuMMKV.putBoolean("shizuku_fallback", true)
                             try {
                                 getIMSICacheFallback(applicationContext)
                                 Snackbar.make(
@@ -826,11 +820,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
-        val shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
-        val shizukuMenuItem = menu.findItem(R.id.set_shizuku_menu_item)
-        if (shizukuMenuItem != null) {
-            shizukuMenuItem.isVisible = shizukuMMKV.getBoolean("shizuku_fallback", false)
-        }
         return true
     }
 
@@ -923,8 +912,8 @@ class MainActivity : AppCompatActivity() {
                 val apiDialog = AlertDialog.Builder(this)
                 apiDialog.setTitle("Set API Address")
                 apiDialog.setView(apiDialogView)
-                apiDialog.setPositiveButton("OK") { dialog, _ ->
-                    {
+                apiDialog.setPositiveButton("OK") { _, _ ->
+                    run {
                         val apiAddressText = apiAddress.text.toString()
                         if (preferences.getString(
                                 "api_address",
@@ -958,11 +947,6 @@ class MainActivity : AppCompatActivity() {
                     return false
                 }
                 startActivity(Intent(this, NotifyActivity::class.java))
-                return true
-            }
-
-            R.id.set_shizuku_menu_item -> {
-                startActivity(Intent(this, ShizukuSettingsActivity::class.java))
                 return true
             }
 

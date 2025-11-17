@@ -84,7 +84,7 @@ object Phone {
             if (phoneCount == 1) {
                 val phone = phoneInfo.getDefaultIMSIFallbackWithShizuku()
                 Log.i("getIMSICache", "getIMSICache: $phone")
-                if (phone.isNotEmpty()) {
+                if (phone?.isNotEmpty() == true) {
                     imsiCache.putString(getPhoneNumber(context, 0), phone)
                 } else {
                     throw Exception("Permission denied")
@@ -94,7 +94,7 @@ object Phone {
                     val subid = Other.getSubId(context, i)
                     val phone = phoneInfo.getIMSIFallbackWithShizuku(subid)
                     Log.i("getIMSICache", "getIMSICache: $phone")
-                    if (phone.isNotEmpty()) {
+                    if (phone?.isNotEmpty() == true) {
                         imsiCache.putString(getPhoneNumber(context, i), phone)
                     } else {
                         throw Exception("Permission denied")
