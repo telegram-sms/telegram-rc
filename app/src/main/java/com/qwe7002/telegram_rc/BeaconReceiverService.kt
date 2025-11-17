@@ -95,6 +95,14 @@ class BeaconReceiverService : Service() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
                     if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                         Log.e(logTag, "Shizuku not available")
+                        if(beaconConfig.getBoolean("beacon_enable", false)){
+                            beaconConfig.putBoolean("beacon_enable", false)
+                            Notify.sendMessage(
+                                applicationContext,
+                                "Beacon Receiver",
+                                "Shizuku not available, beacon receiver disabled"
+                            )
+                        }
                         return@Observer
                     }
                 }
