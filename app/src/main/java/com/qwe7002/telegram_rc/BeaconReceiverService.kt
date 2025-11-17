@@ -47,6 +47,7 @@ import com.qwe7002.telegram_rc.static_class.Phone
 import com.qwe7002.telegram_rc.static_class.Hotspot
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -416,6 +417,7 @@ class BeaconReceiverService : Service() {
     override fun onCreate() {
         super.onCreate()
         MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         if (!hasLocationPermissions()) {
             Log.i(logTag, "onCreate: permission denied")
             return

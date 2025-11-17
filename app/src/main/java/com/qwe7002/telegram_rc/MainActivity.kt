@@ -59,6 +59,7 @@ import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -153,6 +154,7 @@ class MainActivity : AppCompatActivity() {
 
         //load config
         MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
         DataPlanManager.initialize() // 初始化数据计划管理器

@@ -12,6 +12,7 @@ import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import rikka.shizuku.Shizuku
 
 class BootReceiver : BroadcastReceiver() {
@@ -19,6 +20,7 @@ class BootReceiver : BroadcastReceiver() {
         val logTag = this::class.java.simpleName
         try {
             MMKV.initialize(context)
+            MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
             val preferences = MMKV.defaultMMKV()
             if (preferences.contains("initialized")) {
                 LogManage.writeLog(

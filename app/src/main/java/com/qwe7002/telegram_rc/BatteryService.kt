@@ -16,6 +16,7 @@ import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Hotspot
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import java.util.Objects
 
 class BatteryService : Service() {
@@ -47,6 +48,7 @@ class BatteryService : Service() {
     override fun onCreate() {
         super.onCreate()
         MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         val preferences = MMKV.defaultMMKV()
         val chargerStatus = preferences.getBoolean("charger_status", false)
         batteryReceiver = BatteryBroadcastReceiver()

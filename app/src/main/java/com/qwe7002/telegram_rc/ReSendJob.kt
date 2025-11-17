@@ -13,6 +13,7 @@ import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -34,6 +35,7 @@ class ReSendJob : JobService() {
         
         try {
             MMKV.initialize(applicationContext)
+            MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
             preferences = MMKV.defaultMMKV()
             resendMMKV = MMKV.mmkvWithID("resend_list", MMKV.MULTI_PROCESS_MODE)
 

@@ -66,6 +66,7 @@ import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import moe.shizuku.server.IShizukuService
 import okhttp3.Call
 import okhttp3.Callback
@@ -1516,6 +1517,7 @@ class ChatService : Service() {
         connectivityManager =
             applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         preferences = MMKV.defaultMMKV()
         sendStatusMMKV = MMKV.mmkvWithID("send_status")
         statusMMKV = MMKV.mmkvWithID(Const.STATUS_MMKV_ID)

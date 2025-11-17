@@ -14,6 +14,7 @@ import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Resend
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -36,6 +37,7 @@ class NotifyListenerService : NotificationListenerService() {
             return
         }
         MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         val preferences = MMKV.defaultMMKV()
         val requestBody = RequestMessage()
         if (!preferences.contains("initialized")) {
