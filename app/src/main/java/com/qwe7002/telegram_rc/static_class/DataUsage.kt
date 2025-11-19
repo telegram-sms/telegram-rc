@@ -43,18 +43,15 @@ object DataUsage {
                 return "Permission denied"
             }
 
-            // 获取NetworkStatsManager
             val networkStatsManager =
                 context.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
 
-            // 根据数据计划类型查询数据使用情况
             val startTime = getDataPlanStartTime()
             val endTime = System.currentTimeMillis()
 
-            // 使用null作为subscriberId来避免SecurityException，这会返回所有移动网络的数据
             val bucket = networkStatsManager.querySummaryForDevice(
                 ConnectivityManager.TYPE_MOBILE,
-                subscriberId, // 使用null避免SecurityException
+                subscriberId,
                 startTime,
                 endTime
             )
@@ -62,7 +59,6 @@ object DataUsage {
             val totalBytes = bucket.rxBytes + bucket.txBytes
             formatBytes(totalBytes)
         } catch (e: SecurityException) {
-            // 如果出现安全异常，提示用户授予权限
             Log.e(TAG, "SecurityException when getting data", e)
             "Permission required - open settings"
         } catch (e: Exception) {
