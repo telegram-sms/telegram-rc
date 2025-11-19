@@ -66,18 +66,16 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'com.google.android.material:material:1.13.0'
-    //noinspection GradleDependency
-    implementation 'androidx.browser:browser:1.8.0'
-    implementation 'com.squareup.okio:okio:3.16.2'
-    implementation "com.squareup.okhttp3:okhttp:5.3.0"
-    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.3.0"
+    implementation 'androidx.browser:browser:1.9.0'
+    implementation 'com.squareup.okio:okio:3.16.4'
+    implementation "com.squareup.okhttp3:okhttp:5.3.2"
+    implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.3.2"
     implementation 'org.conscrypt:conscrypt-android:2.5.3'
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
     implementation 'aga.android:luch:0.4'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.6'
-    //noinspection GradleDependency
-    implementation "androidx.core:core-ktx:1.13.1"
+    implementation "androidx.core:core-ktx:1.17.0"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.21'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
     implementation 'com.tencent:mmkv:2.2.4'

@@ -22,6 +22,8 @@ import android.widget.SearchView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 import java.util.Locale
@@ -91,8 +93,19 @@ class NotifyActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
         this.title = getString(R.string.app_list)
         setContentView(R.layout.activity_notify_apps_list)
+        
+        // Handle window insets for edge-to-edge
+        val rootView = findViewById<View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        FakeStatusBar().fakeStatusBar(this, window)
+        
         val appList = findViewById<ListView>(R.id.app_listview)
         val filterEdit = findViewById<SearchView>(R.id.filter_searchview)
         filterEdit.isIconifiedByDefault = false

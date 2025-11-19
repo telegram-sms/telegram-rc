@@ -1,19 +1,10 @@
 package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.annotation.SuppressLint
-import android.os.IBinder
-import android.os.ParcelFileDescriptor
 import android.util.Log
-import com.android.internal.telephony.IPhoneSubInfo
-import com.qwe7002.telegram_rc.MMKV.Const
-import com.tencent.mmkv.MMKV
-import moe.shizuku.server.IShizukuService
 import org.lsposed.hiddenapibypass.HiddenApiBypass
-import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 class IPhoneSubInfo {
 

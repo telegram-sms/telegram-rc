@@ -1,21 +1,10 @@
 package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.os.IBinder
 import android.util.Log
-import android.os.ParcelFileDescriptor
-import com.android.internal.telephony.ISub
-import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
-import com.tencent.mmkv.MMKV
-import moe.shizuku.server.IShizukuService
 import org.lsposed.hiddenapibypass.HiddenApiBypass
-import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 
 class ISub {

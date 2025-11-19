@@ -1,37 +1,17 @@
 package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.annotation.SuppressLint
-import android.os.IBinder
 import android.content.Context
-import android.os.ParcelFileDescriptor
 import android.util.Log
-import com.android.internal.telephony.ITelephony
-import com.qwe7002.telegram_rc.MMKV.Const
-import com.tencent.mmkv.MMKV
-import moe.shizuku.server.IShizukuService
 import org.lsposed.hiddenapibypass.HiddenApiBypass
-import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 class Telephony {
     companion object {
         private const val TAG = "TelephonyManager"
     }
 
-    private fun getITelephony(): ITelephony? {
-        return try {
-            val binder: IBinder = ShizukuBinderWrapper(
-                SystemServiceHelper.getSystemService(Context.TELEPHONY_SERVICE)
-            )
-            ITelephony.Stub.asInterface(binder)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to get ITelephony", e)
-            null
-        }
-    }
 
     /**
      * Get ITelephony service interface with Shizuku privileges
