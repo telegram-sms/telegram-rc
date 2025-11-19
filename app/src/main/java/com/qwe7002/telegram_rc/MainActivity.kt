@@ -683,7 +683,7 @@ class MainActivity : AppCompatActivity() {
             val uri = "https://get.telegram-sms.com$privacyPolice".toUri()
             val privacyBuilder = CustomTabsIntent.Builder()
             val customTabsIntent = privacyBuilder.build()
-            customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            customTabsIntent.intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             try {
                 customTabsIntent.launchUrl(applicationContext, uri)
             } catch (e: ActivityNotFoundException) {

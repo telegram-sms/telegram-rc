@@ -70,26 +70,6 @@ class Telephony {
 
 
     fun setSimPowerState(slotIndex: Int, powerUp: Boolean): Boolean {
-        var state = 0
-        if (powerUp) {
-            state = 1
-        }
-        try {
-            val telephony = getITelephony()
-            if (telephony != null) {
-                telephony.setSimPowerStateForSlot(slotIndex, state)
-                Log.d(TAG, "Successfully set SIM power state for slot $slotIndex to $powerUp")
-                return true
-            } else {
-                Log.e(TAG, "ITelephony is null, cannot set SIM power state")
-                return false
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to set SIM power state for slot $slotIndex to $powerUp", e)
-            return false
-        }
-    }
-    fun setSimPowerStateFallBack(slotIndex: Int, powerUp: Boolean): Boolean {
         return try {
             val iTelephonyService = getITelephonyService()
             if (iTelephonyService == null) {

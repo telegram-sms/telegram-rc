@@ -16,23 +16,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class IPhoneSubInfo {
-    private fun getIPhoneSubInfo(): IPhoneSubInfo? {
-        val binder: IBinder =
-            ShizukuBinderWrapper(SystemServiceHelper.getSystemService("iphonesubinfo"))
-        return IPhoneSubInfo.Stub.asInterface(binder)
-    }
-
-    fun getDefaultIMSIWithShizuku(): String {
-        val subInfo = getIPhoneSubInfo() ?: return ""
-        return subInfo.getSubscriberId("com.android.shell")
-    }
-
-    fun getIMSIWithShizuku(subid: Int): String {
-        val subInfo = getIPhoneSubInfo() ?: return ""
-
-        return subInfo.getSubscriberIdForSubscriber(subid, "com.android.shell", null)
-    }
-
 
     /**
      * Get IPhoneSubInfo service interface with Shizuku privileges
@@ -73,7 +56,7 @@ class IPhoneSubInfo {
         }
     }
 
-    fun getDefaultIMSIFallbackWithShizuku(): String? {
+    fun getDefaultIMSIWithShizuku(): String? {
         return try {
             val iPhoneSubInfoService = getIPhoneSubInfoService()
             if (iPhoneSubInfoService == null) {
@@ -98,7 +81,7 @@ class IPhoneSubInfo {
         }
     }
 
-    fun getIMSIFallbackWithShizuku(subId: Int): String? {
+    fun getIMSIWithShizuku(subId: Int): String? {
         return try {
             val iPhoneSubInfoService = getIPhoneSubInfoService()
             if (iPhoneSubInfoService == null) {

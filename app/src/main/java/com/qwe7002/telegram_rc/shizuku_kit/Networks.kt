@@ -59,10 +59,12 @@ object Networks {
     private fun executeCommand(command: Array<String>): CommandResult {
         try {
             // 获取 Shizuku 服务
-            val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
-            if (service == null) {
-                return CommandResult(false, "", "Shizuku service not available")
-            }
+            val service: IShizukuService =
+                IShizukuService.Stub.asInterface(Shizuku.getBinder()) ?: return CommandResult(
+                    false,
+                    "",
+                    "Shizuku service not available"
+                )
 
             val process = service.newProcess(command, null, null)
             // 读取输出（示例）

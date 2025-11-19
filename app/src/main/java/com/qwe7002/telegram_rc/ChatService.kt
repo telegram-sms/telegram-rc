@@ -44,6 +44,7 @@ import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.Hotspot.disableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.enableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.isHotspotActive
+import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.LogManage.readLog
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network
@@ -1003,28 +1004,9 @@ class ChatService : Service() {
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (e: NoSuchMethodError) {
                                                 e.printStackTrace()
-                                                writeLog(
-                                                    applicationContext,
-                                                    "The current device does not support Shizuku direct access, try using ADB shell to access."
-                                                )
-                                                Log.e(
-                                                    "ChatService",
-                                                    "setSimPowerState not supported"
-                                                )
-                                                try {
-                                                    val tm = Telephony()
-                                                    tm.setSimPowerStateFallBack(slot, newState)
-                                                    requestBody.text =
-                                                        "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
-                                                            if (newState) getString(
-                                                                R.string.enable
-                                                            ) else getString(R.string.disable)
-                                                        }"
-                                                } catch (e: Exception) {
-                                                    e.printStackTrace()
-                                                    requestBody.text =
-                                                        "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
-                                                }
+                                                writeLog(applicationContext, "Switching SIM${slot + 1} card status failed: ${e.message}")
+                                                requestBody.text =
+                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             }
                                         }
                                     }
@@ -1064,23 +1046,14 @@ class ChatService : Service() {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (e: NoSuchMethodError) {
-                                            e.printStackTrace()
                                             writeLog(
                                                 applicationContext,
-                                                "The current device does not support Shizuku direct access, try using ADB shell to access."
+                                                "Switching default data SIM failed: Method is not available"
                                             )
-                                            try {
-                                                val dataSub = ISub()
-                                                dataSub.setDefaultDataSubIdFallback(
-                                                    subscriptionInfo.subscriptionId
-                                                )
-                                                requestBody.text =
-                                                    "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
-                                            } catch (e: Exception) {
-                                                e.printStackTrace()
-                                                requestBody.text =
-                                                    "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Method is not available"
-                                            }
+                                            e.printStackTrace()
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Method is not available"
+
                                         }
                                     }
                                 }
