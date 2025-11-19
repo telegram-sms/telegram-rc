@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.view.Window
 import androidx.core.content.ContextCompat
 
+@Suppress("SameParameterValue")
 class FakeStatusBar {
     fun fakeStatusBar(context:Context,window: Window) {
         val decorView = window.decorView as ViewGroup
