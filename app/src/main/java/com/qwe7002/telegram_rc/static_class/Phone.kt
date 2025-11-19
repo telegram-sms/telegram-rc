@@ -52,20 +52,24 @@ object Phone {
             if (phoneCount == 1) {
                 val phone = phoneInfo.getDefaultIMSIWithShizuku()
                 Log.i("getIMSICache", "getIMSICache: $phone")
-                if (phone.isNotEmpty()) {
-                    imsiCache.putString(getPhoneNumber(context, 0), phone)
-                } else {
-                    throw Exception("Permission denied")
+                if (phone != null) {
+                    if (phone.isNotEmpty()) {
+                        imsiCache.putString(getPhoneNumber(context, 0), phone)
+                    } else {
+                        throw Exception("Permission denied")
+                    }
                 }
             } else {
                 for (i in 0 until phoneCount) {
                     val subid = Other.getSubId(context, i)
                     val phone = phoneInfo.getIMSIWithShizuku(subid)
                     Log.i("getIMSICache", "getIMSICache: $phone")
-                    if (phone.isNotEmpty()) {
-                        imsiCache.putString(getPhoneNumber(context, i), phone)
-                    } else {
-                        throw Exception("Permission denied")
+                    if (phone != null) {
+                        if (phone.isNotEmpty()) {
+                            imsiCache.putString(getPhoneNumber(context, i), phone)
+                        } else {
+                            throw Exception("Permission denied")
+                        }
                     }
                 }
             }
@@ -74,35 +78,4 @@ object Phone {
         }
     }
 
-    @JvmStatic
-    fun getIMSICacheFallback(context: Context) {
-        val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-        val phoneInfo = IPhoneSubInfo()
-        if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            val phoneCount = getActiveCard(context)
-            Log.d("getIMSICache", "getIMSICache: $phoneCount")
-            if (phoneCount == 1) {
-                val phone = phoneInfo.getDefaultIMSIFallbackWithShizuku()
-                Log.i("getIMSICache", "getIMSICache: $phone")
-                if (phone?.isNotEmpty() == true) {
-                    imsiCache.putString(getPhoneNumber(context, 0), phone)
-                } else {
-                    throw Exception("Permission denied")
-                }
-            } else {
-                for (i in 0 until phoneCount) {
-                    val subid = Other.getSubId(context, i)
-                    val phone = phoneInfo.getIMSIFallbackWithShizuku(subid)
-                    Log.i("getIMSICache", "getIMSICache: $phone")
-                    if (phone?.isNotEmpty() == true) {
-                        imsiCache.putString(getPhoneNumber(context, i), phone)
-                    } else {
-                        throw Exception("Permission denied")
-                    }
-                }
-            }
-        } else {
-            throw Exception("Permission denied")
-        }
-    }
 }

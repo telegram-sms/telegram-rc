@@ -17,7 +17,6 @@ import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.provider.Settings
-import android.telecom.StatusHints
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -44,7 +43,6 @@ import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.Hotspot.disableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.enableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.isHotspotActive
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.LogManage.readLog
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network
@@ -1077,10 +1075,10 @@ class ChatService : Service() {
                 val command = commandRaw.split(" ").toTypedArray()
                 var sendSlot = -1
                 if (getActiveCard(applicationContext) > 1) {
-                    if (command.size < 2) {
-                        sendSlot = -3
+                    sendSlot = if (command.size < 2) {
+                        -3
                     } else {
-                        sendSlot = when (command[1]) {
+                        when (command[1]) {
                             "1" -> 0
                             "2" -> 1
                             else -> -2
