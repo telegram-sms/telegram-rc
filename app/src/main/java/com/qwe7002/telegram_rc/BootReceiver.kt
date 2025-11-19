@@ -47,6 +47,7 @@ class BootReceiver : BroadcastReceiver() {
                     MMKV.mmkvWithID(Const.BEACON_MMKV_ID).putBoolean("beacon_enable", false)
                     LogManage.writeLog(context, "Shizuku not available, beacon disabled.")
                     Notify.sendMessage(context, "BootReceiver", "Shizuku not available, Beacon disabled.")
+                    ReSendJob.addResendLoop(context, "Shizuku not available, Beacon disabled.")
                 }
             }
             Log.d(logTag, "BootReceiver finished processing.")

@@ -7,7 +7,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
@@ -80,7 +79,7 @@ class USSDCallBack(
                 Log.d(logTag, "onFailure: $e")
                 LogManage.writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, -1)
-                addResendLoop(context,requestBody.text)
+                ReSendJob.addResendLoop(context,requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -92,7 +91,7 @@ class USSDCallBack(
                             .string()
                     )
                     SMS.sendFallbackSMS(context, requestBody.text, -1)
-                    addResendLoop(context,requestBody.text)
+                    ReSendJob.addResendLoop(context,requestBody.text)
                 }
             }
         })

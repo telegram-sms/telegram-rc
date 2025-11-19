@@ -10,7 +10,6 @@ import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
-import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
@@ -71,7 +70,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
                 e.printStackTrace()
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, sub)
-                addResendLoop(context,requestBody.text)
+                ReSendJob.addResendLoop(context,requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -83,7 +82,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
                             errorHead + response.code + " " + Objects.requireNonNull(response.body)
                                 .string()
                         )
-                        addResendLoop(context,requestBody.text)
+                        ReSendJob.addResendLoop(context,requestBody.text)
                     }
                 } catch (e: Exception) {
                     writeLog(context, errorHead + e.message)

@@ -45,7 +45,6 @@ import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Phone
 import com.qwe7002.telegram_rc.static_class.Hotspot
-import com.qwe7002.telegram_rc.static_class.Resend
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import kotlinx.coroutines.CoroutineScope
@@ -223,7 +222,7 @@ class BeaconReceiverService : Service() {
                         override fun onFailure(call: Call, e: IOException) {
                             try {
                                 Log.d(logTag, "onFailure: " + e.message)
-                                Resend.addResendLoop(applicationContext, requestBody.text)
+                                ReSendJob.addResendLoop(applicationContext, requestBody.text)
                                 e.printStackTrace()
                             } catch (ioException: Exception) {
                                 Log.e(

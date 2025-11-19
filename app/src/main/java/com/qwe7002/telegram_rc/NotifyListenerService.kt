@@ -12,7 +12,6 @@ import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
-import com.qwe7002.telegram_rc.static_class.Resend
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Call
@@ -106,7 +105,7 @@ class NotifyListenerService : NotificationListenerService() {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 LogManage.writeLog(applicationContext, errorHead + e.message)
-                Resend.addResendLoop(applicationContext, requestBody.text)
+                ReSendJob.addResendLoop(applicationContext, requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -114,7 +113,7 @@ class NotifyListenerService : NotificationListenerService() {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
                     LogManage.writeLog(applicationContext, errorHead + response.code + " " + result)
-                    Resend.addResendLoop(applicationContext, requestBody.text)
+                    ReSendJob.addResendLoop(applicationContext, requestBody.text)
                 }
             }
         })
