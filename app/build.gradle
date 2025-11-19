@@ -10,8 +10,7 @@ android {
     defaultConfig {
         applicationId "com.qwe7002.telegram_rc"
         minSdkVersion 29
-        //noinspection OldTargetApi
-        targetSdkVersion 34
+        targetSdkVersion 36
         versionCode System.getenv("VERSION_CODE") == null ? 1 : System.getenv("VERSION_CODE").toInteger()
         versionName System.getenv("VERSION_NAME") == null ? "debug-do_not_leak" : System.getenv("VERSION_NAME")
     }
