@@ -33,16 +33,6 @@ class ScannerActivity : Activity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         
         setContentView(R.layout.activity_scanner)
-        
-        // Handle window insets for edge-to-edge
-        val rootView = findViewById<View>(android.R.id.content)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
-            WindowInsetsCompat.CONSUMED
-        }
-
-        FakeStatusBar().fakeStatusBar(this, window)
 
         val scannerView = findViewById<CodeScannerView>(R.id.scanner_view)
         mCodeScanner = CodeScanner(this, scannerView)

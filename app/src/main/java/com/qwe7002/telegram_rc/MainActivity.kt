@@ -25,6 +25,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.RadioButton
@@ -98,17 +99,23 @@ class MainActivity : AppCompatActivity() {
     private lateinit var saveButton: Button
     private lateinit var getIdButton: Button
 
-    @SuppressLint("BatteryLife", "QueryPermissionsNeeded", "SetTextI18n", "PrivateApi")
+    @SuppressLint("BatteryLife", "QueryPermissionsNeeded", "SetTextI18n", "PrivateApi",
+        "MissingInflatedId"
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // Handle window insets for edge-to-edge on ScrollView
-        val scrollView = findViewById<View>(R.id.main_scroll_view)
-        ViewCompat.setOnApplyWindowInsetsListener(scrollView) { view, windowInsets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_scroll_view)) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
-            windowInsets
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById<ImageView>(R.id.character_set)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
         }
         FakeStatusBar().fakeStatusBar(this, window)
 

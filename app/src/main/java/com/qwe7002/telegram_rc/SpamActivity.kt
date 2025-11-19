@@ -20,18 +20,17 @@ class SpamActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_spam_list)
-        
+
+        val inflater = this.layoutInflater
+        val fab = findViewById<FloatingActionButton>(R.id.spam_list_fab)
+        val spamList = findViewById<ListView>(R.id.spam_list)
         // Handle window insets for edge-to-edge
-        val rootView = findViewById<View>(android.R.id.content)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
+        ViewCompat.setOnApplyWindowInsetsListener(spamList) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
             WindowInsetsCompat.CONSUMED
         }
         FakeStatusBar().fakeStatusBar(this, window)
-        val inflater = this.layoutInflater
-        val fab = findViewById<FloatingActionButton>(R.id.spam_list_fab)
-        val spamList = findViewById<ListView>(R.id.spam_list)
         val blockKeywordList = MMKV.defaultMMKV()
             .getStringSet("block_keyword_list", setOf())?.toMutableList() ?: mutableListOf()
         val spamListAdapter = ArrayAdapter(

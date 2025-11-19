@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -27,17 +28,27 @@ class LogcatActivity : AppCompatActivity() {
         setTitle(R.string.logcat)
         
         // Handle window insets for edge-to-edge
-        val rootView = findViewById<View>(android.R.id.content)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
+        
+        logRecyclerView = findViewById(R.id.log_recycler_view)
+        logRecyclerView.layoutManager = LinearLayoutManager(this)
+        ViewCompat.setOnApplyWindowInsetsListener(logRecyclerView) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
             WindowInsetsCompat.CONSUMED
         }
+        ViewCompat.setOnApplyWindowInsetsListener(logRecyclerView) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById<ImageView>(R.id.log_character_set)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+
         FakeStatusBar().fakeStatusBar(this, window)
-        
-        logRecyclerView = findViewById(R.id.log_recycler_view)
-        logRecyclerView.layoutManager = LinearLayoutManager(this)
-        
+
         logAdapter = LogAdapter(emptyList())
         logRecyclerView.adapter = logAdapter
         

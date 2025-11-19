@@ -6,6 +6,7 @@
     android:fitsSystemWindows="false">
 
     <ImageView
+        android:id="@+id/character_set"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:alpha="@dimen/alpha"

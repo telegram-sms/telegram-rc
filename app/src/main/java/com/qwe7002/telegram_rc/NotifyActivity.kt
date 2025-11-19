@@ -1,5 +1,6 @@
 package com.qwe7002.telegram_rc
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.PackageManager
@@ -50,8 +51,8 @@ class NotifyActivity : AppCompatActivity() {
         val preferences = MMKV.defaultMMKV()
         val isEnabled = preferences.getBoolean("xiaomi_auto_answer", false)
         var notify = "Enable"
-        if(!isEnabled){
-             notify = "Disable"
+        if (!isEnabled) {
+            notify = "Disable"
         }
         AlertDialog.Builder(this)
             .setTitle("Xiaomi automatic answering settings")
@@ -91,21 +92,30 @@ class NotifyActivity : AppCompatActivity() {
         return appInfoList
     }
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         this.title = getString(R.string.app_list)
         setContentView(R.layout.activity_notify_apps_list)
-        
-        // Handle window insets for edge-to-edge
-        val rootView = findViewById<View>(android.R.id.content)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.notify_linear_layout)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.notify_character_set)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.progress_view)) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
             WindowInsetsCompat.CONSUMED
         }
         FakeStatusBar().fakeStatusBar(this, window)
-        
+
         val appList = findViewById<ListView>(R.id.app_listview)
         val filterEdit = findViewById<SearchView>(R.id.filter_searchview)
         filterEdit.isIconifiedByDefault = false
