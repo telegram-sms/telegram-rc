@@ -11,7 +11,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 
-object Networks {
+object SVC {
     private const val TAG = "Networks"
 
     @JvmStatic
@@ -19,10 +19,10 @@ object Networks {
         val state = if (enable) "enable" else "disable"
         return try {
             val result = executeCommand(arrayOf("svc", "wifi", state))
-            Log.i("setWifi", "Command output: $result")
+            Log.i(this::class.simpleName, "Command output: $result")
             result.isSuccess
         } catch (e: Exception) {
-            Log.e("setWifi", "Exception occurred: ${e.message}", e)
+            Log.e(this::class.simpleName, "Exception occurred: ${e.message}", e)
             false
         }
     }
@@ -43,10 +43,34 @@ object Networks {
         val state = if (enable) "enable" else "disable"
         return try {
             val result = executeCommand(arrayOf("svc", "data", state))
-            Log.i("setData", "Command output: $result")
+            Log.i(this::class.simpleName, "Command output: $result")
             result.isSuccess
         } catch (e: Exception) {
-            Log.e("setData", "Exception occurred: ${e.message}", e)
+            Log.e(this::class.simpleName, "Exception occurred: ${e.message}", e)
+            false
+        }
+    }
+
+    @JvmStatic
+    fun setBlueTooth(enable: Boolean): Boolean {
+        if (!Shizuku.pingBinder()) {
+            Log.e(TAG, "Shizuku is not running")
+            return false
+        }
+
+        // 检查Shizuku权限
+        if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "Shizuku permission not granted")
+            return false
+        }
+
+        val state = if (enable) "enable" else "disable"
+        return try {
+            val result = executeCommand(arrayOf("svc", "bluetooth", state))
+            Log.i(this::class.simpleName, "Command output: $result")
+            result.isSuccess
+        } catch (e: Exception) {
+            Log.e(this::class.simpleName, "Exception occurred: ${e.message}", e)
             false
         }
     }

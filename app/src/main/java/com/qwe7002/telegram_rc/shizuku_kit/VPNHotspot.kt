@@ -21,7 +21,7 @@ object VPNHotspot {
     @JvmStatic
     fun disableVPNHotspot(wifiManager: WifiManager) {
         forceStopService("be.mygod.vpnhotspot")
-        Networks.setWifi(false)
+        SVC.setWifi(false)
         try {
             while (wifiManager.wifiState != WifiManager.WIFI_STATE_DISABLED) {
                 Thread.sleep(100)
@@ -30,7 +30,7 @@ object VPNHotspot {
         } catch (e: InterruptedException) {
             e.printStackTrace()
         }
-        Networks.setWifi(true)
+        SVC.setWifi(true)
         try {
             while (wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100)
@@ -47,7 +47,7 @@ object VPNHotspot {
             disableVPNHotspot(wifiManager)
         }
         MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", true)
-        Networks.setWifi(true)
+        SVC.setWifi(true)
         try {
             while (wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {
                 Thread.sleep(100)

@@ -32,8 +32,8 @@ import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.BatteryHealth
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
-import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
-import com.qwe7002.telegram_rc.shizuku_kit.Networks.setWifi
+import com.qwe7002.telegram_rc.shizuku_kit.SVC.setData
+import com.qwe7002.telegram_rc.shizuku_kit.SVC.setWifi
 import com.qwe7002.telegram_rc.shizuku_kit.Telephony
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot.isVPNHotspotActive
