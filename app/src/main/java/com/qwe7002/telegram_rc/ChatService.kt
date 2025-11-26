@@ -3,6 +3,7 @@ package com.qwe7002.telegram_rc
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
@@ -32,6 +33,7 @@ import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.BatteryHealth
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
+import com.qwe7002.telegram_rc.shizuku_kit.SVC.setBlueTooth
 import com.qwe7002.telegram_rc.shizuku_kit.SVC.setData
 import com.qwe7002.telegram_rc.shizuku_kit.SVC.setWifi
 import com.qwe7002.telegram_rc.shizuku_kit.Telephony
@@ -892,7 +894,7 @@ class ChatService : Service() {
 
                         if (commandListData.size < 2) {
                             requestBody.text =
-                                "${getString(R.string.system_message_head)}\nUsage: /switch [ auto | data | wifi | sim | datacard ]\nPlease specify a switch type and action."
+                                "${getString(R.string.system_message_head)}\nUsage: /switch [ auto | data | wifi | bluetooth | sim | datacard ]\nPlease specify a switch type and action."
                         } else {
                             val switchType = commandListData[1].lowercase(Locale.getDefault())
                             var action: String? = null
@@ -960,6 +962,23 @@ class ChatService : Service() {
                                     setWifi(newState)
                                     requestBody.text =
                                         "${getString(R.string.system_message_head)}\nWIFI state: ${
+                                            if (newState) getString(
+                                                R.string.enable
+                                            ) else getString(R.string.disable)
+                                        }"
+                                }
+
+                                "bluetooth" -> {
+                                    val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+                                    val bluetoothEnabled = bluetoothAdapter?.isEnabled ?: false
+                                    val newState = when (action) {
+                                        "on" -> true
+                                        "off" -> false
+                                        else -> !bluetoothEnabled // toggle
+                                    }
+                                    setBlueTooth(newState)
+                                    requestBody.text =
+                                        "${getString(R.string.system_message_head)}\nBluetooth state: ${
                                             if (newState) getString(
                                                 R.string.enable
                                             ) else getString(R.string.disable)
@@ -1058,7 +1077,7 @@ class ChatService : Service() {
 
                                 else -> {
                                     requestBody.text =
-                                        "${getString(R.string.system_message_head)}\nUnknown switch type. Available types: autoswitch, sim, data, wifi, datacard"
+                                        "${getString(R.string.system_message_head)}\nUnknown switch type. Available types: autoswitch, sim, data, wifi, bluetooth, datacard"
                                 }
                             }
                         }

@@ -12,7 +12,6 @@ import java.io.InputStreamReader
 
 
 object SVC {
-    private const val TAG = "Networks"
 
     @JvmStatic
     fun setWifi(enable: Boolean): Boolean {
@@ -30,13 +29,13 @@ object SVC {
     @JvmStatic
     fun setData(enable: Boolean): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(TAG, "Shizuku is not running")
+            Log.e(this::class.simpleName, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "Shizuku permission not granted")
+            Log.e(this::class.simpleName, "Shizuku permission not granted")
             return false
         }
 
@@ -54,13 +53,13 @@ object SVC {
     @JvmStatic
     fun setBlueTooth(enable: Boolean): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(TAG, "Shizuku is not running")
+            Log.e(this::class.simpleName, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "Shizuku permission not granted")
+            Log.e(this::class.simpleName, "Shizuku permission not granted")
             return false
         }
 
