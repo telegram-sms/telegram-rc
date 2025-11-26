@@ -18,7 +18,6 @@ import com.qwe7002.telegram_rc.shizuku_kit.Networks.setData
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.database.YellowPage
 import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
-import com.qwe7002.telegram_rc.static_class.Resend.addResendLoop
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
@@ -259,7 +258,7 @@ class SMSReceiver : BroadcastReceiver() {
                 Log.d(logTag, e.toString())
                 writeLog(context, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
-                addResendLoop(context, requestBody.text)
+                ReSendJob.addResendLoop(context, requestBody.text)
                 commandHandle(messageBody, dataEnable)
             }
 
@@ -271,7 +270,7 @@ class SMSReceiver : BroadcastReceiver() {
                     if (!finalIsFlash) {
                         SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                     }
-                    addResendLoop(context, requestBody.text)
+                    ReSendJob.addResendLoop(context, requestBody.text)
                 } else {
                     if (!Other.isPhoneNumber(messageAddress)) {
                         writeLog(context, "[$messageAddress] Not a regular phone number.")

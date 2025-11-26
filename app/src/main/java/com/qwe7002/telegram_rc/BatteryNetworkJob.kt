@@ -17,6 +17,7 @@ import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -25,8 +26,6 @@ import java.io.IOException
 
 class BatteryNetworkJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
-        Log.d(this::class.simpleName, "onStartJob: ")
-        
         if (params == null) {
             Log.e(this::class.simpleName, "onStartJob: params is null")
             return false
@@ -37,6 +36,7 @@ class BatteryNetworkJob : JobService() {
         val action: String? = extras.getString("action", null)
         
         MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         val preferences = MMKV.defaultMMKV()
         val chatId = preferences.getString("chat_id", "") ?: ""
         val botToken = preferences.getString("bot_token", "") ?: ""
@@ -115,7 +115,7 @@ class BatteryNetworkJob : JobService() {
 
             val jobInfoBuilder = JobInfo.Builder(
                 11,
-                ComponentName(context.packageName, BatteryNetworkJob::class.java.getName())
+                ComponentName(context.packageName, BatteryNetworkJob::class.java.name)
             )
                 .setPersisted(true)
             val extras = PersistableBundle()

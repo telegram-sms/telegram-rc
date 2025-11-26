@@ -2,9 +2,17 @@ package com.qwe7002.telegram_rc
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.WindowInsetsController
+import android.view.WindowManager
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.budiyev.android.codescanner.CodeScanner
 import com.budiyev.android.codescanner.CodeScannerView
 import com.budiyev.android.codescanner.DecodeCallback
@@ -20,7 +28,12 @@ class ScannerActivity : Activity() {
 
     public override fun onCreate(state: Bundle?) {
         super.onCreate(state)
+        
+        // Enable edge-to-edge using WindowCompat
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         setContentView(R.layout.activity_scanner)
+
         val scannerView = findViewById<CodeScannerView>(R.id.scanner_view)
         mCodeScanner = CodeScanner(this, scannerView)
         object : ArrayList<BarcodeFormat?>() {

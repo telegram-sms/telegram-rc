@@ -14,7 +14,6 @@ import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
-import com.qwe7002.telegram_rc.static_class.Resend
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
 import okhttp3.Call
@@ -100,7 +99,7 @@ class CallReceiver : BroadcastReceiver() {
                             requestBody.text,
                             Other.getSubId(context, stateMMKV.getInt("incoming_slot", -1))
                         )
-                        Resend.addResendLoop(context, requestBody.text)
+                        ReSendJob.addResendLoop(context, requestBody.text)
                     }
 
                     @Throws(IOException::class)
@@ -110,7 +109,7 @@ class CallReceiver : BroadcastReceiver() {
                                 context,
                                 "$errorHead${response.code} ${Objects.requireNonNull(response.body).string()}"
                             )
-                            Resend.addResendLoop(context, requestBody.text)
+                            ReSendJob.addResendLoop(context, requestBody.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!Other.isPhoneNumber(incomingNumber)) {

@@ -13,36 +13,42 @@ import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class ReSendJob : JobService() {
     private val logTag = this::class.simpleName
     private lateinit var requestUri: String
     private val tableName: String = "resend_list"
-    private lateinit var resendMMKV:MMKV
+    private lateinit var resendMMKV: MMKV
     private lateinit var preferences: MMKV
     override fun onStartJob(params: JobParameters?): Boolean {
         if (params == null) {
             Log.e(logTag, "onStartJob: params is null")
             return false
         }
-        
+
         try {
             MMKV.initialize(applicationContext)
+            MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
             preferences = MMKV.defaultMMKV()
             resendMMKV = MMKV.mmkvWithID("resend_list", MMKV.MULTI_PROCESS_MODE)
 
             requestUri =
                 Network.getUrl(preferences.getString("bot_token", "").toString(), "SendMessage")
-            
+
             Thread {
                 try {
-                    val sendList = resendMMKV.decodeStringSet(tableName, setOf())?.toList() ?: listOf()
+                    val sendList =
+                        resendMMKV.decodeStringSet(tableName, setOf())?.toList() ?: listOf()
                     val okhttpClient = Network.getOkhttpObj()
                     for (item in sendList) {
                         networkProgressHandle(
@@ -53,7 +59,10 @@ class ReSendJob : JobService() {
                         )
                     }
                     if (sendList.isNotEmpty()) {
-                        LogManage.writeLog(applicationContext, "The resend failure message is complete.")
+                        LogManage.writeLog(
+                            applicationContext,
+                            "The resend failure message is complete."
+                        )
                     }
                 } catch (e: Exception) {
                     Log.e(logTag, "Error in resend job", e)
@@ -93,7 +102,9 @@ class ReSendJob : JobService() {
             val response = call.execute()
             try {
                 if (response.code == 200) {
-                    val resendListLocal = resendMMKV.decodeStringSet(tableName, setOf())?.toMutableList() ?: mutableListOf()
+                    val resendListLocal =
+                        resendMMKV.decodeStringSet(tableName, setOf())?.toMutableList()
+                            ?: mutableListOf()
                     resendListLocal.remove(message)
                     resendMMKV.encode(tableName, resendListLocal.toSet())
                 }
@@ -136,6 +147,21 @@ class ReSendJob : JobService() {
                 context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
 
             jobScheduler.cancel(20)
+        }
+        fun addResendLoop(context: Context, msg: String) {
+            var message = msg
+            if (message.isEmpty()) {
+                return
+            }
+            val mmkv = MMKV.mmkvWithID(Const.RESEND_MMKV_ID)
+            val resendList = mmkv.decodeStringSet("resend_list", mutableSetOf())
+            val simpleDateFormat =
+                SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)
+            message += "\n" + context.getString(R.string.time) + simpleDateFormat.format(Date(System.currentTimeMillis()))
+            checkNotNull(resendList)
+            resendList.add(message)
+            mmkv.encode("resend_list", resendList)
+            startJob(context)
         }
     }
 }

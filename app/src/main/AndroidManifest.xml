@@ -86,10 +86,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="DataExtractionRules,GoogleAppIndexingWarning">
-        <activity
-            android:name=".ShizukuSettingsActivity"
-            android:exported="false"
-            android:label="Shizuku Fallback Settings" />
 
         <provider
             android:name="rikka.shizuku.ShizukuProvider"

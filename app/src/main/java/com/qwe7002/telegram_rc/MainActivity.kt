@@ -17,12 +17,15 @@ import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.RadioButton
@@ -37,6 +40,8 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
@@ -53,12 +58,12 @@ import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
 import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
 import com.qwe7002.telegram_rc.static_class.Phone.getIMSICache
-import com.qwe7002.telegram_rc.static_class.Phone.getIMSICacheFallback
 import com.qwe7002.telegram_rc.static_class.ServiceManage.isNotifyListener
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -75,7 +80,6 @@ class MainActivity : AppCompatActivity() {
     private val logTag = this::class.java.simpleName
     private lateinit var preferences: MMKV
     private lateinit var proxyMMKV: MMKV
-    private lateinit var shizukuMMKV: MMKV
     private lateinit var writeSettingsButton: Button
     private lateinit var dataUsageButton: Button
     private lateinit var scannerLauncher: ActivityResultLauncher<Intent>
@@ -95,10 +99,26 @@ class MainActivity : AppCompatActivity() {
     private lateinit var saveButton: Button
     private lateinit var getIdButton: Button
 
-    @SuppressLint("BatteryLife", "QueryPermissionsNeeded", "SetTextI18n", "PrivateApi")
+    @SuppressLint("BatteryLife", "QueryPermissionsNeeded", "SetTextI18n", "PrivateApi",
+        "MissingInflatedId"
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Handle window insets for edge-to-edge on ScrollView
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_scroll_view)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById<ImageView>(R.id.character_set)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        FakeStatusBar().fakeStatusBar(this, window)
+
         scannerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
                 if (result.resultCode == Const.RESULT_CONFIG_JSON) {
@@ -154,9 +174,9 @@ class MainActivity : AppCompatActivity() {
 
         //load config
         MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         preferences = MMKV.defaultMMKV()
         proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
-        shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
         DataPlanManager.initialize() // 初始化数据计划管理器
         writeSettingsButton.setOnClickListener {
             val writeSystemIntent = Intent(
@@ -201,22 +221,8 @@ class MainActivity : AppCompatActivity() {
                     showErrorDialog(e.message.toString())
                 } catch (e: NoSuchMethodError) {
                     e.printStackTrace()
-                    writeLog(
-                        applicationContext,
-                        "The current device does not support Shizuku direct access, try using ADB shell to access."
-                    )
-                    MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID).putBoolean("shizuku_fallback", true)
-                    try {
-                        getIMSICacheFallback(applicationContext)
-                        Snackbar.make(
-                            findViewById(R.id.data_usage_button),
-                            "Get IMSI Success",
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
-                    }
+                    showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
+
                 }
 
             } else {
@@ -471,19 +477,34 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.NEARBY_WIFI_DEVICES,
-                    Manifest.permission.POST_NOTIFICATIONS
+                    Manifest.permission.POST_NOTIFICATIONS,
+                    Manifest.permission.BLUETOOTH_SCAN
                 )
             } else {
-                arrayOf(
-                    Manifest.permission.READ_SMS,
-                    Manifest.permission.SEND_SMS,
-                    Manifest.permission.RECEIVE_SMS,
-                    Manifest.permission.CALL_PHONE,
-                    Manifest.permission.READ_PHONE_STATE,
-                    Manifest.permission.READ_CALL_LOG,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    arrayOf(
+                        Manifest.permission.READ_SMS,
+                        Manifest.permission.SEND_SMS,
+                        Manifest.permission.RECEIVE_SMS,
+                        Manifest.permission.CALL_PHONE,
+                        Manifest.permission.READ_PHONE_STATE,
+                        Manifest.permission.READ_CALL_LOG,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.BLUETOOTH_SCAN
+                    )
+                } else {
+                    arrayOf(
+                        Manifest.permission.READ_SMS,
+                        Manifest.permission.SEND_SMS,
+                        Manifest.permission.RECEIVE_SMS,
+                        Manifest.permission.CALL_PHONE,
+                        Manifest.permission.READ_PHONE_STATE,
+                        Manifest.permission.READ_CALL_LOG,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                }
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 val permissionArrayList =
@@ -669,7 +690,7 @@ class MainActivity : AppCompatActivity() {
             val uri = "https://get.telegram-sms.com$privacyPolice".toUri()
             val privacyBuilder = CustomTabsIntent.Builder()
             val customTabsIntent = privacyBuilder.build()
-            customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            customTabsIntent.intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             try {
                 customTabsIntent.launchUrl(applicationContext, uri)
             } catch (e: ActivityNotFoundException) {
@@ -722,32 +743,17 @@ class MainActivity : AppCompatActivity() {
                                 "Get IMSI Success",
                                 Snackbar.LENGTH_LONG
                             ).show()
-                            shizukuMMKV.putBoolean("shizuku_fallback", false)
                         } catch (e: Exception) {
                             showErrorDialog(e.message.toString())
                             writeLog(applicationContext, e.message.toString())
                         } catch (e: NoSuchMethodError) {
                             e.printStackTrace()
+                            showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
                             writeLog(
                                 applicationContext,
-                                "The current device does not support Shizuku direct access, try using ADB shell to access."
+                                "The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card."
                             )
-                            shizukuMMKV.putBoolean("shizuku_fallback", true)
-                            try {
-                                getIMSICacheFallback(applicationContext)
-                                Snackbar.make(
-                                    findViewById(R.id.data_usage_button),
-                                    "Get IMSI Success",
-                                    Snackbar.LENGTH_LONG
-                                ).show()
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
-                                writeLog(
-                                    applicationContext,
-                                    "The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card."
-                                )
-                            }
+
                         }
                     }
                 } else {
@@ -810,11 +816,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
-        val shizukuMMKV = MMKV.mmkvWithID(Const.SHIZUKU_MMKV_ID)
-        val shizukuMenuItem = menu.findItem(R.id.set_shizuku_menu_item)
-        if (shizukuMenuItem != null) {
-            shizukuMenuItem.isVisible = shizukuMMKV.getBoolean("shizuku_fallback", false)
-        }
         return true
     }
 
@@ -942,11 +943,6 @@ class MainActivity : AppCompatActivity() {
                     return false
                 }
                 startActivity(Intent(this, NotifyActivity::class.java))
-                return true
-            }
-
-            R.id.set_shizuku_menu_item -> {
-                startActivity(Intent(this, ShizukuSettingsActivity::class.java))
                 return true
             }
 

@@ -12,8 +12,8 @@ import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
-import com.qwe7002.telegram_rc.static_class.Resend
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Request
@@ -25,67 +25,87 @@ import java.util.Objects
 
 class NotifyListenerService : NotificationListenerService() {
     private val logTag = this::class.java.simpleName
-
+    var appNameList: MutableMap<String, String> = HashMap()
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
         Log.d(logTag, "onNotificationPosted: $packageName")
-        MMKV.initialize(applicationContext)
-        val preferences = MMKV.defaultMMKV()
-        if (!preferences.contains("initialized")) {
-            Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
-            return
-        }
-        val listenList: List<String> = MMKV.defaultMMKV().decodeStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
-        if (!listenList.contains(packageName)) {
-            Log.i(logTag, "[$packageName] Not in the list of listening packages.")
-            return
-        }
         val extras = sbn.notification.extras!!
-        var appName: String? = "unknown"
-        Log.d(logTag, "onNotificationPosted: $appNameList")
-        if (appNameList.containsKey(packageName)) {
-            appName = appNameList[packageName]
-        } else {
-            val pm = applicationContext.packageManager
-            try {
-                val applicationInfo = pm.getApplicationInfo(sbn.packageName, 0)
-                appName = pm.getApplicationLabel(applicationInfo) as String
-                appNameList[packageName] = appName
-            } catch (e: PackageManager.NameNotFoundException) {
-                e.printStackTrace()
-            }
-        }
         val title = extras.getString(Notification.EXTRA_TITLE, "None")
         val content = extras.getString(Notification.EXTRA_TEXT, "None")
         if (title == "None" && content == "None") {
             return
         }
+        MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
+        val preferences = MMKV.defaultMMKV()
+        val requestBody = RequestMessage()
+        if (!preferences.contains("initialized")) {
+            Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
+            return
+        }
+        if (packageName == "com.android.server.telecom" && preferences.getBoolean(
+                "xiaomi_auto_answer",
+                false
+            )
+        ) {
+            if (title.startsWith("小爱帮你接了个")) {
+                requestBody.text =
+                    "${getString(R.string.receive_notification_title)}\n${
+                        getString(R.string.title)
+                    }$title\n${getString(R.string.content)}$content"
+                Log.d(logTag, "onNotificationPosted: $title $content")
+            } else {
+                LogManage.writeLog(
+                    applicationContext,
+                    "The number [${title}] has been called multiple times and the notification has been collapsed."
+                )
+                return
+            }
+        } else {
+            val listenList: List<String> =
+                preferences.decodeStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
+            if (!listenList.contains(packageName)) {
+                Log.i(logTag, "[$packageName] Not in the list of listening packages.")
+                return
+            }
+            var appName: String? = "unknown"
+            if (appNameList.containsKey(packageName)) {
+                appName = appNameList[packageName]
+            } else {
+                val pm = applicationContext.packageManager
+                try {
+                    val applicationInfo = pm.getApplicationInfo(sbn.packageName, 0)
+                    appName = pm.getApplicationLabel(applicationInfo) as String
+                    appNameList[packageName] = appName
+                } catch (e: PackageManager.NameNotFoundException) {
+                    e.printStackTrace()
+                }
+            }
+            requestBody.text =
+                "${getString(R.string.receive_notification_title)}\n${getString(R.string.app_name_title)}$appName\n${
+                    getString(R.string.title)
+                }$title\n${getString(R.string.content)}$content"
+        }
         val botToken = preferences.getString("bot_token", "").toString()
         val chatId = preferences.getString("chat_id", "").toString()
         val requestUri = Network.getUrl(botToken, "sendMessage")
-        val requestBody = RequestMessage()
-        if ((System.currentTimeMillis() - lastSendTime) <= 1000L && (lastPackage == packageName)) {
-            if (lastMessage == title + content) {
-                return
-            }
-        }
         requestBody.chatId = chatId
         requestBody.messageThreadId = preferences.getString("message_thread_id", "")
-        requestBody.text = "${getString(R.string.receive_notification_title)}\n${getString(R.string.app_name_title)}$appName\n${getString(R.string.title)}$title\n${getString(R.string.content)}$content"
-        CcSendJob.startJob(applicationContext, getString(R.string.receive_notification_title), requestBody.text)
+        CcSendJob.startJob(
+            applicationContext,
+            getString(R.string.receive_notification_title),
+            requestBody.text
+        )
         val body: RequestBody = Gson().toJson(requestBody).toRequestBody(Const.JSON)
         val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
-        lastPackage = packageName
-        lastMessage = title + content
-        lastSendTime = System.currentTimeMillis()
         val errorHead = "Send notification failed:"
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 LogManage.writeLog(applicationContext, errorHead + e.message)
-                Resend.addResendLoop(applicationContext, requestBody.text)
+                ReSendJob.addResendLoop(applicationContext, requestBody.text)
             }
 
             @Throws(IOException::class)
@@ -93,7 +113,7 @@ class NotifyListenerService : NotificationListenerService() {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
                     LogManage.writeLog(applicationContext, errorHead + response.code + " " + result)
-                    Resend.addResendLoop(applicationContext, requestBody.text)
+                    ReSendJob.addResendLoop(applicationContext, requestBody.text)
                 }
             }
         })
@@ -103,11 +123,4 @@ class NotifyListenerService : NotificationListenerService() {
         return super.onBind(intent)
     }
 
-
-    companion object {
-        var appNameList: MutableMap<String, String> = HashMap()
-        lateinit var lastPackage: String
-        lateinit var lastMessage: String
-        var lastSendTime: Long = 0
-    }
 }

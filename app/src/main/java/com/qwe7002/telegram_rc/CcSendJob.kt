@@ -35,10 +35,9 @@ class CcSendJob : JobService() {
         
         val extras = params.extras
 
-        val message: String = extras.getString("message", "") ?: ""
+        val message: String = extras.getString("message", "")
         var title: String = extras.getString("title", getString(R.string.app_name))
-            ?: getString(R.string.app_name)
-        var verificationCode: String = extras.getString("verification_code", "") ?: ""
+        var verificationCode: String = extras.getString("verification_code", "")
         if (verificationCode.isEmpty()) {
             verificationCode = message
         } else {
@@ -47,7 +46,7 @@ class CcSendJob : JobService() {
         Thread {
             val mmkv = MMKV.defaultMMKV()
             try {
-                val serviceListJson = mmkv.getString("CC_service_list", "[]") ?: "[]"
+                val serviceListJson = mmkv.getString("CC_service_list", "[]")
                 val gson = Gson()
                 val type = object : TypeToken<ArrayList<CcSendService>>() {}.type
                 val sendList: ArrayList<CcSendService> = gson.fromJson(serviceListJson, type)

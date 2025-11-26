@@ -16,14 +16,6 @@ import java.util.concurrent.Executor
 object TetheringManagerShizuku {
 
     /**
-     * Checks if Shizuku is authorized and active.
-     * @return true if ready, false otherwise
-     */
-    private fun isShizukuReady(): Boolean {
-        return Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-    }
-
-    /**
      * Get TetheringManager instance with Shizuku privileges
      */
     @RequiresApi(Build.VERSION_CODES.BAKLAVA)
@@ -128,11 +120,6 @@ object TetheringManagerShizuku {
      */
     @RequiresApi(Build.VERSION_CODES.BAKLAVA)
     fun startTethering(context: Context, mode: Int): Boolean {
-        if (!isShizukuReady()) {
-            Log.e(this::class.java.simpleName, "Shizuku not ready or authorized")
-            LogManage.writeLog(context, "Shizuku not ready or authorized")
-            return false
-        }
         return try {
             val tetheringManager = getTetheringManager(context)
             if (tetheringManager == null) {
@@ -192,11 +179,6 @@ object TetheringManagerShizuku {
      */
     @RequiresApi(Build.VERSION_CODES.BAKLAVA)
     fun stopTethering(context: Context, mode: Int): Boolean {
-        if (!isShizukuReady()) {
-            Log.e(this::class.java.simpleName, "Shizuku not ready or authorized")
-            return false
-        }
-
         return try {
             val tetheringManager = getTetheringManager(context)
             if (tetheringManager == null) {

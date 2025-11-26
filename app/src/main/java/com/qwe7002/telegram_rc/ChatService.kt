@@ -17,7 +17,6 @@ import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.provider.Settings
-import android.telecom.StatusHints
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -66,6 +65,7 @@ import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import moe.shizuku.server.IShizukuService
 import okhttp3.Call
 import okhttp3.Callback
@@ -187,7 +187,10 @@ class ChatService : Service() {
 
         // 提前返回，避免后续处理空对象
         if (messageObj == null && messageType != "callback_query") {
-            Log.i(this::class.java.simpleName, "receive_handle: message object is null and not a callback query")
+            Log.i(
+                this::class.java.simpleName,
+                "receive_handle: message object is null and not a callback query"
+            )
             return
         }
 
@@ -583,7 +586,10 @@ class ChatService : Service() {
                                             val errorOutput = errorReader.readText()
 
                                             if (output.isNotEmpty()) {
-                                                Log.i(this::class.java.simpleName, "BATTERY_STATS grant output: $output")
+                                                Log.i(
+                                                    this::class.java.simpleName,
+                                                    "BATTERY_STATS grant output: $output"
+                                                )
                                             }
 
                                             if (errorOutput.isNotEmpty()) {
@@ -646,7 +652,10 @@ class ChatService : Service() {
                         batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
                     val healthRatio = Battery.getLearnedBatteryCapacity()
                         ?.let { (it.toDouble() / Battery.getBatteryCapacity(applicationContext)) * 100 }
-                    Log.d(this::class.java.simpleName, "getLearnedBatteryCapacity: " + Battery.getLearnedBatteryCapacity())
+                    Log.d(
+                        this::class.java.simpleName,
+                        "getLearnedBatteryCapacity: " + Battery.getLearnedBatteryCapacity()
+                    )
                     Log.d(
                         this::class.java.simpleName,
                         "getBatteryCapacity: " + Battery.getBatteryCapacity(applicationContext)
@@ -883,7 +892,7 @@ class ChatService : Service() {
 
                         if (commandListData.size < 2) {
                             requestBody.text =
-                                "${getString(R.string.system_message_head)}\nUsage: /switch [ autoswitch | data | wifi | sim | datacard ]\nPlease specify a switch type and action."
+                                "${getString(R.string.system_message_head)}\nUsage: /switch [ auto | data | wifi | sim | datacard ]\nPlease specify a switch type and action."
                         } else {
                             val switchType = commandListData[1].lowercase(Locale.getDefault())
                             var action: String? = null
@@ -897,7 +906,7 @@ class ChatService : Service() {
                             }
 
                             when (switchType) {
-                                "autoswitch" -> {
+                                "auto" -> {
                                     val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
                                     val currentState = beacon.getBoolean("beacon_enable", false)
                                     val newState = when (action) {
@@ -905,7 +914,16 @@ class ChatService : Service() {
                                         "off" -> false
                                         else -> !currentState // toggle
                                     }
-                                    beacon.putBoolean("beacon_enable", newState)
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+                                        if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                                            requestBody.text =
+                                                "${applicationContext.getString(R.string.system_message_head)}\nShizuku permission not granted"
+                                        } else {
+                                            beacon.putBoolean("beacon_enable", newState)
+                                        }
+                                    } else {
+                                        beacon.putBoolean("beacon_enable", newState)
+                                    }
                                     requestBody.text =
                                         "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${
                                             if (newState) getString(
@@ -984,28 +1002,9 @@ class ChatService : Service() {
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (e: NoSuchMethodError) {
                                                 e.printStackTrace()
-                                                writeLog(
-                                                    applicationContext,
-                                                    "The current device does not support Shizuku direct access, try using ADB shell to access."
-                                                )
-                                                Log.e(
-                                                    "ChatService",
-                                                    "setSimPowerState not supported"
-                                                )
-                                                try {
-                                                    val tm = Telephony()
-                                                    tm.setSimPowerStateFallBack(slot, newState)
-                                                    requestBody.text =
-                                                        "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
-                                                            if (newState) getString(
-                                                                R.string.enable
-                                                            ) else getString(R.string.disable)
-                                                        }"
-                                                } catch (e: Exception) {
-                                                    e.printStackTrace()
-                                                    requestBody.text =
-                                                        "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
-                                                }
+                                                writeLog(applicationContext, "Switching SIM${slot + 1} card status failed: ${e.message}")
+                                                requestBody.text =
+                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             }
                                         }
                                     }
@@ -1045,23 +1044,14 @@ class ChatService : Service() {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (e: NoSuchMethodError) {
-                                            e.printStackTrace()
                                             writeLog(
                                                 applicationContext,
-                                                "The current device does not support Shizuku direct access, try using ADB shell to access."
+                                                "Switching default data SIM failed: Method is not available"
                                             )
-                                            try {
-                                                val dataSub = ISub()
-                                                dataSub.setDefaultDataSubIdFallback(
-                                                    subscriptionInfo.subscriptionId
-                                                )
-                                                requestBody.text =
-                                                    "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
-                                            } catch (e: Exception) {
-                                                e.printStackTrace()
-                                                requestBody.text =
-                                                    "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Method is not available"
-                                            }
+                                            e.printStackTrace()
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Method is not available"
+
                                         }
                                     }
                                 }
@@ -1085,10 +1075,10 @@ class ChatService : Service() {
                 val command = commandRaw.split(" ").toTypedArray()
                 var sendSlot = -1
                 if (getActiveCard(applicationContext) > 1) {
-                    if (command.size < 2) {
-                        sendSlot = -3
+                    sendSlot = if (command.size < 2) {
+                        -3
                     } else {
-                        sendSlot = when (command[1]) {
+                        when (command[1]) {
                             "1" -> 0
                             "2" -> 1
                             else -> -2
@@ -1177,7 +1167,10 @@ class ChatService : Service() {
             setSmsSendStatusStandby()
         }
         if (!hasCommand && sendStatusMMKV.getInt("status", -1) != -1) {
-            Log.i(this::class.java.simpleName, "receive_handle: Enter the interactive SMS sending mode.")
+            Log.i(
+                this::class.java.simpleName,
+                "receive_handle: Enter the interactive SMS sending mode."
+            )
             var dualSim = ""
             val sendSlotTemp = sendStatusMMKV.getInt("slot", -1)
             if (sendSlotTemp != -1) {
@@ -1186,7 +1179,10 @@ class ChatService : Service() {
             val head =
                 "[" + dualSim + applicationContext.getString(R.string.send_sms_head) + "]"
             var resultSend = getString(R.string.failed_to_get_information)
-            Log.d(this::class.java.simpleName, "Sending mode status: ${sendStatusMMKV.getInt("status", -1)}")
+            Log.d(
+                this::class.java.simpleName,
+                "Sending mode status: ${sendStatusMMKV.getInt("status", -1)}"
+            )
 
             when (sendStatusMMKV.getInt("status", -1)) {
                 SEND_SMS_STATUS.PHONE_INPUT_STATUS -> {
@@ -1296,7 +1292,10 @@ class ChatService : Service() {
                         response.close()
                     } catch (e2: Exception) {
                         e2.printStackTrace()
-                        Log.w(this::class.java.simpleName, "Failed to close response: ${e2.message}")
+                        Log.w(
+                            this::class.java.simpleName,
+                            "Failed to close response: ${e2.message}"
+                        )
                     }
                     return
                 }
@@ -1413,7 +1412,11 @@ class ChatService : Service() {
                                             editResponse.close()
                                         }
                                     } catch (e: Exception) {
-                                        Log.e(this::class.java.simpleName, "Failed to update hotspot IP message", e)
+                                        Log.e(
+                                            this::class.java.simpleName,
+                                            "Failed to update hotspot IP message",
+                                            e
+                                        )
                                     } finally {
                                         // 更新完成后清除标记
                                         statusMMKV.putBoolean("hotspot_ip_update_needed", false)
@@ -1485,6 +1488,7 @@ class ChatService : Service() {
         connectivityManager =
             applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         MMKV.initialize(applicationContext)
+        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         preferences = MMKV.defaultMMKV()
         sendStatusMMKV = MMKV.mmkvWithID("send_status")
         statusMMKV = MMKV.mmkvWithID(Const.STATUS_MMKV_ID)

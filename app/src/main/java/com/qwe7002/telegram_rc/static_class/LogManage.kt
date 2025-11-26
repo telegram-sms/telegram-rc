@@ -14,7 +14,7 @@ object LogManage {
 
     @JvmStatic
     fun writeLog(context: Context, log: String) {
-        Log.i("write_log", log)
+        Log.i(context::class.simpleName, log)
 
         val kv = MMKV.mmkvWithID(MMKV_LOG_ID)
 
@@ -24,7 +24,7 @@ object LogManage {
 
         var existingLog = kv.getString("logs", "") ?: ""
 
-        existingLog = existingLog + logEntry
+        existingLog += logEntry
 
         if (existingLog.length > LOG_MAX_SIZE) {
             existingLog = existingLog.substring(existingLog.length - LOG_MAX_SIZE)

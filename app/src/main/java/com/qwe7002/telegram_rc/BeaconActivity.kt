@@ -21,6 +21,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
@@ -54,19 +56,27 @@ class BeaconActivity : AppCompatActivity() {
         }
 
         runOnUiThread {
-            if (customBeaconAdapter == null) {
-                customBeaconAdapter = CustomBeaconAdapter(list, this@BeaconActivity)
+            if(customBeaconAdapter == null){
+                customBeaconAdapter = CustomBeaconAdapter(list, this)
                 beaconListview.adapter = customBeaconAdapter
-            } else {
-                customBeaconAdapter!!.updateList(list)
+            }else {
+                customBeaconAdapter?.updateList(list)
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         setContentView(R.layout.activity_beacon)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.beacon_listview)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+        FakeStatusBar().fakeStatusBar(this, window)
+        
+        beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         flushListView(ArrayList())
 
         // Observe beacon list updates
@@ -79,6 +89,7 @@ class BeaconActivity : AppCompatActivity() {
     }
 
 
+    @SuppressLint("InflateParams")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val inflater = this.layoutInflater
         val dialogView = inflater.inflate(R.layout.set_beacon_layout, null)

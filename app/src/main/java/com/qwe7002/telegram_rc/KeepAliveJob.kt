@@ -9,6 +9,7 @@ import android.content.Context
 import android.util.Log
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
+import com.tencent.mmkv.MMKVLogLevel
 import java.util.concurrent.TimeUnit
 
 
@@ -22,6 +23,7 @@ class KeepAliveJob : JobService() {
             }
             
             MMKV.initialize(applicationContext)
+            MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
             val preferences = MMKV.defaultMMKV()
             if (preferences.contains("initialized")) {
                 ServiceManage.startService(
