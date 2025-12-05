@@ -89,7 +89,24 @@ object VPNHotspot {
                 )
             )
             val output = reader.readText()
-            process.waitFor()
+
+            // 使用線程來實現超時
+            val processThread = Thread {
+                try {
+                    process.waitFor()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Process wait error: ${e.message}")
+                }
+            }
+            processThread.start()
+            processThread.join(10000) // 10秒超時
+
+            if (processThread.isAlive) {
+                process.destroy()
+                processThread.interrupt()
+                Log.e(TAG, "isVPNHotspotActive command timed out")
+                return false
+            }
 
             output.isNotEmpty()
         } catch (e: Exception) {
@@ -149,7 +166,24 @@ object VPNHotspot {
                 )
             )
 
-            process.waitFor()
+            // 使用線程來實現超時
+            val processThread = Thread {
+                try {
+                    process.waitFor()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Process wait error: ${e.message}")
+                }
+            }
+            processThread.start()
+            processThread.join(10000) // 10秒超時
+
+            if (processThread.isAlive) {
+                process.destroy()
+                processThread.interrupt()
+                Log.e(TAG, "startForegroundService command timed out")
+                return false
+            }
+
             val output = reader.readText()
             val errorOutput = errorReader.readText()
 
@@ -199,7 +233,24 @@ object VPNHotspot {
                 )
             )
 
-            process.waitFor()
+            // 使用線程來實現超時
+            val processThread = Thread {
+                try {
+                    process.waitFor()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Process wait error: ${e.message}")
+                }
+            }
+            processThread.start()
+            processThread.join(10000) // 10秒超時
+
+            if (processThread.isAlive) {
+                process.destroy()
+                processThread.interrupt()
+                Log.e(TAG, "forceStopService command timed out")
+                return false
+            }
+
             val output = reader.readText()
             val errorOutput = errorReader.readText()
 

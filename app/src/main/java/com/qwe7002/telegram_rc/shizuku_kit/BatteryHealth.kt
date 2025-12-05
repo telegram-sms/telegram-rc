@@ -95,7 +95,24 @@ object BatteryHealth {
                 output.appendLine(line)
             }
 
-            process.waitFor()
+            // 使用線程來實現超時
+            val processThread = Thread {
+                try {
+                    process.waitFor()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Process wait error: ${e.message}")
+                }
+            }
+            processThread.start()
+            processThread.join(10000) // 10秒超時
+
+            if (processThread.isAlive) {
+                process.destroy()
+                processThread.interrupt()
+                Log.e(TAG, "Command timed out")
+                return CommandResult(false, "", "Command timed out")
+            }
+
             return CommandResult(process.exitValue() == 0, output.toString(), "")
         } catch (e: Exception) {
             Log.e(TAG, "Execution failed: " + e.message)

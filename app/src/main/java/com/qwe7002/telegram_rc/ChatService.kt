@@ -234,14 +234,21 @@ class ChatService : Service() {
                 val request: Request =
                     Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClient.newCall(request)
+                var response: Response? = null
                 try {
-                    val response = call.execute()
+                    response = call.execute()
                     if (response.code != 200) {
                         throw IOException(response.code.toString())
                     }
                 } catch (e: IOException) {
                     e.printStackTrace()
                     writeLog(applicationContext, "failed to send message:" + e.message)
+                } finally {
+                    try {
+                        response?.close()
+                    } catch (e: Exception) {
+                        Log.w(this::class.java.simpleName, "Failed to close response: ${e.message}")
+                    }
                 }
                 return
             }
@@ -583,34 +590,62 @@ class ChatService : Service() {
                                             val errorReader =
                                                 BufferedReader(InputStreamReader(errorStream))
 
-                                            process.waitFor()
-                                            val output = reader.readText()
-                                            val errorOutput = errorReader.readText()
-
-                                            if (output.isNotEmpty()) {
-                                                Log.i(
-                                                    this::class.java.simpleName,
-                                                    "BATTERY_STATS grant output: $output"
-                                                )
+                                            // 使用線程來實現超時
+                                            val processThread = Thread {
+                                                try {
+                                                    process.waitFor()
+                                                } catch (e: Exception) {
+                                                    Log.e(
+                                                        this::class.java.simpleName,
+                                                        "BATTERY_STATS grant process error: ${e.message}"
+                                                    )
+                                                }
                                             }
+                                            processThread.start()
+                                            processThread.join(10000) // 10秒超時
 
-                                            if (errorOutput.isNotEmpty()) {
+                                            if (processThread.isAlive) {
+                                                process.destroy()
+                                                processThread.interrupt()
                                                 Log.e(
                                                     this::class.java.simpleName,
-                                                    "BATTERY_STATS grant error: $errorOutput"
-                                                )
-                                            }
-
-                                            if (process.exitValue() == 0) {
-                                                Log.i(
-                                                    this::class.java.simpleName,
-                                                    "Successfully granted BATTERY_STATS permission via Shizuku"
+                                                    "BATTERY_STATS grant process timed out"
                                                 )
                                             } else {
-                                                Log.e(
-                                                    this::class.java.simpleName,
-                                                    "Failed to grant BATTERY_STATS permission via Shizuku"
-                                                )
+                                                val output = reader.readText()
+                                                val errorOutput = errorReader.readText()
+
+                                                if (output.isNotEmpty()) {
+                                                    Log.i(
+                                                        this::class.java.simpleName,
+                                                        "BATTERY_STATS grant output: $output"
+                                                    )
+                                                }
+
+                                                if (errorOutput.isNotEmpty()) {
+                                                    Log.e(
+                                                        this::class.java.simpleName,
+                                                        "BATTERY_STATS grant error: $errorOutput"
+                                                    )
+                                                }
+
+                                                if (process.exitValue() == 0) {
+                                                    Log.i(
+                                                        this::class.java.simpleName,
+                                                        "Successfully granted BATTERY_STATS permission via Shizuku"
+                                                    )
+                                                } else {
+                                                    Log.e(
+                                                        this::class.java.simpleName,
+                                                        "Failed to grant BATTERY_STATS permission via Shizuku"
+                                                    )
+                                                }
+                                            }
+                                            try {
+                                                reader.close()
+                                                errorReader.close()
+                                            } catch (e: Exception) {
+                                                Log.w(this::class.java.simpleName, "Failed to close readers: ${e.message}")
                                             }
                                         }
                                     } catch (e: Exception) {
@@ -1077,7 +1112,7 @@ class ChatService : Service() {
 
                                 else -> {
                                     requestBody.text =
-                                        "${getString(R.string.system_message_head)}\nUnknown switch type. Available types: autoswitch, sim, data, wifi, bluetooth, datacard"
+                                        "${getString(R.string.system_message_head)}\nUnknown switch type. Available types: auto, sim, data, wifi, bluetooth, datacard"
                                 }
                             }
                         }
@@ -1578,60 +1613,99 @@ class ChatService : Service() {
                 val request: Request =
                     Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClientNew.newCall(request)
-                var response: Response
+                var response: Response? = null
                 try {
                     response = call.execute()
+                    if (response.code == 200) {
+                        var result: String
+                        try {
+                            result = response.body.string()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                            writeLog(
+                                applicationContext,
+                                "Connection to the Telegram API service failed"
+                            )
+                            continue
+                        }
+                        Log.d(this::class.java.simpleName, "run: $result")
+                        try {
+                            val resultObj = JsonParser.parseString(result).asJsonObject
+                            if (resultObj["ok"].asBoolean) {
+                                val resultArray = resultObj["result"].asJsonArray
+                                for (item in resultArray) {
+                                    try {
+                                        if (item.asJsonObject.has("update_id")) {
+                                            offset = item.asJsonObject["update_id"].asLong + 1
+                                        }
+                                        receiveHandle(item.asJsonObject)
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        writeLog(
+                                            applicationContext,
+                                            "Error processing message: ${e.message}"
+                                        )
+                                        Log.e(
+                                            this::class.java.simpleName,
+                                            "Error processing message",
+                                            e
+                                        )
+                                    }
+                                }
+                            } else {
+                                if (resultObj.has("description")) {
+                                    writeLog(
+                                        applicationContext,
+                                        "Error Code: ${resultObj["error_code"]}, ${resultObj["description"]}"
+                                    )
+                                } else {
+                                    writeLog(applicationContext, "Error response code:" + response.code)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            writeLog(
+                                applicationContext,
+                                "Error parsing JSON response: ${e.message}"
+                            )
+                            Log.e(this::class.java.simpleName, "Error parsing JSON response", e)
+                        }
+                    } else {
+                        writeLog(applicationContext, "Error response code:" + response.code)
+                        try {
+                            Thread.sleep(5000L)
+                        } catch (e: InterruptedException) {
+                            e.printStackTrace()
+                        }
+                    }
                 } catch (e: IOException) {
                     e.printStackTrace()
                     writeLog(
                         applicationContext,
-                        "Connection to the Telegram API service failed"
+                        "Connection to the Telegram API service failed: ${e.message}"
                     )
                     try {
-                        Thread.sleep(100L)
+                        Thread.sleep(1000L)
                     } catch (e1: InterruptedException) {
                         e1.printStackTrace()
                     }
-                    continue
-                }
-                if (response.code == 200) {
-                    var result: String
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    writeLog(
+                        applicationContext,
+                        "Unexpected error in polling thread: ${e.message}"
+                    )
+                    Log.e(this::class.java.simpleName, "Unexpected error in polling thread", e)
                     try {
-                        result = response.body.string()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                        writeLog(
-                            applicationContext,
-                            "Connection to the Telegram API service failed"
-                        )
-                        continue
+                        Thread.sleep(1000L)
+                    } catch (e1: InterruptedException) {
+                        e1.printStackTrace()
                     }
-                    Log.d(this::class.java.simpleName, "run: $result")
-                    val resultObj = JsonParser.parseString(result).asJsonObject
-                    if (resultObj["ok"].asBoolean) {
-                        val resultArray = resultObj["result"].asJsonArray
-                        for (item in resultArray) {
-                            if (item.asJsonObject.has("update_id")) {
-                                offset = item.asJsonObject["update_id"].asLong + 1
-                            }
-                            receiveHandle(item.asJsonObject)
-                        }
-                    } else {
-                        if (resultObj.has("description")) {
-                            writeLog(
-                                applicationContext,
-                                "Error Code: ${resultObj["error_code"]}, ${resultObj["description"]}"
-                            )
-                        } else {
-                            writeLog(applicationContext, "Error response code:" + response.code)
-                        }
-                    }
-                } else {
-                    writeLog(applicationContext, "Error response code:" + response.code)
+                } finally {
                     try {
-                        Thread.sleep(5000L)
-                    } catch (e: InterruptedException) {
-                        e.printStackTrace()
+                        response?.close()
+                    } catch (e: Exception) {
+                        Log.w(this::class.java.simpleName, "Failed to close response: ${e.message}")
                     }
                 }
             }
