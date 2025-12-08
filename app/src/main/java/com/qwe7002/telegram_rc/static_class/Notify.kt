@@ -14,24 +14,27 @@ object Notify {
     fun sendMessage(context: Context, subject: String, message: String) {
         val intent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+
+        // 創建 NotificationChannel（Android O+ 必需）
+        val channel = android.app.NotificationChannel(
+            subject,
+            subject,
+            android.app.NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            enableVibration(true)
+            vibrationPattern = longArrayOf(0, 1000)
+        }
+        notificationManager.createNotificationChannel(channel)
+
         val notification = Notification.Builder(context, subject)
             .setContentTitle(subject)
             .setContentText(message)
-        notification.setContentIntent(pendingIntent)
-        notification.setSmallIcon(android.R.drawable.stat_sys_warning)
-        notification.setAutoCancel(true)
-        notification.setDefaults(Notification.DEFAULT_ALL)
-        notification.setPriority(Notification.PRIORITY_HIGH)
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val channel = android.app.NotificationChannel(subject, subject, android.app.NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(channel)
-        }else {
-            notification.setVibrate(longArrayOf(0, 1000))
-        }
-        val notify = notification.build()
-        notificationManager.notify(subject.hashCode(), notify)
+            .setContentIntent(pendingIntent)
+            .setSmallIcon(android.R.drawable.stat_sys_warning)
+            .setAutoCancel(true)
+            .build()
 
-
+        notificationManager.notify(subject.hashCode(), notification)
     }
 }

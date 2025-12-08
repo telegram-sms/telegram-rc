@@ -11,7 +11,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.SMS
@@ -93,7 +92,7 @@ class CallReceiver : BroadcastReceiver() {
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         e.printStackTrace()
-                        LogManage.writeLog(context, "$errorHead${e.message}")
+                        Log.e(logTag, "$errorHead${e.message}")
                         SMS.sendFallbackSMS(
                             context,
                             requestBody.text,
@@ -105,16 +104,16 @@ class CallReceiver : BroadcastReceiver() {
                     @Throws(IOException::class)
                     override fun onResponse(call: Call, response: Response) {
                         if (response.code != 200) {
-                            LogManage.writeLog(
-                                context,
+                            Log.e(
+                                logTag,
                                 "$errorHead${response.code} ${Objects.requireNonNull(response.body).string()}"
                             )
                             ReSendJob.addResendLoop(context, requestBody.text)
                         } else {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!Other.isPhoneNumber(incomingNumber)) {
-                                LogManage.writeLog(
-                                    context,
+                                Log.w(
+                                    logTag,
                                     "[$incomingNumber] Not a regular phone number."
                                 )
                                 return

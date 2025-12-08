@@ -45,8 +45,7 @@ import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.Hotspot.disableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.enableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.isHotspotActive
-import com.qwe7002.telegram_rc.static_class.LogManage.readLog
-import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
+
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Network.getDataEnable
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
@@ -88,6 +87,7 @@ import java.util.concurrent.TimeUnit
 @Suppress("DEPRECATION", "ClassName")
 class ChatService : Service() {
     // global object
+    private val logTag = this::class.java.simpleName
     private lateinit var okhttpClient: OkHttpClient
     private lateinit var messageThreadId: String
     private lateinit var wakeLock: WakeLock
@@ -242,7 +242,7 @@ class ChatService : Service() {
                     }
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    writeLog(applicationContext, "failed to send message:" + e.message)
+                    Log.e(logTag, "failed to send message:" + e.message)
                 } finally {
                     try {
                         response?.close()
@@ -293,7 +293,7 @@ class ChatService : Service() {
 
         val fromId = fromObj["id"].asString
         if (chatID != fromId) {
-            writeLog(applicationContext, "Chat ID [$fromId] not allow")
+            Log.w(logTag, "Chat ID [$fromId] not allow")
             return
         }
 
@@ -303,7 +303,7 @@ class ChatService : Service() {
             requestMsg = messageObj["text"].asString
         } else {
             Log.e(this::class.java.simpleName, "Text is null")
-            writeLog(applicationContext, "Command message text is null")
+            Log.w(logTag, "Command message text is null")
             return
         }
         if (messageObj.has("reply_to_message")) {
@@ -649,7 +649,7 @@ class ChatService : Service() {
                                             }
                                         }
                                     } catch (e: Exception) {
-                                        writeLog(applicationContext, e.message.toString())
+                                        Log.e(logTag, e.message.toString())
                                         Log.e(
                                             this::class.java.simpleName,
                                             "Error granting BATTERY_STATS permission: ${e.message}",
@@ -712,9 +712,7 @@ class ChatService : Service() {
                 Log.d(this::class.java.simpleName, "getInfo: " + requestBody.text)
             }
 
-            "/log" -> requestBody.text = getString(R.string.system_message_head) + "\n" + readLog(
-                applicationContext, 10
-            )
+            "/log" -> requestBody.text = getString(R.string.system_message_head) + "\n" + readLogcat(10)
 
             "/hotspot" -> {
                 if (MMKV.mmkvWithID(Const.BEACON_MMKV_ID).getBoolean("beacon_enable", false)) {
@@ -1056,7 +1054,7 @@ class ChatService : Service() {
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (e: NoSuchMethodError) {
                                                 e.printStackTrace()
-                                                writeLog(applicationContext, "Switching SIM${slot + 1} card status failed: ${e.message}")
+                                                Log.e(logTag, "Switching SIM${slot + 1} card status failed: ${e.message}")
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             }
@@ -1098,8 +1096,8 @@ class ChatService : Service() {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (e: NoSuchMethodError) {
-                                            writeLog(
-                                                applicationContext,
+                                            Log.e(
+                                                logTag,
                                                 "Switching default data SIM failed: Method is not available"
                                             )
                                             e.printStackTrace()
@@ -1305,7 +1303,7 @@ class ChatService : Service() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                writeLog(applicationContext, errorHead + e.message)
+                Log.e(logTag, errorHead + e.message)
             }
 
             @Throws(IOException::class)
@@ -1315,17 +1313,17 @@ class ChatService : Service() {
                     body.string()
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    writeLog(applicationContext, "Failed to read response body: ${e.message}")
+                    Log.e(logTag, "Failed to read response body: ${e.message}")
                     return
                 } catch (e: NullPointerException) {
                     e.printStackTrace()
-                    writeLog(applicationContext, "Response body is null: ${e.message}")
+                    Log.e(logTag, "Response body is null: ${e.message}")
                     return
                 }
 
                 if (response.code != 200) {
-                    writeLog(
-                        applicationContext,
+                    Log.e(
+                        logTag,
                         errorHead + response.code + " " + responseString
                     )
                     try {
@@ -1341,7 +1339,7 @@ class ChatService : Service() {
                     resultObj = JsonParser.parseString(responseString).asJsonObject
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    writeLog(applicationContext, "Failed to parse response JSON: ${e.message}")
+                    Log.e(logTag, "Failed to parse response JSON: ${e.message}")
                     try {
                         response.close()
                     } catch (e2: Exception) {
@@ -1414,12 +1412,8 @@ class ChatService : Service() {
                                         // 继续重试
                                     }
                                     if (i == maxRetries) {
-                                        writeLog(
-                                            applicationContext,
-                                            "Failed to get hotspot IP after $maxRetries attempts"
-                                        )
-                                        Log.e(
-                                            this::class.java.simpleName,
+                                        Log.w(
+                                            logTag,
                                             "Failed to get hotspot IP after $maxRetries attempts"
                                         )
                                     }
@@ -1622,8 +1616,8 @@ class ChatService : Service() {
                             result = response.body.string()
                         } catch (e: IOException) {
                             e.printStackTrace()
-                            writeLog(
-                                applicationContext,
+                            Log.e(
+                                logTag,
                                 "Connection to the Telegram API service failed"
                             )
                             continue
@@ -1641,37 +1635,31 @@ class ChatService : Service() {
                                         receiveHandle(item.asJsonObject)
                                     } catch (e: Exception) {
                                         e.printStackTrace()
-                                        writeLog(
-                                            applicationContext,
-                                            "Error processing message: ${e.message}"
-                                        )
                                         Log.e(
-                                            this::class.java.simpleName,
-                                            "Error processing message",
-                                            e
+                                            logTag,
+                                            "Error processing message: ${e.message}"
                                         )
                                     }
                                 }
                             } else {
                                 if (resultObj.has("description")) {
-                                    writeLog(
-                                        applicationContext,
+                                    Log.e(
+                                        logTag,
                                         "Error Code: ${resultObj["error_code"]}, ${resultObj["description"]}"
                                     )
                                 } else {
-                                    writeLog(applicationContext, "Error response code:" + response.code)
+                                    Log.e(logTag, "Error response code:" + response.code)
                                 }
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            writeLog(
-                                applicationContext,
+                            Log.e(
+                                logTag,
                                 "Error parsing JSON response: ${e.message}"
                             )
-                            Log.e(this::class.java.simpleName, "Error parsing JSON response", e)
                         }
                     } else {
-                        writeLog(applicationContext, "Error response code:" + response.code)
+                        Log.e(logTag, "Error response code:" + response.code)
                         try {
                             Thread.sleep(5000L)
                         } catch (e: InterruptedException) {
@@ -1680,8 +1668,8 @@ class ChatService : Service() {
                     }
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    writeLog(
-                        applicationContext,
+                    Log.e(
+                        logTag,
                         "Connection to the Telegram API service failed: ${e.message}"
                     )
                     try {
@@ -1691,11 +1679,10 @@ class ChatService : Service() {
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    writeLog(
-                        applicationContext,
+                    Log.e(
+                        logTag,
                         "Unexpected error in polling thread: ${e.message}"
                     )
-                    Log.e(this::class.java.simpleName, "Unexpected error in polling thread", e)
                     try {
                         Thread.sleep(1000L)
                     } catch (e1: InterruptedException) {
@@ -1712,5 +1699,30 @@ class ChatService : Service() {
         }
     }
 
+    private fun readLogcat(lines: Int): String {
+        return try {
+            val process = Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-t", lines.toString()))
+            val bufferedReader = java.io.BufferedReader(java.io.InputStreamReader(process.inputStream))
+            val logList = mutableListOf<String>()
+            var logLine: String?
+            while (bufferedReader.readLine().also { logLine = it } != null) {
+                logLine?.let {
+                    if (it.isNotBlank() && !it.startsWith("---------")) {
+                        logList.add(it)
+                    }
+                }
+            }
+            bufferedReader.close()
+            process.waitFor()
+            if (logList.isEmpty()) {
+                getString(R.string.no_logs)
+            } else {
+                logList.joinToString("\n")
+            }
+        } catch (e: Exception) {
+            Log.e(logTag, "Error reading logcat: ${e.message}")
+            getString(R.string.no_logs)
+        }
+    }
 }
 

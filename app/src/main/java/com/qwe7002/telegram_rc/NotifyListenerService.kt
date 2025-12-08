@@ -10,7 +10,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
@@ -55,8 +54,8 @@ class NotifyListenerService : NotificationListenerService() {
                     }$title\n${getString(R.string.content)}$content"
                 Log.d(logTag, "onNotificationPosted: $title $content")
             } else {
-                LogManage.writeLog(
-                    applicationContext,
+                Log.w(
+                    logTag,
                     "The number [${title}] has been called multiple times and the notification has been collapsed."
                 )
                 return
@@ -104,7 +103,7 @@ class NotifyListenerService : NotificationListenerService() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                LogManage.writeLog(applicationContext, errorHead + e.message)
+                Log.e(logTag, errorHead + e.message)
                 ReSendJob.addResendLoop(applicationContext, requestBody.text)
             }
 
@@ -112,7 +111,7 @@ class NotifyListenerService : NotificationListenerService() {
             override fun onResponse(call: Call, response: Response) {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
-                    LogManage.writeLog(applicationContext, errorHead + response.code + " " + result)
+                    Log.e(logTag, errorHead + response.code + " " + result)
                     ReSendJob.addResendLoop(applicationContext, requestBody.text)
                 }
             }

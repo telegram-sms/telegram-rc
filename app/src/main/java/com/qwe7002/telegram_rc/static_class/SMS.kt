@@ -18,7 +18,6 @@ import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.SMSSendResultReceiver
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.tencent.mmkv.MMKV
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -89,7 +88,7 @@ object SMS {
             return
         }
         if (!Other.isPhoneNumber(sendTo)) {
-            writeLog(context, "[$sendTo] is an illegal phone number")
+            Log.e("send_sms", "[$sendTo] is an illegal phone number")
             return
         }
         val preferences = MMKV.defaultMMKV()
@@ -123,7 +122,7 @@ object SMS {
         try {
             val response = call.execute()
             if (response.code != 200) {
-                writeLog(context, "Failed to send message: HTTP ${response.code}")
+                Log.e("send_sms", "Failed to send message: HTTP ${response.code}")
                 response.close()
                 return
             }
@@ -133,7 +132,7 @@ object SMS {
             response.close()
         } catch (e: Exception) {
             Log.d("sendSMS", "sendSMS: $e")
-            writeLog(context, "failed to send message:" + e.message)
+            Log.e("send_sms", "failed to send message:" + e.message)
             return
         }
         val divideContents = smsManager.divideMessage(content)
@@ -167,7 +166,6 @@ object SMS {
             )
         } catch (e: Exception) {
             Log.e("sendSMS", "Failed to send SMS: ${e.message}")
-            writeLog(context, "Failed to send SMS: ${e.message}")
             context.applicationContext.unregisterReceiver(receiver)
         }
     }

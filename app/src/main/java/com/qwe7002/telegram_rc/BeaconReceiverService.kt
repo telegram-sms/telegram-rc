@@ -36,7 +36,6 @@ import com.qwe7002.telegram_rc.static_class.BeaconDataRepository
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.DataUsage
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Network.requestUpdatedCellInfo
 import com.qwe7002.telegram_rc.static_class.Notify
@@ -260,18 +259,10 @@ class BeaconReceiverService : Service() {
                                                     logTag,
                                                     "Hotspot IP update thread interrupted: ${e.message}"
                                                 )
-                                                LogManage.writeLog(
-                                                    applicationContext,
-                                                    "Hotspot IP update thread interrupted: ${e.message}"
-                                                )
                                                 return@Thread
                                             } catch (e: Exception) {
                                                 Log.e(
                                                     logTag,
-                                                    "Error getting hotspot IP address: ${e.message}"
-                                                )
-                                                LogManage.writeLog(
-                                                    applicationContext,
                                                     "Error getting hotspot IP address: ${e.message}"
                                                 )
                                                 // 继续重试
@@ -279,10 +270,6 @@ class BeaconReceiverService : Service() {
                                             if (i == maxRetries) {
                                                 Log.w(
                                                     logTag,
-                                                    "Failed to get hotspot IP after $maxRetries attempts"
-                                                )
-                                                LogManage.writeLog(
-                                                    applicationContext,
                                                     "Failed to get hotspot IP after $maxRetries attempts"
                                                 )
                                             }

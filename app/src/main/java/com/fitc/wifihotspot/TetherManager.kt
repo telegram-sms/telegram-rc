@@ -8,13 +8,13 @@ import android.net.ConnectivityManager
 import android.os.Handler
 import android.util.Log
 import com.android.dx.stock.ProxyBuilder
-import com.qwe7002.telegram_rc.static_class.LogManage
 import java.io.File
 
 /**
  * Created by jonro on 19/03/2018.
  **/
 class TetherManager(private val context: Context) {
+    private val logTag = this::class.java.simpleName
     private val connectivityManager: ConnectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -32,24 +32,19 @@ class TetherManager(private val context: Context) {
             val res = method.invoke(connectivityManager) as Array<*>
             res.isNotEmpty()
         } catch (e: NoSuchMethodException) {
-            Log.e(this::class.java.simpleName, "getTetheredIfaces method not found: $e")
-            LogManage.writeLog(context, "getTetheredIfaces method not found: $e")
+            Log.e(logTag, "getTetheredIfaces method not found: $e")
             false
         } catch (e: IllegalAccessException) {
-            Log.e(this::class.java.simpleName, "getTetheredIfaces access denied: $e")
-            LogManage.writeLog(context, "getTetheredIfaces access denied: $e")
+            Log.e(logTag, "getTetheredIfaces access denied: $e")
             false
         } catch (e: java.lang.reflect.InvocationTargetException) {
-            Log.e(this::class.java.simpleName, "getTetheredIfaces invocation failed: $e")
-            LogManage.writeLog(context, "getTetheredIfaces invocation failed: $e")
+            Log.e(logTag, "getTetheredIfaces invocation failed: $e")
             false
         } catch (e: ClassCastException) {
-            Log.e(this::class.java.simpleName, "getTetheredIfaces invalid return type: $e")
-            LogManage.writeLog(context, "getTetheredIfaces invalid return type: $e")
+            Log.e(logTag, "getTetheredIfaces invalid return type: $e")
             false
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "Error in getTetheredIfaces: $e")
-            LogManage.writeLog(context, "Error in getTetheredIfaces: $e")
+            Log.e(logTag, "Error in getTetheredIfaces: $e")
             false
         }
     }
@@ -77,7 +72,7 @@ class TetherManager(private val context: Context) {
         try {
             val callbackClass = onStartTetheringCallbackClass()
             if (callbackClass == null) {
-                LogManage.writeLog(context, "onStartTetheringCallbackClass returned null")
+                Log.e(logTag, "onStartTetheringCallbackClass returned null")
                 return false
             }
 
@@ -92,32 +87,26 @@ class TetherManager(private val context: Context) {
                     null
                 }.build()
         } catch (e: java.io.IOException) {
-            Log.e(this::class.java.simpleName, "ProxyBuilder IO error: $e")
-            LogManage.writeLog(context, "ProxyBuilder IO error: $e")
+            Log.e(logTag, "ProxyBuilder IO error: $e")
             return false
         } catch (e: java.lang.reflect.InvocationTargetException) {
-            Log.e(this::class.java.simpleName, "ProxyBuilder invocation failed: $e")
-            LogManage.writeLog(context, "ProxyBuilder invocation failed: $e")
+            Log.e(logTag, "ProxyBuilder invocation failed: $e")
             return false
         } catch (e: IllegalAccessException) {
-            Log.e(this::class.java.simpleName, "ProxyBuilder access denied: $e")
-            LogManage.writeLog(context, "ProxyBuilder access denied: $e")
+            Log.e(logTag, "ProxyBuilder access denied: $e")
             return false
         } catch (e: InstantiationException) {
-            Log.e(this::class.java.simpleName, "ProxyBuilder instantiation failed: $e")
-            LogManage.writeLog(context, "ProxyBuilder instantiation failed: $e")
+            Log.e(logTag, "ProxyBuilder instantiation failed: $e")
             return false
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "Error in enableTethering ProxyBuilder: $e")
-            LogManage.writeLog(context, "Error in enableTethering ProxyBuilder: $e")
+            Log.e(logTag, "Error in enableTethering ProxyBuilder: $e")
             return false
         }
 
         return try {
             val callbackClass = onStartTetheringCallbackClass()
             if (callbackClass == null) {
-                Log.e(this::class.java.simpleName, "onStartTetheringCallbackClass returned null")
-                LogManage.writeLog(context, "onStartTetheringCallbackClass returned null")
+                Log.e(logTag, "onStartTetheringCallbackClass returned null")
                 return false
             }
 
@@ -129,23 +118,19 @@ class TetherManager(private val context: Context) {
                 Handler::class.java
             )
             method.invoke(connectivityManager, mode, false, proxy, null as Handler?)
-            Log.d(this::class.java.simpleName, "startTethering invoked")
+            Log.d(logTag, "startTethering invoked")
             true
         } catch (e: NoSuchMethodException) {
-            Log.e(this::class.java.simpleName, "startTethering method not found: $e")
-            LogManage.writeLog(context, "startTethering method not found: $e")
+            Log.e(logTag, "startTethering method not found: $e")
             false
         } catch (e: IllegalAccessException) {
-            Log.e(this::class.java.simpleName, "startTethering access denied: $e")
-            LogManage.writeLog(context, "startTethering access denied: $e")
+            Log.e(logTag, "startTethering access denied: $e")
             false
         } catch (e: java.lang.reflect.InvocationTargetException) {
-            Log.e(this::class.java.simpleName, "startTethering invocation failed: $e")
-            LogManage.writeLog(context, "startTethering invocation failed: $e")
+            Log.e(logTag, "startTethering invocation failed: $e")
             false
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "Error in enableTethering: $e")
-            LogManage.writeLog(context, "Error in enableTethering: $e")
+            Log.e(logTag, "Error in enableTethering: $e")
             false
         }
     }
@@ -155,10 +140,9 @@ class TetherManager(private val context: Context) {
             val method =
                 connectivityManager.javaClass.getDeclaredMethod("stopTethering", Int::class.java)
             method.invoke(connectivityManager, mode)
-            Log.d(this::class.java.simpleName, "stopTethering invoked")
+            Log.d(logTag, "stopTethering invoked")
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "stopTethering error: $e")
-            LogManage.writeLog(context, "stopTethering error: $e")
+            Log.e(logTag, "stopTethering error: $e")
         }
     }
 
@@ -167,12 +151,10 @@ class TetherManager(private val context: Context) {
         return try {
             Class.forName("android.net.ConnectivityManager\$OnStartTetheringCallback")
         } catch (e: ClassNotFoundException) {
-            Log.e(this::class.java.simpleName, "OnStartTetheringCallbackClass not found: $e")
-            LogManage.writeLog(context, "OnStartTetheringCallbackClass not found: $e")
+            Log.e(logTag, "OnStartTetheringCallbackClass not found: $e")
             null
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "OnStartTetheringCallbackClass error: $e")
-            LogManage.writeLog(context, "OnStartTetheringCallbackClass error: $e")
+            Log.e(logTag, "OnStartTetheringCallbackClass error: $e")
             null
         }
     }

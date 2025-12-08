@@ -10,7 +10,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
@@ -59,8 +58,8 @@ class ReSendJob : JobService() {
                         )
                     }
                     if (sendList.isNotEmpty()) {
-                        LogManage.writeLog(
-                            applicationContext,
+                        Log.i(
+                            logTag,
                             "The resend failure message is complete."
                         )
                     }
@@ -112,14 +111,14 @@ class ReSendJob : JobService() {
                 response.close()
             }
         } catch (e: IOException) {
-            LogManage.writeLog(
-                applicationContext,
+            Log.e(
+                logTag,
                 "An error occurred while resending: " + e.message
             )
             e.printStackTrace()
         } catch (e: Exception) {
-            LogManage.writeLog(
-                applicationContext,
+            Log.e(
+                logTag,
                 "An unexpected error occurred while resending: " + e.message
             )
             e.printStackTrace()

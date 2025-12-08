@@ -7,7 +7,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
 import com.tencent.mmkv.MMKV
@@ -77,7 +76,7 @@ class USSDCallBack(
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d(logTag, "onFailure: $e")
-                LogManage.writeLog(context, errorHead + e.message)
+                Log.e(logTag, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, -1)
                 ReSendJob.addResendLoop(context,requestBody.text)
             }
@@ -85,8 +84,8 @@ class USSDCallBack(
             @Throws(IOException::class)
             override fun onResponse(call: Call, response: Response) {
                 if (response.code != 200) {
-                    LogManage.writeLog(
-                        context,
+                    Log.e(
+                        logTag,
                         errorHead + response.code + " " + Objects.requireNonNull(response.body)
                             .string()
                     )

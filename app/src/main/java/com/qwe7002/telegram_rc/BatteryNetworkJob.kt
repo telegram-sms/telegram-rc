@@ -12,7 +12,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.SMS
@@ -70,12 +69,13 @@ class BatteryNetworkJob : JobService() {
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
+        val logTag = this::class.java.simpleName
         val errorHead = "Send battery info failed:"
         
         call.enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 e.printStackTrace()
-                LogManage.writeLog(applicationContext, errorHead + e.message)
+                Log.e(logTag, errorHead + e.message)
                 if (action == Intent.ACTION_BATTERY_LOW) {
                     SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                 }
@@ -88,7 +88,7 @@ class BatteryNetworkJob : JobService() {
 
                 val result = responseBody.string()
                 if (response.code != 200) {
-                    LogManage.writeLog(applicationContext, errorHead + response.code + " " + result)
+                    Log.e(logTag, errorHead + response.code + " " + result)
                     if (action == Intent.ACTION_BATTERY_LOW) {
                         SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                     }

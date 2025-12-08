@@ -53,7 +53,6 @@ import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.static_class.DataUsage
-import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
 import com.qwe7002.telegram_rc.static_class.Network.getUrl
 import com.qwe7002.telegram_rc.static_class.Other.parseStringToLong
@@ -368,7 +367,7 @@ class MainActivity : AppCompatActivity() {
                     Log.e(logTag, "onFailure: ", e)
                     progressDialog.cancel()
                     val errorMessage = errorHead + e.message
-                    writeLog(applicationContext, errorMessage)
+                    Log.e(logTag, errorMessage)
                     runOnUiThread { showErrorDialog(errorMessage) }
                 }
 
@@ -379,7 +378,7 @@ class MainActivity : AppCompatActivity() {
                         val result = Objects.requireNonNull(response.body).string()
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage = errorHead + resultObj["description"].asString
-                        writeLog(applicationContext, errorMessage)
+                        Log.e(logTag, errorMessage)
                         runOnUiThread { showErrorDialog(errorMessage) }
                         return
                     }
@@ -568,7 +567,7 @@ class MainActivity : AppCompatActivity() {
                     Log.e(logTag, "onFailure: ", e)
                     progressDialog.cancel()
                     val errorMessage = errorHead + e.message
-                    writeLog(applicationContext, errorMessage)
+                    Log.e(logTag, errorMessage)
                     runOnUiThread { showErrorDialog(errorMessage) }
                 }
 
@@ -580,7 +579,7 @@ class MainActivity : AppCompatActivity() {
                         val result = Objects.requireNonNull(response.body).string()
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage = errorHead + resultObj["description"]
-                        writeLog(applicationContext, errorMessage)
+                        Log.e(logTag, errorMessage)
                         runOnUiThread { showErrorDialog(errorMessage) }
                         return
                     }
@@ -745,12 +744,12 @@ class MainActivity : AppCompatActivity() {
                             ).show()
                         } catch (e: Exception) {
                             showErrorDialog(e.message.toString())
-                            writeLog(applicationContext, e.message.toString())
+                            Log.e(logTag, e.message.toString())
                         } catch (e: NoSuchMethodError) {
                             e.printStackTrace()
                             showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
-                            writeLog(
-                                applicationContext,
+                            Log.e(
+                                logTag,
                                 "The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card."
                             )
 

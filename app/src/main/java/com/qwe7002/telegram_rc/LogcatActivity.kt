@@ -3,7 +3,6 @@ package com.qwe7002.telegram_rc
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -11,7 +10,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.qwe7002.telegram_rc.data_structure.LogAdapter
-import com.qwe7002.telegram_rc.static_class.LogManage
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import kotlin.concurrent.thread
 
 class LogcatActivity : AppCompatActivity() {
@@ -70,13 +70,33 @@ class LogcatActivity : AppCompatActivity() {
     }
 
     private fun loadLogs() {
-        val logs = LogManage.readLog(this, line)
-        val logList = logs.split("\n").filter { it.isNotBlank() }.reversed()
-        logAdapter.updateLogs(logList)
-        // Only scroll to top if user is at the top or this is the initial load
-        val layoutManager = logRecyclerView.layoutManager as LinearLayoutManager
-        if (layoutManager.findFirstVisibleItemPosition() == 0) {
-            logRecyclerView.scrollToPosition(0)
+        thread {
+            try {
+                val process = Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-t", line.toString()))
+                val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
+                val logList = mutableListOf<String>()
+                var logLine: String?
+                while (bufferedReader.readLine().also { logLine = it } != null) {
+                    logLine?.let {
+                        if (it.isNotBlank() && !it.startsWith("---------")) {
+                            logList.add(it)
+                        }
+                    }
+                }
+                bufferedReader.close()
+                process.waitFor()
+
+                runOnUiThread {
+                    logAdapter.updateLogs(logList.reversed())
+                    // Only scroll to top if user is at the top or this is the initial load
+                    val layoutManager = logRecyclerView.layoutManager as LinearLayoutManager
+                    if (layoutManager.findFirstVisibleItemPosition() == 0) {
+                        logRecyclerView.scrollToPosition(0)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -102,8 +122,16 @@ class LogcatActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_clear_logs -> {
-                LogManage.resetLogFile()
-                loadLogs()
+                thread {
+                    try {
+                        Runtime.getRuntime().exec(arrayOf("logcat", "-c")).waitFor()
+                        runOnUiThread {
+                            loadLogs()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)

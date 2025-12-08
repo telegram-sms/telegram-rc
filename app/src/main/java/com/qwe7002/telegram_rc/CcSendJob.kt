@@ -13,7 +13,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Network
 import com.tencent.mmkv.MMKV
 import okhttp3.OkHttpClient
@@ -92,7 +91,7 @@ class CcSendJob : JobService() {
                     }
                 }
                 if (sendList.isNotEmpty()) {
-                    LogManage.writeLog(applicationContext, "The Cc message is complete.")
+                    Log.i(logTag, "The Cc message is complete.")
                 }
             } catch (e: Exception) {
                 Log.e(logTag, "Error in CcSend job", e)
@@ -130,10 +129,10 @@ class CcSendJob : JobService() {
             if (response.code == 200) {
                 Log.i(logTag, "networkProgressHandle: Message sent successfully.")
             }else{
-                LogManage.writeLog(applicationContext, "Send message failed: " + response.code + " " + response.body.string())
+                Log.e(logTag, "Send message failed: " + response.code + " " + response.body.string())
             }
         } catch (e: IOException) {
-            LogManage.writeLog(applicationContext, "An error occurred while resending: " + e.message)
+            Log.e(logTag, "An error occurred while resending: " + e.message)
             e.printStackTrace()
         }
     }

@@ -17,7 +17,6 @@ import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.SVC.setData
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.database.YellowPage
-import com.qwe7002.telegram_rc.static_class.LogManage.writeLog
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
@@ -80,7 +79,7 @@ class SMSReceiver : BroadcastReceiver() {
             messages[i] = SmsMessage.createFromPdu(pdus[i] as ByteArray, format)
         }
         if (messages.isEmpty()) {
-            writeLog(context, "Message length is equal to 0.")
+            Log.e(logTag, "Message length is equal to 0.")
             return
         }
 
@@ -256,7 +255,7 @@ class SMSReceiver : BroadcastReceiver() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d(logTag, e.toString())
-                writeLog(context, errorHead + e.message)
+                Log.e(logTag, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 ReSendJob.addResendLoop(context, requestBody.text)
                 commandHandle(messageBody, dataEnable)
@@ -266,14 +265,14 @@ class SMSReceiver : BroadcastReceiver() {
             override fun onResponse(call: Call, response: Response) {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
-                    writeLog(context, errorHead + response.code + " " + result)
+                    Log.e(logTag, errorHead + response.code + " " + result)
                     if (!finalIsFlash) {
                         SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                     }
                     ReSendJob.addResendLoop(context, requestBody.text)
                 } else {
                     if (!Other.isPhoneNumber(messageAddress)) {
-                        writeLog(context, "[$messageAddress] Not a regular phone number.")
+                        Log.w(logTag, "[$messageAddress] Not a regular phone number.")
                         return
                     }
                     Other.addMessageList(Other.getMessageId(result), messageAddress, slot)

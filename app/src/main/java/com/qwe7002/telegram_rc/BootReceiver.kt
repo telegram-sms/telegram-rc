@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import com.qwe7002.telegram_rc.MMKV.Const
-import com.qwe7002.telegram_rc.static_class.LogManage
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
@@ -23,8 +22,8 @@ class BootReceiver : BroadcastReceiver() {
             MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
             val preferences = MMKV.defaultMMKV()
             if (preferences.contains("initialized")) {
-                LogManage.writeLog(
-                    context,
+                Log.i(
+                    logTag,
                     "Received [" + intent.action + "] broadcast, starting background service."
                 )
                 ServiceManage.startService(
@@ -45,7 +44,7 @@ class BootReceiver : BroadcastReceiver() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
                 if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                     MMKV.mmkvWithID(Const.BEACON_MMKV_ID).putBoolean("beacon_enable", false)
-                    LogManage.writeLog(context, "Shizuku not available, beacon disabled.")
+                    Log.w(logTag, "Shizuku not available, beacon disabled.")
                     Notify.sendMessage(context, "BootReceiver", "Shizuku not available, Beacon disabled.")
                     ReSendJob.addResendLoop(context, "Shizuku not available, Beacon disabled.")
                 }
