@@ -91,7 +91,7 @@ object SVC {
 
             val process = service.newProcess(command, null, null)
             // 读取输出（示例）
-            val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
+            @Suppress("USELESS_CAST") val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
             var line: String?
             while ((reader.readLine().also { line = it }) != null) {
                 Log.d("ShizukuShell", line!!)

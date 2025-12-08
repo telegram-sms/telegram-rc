@@ -10,7 +10,7 @@ import com.qwe7002.telegram_rc.R
 
 class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<LogAdapter.LogViewHolder>() {
 
-    inner class LogViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class LogViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val timestampText: TextView = itemView.findViewById(R.id.log_timestamp)
         val messageText: TextView = itemView.findViewById(R.id.log_message)
     }

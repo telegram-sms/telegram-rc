@@ -1702,7 +1702,7 @@ class ChatService : Service() {
     private fun readLogcat(lines: Int): String {
         return try {
             val process = Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-t", lines.toString()))
-            val bufferedReader = java.io.BufferedReader(java.io.InputStreamReader(process.inputStream))
+            val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
             val logList = mutableListOf<String>()
             var logLine: String?
             while (bufferedReader.readLine().also { logLine = it } != null) {

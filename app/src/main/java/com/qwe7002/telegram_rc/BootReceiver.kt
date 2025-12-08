@@ -1,6 +1,5 @@
 package com.qwe7002.telegram_rc
 
-import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
