@@ -342,7 +342,7 @@ class MainActivity : AppCompatActivity() {
             progressDialog.setTitle(getString(R.string.get_recent_chat_title))
             progressDialog.setMessage(getString(R.string.get_recent_chat_message))
             progressDialog.isIndeterminate = false
-            progressDialog.setCancelable(false)
+            progressDialog.setCancelable(true)
             progressDialog.show()
             val requestUri =
                 getUrl(botTokenEditView.text.toString().trim { it <= ' ' }, "getUpdates")
@@ -355,12 +355,7 @@ class MainActivity : AppCompatActivity() {
             val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
             val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
             val call = okhttpClient.newCall(request)
-            progressDialog.setOnKeyListener { _: DialogInterface?, _: Int, keyEvent: KeyEvent ->
-                if (keyEvent.keyCode == KeyEvent.KEYCODE_BACK) {
-                    call.cancel()
-                }
-                false
-            }
+            progressDialog.setOnCancelListener { call.cancel() }
             val errorHead = "Get chat ID failed:"
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
