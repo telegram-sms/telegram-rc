@@ -11,6 +11,7 @@ import com.qwe7002.telegram_rc.R
 class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<LogAdapter.LogViewHolder>() {
 
     class LogViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val tagText: TextView = itemView.findViewById(R.id.log_tag)
         val timestampText: TextView = itemView.findViewById(R.id.log_timestamp)
         val messageText: TextView = itemView.findViewById(R.id.log_message)
     }
@@ -27,8 +28,9 @@ class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<Lo
 
         // Parse logcat format: "MM-DD HH:MM:SS.mmm PID TID LEVEL TAG: message"
         val parsed = parseLogcatEntry(entry)
-        holder.timestampText.text = parsed.first
-        holder.messageText.text = parsed.second
+        holder.tagText.text = parsed.first
+        holder.timestampText.text = parsed.second
+        holder.messageText.text = parsed.third
     }
 
     override fun getItemCount(): Int = logEntries.size
@@ -39,7 +41,7 @@ class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<Lo
         notifyDataSetChanged()
     }
 
-    private fun parseLogcatEntry(entry: String): Pair<String, String> {
+    private fun parseLogcatEntry(entry: String): Triple<String, String, String> {
         // Logcat format: "MM-DD HH:MM:SS.mmm PID TID LEVEL TAG: message"
         // Example: "12-08 10:30:45.123  1234  5678 I MyTag: This is a message"
         val regex = Regex("""^(\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3})\s+\d+\s+\d+\s+([VDIWEF])\s+([^:]+):\s*(.*)$""")
@@ -51,10 +53,10 @@ class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<Lo
             val tag = match.groupValues[3].trim()
             val message = match.groupValues[4]
             val levelEmoji = levelToEmoji(level)
-            Pair("$timestamp $levelEmoji $tag:", message)
+            Triple("$levelEmoji $tag", timestamp, message)
         } else {
             // Fallback if regex doesn't match
-            Pair("", entry)
+            Triple("", "", entry)
         }
     }
 
