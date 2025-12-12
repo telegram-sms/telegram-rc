@@ -111,4 +111,7 @@
     <string name="verification_code">" (Verification Code)"</string>
     <string name="beacon_auto_switch_setting">Beacon Auto Switch</string>
     <string name="enable_beacon_auto_switch">Enable beacon auto switch</string>
+    <string name="shizuku_available">Shizuku: Available</string>
+    <string name="shizuku_no_permission">Shizuku: No Permission</string>
+    <string name="shizuku_not_running">Shizuku: Not Running</string>
 </resources>
