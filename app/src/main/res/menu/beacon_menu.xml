@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <item
+        android:id="@+id/action_beacon_settings"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="Setting"
         app:showAsAction="ifRoom"

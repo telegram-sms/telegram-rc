@@ -982,6 +982,11 @@ class MainActivity : AppCompatActivity() {
                     .show()
                 return true
             }
+            R.id.action_beacon_auto_switch -> {
+                val intent = Intent(this, ExtraSwitchActivity::class.java)
+                startActivity(intent)
+                return true
+            }
 
             R.id.user_manual_menu_item -> fileName =
                 "/guide/user-manual"
