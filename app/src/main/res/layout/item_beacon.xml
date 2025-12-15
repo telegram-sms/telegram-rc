@@ -20,7 +20,6 @@
             android:maxEms="20"
             android:singleLine="true"
             android:text="Device name"
-            android:textColor="@color/text_color"
             tools:ignore="HardcodedText,RelativeOverlap" />
 
         <TextView
@@ -33,7 +32,6 @@
             android:maxEms="20"
             android:singleLine="true"
             android:text="Address:"
-            android:textColor="@color/text_color"
             tools:ignore="HardcodedText" />
 
         <TextView
@@ -46,7 +44,6 @@
             android:maxEms="20"
             android:singleLine="true"
             android:text="Rssi: Power:"
-            android:textColor="@color/text_color"
             tools:ignore="HardcodedText" />
 
         <CheckBox
