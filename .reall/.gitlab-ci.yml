@@ -231,7 +231,7 @@ build_release:
         -t "${GITHUB_ACCESS_KEY}" \
         -u "${OWNER}" \
         -r "${REPO}" \
-        -n "Release ${RELEASE_TAG}" \
+        -n "${RELEASE_TAG}" \
         -b "${RELEASE_CHANGELOG}" \
         -replace \
         "${RELEASE_TAG}" \
