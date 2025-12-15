@@ -55,6 +55,10 @@
         android:title="@string/transfer_configuration"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_beacon_auto_switch"
+        android:title="@string/beacon_auto_switch_setting"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/logcat_menu_item"
         android:title="@string/logcat"
         app:showAsAction="never" />

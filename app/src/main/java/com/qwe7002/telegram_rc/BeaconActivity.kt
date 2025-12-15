@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
@@ -88,9 +89,22 @@ class BeaconActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.beacon_menu, menu)
+        return true
+    }
 
-    @SuppressLint("InflateParams")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_beacon_settings -> {
+                showBeaconSettings()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showBeaconSettings() {
         val inflater = this.layoutInflater
         val dialogView = inflater.inflate(R.layout.set_beacon_layout, null)
         val enable = dialogView.findViewById<SwitchMaterial>(R.id.beacon_enable_switch)
@@ -141,7 +155,6 @@ class BeaconActivity : AppCompatActivity() {
                 useVpnHotspotSwitch
             )
         }
-        return true
     }
 
     private fun showBeaconConfigurationDialog(
@@ -160,11 +173,6 @@ class BeaconActivity : AppCompatActivity() {
                 beaconMMKV.putBoolean("opposite", enable.isChecked)
                 BeaconDataRepository.triggerReloadConfig()
             }.show()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.beacon_menu, menu)
-        return true
     }
 
     internal class CustomBeaconAdapter(
