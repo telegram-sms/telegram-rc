@@ -30,7 +30,6 @@
             android:layout_marginRight="12dp"
             android:layout_toEndOf="@id/app_icon_imageview"
             android:singleLine="true"
-            android:textColor="@color/text_color"
             android:text="@string/app_name"
             tools:ignore="RelativeOverlap" />
 
@@ -44,7 +43,6 @@
             android:layout_marginRight="12dp"
             android:layout_toEndOf="@id/app_icon_imageview"
             android:singleLine="true"
-            android:textColor="@color/text_color"
             android:text="com.example.apps"
             tools:ignore="HardcodedText,RelativeOverlap" />
 

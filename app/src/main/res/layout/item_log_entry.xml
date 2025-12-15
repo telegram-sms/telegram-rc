@@ -16,7 +16,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textStyle="bold"
-            android:textColor="@color/timestamp_color"
             android:fontFamily="monospace"
             android:textSize="12sp" />
 
@@ -25,7 +24,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textStyle="bold"
-            android:textColor="@color/timestamp_color"
             android:fontFamily="monospace"
             android:textSize="12sp" />
 
@@ -37,7 +35,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:fontFamily="monospace"
-        android:textColor="@color/text_color"
         android:textSize="12sp" />
 
 </LinearLayout>
