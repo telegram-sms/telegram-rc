@@ -131,9 +131,6 @@ build_release:
     - if: $CI_COMMIT_BRANCH == "master"
   <<: *setup_environment
   script:
-    - |
-      echo "==> Copying language pack..."
-      ./gradlew app:copy_language_pack --no-daemon
     - !reference [.build_apk, script]
     - !reference [.deploy_to_github, script]
     - |
