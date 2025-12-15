@@ -703,7 +703,7 @@ class ChatService : Service() {
                         } ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
                 }
                 val shizukuStatus =
-                    "Shizuku Status: " + if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) "Enabled" else "Disabled"
+                    "\nShizuku Status: " + if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) "Enabled" else "Disabled"
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
