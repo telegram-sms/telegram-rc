@@ -160,7 +160,7 @@ build_release:
       ${GIT_LOG}
 
       Output format:
-      ## What's New
+      ## What\'s New
       - Feature or change description
 
       ## Bug Fixes
@@ -181,7 +181,7 @@ build_release:
         }')
       
       # Call Gemini REST API
-      GEMINI_API_URL="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+      GEMINI_API_URL="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
       
       API_RESPONSE=$(curl -s -X POST "${GEMINI_API_URL}" \
         -H "Content-Type: application/json" \
