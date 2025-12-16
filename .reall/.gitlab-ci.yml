@@ -186,11 +186,11 @@ generate:changelog:
       git config --global user.name "GitLab CI Bot"
     - |
       echo "==> Compiling ChangelogGenerate.java..."
-      javac .reall/ChangelogGenerate.java
+      javac .reall/changelogGenerate.java
   script:
     - |
       echo "==> Generating changelog..."
-      java .reall/ChangelogGenerate > CHANGELOG.md
+      java .reall/changelogGenerate > CHANGELOG.md
   artifacts:
     paths:
       - CHANGELOG.md
