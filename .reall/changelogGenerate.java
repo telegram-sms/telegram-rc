@@ -3,7 +3,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-public class GitChangelogSummarizer {
+public class changelogGenerate {
 
     // Configure OneAPI parameters
     private static final String API_BASE_URL = "https://your-oneapi-url.com/v1/chat/completions";
