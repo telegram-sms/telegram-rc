@@ -177,18 +177,21 @@ build_debug:
 # ------------------------------------------------------------------------------
 generate:changelog:
   stage: build
-  image: node:20
   rules:
     - if: $CI_COMMIT_BRANCH == "master"
   before_script:
-    # 安装 Gemini CLI
-    - npm install -g @google/gemini-cli
-  script:
-    # 使用 GitLab CI/CD 变量中的 API key
-    - export GEMINI_API_KEY=$GEMINI_API_KEY
     - |
-      gemini -p "Analyze the following Git commits and generate entries for the CHANGELOG.md file：
-      $(git log --pretty=format:'%h - %s (%an)' $(git describe --tags --abbrev=0 2>/dev/null || echo 'HEAD~10')..HEAD)"  > CHANGELOG.md
+      echo "==> Configuring git..."
+      git config --global user.email "ci-bot@qwe7002.dev"
+      git config --global user.name "GitLab CI Bot"
+    - |
+      echo "==> Compiling ChangelogGenerate.java..."
+      cd .reall
+      javac ChangelogGenerate.java
+  script:
+    - |
+      echo "==> Generating changelog..."
+      java ChangelogGenerate > CHANGELOG.md
   artifacts:
     paths:
       - CHANGELOG.md
