@@ -188,8 +188,7 @@ generate:changelog:
     - export GEMINI_API_KEY=$GEMINI_API_KEY
     - |
       gemini -p "Analyze the following Git commits and generate entries for the CHANGELOG.md file：
-      $(git log --pretty=format:'%h - %s (%an)' $(git describe --tags --abbrev=0 2>/dev/null || echo 'HEAD~10')..HEAD)" \
-      --non-interactive > CHANGELOG.md
+      $(git log --pretty=format:'%h - %s (%an)' $(git describe --tags --abbrev=0 2>/dev/null || echo 'HEAD~10')..HEAD)"  > CHANGELOG.md
   artifacts:
     paths:
       - CHANGELOG.md
