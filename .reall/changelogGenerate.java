@@ -6,8 +6,8 @@ import java.nio.charset.StandardCharsets;
 public class changelogGenerate {
 
     // Configure OneAPI parameters
-    private static final String API_BASE_URL = "https://your-oneapi-url.com/v1/chat/completions";
-    private static final String API_KEY = "your-api-key-here";
+    private static final String API_BASE_URL = System.getenv("ONEAPI_BASE_URL");
+    private static final String API_KEY = System.getenv("ONEAPI_API_KEY");
     private static final String MODEL = "gpt-3.5-turbo";
 
     public static void main(String[] args) {
