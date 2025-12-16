@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChangelogGenerate {
+public class changelogGenerate {
     public static void main(String[] args) throws IOException, InterruptedException {
         // Get the latest tag or fallback to HEAD~10
         String latestTag = getLatestTag();
