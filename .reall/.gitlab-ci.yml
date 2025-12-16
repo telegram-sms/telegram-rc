@@ -181,10 +181,6 @@ generate:changelog:
     - if: $CI_COMMIT_BRANCH == "master"
   before_script:
     - |
-      echo "==> Configuring git..."
-      git config --global user.email "ci-bot@qwe7002.dev"
-      git config --global user.name "GitLab CI Bot"
-    - |
       echo "==> Compiling ChangelogGenerate.java..."
       javac .reall/changelogGenerate.java
   script:
