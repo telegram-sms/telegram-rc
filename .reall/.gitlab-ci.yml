@@ -190,7 +190,7 @@ generate:changelog:
   script:
     - |
       echo "==> Generating changelog..."
-      java .reall/changelogGenerate > CHANGELOG.md
+      java -cp .reall changelogGenerate > CHANGELOG.md
   artifacts:
     paths:
       - CHANGELOG.md
