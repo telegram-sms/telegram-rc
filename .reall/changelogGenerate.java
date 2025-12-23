@@ -122,19 +122,6 @@ public class changelogGenerate {
             // Set all request headers (based on curl command)
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
-            conn.setRequestProperty("Accept", "*/*");
-            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7");
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0");
-            conn.setRequestProperty("Origin", "https://vercel.ddaiai.com");
-            conn.setRequestProperty("Referer", "https://vercel.ddaiai.com/");
-            conn.setRequestProperty("Cache-Control", "no-cache");
-            conn.setRequestProperty("Pragma", "no-cache");
-            conn.setRequestProperty("sec-ch-ua", "\"Microsoft Edge\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"");
-            conn.setRequestProperty("sec-ch-ua-mobile", "?0");
-            conn.setRequestProperty("sec-ch-ua-platform", "\"macOS\"");
-            conn.setRequestProperty("sec-fetch-dest", "empty");
-            conn.setRequestProperty("sec-fetch-mode", "cors");
-            conn.setRequestProperty("sec-fetch-site", "cross-site");
 
             conn.setDoOutput(true);
             conn.setDoInput(true);
