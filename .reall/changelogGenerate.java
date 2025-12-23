@@ -205,7 +205,6 @@ public class changelogGenerate {
      */
     private static String parseResponse(InputStream is) throws IOException {
         String response = readStream(is);
-        System.out.println(response);
         int contentIndex = response.indexOf("\"content\"");
         if (contentIndex == -1) {
             return response;
