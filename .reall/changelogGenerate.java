@@ -110,7 +110,7 @@ public class changelogGenerate {
     }
 
     /**
-     * Call OneAPI to summarize commits
+     * Call OneAPI to summarize commits (optimized based on curl command)
      */
     public static String summarizeChangelog(String commits) throws IOException {
         URL url = new URL(API_BASE_URL);
@@ -118,9 +118,24 @@ public class changelogGenerate {
 
         try {
             conn.setRequestMethod("POST");
+
+            // Set all request headers (based on curl command)
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Authorization", "Bearer " + API_KEY);
-            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Accept", "*/*");
+            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0");
+            conn.setRequestProperty("Origin", "https://vercel.ddaiai.com");
+            conn.setRequestProperty("Referer", "https://vercel.ddaiai.com/");
+            conn.setRequestProperty("Cache-Control", "no-cache");
+            conn.setRequestProperty("Pragma", "no-cache");
+            conn.setRequestProperty("sec-ch-ua", "\"Microsoft Edge\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"");
+            conn.setRequestProperty("sec-ch-ua-mobile", "?0");
+            conn.setRequestProperty("sec-ch-ua-platform", "\"macOS\"");
+            conn.setRequestProperty("sec-fetch-dest", "empty");
+            conn.setRequestProperty("sec-fetch-mode", "cors");
+            conn.setRequestProperty("sec-fetch-site", "cross-site");
+
             conn.setDoOutput(true);
             conn.setDoInput(true);
             conn.setConnectTimeout(30000);
@@ -146,6 +161,9 @@ public class changelogGenerate {
         }
     }
 
+    /**
+     * Build JSON request payload (matching curl's --data-raw format)
+     */
     private static String buildJsonPayload(String commits) {
         String escapedCommits = escapeJson(commits);
         String prompt = escapeJson(
@@ -165,20 +183,22 @@ public class changelogGenerate {
               "model": "%s",
               "messages": [
                 {
-                  "role": "system",
-                  "content": "You are a professional technical documentation assistant specialized in analyzing Git commit history and generating clear changelogs."
-                },
-                {
                   "role": "user",
                   "content": "%s\\n\\nCommit History:\\n%s"
                 }
               ],
-              "temperature": 0.5,
-              "max_tokens": 2000
+              "max_completion_tokens": 1024,
+              "top_p": 1,
+              "presence_penalty": 0,
+              "frequency_penalty": 0,
+              "stream": false
             }
             """, MODEL, prompt, escapedCommits);
     }
 
+    /**
+     * Parse API response and extract content field
+     */
     private static String parseResponse(InputStream is) throws IOException {
         String response = readStream(is);
 
@@ -198,6 +218,9 @@ public class changelogGenerate {
         return response;
     }
 
+    /**
+     * Read input stream content
+     */
     private static String readStream(InputStream is) throws IOException {
         if (is == null) return "";
 
@@ -212,6 +235,9 @@ public class changelogGenerate {
         }
     }
 
+    /**
+     * Escape JSON string
+     */
     private static String escapeJson(String text) {
         return text.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
@@ -220,6 +246,9 @@ public class changelogGenerate {
                 .replace("\t", "\\t");
     }
 
+    /**
+     * Unescape JSON string
+     */
     private static String unescapeJson(String text) {
         return text.replace("\\n", "\n")
                 .replace("\\r", "\r")
@@ -228,6 +257,9 @@ public class changelogGenerate {
                 .replace("\\\\", "\\");
     }
 
+    /**
+     * Find the position of unescaped closing quote
+     */
     private static int findClosingQuote(String str, int start) {
         for (int i = start; i < str.length(); i++) {
             if (str.charAt(i) == '"' && str.charAt(i - 1) != '\\') {
