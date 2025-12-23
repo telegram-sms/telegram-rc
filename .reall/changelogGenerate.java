@@ -8,7 +8,7 @@ public class changelogGenerate {
     // Configure OneAPI parameters
     private static final String API_BASE_URL = System.getenv("ONEAPI_BASE_URL");
     private static final String API_KEY = System.getenv("ONEAPI_API_KEY");
-    private static final String MODEL = "gpt-3.5-turbo";
+    private static final String MODEL = "gpt-5-mini";
 
     public static void main(String[] args) {
         try {
