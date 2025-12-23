@@ -6,10 +6,8 @@ import java.nio.charset.StandardCharsets;
 public class changelogGenerate {
 
     // Configure OneAPI parameters
-    //private static final String API_BASE_URL = System.getenv("ONEAPI_BASE_URL");
-    //private static final String API_KEY = System.getenv("ONEAPI_API_KEY");
-    private static final String API_BASE_URL = "https://one-api.ous50.moe/v1/chat/completions";
-    private static final String API_KEY = "sk-SSQQxaQxQSaaSQx_WmEzZe-tygppcj98NlQxPFjXGrOgzipDV3eWw__GZYY";
+    private static final String API_BASE_URL = System.getenv("ONEAPI_BASE_URL");
+    private static final String API_KEY = System.getenv("ONEAPI_API_KEY");
     private static final String MODEL = "gpt-5-mini";
 
     public static void main(String[] args) {
@@ -31,7 +29,7 @@ public class changelogGenerate {
             //System.out.println("\nCalling OneAPI for summarization...");
 
             String summary = summarizeChangelog(commits);
-            System.out.println("\n=== Changelog Summary ===\n" + summary);
+            //System.out.println("\n=== Changelog Summary ===\n" + summary);
             System.out.println(summary);
 
         } catch (Exception e) {
