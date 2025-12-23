@@ -17,7 +17,7 @@ public class changelogGenerate {
             int commitCount = 20; // Get last 20 commits
             String branch = "HEAD"; // Or specify branch like "main", "master"
 
-            System.out.println("Fetching Git commit history...");
+            //System.out.println("Fetching Git commit history...");
             String commits = getGitCommits(repoPath, commitCount, branch);
 
             if (commits.isEmpty()) {
@@ -25,11 +25,12 @@ public class changelogGenerate {
                 return;
             }
 
-            System.out.println("\nFetched commits:\n" + commits);
-            System.out.println("\nCalling OneAPI for summarization...");
+            //System.out.println("\nFetched commits:\n" + commits);
+            //System.out.println("\nCalling OneAPI for summarization...");
 
             String summary = summarizeChangelog(commits);
-            System.out.println("\n=== Changelog Summary ===\n" + summary);
+            //System.out.println("\n=== Changelog Summary ===\n" + summary);
+            System.out.println(summary);
 
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
