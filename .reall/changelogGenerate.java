@@ -6,8 +6,10 @@ import java.nio.charset.StandardCharsets;
 public class changelogGenerate {
 
     // Configure OneAPI parameters
-    private static final String API_BASE_URL = System.getenv("ONEAPI_BASE_URL");
-    private static final String API_KEY = System.getenv("ONEAPI_API_KEY");
+    //private static final String API_BASE_URL = System.getenv("ONEAPI_BASE_URL");
+    //private static final String API_KEY = System.getenv("ONEAPI_API_KEY");
+    private static final String API_BASE_URL = "https://one-api.ous50.moe/v1/chat/completions";
+    private static final String API_KEY = "sk-SSQQxaQxQSaaSQx_WmEzZe-tygppcj98NlQxPFjXGrOgzipDV3eWw__GZYY";
     private static final String MODEL = "gpt-5-mini";
 
     public static void main(String[] args) {
@@ -29,7 +31,7 @@ public class changelogGenerate {
             //System.out.println("\nCalling OneAPI for summarization...");
 
             String summary = summarizeChangelog(commits);
-            //System.out.println("\n=== Changelog Summary ===\n" + summary);
+            System.out.println("\n=== Changelog Summary ===\n" + summary);
             System.out.println(summary);
 
         } catch (Exception e) {
@@ -154,15 +156,26 @@ public class changelogGenerate {
     private static String buildJsonPayload(String commits) {
         String escapedCommits = escapeJson(commits);
         String prompt = escapeJson(
-                "Please analyze the following Git commit history and generate a structured changelog summary. " +
-                        "Format: commit hash | author | date | commit message\n\n" +
-                        "Organize the summary into these categories:\n" +
-                        "1. Features (new functionality)\n" +
-                        "2. Bug Fixes\n" +
-                        "3. Performance Improvements\n" +
-                        "4. Documentation\n" +
-                        "5. Other Changes\n\n" +
-                        "List relevant commits under each category."
+                "Analyze the following Git commit history and generate a clean, structured changelog.\n" +
+                        "Format: hash | author | date | message\n\n" +
+                        "Output ONLY the categorized changelog in this exact format:\n\n" +
+                        "# CHANGELOG\n\n" +
+                        "## Features\n" +
+                        "- [hash] message\n\n" +
+                        "## Bug Fixes\n" +
+                        "- [hash] message\n\n" +
+                        "## Performance\n" +
+                        "- [hash] message\n\n" +
+                        "## Documentation\n" +
+                        "- [hash] message\n\n" +
+                        "## Other\n" +
+                        "- [hash] message\n\n" +
+                        "Rules:\n" +
+                        "1. Do NOT include any introductory text, notes, or explanations\n" +
+                        "2. Start directly with '# CHANGELOG'\n" +
+                        "3. Only include categories that have commits\n" +
+                        "4. Keep commit messages concise\n" +
+                        "5. Use markdown format only"
         );
 
         return String.format("""
@@ -170,11 +183,15 @@ public class changelogGenerate {
               "model": "%s",
               "messages": [
                 {
+                  "role": "system",
+                  "content": "You are a changelog generator. Output only the formatted changelog without any additional commentary."
+                },
+                {
                   "role": "user",
                   "content": "%s\\n\\nCommit History:\\n%s"
                 }
               ],
-              "max_completion_tokens": 1024,
+              "max_completion_tokens": 100000,
               "top_p": 1,
               "presence_penalty": 0,
               "frequency_penalty": 0,
@@ -188,7 +205,7 @@ public class changelogGenerate {
      */
     private static String parseResponse(InputStream is) throws IOException {
         String response = readStream(is);
-
+        System.out.println(response);
         int contentIndex = response.indexOf("\"content\"");
         if (contentIndex == -1) {
             return response;
