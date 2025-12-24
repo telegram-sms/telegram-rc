@@ -111,6 +111,7 @@
         <activity
             android:name=".NotifyActivity"
             android:windowSoftInputMode="adjustPan" />
+        <activity android:name=".ExtraSwitchActivity" />
 
         <service
             android:name=".ReSendJob"
