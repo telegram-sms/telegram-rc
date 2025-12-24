@@ -12,13 +12,12 @@ public class changelogGenerate {
 
     public static void main(String[] args) {
         try {
-            // Parameters: Git repository path, commit count
+            // Parameters: Git repository path
             String repoPath = "."; // Current directory, or specify path like "/path/to/your/repo"
-            int commitCount = 20; // Get last 20 commits
-            String branch = "HEAD"; // Or specify branch like "main", "master"
 
             //System.out.println("Fetching Git commit history...");
-            String commits = getGitCommits(repoPath, commitCount, branch);
+            String latestTag = getLatestTag(repoPath);
+            String commits = getGitCommitRange(repoPath, latestTag, "HEAD");
 
             if (commits.isEmpty()) {
                 System.err.println("No commit history found");
@@ -268,5 +267,37 @@ public class changelogGenerate {
             }
         }
         return -1;
+    }
+
+    /**
+     * Get the latest tag in the repository
+     */
+    public static String getLatestTag(String repoPath) throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                "git",
+                "-C", repoPath,
+                "describe",
+                "--tags",
+                "--abbrev=0"
+        );
+
+        processBuilder.redirectErrorStream(true);
+        Process process = processBuilder.start();
+
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line);
+            }
+        }
+
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new IOException("Git command failed with exit code: " + exitCode + ". No tags found?");
+        }
+
+        return output.toString().trim();
     }
 }
