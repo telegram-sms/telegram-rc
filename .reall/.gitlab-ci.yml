@@ -146,7 +146,6 @@ build_release:
         -r "${REPO}" \
         -n "${RELEASE_TAG}" \
         -b "${RELEASE_CHANGELOG}" \
-        -replace \
         "${RELEASE_TAG}" \
         "./app/build/outputs/apk/release/"
 
