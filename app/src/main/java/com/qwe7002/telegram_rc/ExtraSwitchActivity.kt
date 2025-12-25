@@ -42,8 +42,7 @@ class ExtraSwitchActivity : AppCompatActivity() {
 
         // Save setting when changed
         autoSwitch.setOnCheckedChangeListener { _, isChecked ->
-            val isShizukuAvailable = Shizuku.pingBinder()
-            val hasShizukuPermission = isShizukuAvailable &&
+            val hasShizukuPermission = Shizuku.pingBinder() &&
                     Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED
             if(hasShizukuPermission){
                 // Only save if Shizuku permission is granted
