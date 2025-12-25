@@ -32,7 +32,7 @@ public class changelogGenerate {
             BufferedWriter out = new BufferedWriter(new FileWriter("CHANGELOG.md"));
             out.write(summary);
             out.close();
-            system.out.println("Changelog written to CHANGELOG.md");
+            System.out.println("Changelog written to CHANGELOG.md");
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
