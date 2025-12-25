@@ -73,7 +73,6 @@ import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
-    private val logTag = this::class.java.simpleName
     private lateinit var preferences: MMKV
     private lateinit var proxyMMKV: MMKV
     private lateinit var writeSettingsButton: Button
@@ -356,10 +355,10 @@ class MainActivity : AppCompatActivity() {
             val errorHead = "Get chat ID failed:"
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.e(logTag, "onFailure: ", e)
+                    Log.e(Const.TAG, "onFailure: ", e)
                     progressDialog.cancel()
                     val errorMessage = errorHead + e.message
-                    Log.e(logTag, errorMessage)
+                    Log.e(Const.TAG, errorMessage)
                     runOnUiThread { showErrorDialog(errorMessage) }
                 }
 
@@ -370,7 +369,7 @@ class MainActivity : AppCompatActivity() {
                         val result = Objects.requireNonNull(response.body).string()
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage = errorHead + resultObj["description"].asString
-                        Log.e(logTag, errorMessage)
+                        Log.e(Const.TAG, errorMessage)
                         runOnUiThread { showErrorDialog(errorMessage) }
                         return
                     }
@@ -556,10 +555,10 @@ class MainActivity : AppCompatActivity() {
             val errorHead = "Send message failed: "
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.e(logTag, "onFailure: ", e)
+                    Log.e(Const.TAG, "onFailure: ", e)
                     progressDialog.cancel()
                     val errorMessage = errorHead + e.message
-                    Log.e(logTag, errorMessage)
+                    Log.e(Const.TAG, errorMessage)
                     runOnUiThread { showErrorDialog(errorMessage) }
                 }
 
@@ -571,13 +570,13 @@ class MainActivity : AppCompatActivity() {
                         val result = Objects.requireNonNull(response.body).string()
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage = errorHead + resultObj["description"]
-                        Log.e(logTag, errorMessage)
+                        Log.e(Const.TAG, errorMessage)
                         runOnUiThread { showErrorDialog(errorMessage) }
                         return
                     }
                     if (newBotToken != botTokenSave) {
                         Log.i(
-                            logTag,
+                            Const.TAG,
                             "onResponse: The current bot token does not match the saved bot token, clearing the message database."
                         )
                         MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID).clear()
@@ -685,7 +684,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 customTabsIntent.launchUrl(applicationContext, uri)
             } catch (e: ActivityNotFoundException) {
-                Log.e(logTag, "show_privacy_dialog: ", e)
+                Log.e(Const.TAG, "show_privacy_dialog: ", e)
                 showErrorDialog("Browser not found.")
             }
         }
@@ -736,12 +735,12 @@ class MainActivity : AppCompatActivity() {
                             ).show()
                         } catch (e: Exception) {
                             showErrorDialog(e.message.toString())
-                            Log.e(logTag, e.message.toString())
+                            Log.e(Const.TAG, e.message.toString())
                         } catch (e: NoSuchMethodError) {
                             e.printStackTrace()
                             showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
                             Log.e(
-                                logTag,
+                                Const.TAG,
                                 "The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card."
                             )
 
@@ -823,7 +822,7 @@ class MainActivity : AppCompatActivity() {
                     packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
                     versionName = packageInfo.versionName.toString()
                 } catch (e: PackageManager.NameNotFoundException) {
-                    Log.e(logTag, "onOptionsItemSelected: ", e)
+                    Log.e(Const.TAG, "onOptionsItemSelected: ", e)
                 }
                 val builder = AlertDialog.Builder(this)
                 builder.setTitle(R.string.about_title)
@@ -1013,7 +1012,7 @@ class MainActivity : AppCompatActivity() {
         try {
             customTabsIntent.launchUrl(this, uri)
         } catch (e: ActivityNotFoundException) {
-            Log.e(logTag, "onOptionsItemSelected: ", e)
+            Log.e(Const.TAG, "onOptionsItemSelected: ", e)
             showErrorDialog("Browser not found.")
         }
         return true
@@ -1047,7 +1046,7 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 progressDialog.cancel()
-                Log.e(logTag, "onFailure: ", e)
+                Log.e(Const.TAG, "onFailure: ", e)
             }
 
             override fun onResponse(call: Call, response: Response) {

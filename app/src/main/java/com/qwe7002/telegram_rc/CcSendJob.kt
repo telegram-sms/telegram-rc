@@ -137,7 +137,6 @@ class CcSendJob : JobService() {
     }
 
     companion object {
-        private val TAG = this::class.java.simpleName
         fun startJob(context: Context, title: String, message: String, verificationCode: String) {
             try {
                 val jobScheduler =
@@ -156,10 +155,10 @@ class CcSendJob : JobService() {
                 jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 val result = jobScheduler.schedule(jobInfoBuilder.build())
                 if (result <= 0) {
-                    Log.e(TAG, "Failed to schedule job, result code: $result")
+                    Log.e(Const.TAG, "Failed to schedule job, result code: $result")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to start job", e)
+                Log.e(Const.TAG, "Failed to start job", e)
             }
         }
 
@@ -180,10 +179,10 @@ class CcSendJob : JobService() {
                 jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 val result = jobScheduler.schedule(jobInfoBuilder.build())
                 if (result <= 0) {
-                    Log.e(TAG, "Failed to schedule job, result code: $result")
+                    Log.e(Const.TAG, "Failed to schedule job, result code: $result")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to start job", e)
+                Log.e(Const.TAG, "Failed to start job", e)
             }
         }
         

@@ -14,7 +14,7 @@ import java.io.File
  * Created by jonro on 19/03/2018.
  **/
 class TetherManager(private val context: Context) {
-    private val logTag = this::class.java.simpleName
+    private val logTag = "Telegram-RC.TetherManager"
     private val connectivityManager: ConnectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 

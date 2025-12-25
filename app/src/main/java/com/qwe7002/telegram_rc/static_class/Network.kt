@@ -210,7 +210,7 @@ object Network {
             requestUpdatedCellInfo(context, telephonyManager)
 
         if (cellInfoList.isEmpty()) {
-            Log.d("check5GState", "No cell info available")
+            Log.d(Const.TAG, "No cell info available")
             return when (telephonyManager.dataNetworkType) {
                 TelephonyManager.NETWORK_TYPE_NR -> "NR"
                 TelephonyManager.NETWORK_TYPE_LTE,
@@ -347,7 +347,7 @@ object Network {
 
                     networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
                         if (!hasPhoneStatePermission) {
-                            Log.i("get_network_type", "No permission.")
+                            Log.i(Const.TAG, "get_network_type: No permission.")
                             return netType
                         }
                         netType = checkCellularNetworkType(

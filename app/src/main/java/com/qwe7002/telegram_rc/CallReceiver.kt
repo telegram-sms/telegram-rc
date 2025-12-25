@@ -53,20 +53,19 @@ class CallReceiver : BroadcastReceiver() {
 
         @Deprecated("Deprecated in Java")
         override fun onCallStateChanged(nowState: Int, nowIncomingNumber: String) {
-            val logTag = this::class.java.simpleName
             if (stateMMKV.getInt("incoming_last_status", TelephonyManager.CALL_STATE_IDLE) == TelephonyManager.CALL_STATE_RINGING
                 && nowState == TelephonyManager.CALL_STATE_IDLE
             ) {
                 val incomingNumber = stateMMKV.getString("incoming_number", "")
                 // 检查电话号码是否为空
                 if (incomingNumber.isNullOrEmpty()) {
-                    Log.i(logTag, "Incoming number is empty")
+                    Log.i(Const.TAG, "Incoming number is empty")
                     return
                 }
                 
                 val preferences = MMKV.defaultMMKV()
                 if (!preferences.contains("initialized")) {
-                    Log.i(logTag, "Uninitialized, Phone receiver is deactivated.")
+                    Log.i(Const.TAG, "Uninitialized, Phone receiver is deactivated.")
                     return
                 }
                 val botToken = preferences.getString("bot_token", "") ?: ""
@@ -91,7 +90,7 @@ class CallReceiver : BroadcastReceiver() {
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         e.printStackTrace()
-                        Log.e(logTag, "$errorHead${e.message}")
+                        Log.e(Const.TAG, "$errorHead${e.message}")
                         SMS.sendFallbackSMS(
                             context,
                             requestBody.text,
@@ -104,7 +103,7 @@ class CallReceiver : BroadcastReceiver() {
                     override fun onResponse(call: Call, response: Response) {
                         if (response.code != 200) {
                             Log.e(
-                                logTag,
+                                Const.TAG,
                                 "$errorHead${response.code} ${Objects.requireNonNull(response.body).string()}"
                             )
                             ReSendJob.addResendLoop(context, requestBody.text)
@@ -112,7 +111,7 @@ class CallReceiver : BroadcastReceiver() {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!Other.isPhoneNumber(incomingNumber)) {
                                 Log.w(
-                                    logTag,
+                                    Const.TAG,
                                     "[$incomingNumber] Not a regular phone number."
                                 )
                                 return

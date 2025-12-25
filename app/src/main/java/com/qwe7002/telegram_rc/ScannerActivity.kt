@@ -75,7 +75,7 @@ class ScannerActivity : Activity() {
         try {
             jsonElement = JsonParser.parseString(jsonStr)
         } catch (e: Exception) {
-            Log.d("jsonValidate", "jsonValidate: $e")
+            Log.d(Const.TAG, "jsonValidate: $e")
             return false
         }
         return jsonElement != null

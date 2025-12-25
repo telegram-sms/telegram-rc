@@ -11,11 +11,12 @@ import com.qwe7002.telegram_rc.BatteryService
 import com.qwe7002.telegram_rc.BeaconReceiverService
 import com.qwe7002.telegram_rc.NotifyListenerService
 import com.qwe7002.telegram_rc.ChatService
+import com.qwe7002.telegram_rc.MMKV.Const
 
 object ServiceManage {
     @JvmStatic
     fun stopAllService(context: Context) {
-        Log.d("Service", "stopAllService: stopping all services")
+        Log.d(Const.TAG, "stopAllService: stopping all services")
         context.stopService(Intent(context, BatteryService::class.java))
         context.stopService(Intent(context, ChatService::class.java))
         if (hasLocationPermissions(context)) {

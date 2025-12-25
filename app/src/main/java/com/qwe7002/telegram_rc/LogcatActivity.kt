@@ -68,7 +68,7 @@ class LogcatActivity : AppCompatActivity() {
     private fun loadLogs() {
         thread {
             try {
-                val process = Runtime.getRuntime().exec(arrayOf("logcat", "-s", Const.TAG + ":*:V","-v", "-d", "-t", line.toString()))
+                val process = Runtime.getRuntime().exec(arrayOf("logcat", "-s", Const.TAG + ":*:V","Telegram-RC.TetherManager:*:V","ShizukuShell:*:V","-v", "-d", "-t", line.toString()))
                 val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
                 val logList = mutableListOf<String>()
                 var logLine: String?

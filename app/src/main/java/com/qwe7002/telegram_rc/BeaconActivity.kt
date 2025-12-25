@@ -248,7 +248,7 @@ class BeaconActivity : AppCompatActivity() {
                 } else {
                     listenListTemp.remove(address)
                 }
-                Log.d("monitoring_activity", "beacon_address: $listenListTemp")
+                Log.d(Const.TAG, "beacon_address: $listenListTemp")
                 beaconMMKV.encode("address", listenListTemp.toSet())
                 listenList = listenListTemp as ArrayList<String>
             }

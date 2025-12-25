@@ -97,7 +97,7 @@ object Other {
                 Manifest.permission.READ_PHONE_STATE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.d("get_data_sim_id", "No permission.")
+            Log.d(Const.TAG, "getDataSimId: No permission.")
             return result
         }
         val subscriptionManager =
@@ -112,7 +112,7 @@ object Other {
 
     @JvmStatic
     fun getMessageId(result: String?): Long {
-        Log.d("getMessageId", "getMessageId: "+ result)
+        Log.d(Const.TAG, "getMessageId: $result")
         val resultObj = JsonParser.parseString(result).asJsonObject["result"].asJsonObject
         return resultObj["message_id"].asLong
     }
@@ -151,7 +151,7 @@ object Other {
                     Manifest.permission.READ_PHONE_STATE
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                Log.i("getSubId", "get_sub_id: No permission")
+                Log.i(Const.TAG, "get_sub_id: No permission")
                 return -1
             }
             val subscriptionManager =
@@ -216,6 +216,6 @@ object Other {
         item.card = slot
         MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
             .putString(messageId.toString(), Gson().toJson(item))
-        Log.d("add_message_list", "add_message_list: $messageId")
+        Log.d(Const.TAG, "add_message_list: $messageId")
     }
 }

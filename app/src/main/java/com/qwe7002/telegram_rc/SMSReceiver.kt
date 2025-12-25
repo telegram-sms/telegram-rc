@@ -38,11 +38,10 @@ class SMSReceiver : BroadcastReceiver() {
 
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
-        val logTag = "sms_receiver"
         val extras = intent.extras!!
         preferences = MMKV.defaultMMKV()
         if (!preferences.contains("initialized")) {
-            Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
+            Log.i(Const.TAG, "Uninitialized, SMS receiver is deactivated.")
             return
         }
         val botToken = preferences.getString("bot_token", "").toString()
@@ -79,7 +78,7 @@ class SMSReceiver : BroadcastReceiver() {
             messages[i] = SmsMessage.createFromPdu(pdus[i] as ByteArray, format)
         }
         if (messages.isEmpty()) {
-            Log.e(logTag, "Message length is equal to 0.")
+            Log.e(Const.TAG, "Message length is equal to 0.")
             return
         }
 
@@ -99,7 +98,7 @@ class SMSReceiver : BroadcastReceiver() {
         var messageAddressString = messageAddress
 
         if (organizationInfo != null) {
-            messageAddressString = messageAddressString + " [${organizationInfo}]"
+            messageAddressString += " [${organizationInfo}]"
         }
         val trustedPhoneNumber = preferences.getString("trusted_phone_number", "")!!
         var isTrustedPhone = false
@@ -181,7 +180,7 @@ class SMSReceiver : BroadcastReceiver() {
                                 Manifest.permission.SEND_SMS
                             ) != PackageManager.PERMISSION_GRANTED
                         ) {
-                            Log.i(logTag, "No SMS permission.")
+                            Log.i(Const.TAG, "No SMS permission.")
                             return
                         }
                         val command = commandList[0].split(" ")
@@ -231,7 +230,7 @@ class SMSReceiver : BroadcastReceiver() {
                     continue
                 }
                 if (messageBody.contains(blockListItem)) {
-                    Log.i(logTag, "Detected message contains blacklist keywords, Silent send.")
+                    Log.i(Const.TAG, "Detected message contains blacklist keywords, Silent send.")
                     silentSend = true
                 }
             }
@@ -255,7 +254,7 @@ class SMSReceiver : BroadcastReceiver() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d(Const.TAG, e.toString())
-                Log.e(logTag, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 ReSendJob.addResendLoop(context, requestBody.text)
                 commandHandle(messageBody, dataEnable)
@@ -265,14 +264,14 @@ class SMSReceiver : BroadcastReceiver() {
             override fun onResponse(call: Call, response: Response) {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
-                    Log.e(logTag, errorHead + response.code + " " + result)
+                    Log.e(Const.TAG, errorHead + response.code + " " + result)
                     if (!finalIsFlash) {
                         SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                     }
                     ReSendJob.addResendLoop(context, requestBody.text)
                 } else {
                     if (!Other.isPhoneNumber(messageAddress)) {
-                        Log.w(logTag, "[$messageAddress] Not a regular phone number.")
+                        Log.w(Const.TAG, "[$messageAddress] Not a regular phone number.")
                         return
                     }
                     Other.addMessageList(Other.getMessageId(result), messageAddress, slot)
@@ -305,7 +304,7 @@ class SMSReceiver : BroadcastReceiver() {
             try {
                 Thread.sleep(100)
             } catch (e: InterruptedException) {
-                Log.d("openData", e.toString())
+                Log.d(Const.TAG, e.toString())
             }
             ++loopCount
         }

@@ -48,10 +48,10 @@ object Phone {
         val phoneInfo = IPhoneSubInfo()
         if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             val phoneCount = getActiveCard(context)
-            Log.d("getIMSICache", "getIMSICache: $phoneCount")
+            Log.d(Const.TAG, "getIMSICache: $phoneCount")
             if (phoneCount == 1) {
                 val phone = phoneInfo.getDefaultIMSIWithShizuku()
-                Log.i("getIMSICache", "getIMSICache: $phone")
+                Log.i(Const.TAG, "getIMSICache: $phone")
                 if (phone != null) {
                     if (phone.isNotEmpty()) {
                         imsiCache.putString(getPhoneNumber(context, 0), phone)
@@ -63,7 +63,7 @@ object Phone {
                 for (i in 0 until phoneCount) {
                     val subid = Other.getSubId(context, i)
                     val phone = phoneInfo.getIMSIWithShizuku(subid)
-                    Log.i("getIMSICache", "getIMSICache: $phone")
+                    Log.i(Const.TAG, "getIMSICache: $phone")
                     if (phone != null) {
                         if (phone.isNotEmpty()) {
                             imsiCache.putString(getPhoneNumber(context, i), phone)

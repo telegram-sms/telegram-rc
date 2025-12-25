@@ -26,7 +26,7 @@ import java.io.IOException
 class BatteryNetworkJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         if (params == null) {
-            Log.e(this::class.simpleName, "onStartJob: params is null")
+            Log.e(Const.TAG, "onStartJob: params is null")
             return false
         }
         
@@ -69,13 +69,12 @@ class BatteryNetworkJob : JobService() {
         val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
-        val logTag = this::class.java.simpleName
         val errorHead = "Send battery info failed:"
         
         call.enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 e.printStackTrace()
-                Log.e(logTag, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message)
                 if (action == Intent.ACTION_BATTERY_LOW) {
                     SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                 }
@@ -88,7 +87,7 @@ class BatteryNetworkJob : JobService() {
 
                 val result = responseBody.string()
                 if (response.code != 200) {
-                    Log.e(logTag, errorHead + response.code + " " + result)
+                    Log.e(Const.TAG, errorHead + response.code + " " + result)
                     if (action == Intent.ACTION_BATTERY_LOW) {
                         SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                     }

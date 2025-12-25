@@ -65,7 +65,6 @@ class USSDCallBack(
     }
 
     private fun networkHandle(message: String) {
-        val logTag = this::class.simpleName
         requestBody.text = message
         val requestBodyJson = Gson().toJson(requestBody)
         val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
@@ -76,7 +75,7 @@ class USSDCallBack(
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d(Const.TAG, "onFailure: $e")
-                Log.e(logTag, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, -1)
                 ReSendJob.addResendLoop(context,requestBody.text)
             }
@@ -85,7 +84,7 @@ class USSDCallBack(
             override fun onResponse(call: Call, response: Response) {
                 if (response.code != 200) {
                     Log.e(
-                        logTag,
+                        Const.TAG,
                         errorHead + response.code + " " + Objects.requireNonNull(response.body)
                             .string()
                     )
