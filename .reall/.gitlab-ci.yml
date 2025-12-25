@@ -180,6 +180,9 @@ generate:changelog:
     - if: $CI_COMMIT_BRANCH == "master"
   script:
     - |
+      git remote add source https://github.com/telegram-sms/telegram-rc
+      git fetch source --tags
+    - |
       echo "==> Compiling ChangelogGenerate.java..."
       javac .reall/changelogGenerate.java
       echo "==> Generating changelog..."
