@@ -24,13 +24,15 @@ public class changelogGenerate {
                 return;
             }
 
-            //System.out.println("\nFetched commits:\n" + commits);
-            //System.out.println("\nCalling OneAPI for summarization...");
+            System.out.println("\nFetched commits:\n" + commits);
+            System.out.println("\nCalling OneAPI for summarization...");
 
             String summary = summarizeChangelog(commits);
-            //System.out.println("\n=== Changelog Summary ===\n" + summary);
-            System.out.println(summary);
-
+            System.out.println("\n=== Changelog Summary ===\n" + summary);
+            BufferedWriter out = new BufferedWriter(new FileWriter("CHANGELOG.md"));
+            out.write(summary);
+            out.close();
+            system.out.println("Changelog written to CHANGELOG.md");
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
             e.printStackTrace();

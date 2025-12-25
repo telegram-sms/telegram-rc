@@ -178,14 +178,12 @@ generate:changelog:
   stage: build
   rules:
     - if: $CI_COMMIT_BRANCH == "master"
-  before_script:
+  script:
     - |
       echo "==> Compiling ChangelogGenerate.java..."
       javac .reall/changelogGenerate.java
-  script:
-    - |
       echo "==> Generating changelog..."
-      java -cp .reall changelogGenerate > CHANGELOG.md
+      java -cp .reall changelogGenerate
   artifacts:
     paths:
       - CHANGELOG.md
