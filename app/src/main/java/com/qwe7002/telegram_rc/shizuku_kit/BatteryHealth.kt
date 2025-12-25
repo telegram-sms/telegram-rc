@@ -18,18 +18,18 @@ object BatteryHealth {
     fun getBatteryHealthFromSysfs(): BatteryHealthInfo {
         if (!Shizuku.pingBinder()) {
             Log.e(Const.TAG, "Shizuku is not running")
-            return BatteryHealthInfo(0, 0, 0.0, 0, "",0.0, false, "Shizuku is not running")
+            return BatteryHealthInfo(0, 0, 0.0, 0, "", 0.0, false, "Shizuku is not running")
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
             Log.e(Const.TAG, "Shizuku permission not granted")
-            return BatteryHealthInfo(0, 0, 0.0, 0, "",0.0, false, "Shizuku permission not granted")
+            return BatteryHealthInfo(0, 0, 0.0, 0, "", 0.0, false, "Shizuku permission not granted")
         }
-        if(Shizuku.getUid()!=0){
+        if (Shizuku.getUid() != 0) {
             Log.e(Const.TAG, "root permission not granted")
-            return BatteryHealthInfo(0, 0, 0.0, 0, "",0.0, false, "root permission not granted")
-        }else {
+            return BatteryHealthInfo(0, 0, 0.0, 0, "", 0.0, false, "root permission not granted")
+        } else {
             return try {
                 val chargeFullDesign =
                     readSysfsFile("/sys/class/power_supply/battery/charge_full_design")
@@ -88,29 +88,16 @@ object BatteryHealth {
             // 正确处理 ParcelFileDescriptor
             val inputStream = ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
             val reader = BufferedReader(InputStreamReader(inputStream))
-
             val output = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) {
                 output.appendLine(line)
             }
 
-            // 使用線程來實現超時
-            val processThread = Thread {
-                try {
-                    process.waitFor()
-                } catch (e: Exception) {
-                    Log.e(Const.TAG, "Process wait error: ${e.message}")
-                }
-            }
-            processThread.start()
-            processThread.join(10000) // 10秒超時
-
-            if (processThread.isAlive) {
-                process.destroy()
-                processThread.interrupt()
-                Log.e(Const.TAG, "Command timed out")
-                return CommandResult(false, "", "Command timed out")
+            try {
+                process.waitFor()
+            } catch (e: Exception) {
+                Log.e(Const.TAG, "Process wait error: ${e.message}")
             }
 
             return CommandResult(process.exitValue() == 0, output.toString(), "")
