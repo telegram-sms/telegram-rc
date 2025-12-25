@@ -45,8 +45,7 @@ class ScannerActivity : Activity() {
         }.also { this.mCodeScanner.formats = it }
         DecodeCallback { result: Result ->
             runOnUiThread {
-                val logTag = this::class.java.simpleName
-                Log.d(logTag, "format: " + result.barcodeFormat + " content: " + result.text)
+                Log.d(Const.TAG, "format: " + result.barcodeFormat + " content: " + result.text)
                 if (!jsonValidate(result.text)) {
                     Toast.makeText(this, "The QR code is not legal", Toast.LENGTH_SHORT).show()
                     mCodeScanner.startPreview()

@@ -24,14 +24,13 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class ReSendJob : JobService() {
-    private val logTag = this::class.simpleName
     private lateinit var requestUri: String
     private val tableName: String = "resend_list"
     private lateinit var resendMMKV: MMKV
     private lateinit var preferences: MMKV
     override fun onStartJob(params: JobParameters?): Boolean {
         if (params == null) {
-            Log.e(logTag, "onStartJob: params is null")
+            Log.e(Const.TAG, "onStartJob: params is null")
             return false
         }
 
@@ -59,18 +58,18 @@ class ReSendJob : JobService() {
                     }
                     if (sendList.isNotEmpty()) {
                         Log.i(
-                            logTag,
+                            Const.TAG,
                             "The resend failure message is complete."
                         )
                     }
                 } catch (e: Exception) {
-                    Log.e(logTag, "Error in resend job", e)
+                    Log.e(Const.TAG, "Error in resend job", e)
                 } finally {
                     jobFinished(params, false)
                 }
             }.start()
         } catch (e: Exception) {
-            Log.e(logTag, "Failed to start resend job", e)
+            Log.e(Const.TAG, "Failed to start resend job", e)
             return false
         }
         return true
@@ -112,13 +111,13 @@ class ReSendJob : JobService() {
             }
         } catch (e: IOException) {
             Log.e(
-                logTag,
+                Const.TAG,
                 "An error occurred while resending: " + e.message
             )
             e.printStackTrace()
         } catch (e: Exception) {
             Log.e(
-                logTag,
+                Const.TAG,
                 "An unexpected error occurred while resending: " + e.message
             )
             e.printStackTrace()

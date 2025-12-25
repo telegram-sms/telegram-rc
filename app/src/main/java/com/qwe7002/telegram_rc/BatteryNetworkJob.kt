@@ -60,7 +60,7 @@ class BatteryNetworkJob : JobService() {
         ) {
             requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = chatInfoMMKV.getLong("batteryLastReceiveMessageId", 0L)
-            Log.d(this::class.java.simpleName, "onReceive: edit_mode")
+            Log.d(Const.TAG, "onReceive: edit_mode")
         }
         
         chatInfoMMKV.putLong("batteryLastReceiveTime", System.currentTimeMillis())

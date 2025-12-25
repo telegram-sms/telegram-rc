@@ -2,6 +2,7 @@ package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.annotation.SuppressLint
 import android.util.Log
+import com.qwe7002.telegram_rc.MMKV.Const
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
@@ -19,7 +20,7 @@ class IPhoneSubInfo {
             // Get the IPhoneSubInfo service binder via Shizuku
             val binder = SystemServiceHelper.getSystemService("iphonesubinfo")
             if (binder == null) {
-                Log.e(this::class.java.simpleName, "Failed to get IPhoneSubInfo service binder")
+                Log.e(Const.TAG, "Failed to get IPhoneSubInfo service binder")
                 return null
             }
 
@@ -35,7 +36,7 @@ class IPhoneSubInfo {
             )
 
             val iPhoneSubInfoService = asInterfaceMethod.invoke(null, wrappedBinder)
-            Log.d(this::class.java.simpleName, "Successfully obtained IPhoneSubInfo service")
+            Log.d(Const.TAG, "Successfully obtained IPhoneSubInfo service")
             iPhoneSubInfoService
         } catch (e: Exception) {
             Log.e(
@@ -51,7 +52,7 @@ class IPhoneSubInfo {
         return try {
             val iPhoneSubInfoService = getIPhoneSubInfoService()
             if (iPhoneSubInfoService == null) {
-                Log.e(this::class.java.simpleName, "Failed to get IPhoneSubInfo service")
+                Log.e(Const.TAG, "Failed to get IPhoneSubInfo service")
                 return null
             }
 
@@ -64,10 +65,10 @@ class IPhoneSubInfo {
             val result =
                 getSubscriberIdMethod.invoke(iPhoneSubInfoService, "com.android.shell") as? String
 
-            Log.i(this::class.java.simpleName, "Successfully retrieved subscriber ID")
+            Log.i(Const.TAG, "Successfully retrieved subscriber ID")
             result
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "Exception during getSubscriberId: ${e.message}", e)
+            Log.e(Const.TAG, "Exception during getSubscriberId: ${e.message}", e)
             null
         }
     }
@@ -76,7 +77,7 @@ class IPhoneSubInfo {
         return try {
             val iPhoneSubInfoService = getIPhoneSubInfoService()
             if (iPhoneSubInfoService == null) {
-                Log.e(this::class.java.simpleName, "Failed to get IPhoneSubInfo service")
+                Log.e(Const.TAG, "Failed to get IPhoneSubInfo service")
                 return null
             }
 

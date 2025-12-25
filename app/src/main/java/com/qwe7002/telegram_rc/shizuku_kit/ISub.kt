@@ -2,6 +2,7 @@ package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.annotation.SuppressLint
 import android.util.Log
+import com.qwe7002.telegram_rc.MMKV.Const
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
@@ -20,7 +21,7 @@ class ISub {
             // Get the ISub service binder via Shizuku
             val binder = SystemServiceHelper.getSystemService("isub")
             if (binder == null) {
-                Log.e(this::class.java.simpleName, "Failed to get ISub service binder")
+                Log.e(Const.TAG, "Failed to get ISub service binder")
                 return null
             }
 
@@ -33,10 +34,10 @@ class ISub {
                 iSubStubClass.getMethod("asInterface", Class.forName("android.os.IBinder"))
 
             val iSubService = asInterfaceMethod.invoke(null, wrappedBinder)
-            Log.d(this::class.java.simpleName, "Successfully obtained ISub service")
+            Log.d(Const.TAG, "Successfully obtained ISub service")
             iSubService
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "Failed to get ISub service: ${e.message}", e)
+            Log.e(Const.TAG, "Failed to get ISub service: ${e.message}", e)
             null
         }
     }
@@ -45,7 +46,7 @@ class ISub {
         return try {
             val iSubService = getISubService()
             if (iSubService == null) {
-                Log.e(this::class.java.simpleName, "Failed to get ISub service")
+                Log.e(Const.TAG, "Failed to get ISub service")
                 return false
             }
 
@@ -56,7 +57,7 @@ class ISub {
             )
 
             setDefaultDataSubIdMethod.invoke(iSubService, subId)
-            Log.i(this::class.java.simpleName, "Successfully set default data subId to: $subId")
+            Log.i(Const.TAG, "Successfully set default data subId to: $subId")
             true
         } catch (e: Exception) {
             Log.e(

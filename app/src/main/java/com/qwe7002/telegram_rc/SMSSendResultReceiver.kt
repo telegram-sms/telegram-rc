@@ -24,13 +24,12 @@ import java.util.Objects
 class SMSSendResultReceiver : BroadcastReceiver() {
     private var preferences = MMKV.defaultMMKV()
     override fun onReceive(context: Context, intent: Intent) {
-        val logTag = this::class.java.simpleName
-        Log.d(logTag, "Receive action: " + intent.action)
+        Log.d(Const.TAG, "Receive action: " + intent.action)
         val extras = intent.extras ?: return
         val sub = extras.getInt("sub_id")
         context.unregisterReceiver(this)
         if (!preferences.contains("initialized")) {
-            Log.i(logTag, "Uninitialized, SMS receiver is deactivated.")
+            Log.i(Const.TAG, "Uninitialized, SMS receiver is deactivated.")
             return
         }
         val botToken = preferences.getString("bot_token", "") ?: ""
@@ -41,7 +40,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         var requestUri = Network.getUrl(botToken, "sendMessage")
         val messageId = extras.getLong("message_id")
         if (messageId != -1L) {
-            Log.d(logTag, "Find the message_id and switch to edit mode.")
+            Log.d(Const.TAG, "Find the message_id and switch to edit mode.")
             requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = messageId
         }
@@ -67,7 +66,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                Log.e(logTag, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, sub)
                 ReSendJob.addResendLoop(context,requestBody.text)
             }
@@ -77,14 +76,14 @@ class SMSSendResultReceiver : BroadcastReceiver() {
                 try {
                     if (response.code != 200) {
                         Log.e(
-                            logTag,
+                            Const.TAG,
                             errorHead + response.code + " " + Objects.requireNonNull(response.body)
                                 .string()
                         )
                         ReSendJob.addResendLoop(context,requestBody.text)
                     }
                 } catch (e: Exception) {
-                    Log.e(logTag, errorHead + e.message)
+                    Log.e(Const.TAG, errorHead + e.message)
                     e.printStackTrace()
                 } finally {
                     response.close()

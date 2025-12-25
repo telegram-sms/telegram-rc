@@ -177,26 +177,25 @@ object Other {
 
     @JvmStatic
     fun getSimDisplayName(context: Context, slot: Int): String {
-        val TAG = "get_sim_display_name"
         var result = "Unknown"
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.READ_PHONE_STATE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.i(TAG, "No permission.")
+            Log.i(Const.TAG, "No permission.")
             return result
         }
         val subscriptionManager =
             (context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
         var info = subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slot)
         if (info == null) {
-            Log.d(TAG, "The active card is in the second card slot.")
+            Log.d(Const.TAG, "The active card is in the second card slot.")
             if (getActiveCard(context) == 1 && slot == 0) {
                 info = subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(1)
             }
             if (info == null) {
-                Log.d(TAG, "get_sim_display_name: Unable to obtain information")
+                Log.d(Const.TAG, "get_sim_display_name: Unable to obtain information")
                 return result
             }
         }

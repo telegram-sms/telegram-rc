@@ -240,7 +240,7 @@ class NotifyActivity : AppCompatActivity() {
                 } else {
                     listenListTemp.remove(packageName)
                 }
-                Log.d(logTag, "notify_listen_list: $listenListTemp")
+                Log.d(Const.TAG, "notify_listen_list: $listenListTemp")
                 MMKV.defaultMMKV().encode("notify_listen_list", listenListTemp.toSet())
                 listenList = listenListTemp
             }

@@ -74,7 +74,7 @@ class SMSReceiver : BroadcastReceiver() {
         )
         for (i in pdus.indices) {
             val format = extras.getString("format")
-            Log.d(logTag, "format: $format")
+            Log.d(Const.TAG, "format: $format")
             assert(format != null)
             messages[i] = SmsMessage.createFromPdu(pdus[i] as ByteArray, format)
         }
@@ -106,7 +106,7 @@ class SMSReceiver : BroadcastReceiver() {
         if (trustedPhoneNumber.isNotEmpty()) {
             isTrustedPhone = messageAddress.contains(trustedPhoneNumber)
         }
-        Log.d(logTag, "onReceive: $isTrustedPhone")
+        Log.d(Const.TAG, "onReceive: $isTrustedPhone")
         val requestBody = RequestMessage()
         requestBody.chatId = chatId
         requestBody.messageThreadId = preferences.getString("message_thread_id", "")
@@ -220,7 +220,7 @@ class SMSReceiver : BroadcastReceiver() {
                 }
             }
         }
-        Log.d(logTag, "onReceive: $isVerificationCode")
+        Log.d(Const.TAG, "onReceive: $isVerificationCode")
         var silentSend = false
         if (!isVerificationCode && !isTrustedPhone) {
             val blackListArray =
@@ -254,7 +254,7 @@ class SMSReceiver : BroadcastReceiver() {
         val finalIsFlash = (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d(logTag, e.toString())
+                Log.d(Const.TAG, e.toString())
                 Log.e(logTag, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 ReSendJob.addResendLoop(context, requestBody.text)

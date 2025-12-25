@@ -5,9 +5,9 @@ import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
 import android.telephony.TelephonyManager
 import android.util.Log
+import com.qwe7002.telegram_rc.MMKV.Const
 
 object ArfcnConverter {
-    private const val TAG = "ArfcnConverter"
 
     // LTE Bands mapping (EARFCN ranges) - 根据3GPP TS 36.101标准
     private val lteBandRanges: Map<Int, Pair<Int, Int>> = mapOf(
@@ -190,7 +190,7 @@ object ArfcnConverter {
             return matchingBands.first()
         }
 
-        Log.d(TAG, "Multiple bands match ARFCN $arfcn: $matchingBands")
+        Log.d(Const.TAG, "Multiple bands match ARFCN $arfcn: $matchingBands")
 
         // 多个匹配时的优先级规则：
         // 1. TDD频段优先
@@ -247,7 +247,7 @@ object ArfcnConverter {
                     val cellIdentity = cellInfo.cellIdentity
                     val cellSignalStrength = cellInfo.cellSignalStrength
                     val earfcn = cellIdentity.earfcn
-                    Log.d(TAG, "getCellInfoDetails LTE: EARFCN=$earfcn")
+                    Log.d(Const.TAG, "getCellInfoDetails LTE: EARFCN=$earfcn")
 
                     val band = if (earfcn != Int.MAX_VALUE) {
                         getLteBand(earfcn)
@@ -269,7 +269,7 @@ object ArfcnConverter {
                         e.printStackTrace()
                         Int.MAX_VALUE
                     }
-                    Log.d(TAG, "getCellInfoDetails NR: ARFCN=$arfcn")
+                    Log.d(Const.TAG, "getCellInfoDetails NR: ARFCN=$arfcn")
 
                     val band = if (arfcn != Int.MAX_VALUE) getNrBand(arfcn) else null
                     val duplexMode = band?.let { getBandDuplexMode(it) }
@@ -296,7 +296,7 @@ object ArfcnConverter {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting cell info details", e)
+            Log.e(Const.TAG, "Error getting cell info details", e)
             "Error getting cell info"
         }
     }

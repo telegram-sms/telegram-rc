@@ -4,6 +4,7 @@ package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.content.pm.PackageManager
 import android.util.Log
+import com.qwe7002.telegram_rc.MMKV.Const
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
 import java.io.BufferedReader
@@ -18,10 +19,10 @@ object SVC {
         val state = if (enable) "enable" else "disable"
         return try {
             val result = executeCommand(arrayOf("svc", "wifi", state))
-            Log.i(this::class.simpleName, "Command output: $result")
+            Log.i(Const.TAG, "Command output: $result")
             result.isSuccess
         } catch (e: Exception) {
-            Log.e(this::class.simpleName, "Exception occurred: ${e.message}", e)
+            Log.e(Const.TAG, "Exception occurred: ${e.message}", e)
             false
         }
     }
@@ -29,23 +30,23 @@ object SVC {
     @JvmStatic
     fun setData(enable: Boolean): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(this::class.simpleName, "Shizuku is not running")
+            Log.e(Const.TAG, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(this::class.simpleName, "Shizuku permission not granted")
+            Log.e(Const.TAG, "Shizuku permission not granted")
             return false
         }
 
         val state = if (enable) "enable" else "disable"
         return try {
             val result = executeCommand(arrayOf("svc", "data", state))
-            Log.i(this::class.simpleName, "Command output: $result")
+            Log.i(Const.TAG, "Command output: $result")
             result.isSuccess
         } catch (e: Exception) {
-            Log.e(this::class.simpleName, "Exception occurred: ${e.message}", e)
+            Log.e(Const.TAG, "Exception occurred: ${e.message}", e)
             false
         }
     }
@@ -53,23 +54,23 @@ object SVC {
     @JvmStatic
     fun setBlueTooth(enable: Boolean): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(this::class.simpleName, "Shizuku is not running")
+            Log.e(Const.TAG, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(this::class.simpleName, "Shizuku permission not granted")
+            Log.e(Const.TAG, "Shizuku permission not granted")
             return false
         }
 
         val state = if (enable) "enable" else "disable"
         return try {
             val result = executeCommand(arrayOf("svc", "bluetooth", state))
-            Log.i(this::class.simpleName, "Command output: $result")
+            Log.i(Const.TAG, "Command output: $result")
             result.isSuccess
         } catch (e: Exception) {
-            Log.e(this::class.simpleName, "Exception occurred: ${e.message}", e)
+            Log.e(Const.TAG, "Exception occurred: ${e.message}", e)
             false
         }
     }

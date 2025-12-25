@@ -87,7 +87,6 @@ import java.util.concurrent.TimeUnit
 @Suppress("DEPRECATION", "ClassName")
 class ChatService : Service() {
     // global object
-    private val logTag = this::class.java.simpleName
     private lateinit var okhttpClient: OkHttpClient
     private lateinit var messageThreadId: String
     private lateinit var wakeLock: WakeLock
@@ -190,7 +189,7 @@ class ChatService : Service() {
         // 提前返回，避免后续处理空对象
         if (messageObj == null && messageType != "callback_query") {
             Log.i(
-                this::class.java.simpleName,
+                Const.TAG,
                 "receive_handle: message object is null and not a callback query"
             )
             return
@@ -203,7 +202,7 @@ class ChatService : Service() {
         ) {
             // 确保callbackData已初始化
             if (callbackData == null) {
-                Log.e(this::class.java.simpleName, "Callback data is null")
+                Log.e(Const.TAG, "Callback data is null")
                 return
             }
             val slot = sendStatusMMKV.getInt("slot", -1)
@@ -242,12 +241,12 @@ class ChatService : Service() {
                     }
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    Log.e(logTag, "failed to send message:" + e.message)
+                    Log.e(Const.TAG, "failed to send message:" + e.message)
                 } finally {
                     try {
                         response?.close()
                     } catch (e: Exception) {
-                        Log.w(this::class.java.simpleName, "Failed to close response: ${e.message}")
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}")
                     }
                 }
                 return
@@ -269,7 +268,7 @@ class ChatService : Service() {
         if (messageObj != null && messageObj.has("from")) {
             fromObj = messageObj["from"].asJsonObject
             if (!messageTypeIsPrivate && fromObj["is_bot"].asBoolean) {
-                Log.i(this::class.java.simpleName, "receive_handle: receive from bot.")
+                Log.i(Const.TAG, "receive_handle: receive from bot.")
                 return
             }
         }
@@ -278,7 +277,7 @@ class ChatService : Service() {
                 fromTopicId = messageObj["message_thread_id"].asString
             }
             if (messageThreadId != fromTopicId) {
-                Log.i(this::class.java.simpleName, "Topic ID[$fromTopicId] not allow.")
+                Log.i(Const.TAG, "Topic ID[$fromTopicId] not allow.")
                 return
             }
         }
@@ -287,13 +286,13 @@ class ChatService : Service() {
         }
 
         if (fromObj == null) {
-            Log.e(this::class.java.simpleName, "From object is null")
+            Log.e(Const.TAG, "From object is null")
             return
         }
 
         val fromId = fromObj["id"].asString
         if (chatID != fromId) {
-            Log.w(logTag, "Chat ID [$fromId] not allow")
+            Log.w(Const.TAG, "Chat ID [$fromId] not allow")
             return
         }
 
@@ -302,8 +301,8 @@ class ChatService : Service() {
         if (messageObj != null && messageObj.has("text")) {
             requestMsg = messageObj["text"].asString
         } else {
-            Log.e(this::class.java.simpleName, "Text is null")
-            Log.w(logTag, "Command message text is null")
+            Log.e(Const.TAG, "Text is null")
+            Log.w(Const.TAG, "Command message text is null")
             return
         }
         if (messageObj.has("reply_to_message")) {
@@ -344,7 +343,7 @@ class ChatService : Service() {
                 }
             }
         }
-        Log.d(this::class.java.simpleName, "Command: $command")
+        Log.d(Const.TAG, "Command: $command")
 
         when (command) {
             "/help", "/start", "/commandlist" -> {
@@ -645,11 +644,11 @@ class ChatService : Service() {
                                                 reader.close()
                                                 errorReader.close()
                                             } catch (e: Exception) {
-                                                Log.w(this::class.java.simpleName, "Failed to close readers: ${e.message}")
+                                                Log.w(Const.TAG, "Failed to close readers: ${e.message}")
                                             }
                                         }
                                     } catch (e: Exception) {
-                                        Log.e(logTag, e.message.toString())
+                                        Log.e(Const.TAG, e.message.toString())
                                         Log.e(
                                             this::class.java.simpleName,
                                             "Error granting BATTERY_STATS permission: ${e.message}",
@@ -709,7 +708,7 @@ class ChatService : Service() {
                         applicationContext
                     ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + cardInfo + shizukuStatus
 
-                Log.d(this::class.java.simpleName, "getInfo: " + requestBody.text)
+                Log.d(Const.TAG, "getInfo: " + requestBody.text)
             }
 
             "/log" -> requestBody.text = getString(R.string.system_message_head) + "\n" + readLogcat(10)
@@ -905,7 +904,7 @@ class ChatService : Service() {
                         }
                     }
                 } else {
-                    Log.i(this::class.java.simpleName, "send_ussd: No permission.")
+                    Log.i(Const.TAG, "send_ussd: No permission.")
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\n${getString(R.string.no_permission)}"
                 }
@@ -1054,7 +1053,7 @@ class ChatService : Service() {
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (e: NoSuchMethodError) {
                                                 e.printStackTrace()
-                                                Log.e(logTag, "Switching SIM${slot + 1} card status failed: ${e.message}")
+                                                Log.e(Const.TAG, "Switching SIM${slot + 1} card status failed: ${e.message}")
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             }
@@ -1097,7 +1096,7 @@ class ChatService : Service() {
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (e: NoSuchMethodError) {
                                             Log.e(
-                                                logTag,
+                                                Const.TAG,
                                                 "Switching default data SIM failed: Method is not available"
                                             )
                                             e.printStackTrace()
@@ -1294,7 +1293,7 @@ class ChatService : Service() {
         val gson = Gson()
         val body
                 : RequestBody = gson.toJson(requestBody).toRequestBody(Const.JSON)
-        Log.d(this::class.java.simpleName, "receive_handle: " + gson.toJson(requestBody))
+        Log.d(Const.TAG, "receive_handle: " + gson.toJson(requestBody))
         val sendRequest
 
                 : Request = Request.Builder().url(requestUri).method("POST", body).build()
@@ -1303,7 +1302,7 @@ class ChatService : Service() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                Log.e(logTag, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message)
             }
 
             @Throws(IOException::class)
@@ -1313,23 +1312,23 @@ class ChatService : Service() {
                     body.string()
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    Log.e(logTag, "Failed to read response body: ${e.message}")
+                    Log.e(Const.TAG, "Failed to read response body: ${e.message}")
                     return
                 } catch (e: NullPointerException) {
                     e.printStackTrace()
-                    Log.e(logTag, "Response body is null: ${e.message}")
+                    Log.e(Const.TAG, "Response body is null: ${e.message}")
                     return
                 }
 
                 if (response.code != 200) {
                     Log.e(
-                        logTag,
+                        Const.TAG,
                         errorHead + response.code + " " + responseString
                     )
                     try {
                         response.close()
                     } catch (e: Exception) {
-                        Log.w(this::class.java.simpleName, "Failed to close response: ${e.message}")
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}")
                     }
                     return
                 }
@@ -1339,7 +1338,7 @@ class ChatService : Service() {
                     resultObj = JsonParser.parseString(responseString).asJsonObject
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    Log.e(logTag, "Failed to parse response JSON: ${e.message}")
+                    Log.e(Const.TAG, "Failed to parse response JSON: ${e.message}")
                     try {
                         response.close()
                     } catch (e2: Exception) {
@@ -1362,7 +1361,7 @@ class ChatService : Service() {
                         sendStatusMMKV.putLong("message_id", getMessageId(responseString))
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Log.e(this::class.java.simpleName, "Failed to get message ID: ${e.message}")
+                        Log.e(Const.TAG, "Failed to get message ID: ${e.message}")
                     }
                 }
 
@@ -1413,7 +1412,7 @@ class ChatService : Service() {
                                     }
                                     if (i == maxRetries) {
                                         Log.w(
-                                            logTag,
+                                            Const.TAG,
                                             "Failed to get hotspot IP after $maxRetries attempts"
                                         )
                                     }
@@ -1514,7 +1513,7 @@ class ChatService : Service() {
                 try {
                     response.close()
                 } catch (e: Exception) {
-                    Log.w(this::class.java.simpleName, "Failed to close response: ${e.message}")
+                    Log.w(Const.TAG, "Failed to close response: ${e.message}")
                 }
             }
         })
@@ -1583,10 +1582,10 @@ class ChatService : Service() {
     internal inner class threadMainRunnable : Runnable {
 
         override fun run() {
-            Log.d(this::class.java.simpleName, "run: thread main start")
+            Log.d(Const.TAG, "run: thread main start")
             while (true) {
                 if (terminalThread) {
-                    Log.d(this::class.java.simpleName, "run: thread Stop")
+                    Log.d(Const.TAG, "run: thread Stop")
                     terminalThread = false
                     break
                 }
@@ -1617,12 +1616,12 @@ class ChatService : Service() {
                         } catch (e: IOException) {
                             e.printStackTrace()
                             Log.e(
-                                logTag,
+                                Const.TAG,
                                 "Connection to the Telegram API service failed"
                             )
                             continue
                         }
-                        Log.d(this::class.java.simpleName, "run: $result")
+                        Log.d(Const.TAG, "run: $result")
                         try {
                             val resultObj = JsonParser.parseString(result).asJsonObject
                             if (resultObj["ok"].asBoolean) {
@@ -1636,7 +1635,7 @@ class ChatService : Service() {
                                     } catch (e: Exception) {
                                         e.printStackTrace()
                                         Log.e(
-                                            logTag,
+                                            Const.TAG,
                                             "Error processing message: ${e.message}"
                                         )
                                     }
@@ -1644,22 +1643,22 @@ class ChatService : Service() {
                             } else {
                                 if (resultObj.has("description")) {
                                     Log.e(
-                                        logTag,
+                                        Const.TAG,
                                         "Error Code: ${resultObj["error_code"]}, ${resultObj["description"]}"
                                     )
                                 } else {
-                                    Log.e(logTag, "Error response code:" + response.code)
+                                    Log.e(Const.TAG, "Error response code:" + response.code)
                                 }
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()
                             Log.e(
-                                logTag,
+                                Const.TAG,
                                 "Error parsing JSON response: ${e.message}"
                             )
                         }
                     } else {
-                        Log.e(logTag, "Error response code:" + response.code)
+                        Log.e(Const.TAG, "Error response code:" + response.code)
                         try {
                             Thread.sleep(5000L)
                         } catch (e: InterruptedException) {
@@ -1669,7 +1668,7 @@ class ChatService : Service() {
                 } catch (e: IOException) {
                     e.printStackTrace()
                     Log.e(
-                        logTag,
+                        Const.TAG,
                         "Connection to the Telegram API service failed: ${e.message}"
                     )
                     try {
@@ -1680,7 +1679,7 @@ class ChatService : Service() {
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Log.e(
-                        logTag,
+                        Const.TAG,
                         "Unexpected error in polling thread: ${e.message}"
                     )
                     try {
@@ -1692,7 +1691,7 @@ class ChatService : Service() {
                     try {
                         response?.close()
                     } catch (e: Exception) {
-                        Log.w(this::class.java.simpleName, "Failed to close response: ${e.message}")
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}")
                     }
                 }
             }
@@ -1720,7 +1719,7 @@ class ChatService : Service() {
                 logList.joinToString("\n")
             }
         } catch (e: Exception) {
-            Log.e(logTag, "Error reading logcat: ${e.message}")
+            Log.e(Const.TAG, "Error reading logcat: ${e.message}")
             getString(R.string.no_logs)
         }
     }

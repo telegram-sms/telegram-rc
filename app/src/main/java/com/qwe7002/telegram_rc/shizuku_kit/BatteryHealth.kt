@@ -3,13 +3,13 @@ package com.qwe7002.telegram_rc.shizuku_kit
 import android.content.pm.PackageManager
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import com.qwe7002.telegram_rc.MMKV.Const
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 object BatteryHealth {
-    private const val TAG = "Battery"
 
     /**
      * 使用Shizuku读取系统文件获取电池设计容量和当前容量
@@ -17,17 +17,17 @@ object BatteryHealth {
      */
     fun getBatteryHealthFromSysfs(): BatteryHealthInfo {
         if (!Shizuku.pingBinder()) {
-            Log.e(TAG, "Shizuku is not running")
+            Log.e(Const.TAG, "Shizuku is not running")
             return BatteryHealthInfo(0, 0, 0.0, 0, "",0.0, false, "Shizuku is not running")
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "Shizuku permission not granted")
+            Log.e(Const.TAG, "Shizuku permission not granted")
             return BatteryHealthInfo(0, 0, 0.0, 0, "",0.0, false, "Shizuku permission not granted")
         }
         if(Shizuku.getUid()!=0){
-            Log.e(TAG, "root permission not granted")
+            Log.e(Const.TAG, "root permission not granted")
             return BatteryHealthInfo(0, 0, 0.0, 0, "",0.0, false, "root permission not granted")
         }else {
             return try {
@@ -62,7 +62,7 @@ object BatteryHealth {
                     )
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Exception occurred: ${e.message}", e)
+                Log.e(Const.TAG, "Exception occurred: ${e.message}", e)
                 BatteryHealthInfo(0, 0, 0.0, 0, "", 0.0, false, e.message ?: "Unknown error")
             }
         }
@@ -100,7 +100,7 @@ object BatteryHealth {
                 try {
                     process.waitFor()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Process wait error: ${e.message}")
+                    Log.e(Const.TAG, "Process wait error: ${e.message}")
                 }
             }
             processThread.start()
@@ -109,13 +109,13 @@ object BatteryHealth {
             if (processThread.isAlive) {
                 process.destroy()
                 processThread.interrupt()
-                Log.e(TAG, "Command timed out")
+                Log.e(Const.TAG, "Command timed out")
                 return CommandResult(false, "", "Command timed out")
             }
 
             return CommandResult(process.exitValue() == 0, output.toString(), "")
         } catch (e: Exception) {
-            Log.e(TAG, "Execution failed: " + e.message)
+            Log.e(Const.TAG, "Execution failed: " + e.message)
             return CommandResult(false, "", e.message)
         }
     }

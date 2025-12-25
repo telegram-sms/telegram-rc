@@ -27,27 +27,26 @@ import java.util.Objects
 object SMS {
     @JvmStatic
     fun sendFallbackSMS(context: Context, content: String?, subId: Int) {
-        val TAG = "send_fallback_sms"
         if (PermissionChecker.checkSelfPermission(
                 context,
                 Manifest.permission.SEND_SMS
             ) != PermissionChecker.PERMISSION_GRANTED
         ) {
-            Log.d(TAG, ": No permission.")
+            Log.d(Const.TAG, ": No permission.")
             return
         }
         val preferences = MMKV.defaultMMKV()
         val trustNumber = preferences.getString("trusted_phone_number", "")
         if (trustNumber.isNullOrEmpty()) {
-            Log.i(TAG, "The trusted number is empty.")
+            Log.i(Const.TAG, "The trusted number is empty.")
             return
         }
         if (!preferences.getBoolean("fallback_sms", false)) {
-            Log.i(TAG, "Did not open the SMS to fall back.")
+            Log.i(Const.TAG, "Did not open the SMS to fall back.")
             return
         }
         if (content.isNullOrEmpty()) {
-            Log.i(TAG, "The content is empty.")
+            Log.i(Const.TAG, "The content is empty.")
             return
         }
         try {
@@ -59,7 +58,7 @@ object SMS {
             val divideContents = smsManager.divideMessage(content)
             smsManager.sendMultipartTextMessage(trustNumber, null, divideContents, null, null)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send fallback SMS: ${e.message}")
+            Log.e(Const.TAG, "Failed to send fallback SMS: ${e.message}")
         }
     }
 
@@ -84,11 +83,11 @@ object SMS {
                 Manifest.permission.SEND_SMS
             ) != PermissionChecker.PERMISSION_GRANTED
         ) {
-            Log.d("send_sms", "No permission.")
+            Log.d(Const.TAG, "No permission.")
             return
         }
         if (!Other.isPhoneNumber(sendTo)) {
-            Log.e("send_sms", "[$sendTo] is an illegal phone number")
+            Log.e(Const.TAG, "[$sendTo] is an illegal phone number")
             return
         }
         val preferences = MMKV.defaultMMKV()
@@ -96,7 +95,7 @@ object SMS {
         val chatId = preferences.getString("chat_id", "") ?: ""
         var requestUri = Network.getUrl(botToken, "sendMessage")
         if (privateMessageId != -1L) {
-            Log.d("send_sms", "Find the message_id and switch to edit mode.")
+            Log.d(Const.TAG, "Find the message_id and switch to edit mode.")
             requestUri = Network.getUrl(botToken, "editMessageText")
         }
         val requestBody = RequestMessage()
@@ -122,7 +121,7 @@ object SMS {
         try {
             val response = call.execute()
             if (response.code != 200) {
-                Log.e("send_sms", "Failed to send message: HTTP ${response.code}")
+                Log.e(Const.TAG, "Failed to send message: HTTP ${response.code}")
                 response.close()
                 return
             }
@@ -131,8 +130,8 @@ object SMS {
             }
             response.close()
         } catch (e: Exception) {
-            Log.d("sendSMS", "sendSMS: $e")
-            Log.e("send_sms", "failed to send message:" + e.message)
+            Log.d(Const.TAG, "sendSMS: $e")
+            Log.e(Const.TAG, "failed to send message:" + e.message)
             return
         }
         val divideContents = smsManager.divideMessage(content)
@@ -165,7 +164,7 @@ object SMS {
                 null
             )
         } catch (e: Exception) {
-            Log.e("sendSMS", "Failed to send SMS: ${e.message}")
+            Log.e(Const.TAG, "Failed to send SMS: ${e.message}")
             context.applicationContext.unregisterReceiver(receiver)
         }
     }

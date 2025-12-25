@@ -75,7 +75,7 @@ class USSDCallBack(
         val errorHead = "Send USSD failed:"
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d(logTag, "onFailure: $e")
+                Log.d(Const.TAG, "onFailure: $e")
                 Log.e(logTag, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, -1)
                 ReSendJob.addResendLoop(context,requestBody.text)

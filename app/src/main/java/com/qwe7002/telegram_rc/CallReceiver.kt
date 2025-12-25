@@ -26,8 +26,7 @@ import java.util.Objects
 
 class CallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val logTag = this::class.java.simpleName
-        Log.d(logTag, "Receive action: " + intent.action)
+        Log.d(Const.TAG, "Receive action: " + intent.action)
         stateMMKV = MMKV.mmkvWithID(Const.STATUS_MMKV_ID)
         when (Objects.requireNonNull(intent.action)) {
             "android.intent.action.PHONE_STATE" -> {

@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.R
 import moe.shizuku.server.IShizukuService
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -24,7 +25,7 @@ object Battery {
             batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         if (batteryLevel > 100) {
             Log.i(
-                "get_battery_info",
+                Const.TAG,
                 "The previous battery is over 100%, and the correction is 100%."
             )
             batteryLevel = 100
@@ -63,19 +64,19 @@ object Battery {
     @JvmStatic
     fun getLearnedBatteryCapacity(): String? {
         if (!Shizuku.pingBinder()) {
-            Log.e("Battery", "Shizuku is not running")
+            Log.e(Const.TAG, "Shizuku is not running")
             return null
         }
 
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e("Battery", "Shizuku permission not granted")
+            Log.e(Const.TAG, "Shizuku permission not granted")
             return null
         }
 
         return try {
             val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
             if (service == null) {
-                Log.e("Battery", "Shizuku service not available")
+                Log.e(Const.TAG, "Shizuku service not available")
                 return null
             }
 
@@ -102,7 +103,7 @@ object Battery {
                 try {
                     process.waitFor()
                 } catch (e: Exception) {
-                    Log.e("Battery", "Process wait error: ${e.message}")
+                    Log.e(Const.TAG, "Process wait error: ${e.message}")
                 }
             }
             processThread.start()
@@ -111,13 +112,13 @@ object Battery {
             if (processThread.isAlive) {
                 process.destroy()
                 processThread.interrupt()
-                Log.e("Battery", "getLearnedBatteryCapacity command timed out")
+                Log.e(Const.TAG, "getLearnedBatteryCapacity command timed out")
                 return null
             }
 
             learnedCapacity
         } catch (e: Exception) {
-            Log.e("Battery", "Exception occurred: ${e.message}", e)
+            Log.e(Const.TAG, "Exception occurred: ${e.message}", e)
             null
         }
     }

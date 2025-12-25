@@ -48,7 +48,7 @@ object Network {
         val networks = connectivityManager.allNetworks
         for (network in networks) {
             val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
-            Log.d("check_network_status", "check_network_status: $networkCapabilities")
+            Log.d(Const.TAG, "check_network_status: $networkCapabilities")
             assert(networkCapabilities != null)
             if (networkCapabilities!!.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                 networkStatus = true
@@ -66,7 +66,7 @@ object Network {
         val networks = manager.allNetworks
         for (network in networks) {
             val networkCapabilities = manager.getNetworkCapabilities(network)
-            Log.d("check_network_status", "check_network_status: $networkCapabilities")
+            Log.d(Const.TAG, "check_network_status: $networkCapabilities")
             assert(networkCapabilities != null)
             if (networkCapabilities!!.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
                 networkStatus = true
@@ -84,7 +84,7 @@ object Network {
 
     @JvmStatic
     fun getOkhttpObj(): OkHttpClient {
-        var doh = MMKV.defaultMMKV().getBoolean("doh_switch", true)
+        val doh = MMKV.defaultMMKV().getBoolean("doh_switch", true)
 
         val proxyConfig = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
         val okhttp: OkHttpClient.Builder = OkHttpClient.Builder()
@@ -303,7 +303,7 @@ object Network {
 
                     override fun onError(errorCode: Int, detail: Throwable?) {
                         Log.w(
-                            "requestUpdatedCellInfo",
+                            Const.TAG,
                             "Failed to get updated cell info. Error code: $errorCode",
                             detail
                         )
@@ -314,7 +314,7 @@ object Network {
             // Wait up to 2 seconds for the update
             latch.await(2, TimeUnit.SECONDS)
         } catch (e: Exception) {
-            Log.w("check5GState", "Exception while requesting cell info update", e)
+            Log.w(Const.TAG, "Exception while requesting cell info update", e)
         }
 
         return result
@@ -391,14 +391,14 @@ object Network {
                     else -> "wlan"
                 }
                 if (interfaceName.startsWith(prefix)) {
-                    Log.d("getHotspotIpAddress", "Checking interface: $interfaceName")
+                    Log.d(Const.TAG, "Checking interface: $interfaceName")
                     val addresses = networkInterface.inetAddresses
 
                     while (addresses.hasMoreElements()) {
                         val address = addresses.nextElement()
                         if (!address.isLoopbackAddress && address is Inet4Address) {
                             Log.d(
-                                "getHotspotIpAddress",
+                                Const.TAG,
                                 "Found IP on $interfaceName: ${address.hostAddress}"
                             )
                             @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -407,7 +407,7 @@ object Network {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("getHotspotIpAddress", "Error getting hotspot IP: ${e.message}")
+                Log.e(Const.TAG, "Error getting hotspot IP: ${e.message}")
             }
         }
         return "Unknown"

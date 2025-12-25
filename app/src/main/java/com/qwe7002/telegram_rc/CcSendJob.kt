@@ -23,12 +23,11 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 
 class CcSendJob : JobService() {
-    private val logTag = this::class.java.simpleName
     override fun onStartJob(params: JobParameters?): Boolean {
-        Log.d(logTag, "startJob: Trying to send message.")
+        Log.d(Const.TAG, "startJob: Trying to send message.")
         
         if (params == null) {
-            Log.e(logTag, "onStartJob: params is null")
+            Log.e(Const.TAG, "onStartJob: params is null")
             return false
         }
         
@@ -91,15 +90,15 @@ class CcSendJob : JobService() {
                     }
                 }
                 if (sendList.isNotEmpty()) {
-                    Log.i(logTag, "The Cc message is complete.")
+                    Log.i(Const.TAG, "The Cc message is complete.")
                 }
             } catch (e: Exception) {
-                Log.e(logTag, "Error in CcSend job", e)
+                Log.e(Const.TAG, "Error in CcSend job", e)
             } finally {
                 try {
                     jobFinished(params, false)
                 } catch (e: Exception) {
-                    Log.e(logTag, "Error finishing job", e)
+                    Log.e(Const.TAG, "Error finishing job", e)
                 }
             }
         }.start()
@@ -127,12 +126,12 @@ class CcSendJob : JobService() {
         try {
             val response = call.execute()
             if (response.code == 200) {
-                Log.i(logTag, "networkProgressHandle: Message sent successfully.")
+                Log.i(Const.TAG, "networkProgressHandle: Message sent successfully.")
             }else{
-                Log.e(logTag, "Send message failed: " + response.code + " " + response.body.string())
+                Log.e(Const.TAG, "Send message failed: " + response.code + " " + response.body.string())
             }
         } catch (e: IOException) {
-            Log.e(logTag, "An error occurred while resending: " + e.message)
+            Log.e(Const.TAG, "An error occurred while resending: " + e.message)
             e.printStackTrace()
         }
     }

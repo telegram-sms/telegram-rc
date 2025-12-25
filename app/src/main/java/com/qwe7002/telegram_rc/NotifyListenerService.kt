@@ -23,11 +23,10 @@ import java.io.IOException
 import java.util.Objects
 
 class NotifyListenerService : NotificationListenerService() {
-    private val logTag = this::class.java.simpleName
     var appNameList: MutableMap<String, String> = HashMap()
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
-        Log.d(logTag, "onNotificationPosted: $packageName")
+        Log.d(Const.TAG, "onNotificationPosted: $packageName")
         val extras = sbn.notification.extras!!
         val title = extras.getString(Notification.EXTRA_TITLE, "None")
         val content = extras.getString(Notification.EXTRA_TEXT, "None")
@@ -39,7 +38,7 @@ class NotifyListenerService : NotificationListenerService() {
         val preferences = MMKV.defaultMMKV()
         val requestBody = RequestMessage()
         if (!preferences.contains("initialized")) {
-            Log.i(logTag, "Uninitialized, Notification receiver is deactivated.")
+            Log.i(Const.TAG, "Uninitialized, Notification receiver is deactivated.")
             return
         }
         if (packageName == "com.android.server.telecom" && preferences.getBoolean(
@@ -52,10 +51,10 @@ class NotifyListenerService : NotificationListenerService() {
                     "${getString(R.string.receive_notification_title)}\n${
                         getString(R.string.title)
                     }$title\n${getString(R.string.content)}$content"
-                Log.d(logTag, "onNotificationPosted: $title $content")
+                Log.d(Const.TAG, "onNotificationPosted: $title $content")
             } else {
                 Log.w(
-                    logTag,
+                    Const.TAG,
                     "The number [${title}] has been called multiple times and the notification has been collapsed."
                 )
                 return
@@ -64,7 +63,7 @@ class NotifyListenerService : NotificationListenerService() {
             val listenList: List<String> =
                 preferences.decodeStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
             if (!listenList.contains(packageName)) {
-                Log.i(logTag, "[$packageName] Not in the list of listening packages.")
+                Log.i(Const.TAG, "[$packageName] Not in the list of listening packages.")
                 return
             }
             var appName: String? = "unknown"
@@ -103,7 +102,7 @@ class NotifyListenerService : NotificationListenerService() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                Log.e(logTag, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message)
                 ReSendJob.addResendLoop(applicationContext, requestBody.text)
             }
 
@@ -111,7 +110,7 @@ class NotifyListenerService : NotificationListenerService() {
             override fun onResponse(call: Call, response: Response) {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
-                    Log.e(logTag, errorHead + response.code + " " + result)
+                    Log.e(Const.TAG, errorHead + response.code + " " + result)
                     ReSendJob.addResendLoop(applicationContext, requestBody.text)
                 }
             }

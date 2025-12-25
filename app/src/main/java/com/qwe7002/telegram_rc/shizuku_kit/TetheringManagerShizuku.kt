@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.qwe7002.telegram_rc.MMKV.Const
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
@@ -23,7 +24,7 @@ object TetheringManagerShizuku {
             // Get the system TetheringManager service via Shizuku
             val binder = SystemServiceHelper.getSystemService(Context.TETHERING_SERVICE)
             if (binder == null) {
-                Log.e(this::class.java.simpleName, "Failed to get TetheringManager service binder")
+                Log.e(Const.TAG, "Failed to get TetheringManager service binder")
                 return null
             }
 
@@ -75,11 +76,11 @@ object TetheringManagerShizuku {
                     }
                 }
                 
-                Log.d(this::class.java.simpleName, "Creating TetheringManager with Supplier constructor")
+                Log.d(Const.TAG, "Creating TetheringManager with Supplier constructor")
                 return constructor.newInstance(minimalContext, supplier)
             } catch (e: NoSuchMethodException) {
                 e.printStackTrace()
-                Log.d(this::class.java.simpleName, "Supplier constructor not found: ${e.message}")
+                Log.d(Const.TAG, "Supplier constructor not found: ${e.message}")
             }
             
             // Try the older constructor with direct IBinder
@@ -89,17 +90,17 @@ object TetheringManagerShizuku {
                     Class.forName("android.os.IBinder")
                 )
                 constructor.isAccessible = true
-                Log.d(this::class.java.simpleName, "Creating TetheringManager with IBinder constructor")
+                Log.d(Const.TAG, "Creating TetheringManager with IBinder constructor")
                 return constructor.newInstance(minimalContext, wrappedBinder)
             } catch (e: NoSuchMethodException) {
                 e.printStackTrace()
-                Log.d(this::class.java.simpleName, "IBinder constructor not found: ${e.message}")
+                Log.d(Const.TAG, "IBinder constructor not found: ${e.message}")
             }
             
-            Log.e(this::class.java.simpleName, "No suitable constructor found for TetheringManager")
+            Log.e(Const.TAG, "No suitable constructor found for TetheringManager")
             null
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "Failed to get TetheringManager: ${e.message}", e)
+            Log.e(Const.TAG, "Failed to get TetheringManager: ${e.message}", e)
             null
         }
     }
@@ -115,7 +116,7 @@ object TetheringManagerShizuku {
         return try {
             val tetheringManager = getTetheringManager(context)
             if (tetheringManager == null) {
-                Log.e(this::class.java.simpleName, "Failed to get TetheringManager")
+                Log.e(Const.TAG, "Failed to get TetheringManager")
                 return false
             }
 
@@ -138,11 +139,11 @@ object TetheringManagerShizuku {
             ) { _, method, args ->
                 when (method.name) {
                     "onTetheringStarted" -> {
-                        Log.d(this::class.java.simpleName, "Tethering started successfully for mode: $mode")
+                        Log.d(Const.TAG, "Tethering started successfully for mode: $mode")
                     }
                     "onTetheringFailed" -> {
                         val error = args?.getOrNull(0) as? Int ?: -1
-                        Log.e(this::class.java.simpleName, "Tethering failed for mode: $mode with error: $error")
+                        Log.e(Const.TAG, "Tethering failed for mode: $mode with error: $error")
                     }
                 }
                 null
@@ -150,10 +151,10 @@ object TetheringManagerShizuku {
 
             startTetheringMethod.invoke(tetheringManager, mode, executor, callback)
 
-            Log.i(this::class.java.simpleName, "Initiated tethering start for mode: $mode")
+            Log.i(Const.TAG, "Initiated tethering start for mode: $mode")
             true
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "Exception during tethering start: ${e.message}", e)
+            Log.e(Const.TAG, "Exception during tethering start: ${e.message}", e)
             false
         }
     }
@@ -169,7 +170,7 @@ object TetheringManagerShizuku {
         return try {
             val tetheringManager = getTetheringManager(context)
             if (tetheringManager == null) {
-                Log.e(this::class.java.simpleName, "Failed to get TetheringManager")
+                Log.e(Const.TAG, "Failed to get TetheringManager")
                 return false
             }
 
@@ -179,10 +180,10 @@ object TetheringManagerShizuku {
                 Int::class.javaPrimitiveType
             )
             stopTetheringMethod.invoke(tetheringManager, mode)
-            Log.i(this::class.java.simpleName, "Initiated tethering stop for mode: $mode")
+            Log.i(Const.TAG, "Initiated tethering stop for mode: $mode")
             true
         } catch (e: Exception) {
-            Log.e(this::class.java.simpleName, "Exception during tethering stop: ${e.message}", e)
+            Log.e(Const.TAG, "Exception during tethering stop: ${e.message}", e)
             false
         }
     }

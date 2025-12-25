@@ -705,7 +705,7 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             0 -> {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    Log.d(logTag, "No camera permissions.")
+                    Log.d(Const.TAG, "No camera permissions.")
                     showErrorDialog(applicationContext.getString(R.string.no_camera_permission))
                     return
                 }
@@ -714,7 +714,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             1 -> {
-                Log.d(logTag, "onRequestPermissionsResult: 1")
+                Log.d(Const.TAG, "onRequestPermissionsResult: 1")
             }
 
             2 -> {
@@ -727,7 +727,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                         try {
-                            Log.d(logTag, "onCreate: ")
+                            Log.d(Const.TAG, "onCreate: ")
                             getIMSICache(applicationContext)
                             Snackbar.make(
                                 findViewById(R.id.data_usage_button),
@@ -866,7 +866,7 @@ class MainActivity : AppCompatActivity() {
                         Manifest.permission.ACCESS_COARSE_LOCATION
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    Log.d(logTag, "No permissions.")
+                    Log.d(Const.TAG, "No permissions.")
                     showErrorDialog("No permission.")
                     return false
                 }

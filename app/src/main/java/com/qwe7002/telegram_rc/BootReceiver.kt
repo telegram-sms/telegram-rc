@@ -15,14 +15,13 @@ import rikka.shizuku.Shizuku
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val logTag = this::class.java.simpleName
         try {
             MMKV.initialize(context)
             MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
             val preferences = MMKV.defaultMMKV()
             if (preferences.contains("initialized")) {
                 Log.i(
-                    logTag,
+                    Const.TAG,
                     "Received [" + intent.action + "] broadcast, starting background service."
                 )
                 ServiceManage.startService(
@@ -38,19 +37,19 @@ class BootReceiver : BroadcastReceiver() {
             try {
                 MMKV.mmkvWithID(Const.STATUS_MMKV_ID).clear()
             } catch (e: Exception) {
-                Log.w(logTag, "Failed to clear status MMKV: ${e.message}")
+                Log.w(Const.TAG, "Failed to clear status MMKV: ${e.message}")
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
                 if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                     MMKV.mmkvWithID(Const.BEACON_MMKV_ID).putBoolean("beacon_enable", false)
-                    Log.w(logTag, "Shizuku not available, beacon disabled.")
+                    Log.w(Const.TAG, "Shizuku not available, beacon disabled.")
                     Notify.sendMessage(context, "BootReceiver", "Shizuku not available, Beacon disabled.")
                     ReSendJob.addResendLoop(context, "Shizuku not available, Beacon disabled.")
                 }
             }
-            Log.d(logTag, "BootReceiver finished processing.")
+            Log.d(Const.TAG, "BootReceiver finished processing.")
         } catch (e: Exception) {
-            Log.e(logTag, "Error in BootReceiver: ${e.message}", e)
+            Log.e(Const.TAG, "Error in BootReceiver: ${e.message}", e)
         }
     }
 }

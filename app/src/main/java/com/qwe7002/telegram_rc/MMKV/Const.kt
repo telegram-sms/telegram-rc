@@ -4,6 +4,7 @@ import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 
 object Const {
+    const val TAG: String = "Telegram-RC"
     const val SYSTEM_CONFIG_VERSION: Int = 1
 
     @JvmField
