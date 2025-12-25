@@ -9,6 +9,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.data_structure.LogAdapter
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -67,8 +68,7 @@ class LogcatActivity : AppCompatActivity() {
     private fun loadLogs() {
         thread {
             try {
-                val pid = android.os.Process.myPid()
-                val process = Runtime.getRuntime().exec(arrayOf("logcat","--pid=$pid", "-d", "-t", line.toString()))
+                val process = Runtime.getRuntime().exec(arrayOf("logcat", "-s", Const.TAG + ":*:V","-v", "-d", "-t", line.toString()))
                 val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
                 val logList = mutableListOf<String>()
                 var logLine: String?
