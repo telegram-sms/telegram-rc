@@ -1533,10 +1533,10 @@ class ChatService : Service() {
     internal inner class threadMainRunnable : Runnable {
 
         override fun run() {
-            Log.d(Const.TAG, "run: thread main start")
+            Log.d(Const.TAG, "threadMainRunnable: thread main start")
             while (true) {
                 if (terminalThread) {
-                    Log.d(Const.TAG, "run: thread Stop")
+                    Log.d(Const.TAG, "threadMainRunnable: thread Stop")
                     terminalThread = false
                     break
                 }
@@ -1572,7 +1572,6 @@ class ChatService : Service() {
                             )
                             continue
                         }
-                        Log.d(Const.TAG, "run: $result")
                         try {
                             val resultObj = JsonParser.parseString(result).asJsonObject
                             if (resultObj["ok"].asBoolean) {
