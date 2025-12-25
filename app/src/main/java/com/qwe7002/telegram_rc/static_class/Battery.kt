@@ -63,48 +63,37 @@ object Battery {
 
     @JvmStatic
     fun getLearnedBatteryCapacity(): String? {
-        if (!Shizuku.pingBinder()) {
-            Log.e(Const.TAG, "Shizuku is not running")
-            return null
-        }
-
-        if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(Const.TAG, "Shizuku permission not granted")
-            return null
-        }
-
         return try {
             val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
             if (service == null) {
                 Log.e(Const.TAG, "Shizuku service not available")
                 return null
             }
+            Log.d(Const.TAG, "Shizuku service obtained successfully")
 
-            val process = service.newProcess(arrayOf("dumpsys", "batterystats"), null, null)
+            // Use grep to filter output directly in the shell command
+            val process = service.newProcess(
+                arrayOf("sh", "-c", "dumpsys batterystats | grep 'Max learned battery capacity'"),
+                null,
+                null
+            )
+
             val reader = BufferedReader(
                 InputStreamReader(
                     ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
                 )
             )
-            var line: String?
-            var learnedCapacity: String? = null
 
-            while (reader.readLine().also { line = it } != null) {
-                if (line != null && line.contains("Max learned battery capacity: ")) {
-                    learnedCapacity = line.trim()
-                    learnedCapacity = learnedCapacity.replace("Max learned battery capacity: ", "")
-                    learnedCapacity = learnedCapacity.replace(" mAh", "")
-                    break
-                }
+            val line = reader.readLine()
+            reader.close()
+
+            val learnedCapacity = line?.let {
+                it.trim()
+                    .replace("Max learned battery capacity: ", "")
+                    .replace(" mAh", "")
             }
 
-            // 使用線程來實現超時
-            try {
-                process.waitFor()
-            } catch (e: Exception) {
-                Log.e(Const.TAG, "Process wait error: ${e.message}")
-            }
-
+            process.waitFor()
             learnedCapacity
         } catch (e: Exception) {
             e.printStackTrace()

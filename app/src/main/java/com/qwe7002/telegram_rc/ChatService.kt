@@ -31,7 +31,6 @@ import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.shizuku_kit.BatteryHealth
 import com.qwe7002.telegram_rc.shizuku_kit.ISub
 import com.qwe7002.telegram_rc.shizuku_kit.SVC.setBlueTooth
 import com.qwe7002.telegram_rc.shizuku_kit.SVC.setData
@@ -560,95 +559,55 @@ class ChatService : Service() {
                 var batteryHealth = ""
                 if (Shizuku.pingBinder()) {
                     if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-                        val batteryInfoSys = BatteryHealth.getBatteryHealthFromSysfs()
-                        var healthSys: String
-                        if (batteryInfoSys.isSuccess) {
-                            healthSys = " (" + batteryInfoSys.healthRatio.toInt() + "%)"
-                            batteryHealth =
-                                "\nBattery Health: " + batteryInfoSys.healthStatus + healthSys + " (Cycle Count: ${batteryInfoSys.cycleCount}, Temperature: ${batteryInfoSys.temperature}℃)"
-                        } else {
-                            // Check if we have BATTERY_STATS permission, if not, try to grant it via Shizuku
-                            if (checkSelfPermission(Manifest.permission.BATTERY_STATS) != PackageManager.PERMISSION_GRANTED) {
-                                // Try to grant BATTERY_STATS permission using Shizuku shell command
-                                if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-                                    try {
-                                        val service: IShizukuService? =
-                                            IShizukuService.Stub.asInterface(Shizuku.getBinder())
-                                        if (service != null) {
-                                            val command = arrayOf(
-                                                "pm",
-                                                "grant",
-                                                packageName,
-                                                Manifest.permission.BATTERY_STATS
-                                            )
-                                            val process = service.newProcess(command, null, null)
-                                            val inputStream =
-                                                ParcelFileDescriptor.AutoCloseInputStream(process.inputStream)
-                                            val errorStream =
-                                                ParcelFileDescriptor.AutoCloseInputStream(process.errorStream)
-                                            val reader =
-                                                BufferedReader(InputStreamReader(inputStream))
-                                            val errorReader =
-                                                BufferedReader(InputStreamReader(errorStream))
-
-                                            try {
-                                                process.waitFor()
-                                            } catch (e: Exception) {
-                                                Log.e(
-                                                    Const.TAG,
-                                                    "BATTERY_STATS grant process error: ${e.message}"
-                                                )
-                                            }
-                                            val output = reader.readText()
-                                            val errorOutput = errorReader.readText()
-
-                                            if (output.isNotEmpty()) {
-                                                Log.i(
-                                                    Const.TAG,
-                                                    "BATTERY_STATS grant output: $output"
-                                                )
-                                            }
-
-                                            if (errorOutput.isNotEmpty()) {
-                                                Log.e(
-                                                    Const.TAG,
-                                                    "BATTERY_STATS grant error: $errorOutput"
-                                                )
-                                            }
-
-                                            if (process.exitValue() == 0) {
-                                                Log.i(
-                                                    Const.TAG,
-                                                    "Successfully granted BATTERY_STATS permission via Shizuku"
-                                                )
-                                            } else {
-                                                Log.e(
-                                                    Const.TAG,
-                                                    "Failed to grant BATTERY_STATS permission via Shizuku"
-                                                )
-                                            }
-
-                                            try {
-                                                reader.close()
-                                                errorReader.close()
-                                            } catch (e: Exception) {
-                                                Log.w(
-                                                    Const.TAG,
-                                                    "Failed to close readers: ${e.message}"
-                                                )
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                        Log.e(Const.TAG, e.message.toString())
-                                        Log.e(
-                                            Const.TAG,
-                                            "Error granting BATTERY_STATS permission: ${e.message}",
-                                            e
+                        // Check if we have BATTERY_STATS permission, if not, try to grant it via Shizuku
+                        if (checkSelfPermission(Manifest.permission.BATTERY_STATS) != PackageManager.PERMISSION_GRANTED) {
+                            // Try to grant BATTERY_STATS permission using Shizuku shell command
+                            if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                                try {
+                                    val service: IShizukuService? =
+                                        IShizukuService.Stub.asInterface(Shizuku.getBinder())
+                                    if (service != null) {
+                                        val command = arrayOf(
+                                            "pm",
+                                            "grant",
+                                            packageName,
+                                            Manifest.permission.BATTERY_STATS
                                         )
+                                        val process = service.newProcess(command, null, null)
+
+                                        try {
+                                            process.waitFor()
+                                        } catch (e: Exception) {
+                                            Log.e(
+                                                Const.TAG,
+                                                "BATTERY_STATS grant process error: ${e.message}"
+                                            )
+                                        }
+
+                                        if (process.exitValue() == 0) {
+                                            Log.i(
+                                                Const.TAG,
+                                                "Successfully granted BATTERY_STATS permission via Shizuku"
+                                            )
+                                        } else {
+                                            Log.e(
+                                                Const.TAG,
+                                                "Failed to grant BATTERY_STATS permission via Shizuku"
+                                            )
+                                        }
+
                                     }
+                                } catch (e: Exception) {
+                                    Log.e(Const.TAG, e.message.toString())
+                                    Log.e(
+                                        Const.TAG,
+                                        "Error granting BATTERY_STATS permission: ${e.message}",
+                                        e
+                                    )
                                 }
                             }
                         }
+
                     }
                 }
                 if (batteryHealth.isEmpty() && checkSelfPermission(Manifest.permission.BATTERY_STATS) == PackageManager.PERMISSION_GRANTED) {
