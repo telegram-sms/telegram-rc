@@ -28,11 +28,13 @@ class ScannerActivity : Activity() {
 
     public override fun onCreate(state: Bundle?) {
         super.onCreate(state)
-        
-        // Enable edge-to-edge using WindowCompat
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        
         setContentView(R.layout.activity_scanner)
+        // Handle window insets for edge-to-edge on ScrollView
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.scanner_container)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
 
         val scannerView = findViewById<CodeScannerView>(R.id.scanner_view)
         mCodeScanner = CodeScanner(this, scannerView)
