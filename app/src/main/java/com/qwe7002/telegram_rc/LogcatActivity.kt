@@ -72,7 +72,8 @@ class LogcatActivity : AppCompatActivity() {
     private fun loadLogs() {
         thread {
             try {
-                val process = Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-t", line.toString()))
+                val pid = android.os.Process.myPid()
+                val process = Runtime.getRuntime().exec(arrayOf("logcat","--pid=$pid", "-d", "-t", line.toString()))
                 val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
                 val logList = mutableListOf<String>()
                 var logLine: String?
