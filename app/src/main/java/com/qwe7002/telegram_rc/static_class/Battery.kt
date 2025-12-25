@@ -87,11 +87,8 @@ object Battery {
             val line = reader.readLine()
             reader.close()
 
-            val learnedCapacity = line?.let {
-                it.trim()
-                    .replace("Max learned battery capacity: ", "")
-                    .replace(" mAh", "")
-            }
+            val learnedCapacity =
+                line?.trim()?.replace("Max learned battery capacity: ", "")?.replace(" mAh", "")
 
             process.waitFor()
             learnedCapacity
