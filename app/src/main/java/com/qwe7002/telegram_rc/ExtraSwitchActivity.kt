@@ -25,6 +25,7 @@ class ExtraSwitchActivity : AppCompatActivity() {
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
             WindowInsetsCompat.CONSUMED
         }
+        FakeStatusBar().fakeStatusBar(this, window)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         setTitle(R.string.beacon_auto_switch_setting)
