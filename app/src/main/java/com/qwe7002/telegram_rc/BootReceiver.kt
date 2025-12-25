@@ -43,8 +43,10 @@ class BootReceiver : BroadcastReceiver() {
                 if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                     MMKV.mmkvWithID(Const.BEACON_MMKV_ID).putBoolean("beacon_enable", false)
                     Log.w(Const.TAG, "Shizuku not available, beacon disabled.")
-                    Notify.sendMessage(context, "BootReceiver", "Shizuku not available, Beacon disabled.")
-                    ReSendJob.addResendLoop(context, "Shizuku not available, Beacon disabled.")
+                    if(preferences.getBoolean("beacon_switch", false)) {
+                        Notify.sendMessage(context, "BootReceiver", "Shizuku not available, Beacon disabled.")
+                        ReSendJob.addResendLoop(context, "Shizuku not available, Beacon disabled.")
+                    }
                 }
             }
             Log.d(Const.TAG, "BootReceiver finished processing.")

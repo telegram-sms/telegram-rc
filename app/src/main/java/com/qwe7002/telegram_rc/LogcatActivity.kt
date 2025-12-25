@@ -70,7 +70,7 @@ class LogcatActivity : AppCompatActivity() {
             try {
                 val process = Runtime.getRuntime().exec(
                     arrayOf(
-                        "logcat","-v", "time", "Telegram-RC.TetherManager:V",
+                        "logcat","${Const.TAG}:V", "Telegram-RC.TetherManager:V",
                         "ShizukuShell:V",
                         "*:S", "-d", "-t", line.toString()
                     )
