@@ -42,7 +42,17 @@ class ExtraSwitchActivity : AppCompatActivity() {
 
         // Save setting when changed
         autoSwitch.setOnCheckedChangeListener { _, isChecked ->
-            beaconMMKV.putBoolean("beacon_enable", isChecked)
+            val isShizukuAvailable = Shizuku.pingBinder()
+            val hasShizukuPermission = isShizukuAvailable &&
+                    Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if(hasShizukuPermission){
+                // Only save if Shizuku permission is granted
+                beaconMMKV.putBoolean("beacon_enable", isChecked)
+            }else{
+                // Revert the switch state if no permission
+                autoSwitch.isChecked = !isChecked
+            }
+
             // Also check Shizuku status when changing setting
             updateShizukuStatus()
         }
