@@ -140,7 +140,7 @@ class ChatService : Service() {
             startForeground(
                 Notify.CHAT_COMMAND,
                 notification.build(),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
         } else {
             startForeground(Notify.CHAT_COMMAND, notification.build())

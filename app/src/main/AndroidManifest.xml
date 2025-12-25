@@ -131,7 +131,7 @@
             android:name=".ChatService"
             android:enabled="true"
             android:exported="true"
-            android:foregroundServiceType="location"
+            android:foregroundServiceType="specialUse"
             android:permission="android.permission.FOREGROUND_SERVICE" />
 
         <activity android:name=".LogcatActivity" />
