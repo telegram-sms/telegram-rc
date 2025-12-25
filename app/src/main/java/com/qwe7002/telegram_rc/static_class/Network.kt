@@ -6,6 +6,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Context.CONNECTIVITY_SERVICE
 import android.content.Context.TELEPHONY_SERVICE
+import android.content.Context.TELEPHONY_SUBSCRIPTION_SERVICE
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -14,12 +15,14 @@ import android.os.StrictMode.ThreadPolicy
 import android.telephony.CellInfo
 import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
+import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
 import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.tencent.mmkv.MMKV
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -324,10 +327,20 @@ object Network {
         var netType = "Unknown"
         val connectManager =
             checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
-        val telephonyManager = checkNotNull(
-            context
-                .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-        )
+        var telephonyManager : TelephonyManager
+        if(getActiveCard(context) == 2){
+            Log.d(Const.TAG, "Dual SIM detected")
+            telephonyManager = checkNotNull(
+                context
+                    .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+            ).createForSubscriptionId(SubscriptionManager.getDefaultDataSubscriptionId())
+        }else{
+            Log.d(Const.TAG, "Single SIM detected")
+            telephonyManager = checkNotNull(
+                context
+                    .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+            )
+        }
 
         // Check permission once before entering loop
         val hasPhoneStatePermission = ActivityCompat.checkSelfPermission(

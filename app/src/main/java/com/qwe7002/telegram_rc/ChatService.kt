@@ -537,13 +537,11 @@ class ChatService : Service() {
                 }
 
                 var isHotspotRunning = ""
-                if (Settings.System.canWrite(applicationContext)) {
-                    isHotspotRunning += "\n${getString(R.string.hotspot_status)}"
-                    isHotspotRunning += if (isHotspotActive(applicationContext)) {
-                        getString(R.string.enable)
-                    } else {
-                        getString(R.string.disable)
-                    }
+                isHotspotRunning += "\n${getString(R.string.hotspot_status)}"
+                isHotspotRunning += if (isHotspotActive(applicationContext)) {
+                    getString(R.string.enable)
+                } else {
+                    getString(R.string.disable)
                 }
                 val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
                 var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
@@ -658,8 +656,10 @@ class ChatService : Service() {
                 Log.d(Const.TAG, "getInfo: " + requestBody.text)
             }
 
-            "/log" -> requestBody.text =
-                getString(R.string.system_message_head) + "\n" + readLogcat(10)
+            "/log" -> {
+                requestBody.text =
+                    getString(R.string.system_message_head) + "\n" + readLogcat(10)
+            }
 
             "/hotspot" -> {
                 if (MMKV.mmkvWithID(Const.BEACON_MMKV_ID).getBoolean("beacon_enable", false)) {
