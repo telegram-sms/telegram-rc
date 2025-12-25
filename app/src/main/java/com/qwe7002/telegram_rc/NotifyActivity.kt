@@ -144,7 +144,6 @@ class NotifyActivity : AppCompatActivity() {
     }
 
     internal class AppAdapter(private val context: Context?) : BaseAdapter(), Filterable {
-        private val logTag: String = this::class.java.simpleName
         private var listenList: List<String>
         var appInfoList: List<ApplicationInfo> = ArrayList()
         var viewAppInfoList: List<ApplicationInfo> = ArrayList()

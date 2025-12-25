@@ -24,12 +24,12 @@ class LogcatActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         setContentView(R.layout.activity_logcat)
         setTitle(R.string.logcat)
-        
+
         // Handle window insets for edge-to-edge
-        
+
         logRecyclerView = findViewById(R.id.log_recycler_view)
         logRecyclerView.layoutManager = LinearLayoutManager(this)
         ViewCompat.setOnApplyWindowInsetsListener(logRecyclerView) { view, windowInsets ->
@@ -47,9 +47,9 @@ class LogcatActivity : AppCompatActivity() {
 
         logAdapter = LogAdapter(emptyList())
         logRecyclerView.adapter = logAdapter
-        
+
         loadLogs()
-        
+
         startRefreshThread()
     }
 
@@ -68,7 +68,13 @@ class LogcatActivity : AppCompatActivity() {
     private fun loadLogs() {
         thread {
             try {
-                val process = Runtime.getRuntime().exec(arrayOf("logcat", "-s", Const.TAG + ":*:V","Telegram-RC.TetherManager:*:V","ShizukuShell:*:V","-v", "-d", "-t", line.toString()))
+                val process = Runtime.getRuntime().exec(
+                    arrayOf(
+                        "logcat","-v", "time", "Telegram-RC.TetherManager:V",
+                        "ShizukuShell:V",
+                        "*:S", "-d", "-t", line.toString()
+                    )
+                )
                 val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
                 val logList = mutableListOf<String>()
                 var logLine: String?
@@ -104,7 +110,7 @@ class LogcatActivity : AppCompatActivity() {
         super.onResume()
         loadLogs()
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         isRefreshing = false
@@ -130,6 +136,7 @@ class LogcatActivity : AppCompatActivity() {
                 }
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
