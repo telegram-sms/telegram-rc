@@ -91,8 +91,9 @@ public class changelogGenerate {
                 "log",
                 fromCommit + ".." + toCommit,
                 "--pretty=format:" + format,
-                "--date=short"
-        );
+                "--date=short",
+                "--tags"
+                );
 
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
