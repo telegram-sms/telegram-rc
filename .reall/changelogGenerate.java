@@ -15,8 +15,9 @@ public class changelogGenerate {
             // Parameters: Git repository path
             String repoPath = "."; // Current directory, or specify path like "/path/to/your/repo"
 
-            //System.out.println("Fetching Git commit history...");
+            System.out.println("Fetching Git commit history...");
             String latestTag = getLatestTag(repoPath);
+            System.out.println("Latest tag found: " + latestTag);  // 添加这行调试
             String commits = getGitCommitRange(repoPath, latestTag, "HEAD");
 
             if (commits.isEmpty()) {
