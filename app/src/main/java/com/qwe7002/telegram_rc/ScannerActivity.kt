@@ -2,16 +2,10 @@ package com.qwe7002.telegram_rc
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.WindowInsetsController
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.budiyev.android.codescanner.CodeScanner
 import com.budiyev.android.codescanner.CodeScannerView
