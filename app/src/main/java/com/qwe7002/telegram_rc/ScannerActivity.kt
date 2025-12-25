@@ -29,6 +29,7 @@ class ScannerActivity : Activity() {
             view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
             WindowInsetsCompat.CONSUMED
         }
+        FakeStatusBar().fakeStatusBar(this, window)
 
         val scannerView = findViewById<CodeScannerView>(R.id.scanner_view)
         mCodeScanner = CodeScanner(this, scannerView)

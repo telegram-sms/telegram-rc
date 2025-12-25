@@ -79,9 +79,11 @@ import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.text.DecimalFormat
 import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 
 @Suppress("DEPRECATION", "ClassName")
@@ -561,7 +563,7 @@ class ChatService : Service() {
                         val batteryInfoSys = BatteryHealth.getBatteryHealthFromSysfs()
                         var healthSys: String
                         if (batteryInfoSys.isSuccess) {
-                            healthSys = " (" + batteryInfoSys.healthRatio + "%)"
+                            healthSys = " (" + batteryInfoSys.healthRatio.toInt() + "%)"
                             batteryHealth =
                                 "\nBattery Health: " + batteryInfoSys.healthStatus + healthSys + " (Cycle Count: ${batteryInfoSys.cycleCount}, Temperature: ${batteryInfoSys.temperature}℃)"
                         } else {
@@ -589,68 +591,57 @@ class ChatService : Service() {
                                             val errorReader =
                                                 BufferedReader(InputStreamReader(errorStream))
 
-                                            // 使用線程來實現超時
-                                            val processThread = Thread {
-                                                try {
-                                                    process.waitFor()
-                                                } catch (e: Exception) {
-                                                    Log.e(
-                                                        this::class.java.simpleName,
-                                                        "BATTERY_STATS grant process error: ${e.message}"
-                                                    )
-                                                }
-                                            }
-                                            processThread.start()
-                                            processThread.join(10000) // 10秒超時
-
-                                            if (processThread.isAlive) {
-                                                process.destroy()
-                                                processThread.interrupt()
+                                            try {
+                                                process.waitFor()
+                                            } catch (e: Exception) {
                                                 Log.e(
-                                                    this::class.java.simpleName,
-                                                    "BATTERY_STATS grant process timed out"
+                                                    Const.TAG,
+                                                    "BATTERY_STATS grant process error: ${e.message}"
+                                                )
+                                            }
+                                            val output = reader.readText()
+                                            val errorOutput = errorReader.readText()
+
+                                            if (output.isNotEmpty()) {
+                                                Log.i(
+                                                    Const.TAG,
+                                                    "BATTERY_STATS grant output: $output"
+                                                )
+                                            }
+
+                                            if (errorOutput.isNotEmpty()) {
+                                                Log.e(
+                                                    Const.TAG,
+                                                    "BATTERY_STATS grant error: $errorOutput"
+                                                )
+                                            }
+
+                                            if (process.exitValue() == 0) {
+                                                Log.i(
+                                                    Const.TAG,
+                                                    "Successfully granted BATTERY_STATS permission via Shizuku"
                                                 )
                                             } else {
-                                                val output = reader.readText()
-                                                val errorOutput = errorReader.readText()
-
-                                                if (output.isNotEmpty()) {
-                                                    Log.i(
-                                                        this::class.java.simpleName,
-                                                        "BATTERY_STATS grant output: $output"
-                                                    )
-                                                }
-
-                                                if (errorOutput.isNotEmpty()) {
-                                                    Log.e(
-                                                        this::class.java.simpleName,
-                                                        "BATTERY_STATS grant error: $errorOutput"
-                                                    )
-                                                }
-
-                                                if (process.exitValue() == 0) {
-                                                    Log.i(
-                                                        this::class.java.simpleName,
-                                                        "Successfully granted BATTERY_STATS permission via Shizuku"
-                                                    )
-                                                } else {
-                                                    Log.e(
-                                                        this::class.java.simpleName,
-                                                        "Failed to grant BATTERY_STATS permission via Shizuku"
-                                                    )
-                                                }
+                                                Log.e(
+                                                    Const.TAG,
+                                                    "Failed to grant BATTERY_STATS permission via Shizuku"
+                                                )
                                             }
+
                                             try {
                                                 reader.close()
                                                 errorReader.close()
                                             } catch (e: Exception) {
-                                                Log.w(Const.TAG, "Failed to close readers: ${e.message}")
+                                                Log.w(
+                                                    Const.TAG,
+                                                    "Failed to close readers: ${e.message}"
+                                                )
                                             }
                                         }
                                     } catch (e: Exception) {
                                         Log.e(Const.TAG, e.message.toString())
                                         Log.e(
-                                            this::class.java.simpleName,
+                                            Const.TAG,
                                             "Error granting BATTERY_STATS permission: ${e.message}",
                                             e
                                         )
@@ -688,17 +679,14 @@ class ChatService : Service() {
                         batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
                     val healthRatio = Battery.getLearnedBatteryCapacity()
                         ?.let { (it.toDouble() / Battery.getBatteryCapacity(applicationContext)) * 100 }
+                    val health = healthRatio?.toInt()
                     Log.d(
-                        this::class.java.simpleName,
-                        "getLearnedBatteryCapacity: " + Battery.getLearnedBatteryCapacity()
-                    )
-                    Log.d(
-                        this::class.java.simpleName,
-                        "getBatteryCapacity: " + Battery.getBatteryCapacity(applicationContext)
+                        Const.TAG,
+                        "getInfo: battery health ratio: $healthRatio, temperature: $batteryTemperature"
                     )
                     batteryHealth =
                         "\nBattery Health: $batteryHealthString${
-                            if (healthRatio != null) " (${"%.2f".format(healthRatio)}%)" else ""
+                            if (health != null) " (${health}%)" else ""
                         } ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
                 }
                 val shizukuStatus =
@@ -706,12 +694,13 @@ class ChatService : Service() {
                 requestBody.text =
                     "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
                         applicationContext
-                    ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + beaconStatus + cardInfo + shizukuStatus
+                    ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + shizukuStatus + beaconStatus + cardInfo
 
                 Log.d(Const.TAG, "getInfo: " + requestBody.text)
             }
 
-            "/log" -> requestBody.text = getString(R.string.system_message_head) + "\n" + readLogcat(10)
+            "/log" -> requestBody.text =
+                getString(R.string.system_message_head) + "\n" + readLogcat(10)
 
             "/hotspot" -> {
                 if (MMKV.mmkvWithID(Const.BEACON_MMKV_ID).getBoolean("beacon_enable", false)) {
@@ -1053,7 +1042,10 @@ class ChatService : Service() {
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (e: NoSuchMethodError) {
                                                 e.printStackTrace()
-                                                Log.e(Const.TAG, "Switching SIM${slot + 1} card status failed: ${e.message}")
+                                                Log.e(
+                                                    Const.TAG,
+                                                    "Switching SIM${slot + 1} card status failed: ${e.message}"
+                                                )
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             }

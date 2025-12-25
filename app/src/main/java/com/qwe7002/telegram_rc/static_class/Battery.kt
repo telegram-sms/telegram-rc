@@ -99,25 +99,15 @@ object Battery {
             }
 
             // 使用線程來實現超時
-            val processThread = Thread {
-                try {
-                    process.waitFor()
-                } catch (e: Exception) {
-                    Log.e(Const.TAG, "Process wait error: ${e.message}")
-                }
-            }
-            processThread.start()
-            processThread.join(10000) // 10秒超時
-
-            if (processThread.isAlive) {
-                process.destroy()
-                processThread.interrupt()
-                Log.e(Const.TAG, "getLearnedBatteryCapacity command timed out")
-                return null
+            try {
+                process.waitFor()
+            } catch (e: Exception) {
+                Log.e(Const.TAG, "Process wait error: ${e.message}")
             }
 
             learnedCapacity
         } catch (e: Exception) {
+            e.printStackTrace()
             Log.e(Const.TAG, "Exception occurred: ${e.message}", e)
             null
         }

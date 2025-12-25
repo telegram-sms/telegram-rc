@@ -109,7 +109,7 @@ class BeaconReceiverService : Service() {
                     )
                 ) {
                     resetCounters()
-                    Log.d(Const.TAG, "Battery level too low, skipping beacon processing")
+                    //Log.d(Const.TAG, "Battery level too low, skipping beacon processing")
                     return@Observer
                 }
 
@@ -117,13 +117,13 @@ class BeaconReceiverService : Service() {
                     beaconConfig.decodeStringSet("address", emptySet()) ?: emptySet()
                 if (listenBeaconList.isEmpty()) {
                     resetCounters()
-                    Log.i(Const.TAG, "Watchlist is empty")
+                    //Log.i(Const.TAG, "Watchlist is empty")
                     return@Observer
                 }
 
                 if (!isBluetoothEnabled()) {
                     resetCounters()
-                    Log.i(Const.TAG, "Bluetooth is disabled")
+                    //Log.i(Const.TAG, "Bluetooth is disabled")
                     return@Observer
                 }
 
