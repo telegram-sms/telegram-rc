@@ -17,7 +17,7 @@ import kotlin.concurrent.thread
 class LogcatActivity : AppCompatActivity() {
     private lateinit var logRecyclerView: RecyclerView
     private lateinit var logAdapter: LogAdapter
-    private val line = 100
+    private val line = 500
     private lateinit var refreshThread: Thread
     private var isRefreshing = true
 
