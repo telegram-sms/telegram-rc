@@ -1542,6 +1542,7 @@ class ChatService : Service() {
                 }
                 val timeout = 60
                 val httpTimeout = 65L
+
                 val okhttpClientNew = okhttpClient.newBuilder()
                     .readTimeout(httpTimeout, TimeUnit.SECONDS)
                     .writeTimeout(httpTimeout, TimeUnit.SECONDS)

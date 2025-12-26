@@ -18,7 +18,7 @@ class KeepAliveJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         try {
             if (params == null) {
-                Log.e(Const.TAG, "onStartJob: params is null")
+                Log.e(Const.TAG, "KeepAliveJob: params is null")
                 return false
             }
             
@@ -33,7 +33,7 @@ class KeepAliveJob : JobService() {
                 )
                 ServiceManage.startBeaconService(applicationContext)
             }
-            Log.d(Const.TAG, "startJob: Try to pull up the service")
+            Log.d(Const.TAG+"-Debug", "KeepAliveJob: Try to pull up the service")
             this.jobFinished(params, false)
             startJob(applicationContext)
         } catch (e: Exception) {

@@ -30,7 +30,7 @@ class ReSendJob : JobService() {
     private lateinit var preferences: MMKV
     override fun onStartJob(params: JobParameters?): Boolean {
         if (params == null) {
-            Log.e(Const.TAG, "onStartJob: params is null")
+            Log.e(Const.TAG, "ReSendJob: params is null")
             return false
         }
 
