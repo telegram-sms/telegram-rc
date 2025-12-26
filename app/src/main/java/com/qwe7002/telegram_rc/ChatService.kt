@@ -14,7 +14,6 @@ import android.net.wifi.WifiManager.WifiLock
 import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
-import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.provider.Settings
@@ -44,7 +43,6 @@ import com.qwe7002.telegram_rc.static_class.DataUsage
 import com.qwe7002.telegram_rc.static_class.Hotspot.disableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.enableHotspot
 import com.qwe7002.telegram_rc.static_class.Hotspot.isHotspotActive
-
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Network.getDataEnable
 import com.qwe7002.telegram_rc.static_class.Network.getOkhttpObj
@@ -78,11 +76,9 @@ import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
-import java.text.DecimalFormat
 import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.TimeUnit
-import kotlin.math.roundToInt
 
 
 @Suppress("DEPRECATION", "ClassName")
@@ -1651,7 +1647,13 @@ class ChatService : Service() {
 
     private fun readLogcat(lines: Int): String {
         return try {
-            val process = Runtime.getRuntime().exec(arrayOf("logcat", "-d", "-t", lines.toString()))
+            val process = Runtime.getRuntime().exec(
+                arrayOf(
+                    "logcat","${Const.TAG}:V", "Telegram-RC.TetherManager:V",
+                    "ShizukuShell:V",
+                    "*:S", "-d", "-t", lines.toString()
+                )
+            )
             val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
             val logList = mutableListOf<String>()
             var logLine: String?

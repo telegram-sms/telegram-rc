@@ -56,7 +56,7 @@ object ServiceManage {
         }
     }
 
-    public fun hasLocationPermissions(context: Context): Boolean {
+    fun hasLocationPermissions(context: Context): Boolean {
         val fineLocationPermission =
             context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
         val coarseLocationPermission =

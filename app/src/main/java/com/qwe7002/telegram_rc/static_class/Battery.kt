@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Context.BATTERY_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.ParcelFileDescriptor
 import android.util.Log

@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
@@ -26,10 +25,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import com.google.android.material.switchmaterial.SwitchMaterial
+import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.BeaconDataRepository
-import com.qwe7002.telegram_rc.MMKV.Const
 import com.tencent.mmkv.MMKV
 import rikka.shizuku.Shizuku
 

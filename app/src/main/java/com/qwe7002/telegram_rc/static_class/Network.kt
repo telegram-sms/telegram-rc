@@ -6,7 +6,6 @@ import android.Manifest
 import android.content.Context
 import android.content.Context.CONNECTIVITY_SERVICE
 import android.content.Context.TELEPHONY_SERVICE
-import android.content.Context.TELEPHONY_SUBSCRIPTION_SERVICE
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities

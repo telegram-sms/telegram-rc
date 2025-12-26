@@ -79,7 +79,6 @@ class BatteryService : Service() {
 
     internal inner class BatteryBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val logTag = this::class.java.simpleName
             Log.d(Const.TAG, "Receive action: " + intent.action)
             val builder = StringBuilder(context.getString(R.string.system_message_head) + "\n")
             val action = intent.action

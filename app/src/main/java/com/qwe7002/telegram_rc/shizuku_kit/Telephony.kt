@@ -9,9 +9,6 @@ import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
 
 class Telephony {
-    companion object {
-        private const val TAG = "TelephonyManager"
-    }
 
 
     /**

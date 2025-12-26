@@ -3,7 +3,6 @@ package com.qwe7002.telegram_rc.static_class
 import android.telephony.CellInfo
 import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
-import android.telephony.TelephonyManager
 import android.util.Log
 import com.qwe7002.telegram_rc.MMKV.Const
 
