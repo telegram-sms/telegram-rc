@@ -16,7 +16,7 @@ object YellowPage {
     fun checkPhoneNumberInDatabaseBlocking(context: Context, phoneNumber: String): String? {
         return try {
             runBlocking {
-                val db = AppDatabase.Companion.getDatabase(context)
+                val db = AppDatabase.getDatabase(context)
                 val phoneNumbers = db.phoneNumberDao().getPhoneNumbersByPhoneNumber(phoneNumber)
                 if (phoneNumbers.isNotEmpty()) {
                     val organization =
