@@ -94,7 +94,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var saveButton: Button
     private lateinit var getIdButton: Button
 
-    @SuppressLint("BatteryLife", "QueryPermissionsNeeded", "SetTextI18n", "PrivateApi",
+    @SuppressLint(
+        "BatteryLife", "QueryPermissionsNeeded", "SetTextI18n", "PrivateApi",
         "MissingInflatedId"
     )
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -190,6 +191,14 @@ class MainActivity : AppCompatActivity() {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.CALL_PHONE),
+                    2
+                )
+                return@setOnClickListener
+            }
+            if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS)!= PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.READ_PHONE_NUMBERS),
                     2
                 )
                 return@setOnClickListener
@@ -458,6 +467,7 @@ class MainActivity : AppCompatActivity() {
             }
             var permissionList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 arrayOf(
+                    Manifest.permission.READ_PHONE_NUMBERS,
                     Manifest.permission.READ_SMS,
                     Manifest.permission.SEND_SMS,
                     Manifest.permission.RECEIVE_SMS,
@@ -981,6 +991,7 @@ class MainActivity : AppCompatActivity() {
                     .show()
                 return true
             }
+
             R.id.action_beacon_auto_switch -> {
                 val intent = Intent(this, ExtraSwitchActivity::class.java)
                 startActivity(intent)
