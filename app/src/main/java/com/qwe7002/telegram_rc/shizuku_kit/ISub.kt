@@ -61,7 +61,7 @@ class ISub {
             true
         } catch (e: Exception) {
             Log.e(
-                this::class.java.simpleName,
+                Const.TAG,
                 "Exception during setDefaultDataSubId: ${e.message}",
                 e
             )

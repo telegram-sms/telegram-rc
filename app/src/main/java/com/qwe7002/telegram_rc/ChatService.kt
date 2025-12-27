@@ -1145,7 +1145,7 @@ class ChatService : Service() {
                 if (!messageTypeIsPrivate && sendStatusMMKV.getInt("status", -1) == -1) {
                     if (messageType != "supergroup" || messageThreadId.isEmpty()) {
                         Log.i(
-                            this::class.java.simpleName,
+                            Const.TAG,
                             "receive_handle: The conversation is not Private and does not prompt an error."
                         )
                         return
@@ -1166,7 +1166,7 @@ class ChatService : Service() {
         }
         if (!hasCommand && sendStatusMMKV.getInt("status", -1) != -1) {
             Log.i(
-                this::class.java.simpleName,
+                Const.TAG,
                 "receive_handle: Enter the interactive SMS sending mode."
             )
             var dualSim = ""
@@ -1178,7 +1178,7 @@ class ChatService : Service() {
                 "[" + dualSim + applicationContext.getString(R.string.send_sms_head) + "]"
             var resultSend = getString(R.string.failed_to_get_information)
             Log.d(
-                this::class.java.simpleName,
+                Const.TAG,
                 "Sending mode status: ${sendStatusMMKV.getInt("status", -1)}"
             )
 
@@ -1291,7 +1291,7 @@ class ChatService : Service() {
                     } catch (e2: Exception) {
                         e2.printStackTrace()
                         Log.w(
-                            this::class.java.simpleName,
+                            Const.TAG,
                             "Failed to close response: ${e2.message}"
                         )
                     }
@@ -1327,13 +1327,12 @@ class ChatService : Service() {
                                     Thread.sleep(2000)
                                 } catch (e: InterruptedException) {
                                     Log.w(
-                                        this::class.java.simpleName,
+                                        Const.TAG,
                                         "Hotspot IP update thread interrupted: ${e.message}"
                                     )
                                     return@Thread
                                 }
 
-                                // 尝试多次获取IP地址
                                 var newIp = "Unknown"
                                 val maxRetries = 10
                                 val retryDelay = 1000L
@@ -1346,13 +1345,13 @@ class ChatService : Service() {
                                         Thread.sleep(retryDelay)
                                     } catch (e: InterruptedException) {
                                         Log.w(
-                                            this::class.java.simpleName,
+                                            Const.TAG,
                                             "Hotspot IP update thread interrupted: ${e.message}"
                                         )
                                         return@Thread
                                     } catch (e: Exception) {
                                         Log.e(
-                                            this::class.java.simpleName,
+                                            Const.TAG,
                                             "Error getting hotspot IP address: ${e.message}"
                                         )
                                         // 继续重试
@@ -1393,12 +1392,12 @@ class ChatService : Service() {
                                         val editResponse = client.newCall(request).execute()
                                         try {
                                             Log.d(
-                                                this::class.java.simpleName,
+                                                Const.TAG,
                                                 "Hotspot IP update result: ${editResponse.code}"
                                             )
                                             if (editResponse.code != 200) {
                                                 Log.e(
-                                                    this::class.java.simpleName,
+                                                    Const.TAG,
                                                     "Failed to update hotspot IP message. Status code: ${editResponse.code}"
                                                 )
                                             }
@@ -1407,7 +1406,7 @@ class ChatService : Service() {
                                         }
                                     } catch (e: Exception) {
                                         Log.e(
-                                            this::class.java.simpleName,
+                                            Const.TAG,
                                             "Failed to update hotspot IP message",
                                             e
                                         )

@@ -68,14 +68,14 @@ class Telephony {
                 setSimPowerStateForSlotMethod.invoke(iTelephonyService, slotIndex, state)
 
                 Log.i(
-                    this::class.java.simpleName,
+                    Const.TAG,
                     "Successfully set SIM power state for slot $slotIndex to state $state"
                 )
 
                 return true
             } catch (e: NoSuchMethodException) {
                 Log.d(
-                    this::class.java.simpleName,
+                    Const.TAG,
                     "Method with int state not found, trying boolean signature: ${e.message}"
                 )
             }
@@ -90,13 +90,13 @@ class Telephony {
             setSimPowerStateForSlotMethod.invoke(iTelephonyService, slotIndex, powerUp)
 
             Log.i(
-                this::class.java.simpleName,
+                Const.TAG,
                 "Successfully set SIM power state for slot $slotIndex to ${if (powerUp) "UP" else "DOWN"}"
             )
             true
         } catch (e: Exception) {
             Log.e(
-                this::class.java.simpleName,
+                Const.TAG,
                 "Exception during setSimPowerStateForSlot: ${e.message}",
                 e
             )

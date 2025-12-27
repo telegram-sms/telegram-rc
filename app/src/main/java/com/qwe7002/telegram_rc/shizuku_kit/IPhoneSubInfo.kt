@@ -40,7 +40,7 @@ class IPhoneSubInfo {
             iPhoneSubInfoService
         } catch (e: Exception) {
             Log.e(
-                this::class.java.simpleName,
+                Const.TAG,
                 "Failed to get IPhoneSubInfo service: ${e.message}",
                 e
             )
@@ -99,13 +99,13 @@ class IPhoneSubInfo {
                 ) as? String
 
                 Log.i(
-                    this::class.java.simpleName,
+                    Const.TAG,
                     "Successfully retrieved subscriber ID for subId: $subId (with featureId)"
                 )
                 return result
             } catch (e: NoSuchMethodException) {
                 Log.d(
-                    this::class.java.simpleName,
+                    Const.TAG,
                     "Method with featureId not found, trying without: ${e.message}"
                 )
             }
@@ -124,13 +124,13 @@ class IPhoneSubInfo {
             ) as? String
 
             Log.i(
-                this::class.java.simpleName,
+                Const.TAG,
                 "Successfully retrieved subscriber ID for subId: $subId"
             )
             result
         } catch (e: Exception) {
             Log.e(
-                this::class.java.simpleName,
+                Const.TAG,
                 "Exception during getSubscriberIdForSubscriber: ${e.message}",
                 e
             )
