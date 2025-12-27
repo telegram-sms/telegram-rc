@@ -50,9 +50,10 @@ class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<Lo
         return if (match != null) {
             val timestamp = match.groupValues[1]
             val level = match.groupValues[2]
+            val tag = match.groupValues[3].trim()
             val message = match.groupValues[4]
             val levelEmoji = levelToEmoji(level)
-            Triple(levelEmoji, timestamp, message)
+            Triple("$levelEmoji $tag", timestamp, message)
         } else {
             // Fallback if regex doesn't match
             Triple("", "", entry)
