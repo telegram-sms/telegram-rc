@@ -58,7 +58,8 @@ class LogcatActivity : AppCompatActivity() {
         } catch (e: PackageManager.NameNotFoundException) {
             Log.d(Const.TAG, "onOptionsItemSelected: $e")
         }
-        if (versionName == "unknown" || versionName == "Debug" || versionName.startsWith("nightly")) {
+        if (versionName.startsWith("debug") || versionName.startsWith("nightly")) {
+            Log.d(Const.TAG, "onCreate: Setting log level to V for debug/nightly build")
             level = "V"
         }
 
