@@ -33,7 +33,7 @@ class KeepAliveJob : JobService() {
                 )
                 ServiceManage.startBeaconService(applicationContext)
             }
-            Log.d(Const.TAG+"-Debug", "KeepAliveJob: Try to pull up the service")
+            Log.d(Const.TAG, "KeepAliveJob: Try to pull up the service")
             this.jobFinished(params, false)
             startJob(applicationContext)
         } catch (e: Exception) {
