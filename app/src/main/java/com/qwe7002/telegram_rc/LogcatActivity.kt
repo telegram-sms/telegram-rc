@@ -1,6 +1,9 @@
 package com.qwe7002.telegram_rc
 
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
@@ -21,6 +24,7 @@ class LogcatActivity : AppCompatActivity() {
     private val line = 500
     private lateinit var refreshThread: Thread
     private var isRefreshing = true
+    private var level = "I"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +48,19 @@ class LogcatActivity : AppCompatActivity() {
         }
 
         FakeStatusBar().fakeStatusBar(this, window)
+
+        var versionName = "unknown"
+        val packageManager = applicationContext.packageManager
+        val packageInfo: PackageInfo
+        try {
+            packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
+            versionName = packageInfo.versionName.toString()
+        } catch (e: PackageManager.NameNotFoundException) {
+            Log.d(Const.TAG, "onOptionsItemSelected: $e")
+        }
+        if (versionName == "unknown" || versionName == "Debug" || versionName.startsWith("nightly")) {
+            level = "V"
+        }
 
         logAdapter = LogAdapter(emptyList())
         logRecyclerView.adapter = logAdapter
@@ -70,8 +87,8 @@ class LogcatActivity : AppCompatActivity() {
             try {
                 val process = Runtime.getRuntime().exec(
                     arrayOf(
-                        "logcat","${Const.TAG}:V", "Telegram-RC.TetherManager:V",
-                        "ShizukuShell:V",
+                        "logcat","${Const.TAG}:${level}", "Telegram-RC.TetherManager:${level}",
+                        "ShizukuShell:${level}",
                         "*:S", "-d", "-t", line.toString()
                     )
                 )
