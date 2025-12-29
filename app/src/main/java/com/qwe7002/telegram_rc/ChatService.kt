@@ -802,7 +802,7 @@ class ChatService : Service() {
 
             "/data" -> {
                 if (!Shizuku.pingBinder()) {
-                    Log.e("Shizuku", "Shizuku not running")
+                    Log.e(Const.TAG, "Shizuku not running")
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\nShizuku not running"
                 } else {
@@ -857,7 +857,7 @@ class ChatService : Service() {
 
             "/switch" -> {
                 if (!Shizuku.pingBinder()) {
-                    Log.e("Shizuku", "Shizuku not running")
+                    Log.e(Const.TAG, "Shizuku not running")
                     requestBody.text =
                         "${getString(R.string.system_message_head)}\nShizuku not running"
                 } else {

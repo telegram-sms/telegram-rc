@@ -24,7 +24,6 @@ class LogcatActivity : AppCompatActivity() {
     private val line = 500
     private lateinit var refreshThread: Thread
     private var isRefreshing = true
-    private var level = "I"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,19 +48,6 @@ class LogcatActivity : AppCompatActivity() {
 
         FakeStatusBar().fakeStatusBar(this, window)
 
-        var versionName = "unknown"
-        val packageManager = applicationContext.packageManager
-        val packageInfo: PackageInfo
-        try {
-            packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
-            versionName = packageInfo.versionName.toString()
-        } catch (e: PackageManager.NameNotFoundException) {
-            Log.d(Const.TAG, "onOptionsItemSelected: $e")
-        }
-        if (versionName.startsWith("debug") || versionName.startsWith("nightly")) {
-            Log.d(Const.TAG, "onCreate: Setting log level to V for debug/nightly build")
-            level = "V"
-        }
 
         logAdapter = LogAdapter(emptyList())
         logRecyclerView.adapter = logAdapter
@@ -86,6 +72,10 @@ class LogcatActivity : AppCompatActivity() {
     private fun loadLogs() {
         thread {
             try {
+                var level = "I"
+                if(BuildConfig.DEBUG) {
+                    level = "V" // Verbose in debug builds
+                }
                 val process = Runtime.getRuntime().exec(
                     arrayOf(
                         "logcat","${Const.TAG}:${level}", "Telegram-RC.TetherManager:${level}",
