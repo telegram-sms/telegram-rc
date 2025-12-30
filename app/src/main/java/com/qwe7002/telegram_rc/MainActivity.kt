@@ -364,12 +364,11 @@ class MainActivity : AppCompatActivity() {
             val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
             val call = okhttpClient.newCall(request)
             progressDialog.setOnCancelListener { call.cancel() }
-            val errorHead = "Get chat ID failed:"
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     Log.e(Const.TAG, "onFailure: ", e)
                     progressDialog.cancel()
-                    val errorMessage = errorHead + e.message
+                    val errorMessage = "Get chat ID failed: ${e.message}"
                     Log.e(Const.TAG, errorMessage)
                     runOnUiThread { showErrorDialog(errorMessage) }
                 }
@@ -380,7 +379,7 @@ class MainActivity : AppCompatActivity() {
                     if (response.code != 200) {
                         val result = Objects.requireNonNull(response.body).string()
                         val resultObj = JsonParser.parseString(result).asJsonObject
-                        val errorMessage = errorHead + resultObj["description"].asString
+                        val errorMessage = "Get chat ID failed: ${resultObj["description"].asString}"
                         Log.e(Const.TAG, errorMessage)
                         runOnUiThread { showErrorDialog(errorMessage) }
                         return
@@ -399,6 +398,25 @@ class MainActivity : AppCompatActivity() {
                         val itemObj = item.asJsonObject
                         if (itemObj.has("message")) {
                             val messageObj = itemObj["message"].asJsonObject
+
+                            // 处理群组升级为超级群组的情况
+                            if (messageObj.has("migrate_to_chat_id")) {
+                                val newChatId = messageObj["migrate_to_chat_id"].asString
+                                if (!chatIdList.contains(newChatId)) {
+                                    val chatObj = messageObj["chat"].asJsonObject
+                                    var username = StringBuilder()
+                                    if (chatObj.has("title")) {
+                                        username = StringBuilder(chatObj["title"].asString)
+                                    } else if (chatObj.has("username")) {
+                                        username = StringBuilder(chatObj["username"].asString)
+                                    }
+                                    chatNameList.add("$username(supergroup)")
+                                    chatIdList.add(newChatId)
+                                    chatTopicIdList.add("")
+                                }
+                                continue
+                            }
+
                             val chatObj = messageObj["chat"].asJsonObject
                             if (!chatIdList.contains(chatObj["id"].asString)) {
                                 var username = StringBuilder()
@@ -432,6 +450,7 @@ class MainActivity : AppCompatActivity() {
                             if (!chatIdList.contains(chatObj["id"].asString)) {
                                 chatNameList.add(chatObj["title"].asString + "(Channel)")
                                 chatIdList.add(chatObj["id"].asString)
+                                chatTopicIdList.add("")
                             }
                         }
                     }
@@ -447,6 +466,7 @@ class MainActivity : AppCompatActivity() {
                 }
             })
         }
+
 
         saveButton.setOnClickListener { v: View? ->
             if (botTokenEditView.text.toString().isEmpty() || chatIdEditView.text.toString()

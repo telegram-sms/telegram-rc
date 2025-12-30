@@ -1242,15 +1242,12 @@ class ChatService : Service() {
         val body
                 : RequestBody = gson.toJson(requestBody).toRequestBody(Const.JSON)
         Log.v(Const.TAG, "receive_handle: " + gson.toJson(requestBody))
-        val sendRequest
-
-                : Request = Request.Builder().url(requestUri).method("POST", body).build()
+        val sendRequest: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(sendRequest)
-        val errorHead = "Send reply failed:"
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                Log.e(Const.TAG, errorHead + e.message)
+                Log.e(Const.TAG, "Send reply failed: ${e.message}" )
             }
 
             @Throws(IOException::class)
@@ -1271,7 +1268,7 @@ class ChatService : Service() {
                 if (response.code != 200) {
                     Log.e(
                         Const.TAG,
-                        errorHead + response.code + " " + responseString
+                        "Send reply failed: ${response.code} ${responseString}"
                     )
                     try {
                         response.close()
