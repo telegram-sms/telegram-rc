@@ -75,6 +75,10 @@ class LogcatActivity : AppCompatActivity() {
                 var level = "I"
                 if(BuildConfig.DEBUG) {
                     level = "V" // Verbose in debug builds
+                    if(BuildConfig.VERSION_NAME.contains("nightly", ignoreCase = true)) {
+                        level = "D"
+                        Log.d(Const.TAG, "onCreate: Setting log level to V for debug/nightly build")
+                    }
                 }
                 val process = Runtime.getRuntime().exec(
                     arrayOf(

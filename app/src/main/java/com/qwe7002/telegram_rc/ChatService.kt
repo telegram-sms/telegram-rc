@@ -1241,7 +1241,7 @@ class ChatService : Service() {
         val gson = Gson()
         val body
                 : RequestBody = gson.toJson(requestBody).toRequestBody(Const.JSON)
-        Log.d(Const.TAG, "receive_handle: " + gson.toJson(requestBody))
+        Log.v(Const.TAG, "receive_handle: " + gson.toJson(requestBody))
         val sendRequest
 
                 : Request = Request.Builder().url(requestUri).method("POST", body).build()
@@ -1561,6 +1561,7 @@ class ChatService : Service() {
                         var result: String
                         try {
                             result = response.body.string()
+                            Log.v(Const.TAG, "Polling response: $result")
                         } catch (e: IOException) {
                             e.printStackTrace()
                             Log.e(
@@ -1645,21 +1646,15 @@ class ChatService : Service() {
         }
     }
 
-    private fun readLogcat( lines: Int): String {
+    private fun readLogcat(lines: Int): String {
         return try {
             var level = "I"
-            var versionName = "unknown"
-            val packageManager = applicationContext.packageManager
-            val packageInfo: PackageInfo
-            try {
-                packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
-                versionName = packageInfo.versionName.toString()
-            } catch (e: PackageManager.NameNotFoundException) {
-                Log.d(Const.TAG, "onOptionsItemSelected: $e")
-            }
-            if (versionName.startsWith("debug") || versionName.startsWith("nightly")) {
-                Log.d(Const.TAG, "onCreate: Setting log level to V for debug/nightly build")
-                level = "V"
+            if(BuildConfig.DEBUG) {
+                level = "V" // Verbose in debug builds
+                if(BuildConfig.VERSION_NAME.contains("nightly", ignoreCase = true)) {
+                    level = "D"
+                    Log.d(Const.TAG, "onCreate: Setting log level to V for debug/nightly build")
+                }
             }
             val process = Runtime.getRuntime().exec(
                 arrayOf(
