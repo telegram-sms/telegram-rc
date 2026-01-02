@@ -64,6 +64,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.browser:browser:1.9.0'
+    // OkHttp & Okio
     implementation 'com.squareup.okio:okio:3.16.4'
     implementation "com.squareup.okhttp3:okhttp:5.3.2"
     implementation "com.squareup.okhttp3:okhttp-dnsoverhttps:5.3.2"
@@ -72,15 +73,16 @@ dependencies {
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
     implementation 'aga.android:luch:0.4'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.6'
+    // Android KTX
     implementation "androidx.core:core-ktx:1.17.0"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.21'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    // MMKV
     implementation 'com.tencent:mmkv:2.3.0'
-    //Shizuku
+    // Shizuku
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
-
     // Room database dependencies
     runtimeOnly("androidx.room:room-runtime:2.8.4")
     implementation "androidx.room:room-ktx:2.8.4"
