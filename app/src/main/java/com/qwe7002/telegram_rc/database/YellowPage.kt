@@ -49,31 +49,6 @@ object YellowPage {
         }
     }
 
-    fun addPhoneNumberToDatabase(
-        context: Context,
-        phoneNumbers: List<String>,
-        organization: String,
-        url: String
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val db = AppDatabase.getDatabase(context)
-            val organizationDao = db.organizationDao()
-            val phoneNumberDao = db.phoneNumberDao()
-            val orgId = organizationDao.insertOrganization(
-                Organization(
-                    organization = organization,
-                    url = url
-                )
-            )
-            phoneNumberDao.insertPhoneNumbers(phoneNumbers.map {
-                PhoneNumber(
-                    organizationId = orgId,
-                    phoneNumber = it
-                )
-            })
-        }
-    }
-
     /**
      * Data class for parsing JSON entries
      */
@@ -107,8 +82,7 @@ object YellowPage {
             throw Exception("HTTP ${response.code}: ${response.message}")
         }
 
-        val jsonString = response.body?.string()
-            ?: throw Exception("Empty response body")
+        val jsonString = response.body.string()
 
         statusCallback("Parsing...")
         val type = object : TypeToken<Map<String, YellowPageEntry>>() {}.type
