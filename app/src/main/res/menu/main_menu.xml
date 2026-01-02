@@ -60,7 +60,7 @@
         app:showAsAction="never" />
     <item
         android:id="@+id/action_beacon_auto_switch"
-        android:title="@string/beacon_auto_switch_setting"
+        android:title="Extra Settings"
         app:showAsAction="never" />
     <item
         android:id="@+id/logcat_menu_item"
