@@ -32,6 +32,12 @@ class YellowPageSyncActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_yellowpage_sync)
+        // Handle window insets for edge-to-edge
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.yellowpage_sync_layout)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
         FakeStatusBar().fakeStatusBar(this, window)
         // Initialize views
         countText = findViewById(R.id.yellowpage_count)
@@ -41,14 +47,9 @@ class YellowPageSyncActivity : AppCompatActivity() {
         statusText = findViewById(R.id.yellowpage_status)
         syncButton = findViewById(R.id.yellowpage_sync_button)
         clearButton = findViewById(R.id.yellowpage_clear_button)
-        // Handle window insets for edge-to-edge
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
-            WindowInsetsCompat.CONSUMED
-        }
+
         // Load saved URL
-        val savedUrl = mmkv.getString("yellowpage_url", getString(R.string.yellowpage_default_url))
+        val savedUrl = mmkv.getString("yellowpage_url","") ?: ""
         urlInput.setText(savedUrl)
         // Update UI with current data
         updateDatabaseInfo()

@@ -65,9 +65,7 @@ CodeauxLib is licensed under [BSD 3-Clause License](https://github.com/telegram-
 
 Copyright of the artwork belongs to [@walliant](https://www.pixiv.net/member.php?id=5600144).Licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-Download resource file: [mega.nz](https://mega.nz/#F!TmwQSYjD!XN-uVfciajwy3okjIdpCAQ)
-
-artwork Use free fonts licensed by the whole society: [站酷庆科黄油体](https://www.zcool.com.cn/work/ZMTg5MDEyMDQ=.html)
+Download resource file: [Google Drive](https://drive.google.com/drive/folders/1Rg_MaJk0dnIN5GtKKmfvHPPCxjys8A0A?usp=drive_link)
 
 ## Acknowledgements
 
