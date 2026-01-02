@@ -135,6 +135,9 @@
             android:permission="android.permission.FOREGROUND_SERVICE" />
 
         <activity android:name=".LogcatActivity" />
+        <activity
+            android:name=".YellowPageSyncActivity"
+            android:label="@string/yellowpage_menu_title" />
 
         <service
             android:name=".BatteryService"

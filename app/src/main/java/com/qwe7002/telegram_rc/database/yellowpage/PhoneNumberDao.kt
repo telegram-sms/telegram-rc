@@ -21,4 +21,7 @@ interface PhoneNumberDao {
 
     @Query("SELECT * FROM phone_numbers WHERE phone_number = :phoneNumber")
     suspend fun getPhoneNumbersByPhoneNumber(phoneNumber: String): List<PhoneNumber>
+
+    @Query("SELECT COUNT(*) FROM phone_numbers")
+    suspend fun getCount(): Int
 }

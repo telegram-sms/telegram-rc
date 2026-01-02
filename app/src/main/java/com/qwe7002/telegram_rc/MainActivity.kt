@@ -974,6 +974,11 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
+            R.id.yellowpage_sync_menu_item -> {
+                startActivity(Intent(this, YellowPageSyncActivity::class.java))
+                return true
+            }
+
             R.id.set_proxy_menu_item -> {
                 val proxyDialogView = inflater.inflate(R.layout.set_proxy_layout, null)
                 val proxyEnable =

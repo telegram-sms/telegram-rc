@@ -29,6 +29,10 @@
         android:title="@string/spam_sms_keyword_title"
         app:showAsAction="never" />
     <item
+        android:id="@+id/yellowpage_sync_menu_item"
+        android:title="@string/yellowpage_menu_title"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/set_proxy_menu_item"
         android:title="@string/proxy_title"
         app:showAsAction="never" />

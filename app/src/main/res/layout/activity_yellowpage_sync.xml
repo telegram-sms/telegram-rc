@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".YellowPageSyncActivity">
+
+    <TextView
+        android:id="@+id/yellowpage_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/yellowpage_sync_title"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/yellowpage_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/yellowpage_sync_description"
+        android:textSize="14sp"
+        android:layout_marginBottom="24dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/yellowpage_current_count"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/yellowpage_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/yellowpage_last_sync"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/yellowpage_last_sync_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/yellowpage_never_synced"
+            android:textSize="16sp"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:hint="@string/yellowpage_github_url">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/yellowpage_url_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textUri"
+            android:text="@string/yellowpage_default_url" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <ProgressBar
+        android:id="@+id/yellowpage_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/yellowpage_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:layout_marginBottom="24dp"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/yellowpage_sync_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/yellowpage_sync_button"
+        style="@style/Widget.Material3.Button" />
+
+    <Button
+        android:id="@+id/yellowpage_clear_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/yellowpage_clear_button"
+        android:layout_marginTop="8dp"
+        style="@style/Widget.Material3.Button.OutlinedButton" />
+
+</LinearLayout>
+
