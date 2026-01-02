@@ -28,7 +28,7 @@ class ExtraSwitchActivity : AppCompatActivity() {
         FakeStatusBar().fakeStatusBar(this, window)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        setTitle(R.string.beacon_auto_switch_setting)
+        setTitle("Extra Settings")
 
         beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
         autoSwitch = findViewById(R.id.beacon_auto_switch)
