@@ -122,7 +122,6 @@
     <string name="yellowpage_last_sync">Last sync:</string>
     <string name="yellowpage_never_synced">Never</string>
     <string name="yellowpage_github_url">GitHub Raw URL</string>
-    <string name="yellowpage_default_url">https://raw.githubusercontent.com/nicholascw/YellowPage_CN/refs/heads/master/yellowpage.json</string>
     <string name="yellowpage_sync_button">Sync Now</string>
     <string name="yellowpage_clear_button">Clear Database</string>
     <string name="yellowpage_syncing">Syncing…</string>

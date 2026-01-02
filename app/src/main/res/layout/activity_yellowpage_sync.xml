@@ -77,8 +77,7 @@
             android:id="@+id/yellowpage_url_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textUri"
-            android:text="@string/yellowpage_default_url" />
+            android:inputType="textUri" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <ProgressBar
@@ -101,16 +100,14 @@
         android:id="@+id/yellowpage_sync_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/yellowpage_sync_button"
-        style="@style/Widget.Material3.Button" />
+        android:text="@string/yellowpage_sync_button" />
 
     <Button
         android:id="@+id/yellowpage_clear_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/yellowpage_clear_button"
-        android:layout_marginTop="8dp"
-        style="@style/Widget.Material3.Button.OutlinedButton" />
+        android:layout_marginTop="8dp" />
 
 </LinearLayout>
 
