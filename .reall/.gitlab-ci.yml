@@ -129,12 +129,18 @@ build_release:
       - stuck_or_timeout_failure
   rules:
     - if: $CI_COMMIT_BRANCH == "master"
-  needs:
-    - generate:changelog
   <<: *setup_environment
   script:
     - !reference [.build_apk, script]
     - !reference [.deploy_to_github, script]
+    - |
+      git remote add source https://github.com/telegram-sms/telegram-rc
+      git fetch source --tags
+    - |
+      echo "==> Compiling ChangelogGenerate.java..."
+      javac .reall/changelogGenerate.java
+      echo "==> Generating changelog..."
+      java -cp .reall changelogGenerate
     - |
       echo "==> Using generated changelog..."
       export RELEASE_CHANGELOG=$(cat CHANGELOG.md)
@@ -170,24 +176,3 @@ build_debug:
     when: on_success
   cache:
     policy: pull
-
-# ------------------------------------------------------------------------------
-# Generate Changelog Job
-# ------------------------------------------------------------------------------
-generate:changelog:
-  stage: build
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master"
-  script:
-    - |
-      git remote add source https://github.com/telegram-sms/telegram-rc
-      git fetch source --tags
-    - |
-      echo "==> Compiling ChangelogGenerate.java..."
-      javac .reall/changelogGenerate.java
-      echo "==> Generating changelog..."
-      java -cp .reall changelogGenerate
-  artifacts:
-    paths:
-      - CHANGELOG.md
-    expire_in: 1 week
