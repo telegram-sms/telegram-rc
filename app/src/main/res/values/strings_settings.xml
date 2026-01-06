@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bot_token">Bot Token</string>
+    <string name="chat_id">Chat ID</string>
+    <string name="message_thread_id">Topic ID</string>
+    <string name="trusted_phone_number">Trusted phone number</string>
+    <string name="get_recent_chat_id">Get recent chat ID</string>
+    <string name="test_and_save">Test and save</string>
+    <string name="network_error_falls_back_to_sms">Forward SMS to trusted number when network unavailable</string>
+    <string name="logcat">View log</string>
+    <string name="token_not_configure">Please configure the bot token first.</string>
+    <string name="chat_id_or_token_not_config">Please configure the bot token and chat ID first.</string>
+    <string name="unable_get_recent">Fail to get recent chat history</string>
+    <string name="battery_monitoring">Monitor battery level change</string>
+    <string name="trusted_phone_number_empty">Trusted phone number cannot be empty.</string>
+    <string name="using_verification_code_identification">Verification code automatic extraction (Alpha)</string>
+    <string name="keywords">Keywords</string>
+    <string name="spam_sms_keyword_title">SMS blocklist</string>
+    <string name="spam_keyword_edit_title">Edit Keyword</string>
+    <string name="spam_keyword_add_title">Add Keyword</string>
+    <string name="set_notification_listener">Notification listener</string>
+    <string name="transfer_configuration">Transfer Configuration</string>
+    <string name="edit_cc_service">Edit Cc Service</string>
+    <string name="add_cc_service">Add Cc Service</string>
+    <string name="copy_notification_menu">Carbon copy</string>
+    <string name="beacon_auto_switch_setting">Beacon Auto Switch</string>
+    <string name="enable_beacon_auto_switch">Enable beacon auto switch</string>
+</resources>

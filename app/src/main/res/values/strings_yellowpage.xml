@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- YellowPage Sync -->
+    <string name="yellowpage_sync_title">YellowPage Database Sync</string>
+    <string name="yellowpage_sync_description">Sync the phone number database from GitHub to identify callers and SMS senders.</string>
+    <string name="yellowpage_current_count">Current entries:</string>
+    <string name="yellowpage_last_sync">Last sync:</string>
+    <string name="yellowpage_never_synced">Never</string>
+    <string name="yellowpage_github_url">GitHub Raw URL</string>
+    <string name="yellowpage_sync_button">Sync Now</string>
+    <string name="yellowpage_clear_button">Clear Database</string>
+    <string name="yellowpage_syncing">Syncing…</string>
+    <string name="yellowpage_sync_success">Sync completed successfully! Added %d entries.</string>
+    <string name="yellowpage_sync_failed">Sync failed: %s</string>
+    <string name="yellowpage_downloading">Downloading database…</string>
+    <string name="yellowpage_parsing">Parsing data…</string>
+    <string name="yellowpage_saving">Saving to database…</string>
+    <string name="yellowpage_cleared">Database cleared.</string>
+    <string name="yellowpage_menu_title">YellowPage Sync</string>
+</resources>

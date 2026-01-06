@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_title">About</string>
+    <string name="about_content">"Developer: qwe7002\nEnglish translation: @tangbao @jixunmoe\nCurrent version: "</string>
+    <string name="qrcode_notice">Keep this QR code safe!\nPlease don\'t share it with others.</string>
+    <string name="donate">Donate</string>
+</resources>
