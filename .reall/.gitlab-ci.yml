@@ -137,6 +137,11 @@ build_release:
       git remote add source https://github.com/telegram-sms/telegram-rc
       git fetch source --tags
     - |
+      echo "==> Syncing GitHub tags to GitLab..."
+      git push origin --tags || {
+        echo "WARNING: Failed to push tags to GitLab, continuing..."
+      }
+    - |
       echo "==> Installing Python dependencies..."
       pip3 install --break-system-packages -r .reall/scripts/requirements.txt
     - |
