@@ -1128,12 +1128,10 @@ class MainActivity : AppCompatActivity() {
         val billingCyclePicker = dialogView.findViewById<NumberPicker>(R.id.billing_cycle_picker)
         val billingCycleLayout = dialogView.findViewById<LinearLayout>(R.id.billing_cycle_layout)
 
-        // 设置NumberPicker
         billingCyclePicker.minValue = 1
         billingCyclePicker.maxValue = 31
         billingCyclePicker.value = DataPlanManager.getBillingCycleStart()
 
-        // 根据当前设置选择RadioButton
         when (DataPlanManager.getDataPlanType()) {
             DataPlanManager.DATA_PLAN_TYPE_DAILY -> {
                 dailyRadioButton.isChecked = true
@@ -1146,7 +1144,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 设置RadioButton监听器
         val radioGroup = dialogView.findViewById<RadioGroup>(R.id.data_plan_radio_group)
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
@@ -1164,7 +1161,6 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Set Data Plan")
             .setView(dialogView)
             .setPositiveButton("OK") { _, _ ->
-                // 保存设置
                 if (dailyRadioButton.isChecked) {
                     DataPlanManager.setDataPlanType(DataPlanManager.DATA_PLAN_TYPE_DAILY)
                 } else {
