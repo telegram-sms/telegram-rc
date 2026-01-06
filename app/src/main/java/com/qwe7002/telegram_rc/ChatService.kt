@@ -154,8 +154,10 @@ class ChatService : Service() {
             keyboardButtons.add(row4)
             val row5 = ArrayList<KeyboardButton>()
             if(getActiveCard(context)==2){
-                row5.add(KeyboardButton("/switch sim 1"))
-                row5.add(KeyboardButton("/switch sim 2"))
+                row5.add(KeyboardButton("/switch sim on 1"))
+                row5.add(KeyboardButton("/switch sim off 1"))
+                row5.add(KeyboardButton("/switch sim on 2"))
+                row5.add(KeyboardButton("/switch sim off 2"))
             }
             keyboardButtons.add(row5)
 
