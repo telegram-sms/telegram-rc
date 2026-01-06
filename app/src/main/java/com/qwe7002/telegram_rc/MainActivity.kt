@@ -408,8 +408,7 @@ class MainActivity : AppCompatActivity() {
                         val itemObj = item.asJsonObject
                         if (itemObj.has("message")) {
                             val messageObj = itemObj["message"].asJsonObject
-
-                            // 处理群组升级为超级群组的情况
+                            
                             if (messageObj.has("migrate_to_chat_id")) {
                                 val newChatId = messageObj["migrate_to_chat_id"].asString
                                 if (!chatIdList.contains(newChatId)) {
