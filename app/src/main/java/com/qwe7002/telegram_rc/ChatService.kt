@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
@@ -114,31 +115,43 @@ class ChatService : Service() {
             return buttonArraylist
         }
 
-        fun getReplyKeyboardMarkup(): KeyboardMarkup {
+        fun getReplyKeyboardMarkup(context: Context): KeyboardMarkup {
             val keyboard = KeyboardMarkup()
             val keyboardButtons = ArrayList<ArrayList<KeyboardButton>>()
 
             val row1 = ArrayList<KeyboardButton>()
-            row1.add(KeyboardButton("/help"))
             row1.add(KeyboardButton("/getinfo"))
+            row1.add(KeyboardButton("/battery"))
+            row1.add(KeyboardButton("/log"))
             keyboardButtons.add(row1)
 
             val row2 = ArrayList<KeyboardButton>()
-            row2.add(KeyboardButton("/sendsms"))
-            row2.add(KeyboardButton("/sendussd"))
+            if(ActivityCompat.checkSelfPermission(
+                context,
+                    Manifest.permission.SEND_SMS
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                row2.add(KeyboardButton("/sendsms"))
+            }
+            if(ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.CALL_PHONE
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                row2.add(KeyboardButton("/sendussd"))
+            }
             keyboardButtons.add(row2)
 
-            // Third row: /switch
             val row3 = ArrayList<KeyboardButton>()
-            row3.add(KeyboardButton("/switch auto"))
-            row3.add(KeyboardButton("/switch datacard"))
-
+            row3.add(KeyboardButton("/hotspot"))
             keyboardButtons.add(row3)
-
-            // Fourth row: /battery and /log
+            // Third row: /switch
             val row4 = ArrayList<KeyboardButton>()
-            row4.add(KeyboardButton("/battery"))
-            row4.add(KeyboardButton("/log"))
+            row4.add(KeyboardButton("/switch auto"))
+            row4.add(KeyboardButton("/switch wifi"))
+            row3.add(KeyboardButton("/switch data"))
+            row4.add(KeyboardButton("/switch datacard"))
+
             keyboardButtons.add(row4)
 
             keyboard.keyboard = keyboardButtons

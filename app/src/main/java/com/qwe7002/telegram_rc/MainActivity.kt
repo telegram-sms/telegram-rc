@@ -593,7 +593,7 @@ class MainActivity : AppCompatActivity() {
             // Add or remove reply keyboard based on chat command setting
             if (chatCommandSwitch.isChecked) {
                 requestBody.keyboardMarkup =
-                    ChatService.ReplyMarkupKeyboard.getReplyKeyboardMarkup()
+                    ChatService.ReplyMarkupKeyboard.getReplyKeyboardMarkup(applicationContext)
             } else {
                 requestBody.keyboardMarkup =
                     ChatService.ReplyMarkupKeyboard.getRemoveKeyboardMarkup()
