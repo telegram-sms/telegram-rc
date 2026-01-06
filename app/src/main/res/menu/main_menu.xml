@@ -71,6 +71,10 @@
         android:title="@string/donate"
         app:showAsAction="never" />
     <item
+        android:id="@+id/check_update_menu_item"
+        android:title="@string/check_update"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/about_menu_item"
         android:title="@string/about_title"
         app:showAsAction="never" />

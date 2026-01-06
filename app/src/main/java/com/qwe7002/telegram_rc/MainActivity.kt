@@ -46,6 +46,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager
+import com.qwe7002.telegram_rc.data_structure.GitHubRelease
+import com.qwe7002.telegram_rc.data_structure.OutputMetadata
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
 import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
@@ -62,6 +64,7 @@ import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -408,7 +411,7 @@ class MainActivity : AppCompatActivity() {
                         val itemObj = item.asJsonObject
                         if (itemObj.has("message")) {
                             val messageObj = itemObj["message"].asJsonObject
-                            
+
                             if (messageObj.has("migrate_to_chat_id")) {
                                 val newChatId = messageObj["migrate_to_chat_id"].asString
                                 if (!chatIdList.contains(newChatId)) {
@@ -712,6 +715,9 @@ class MainActivity : AppCompatActivity() {
         if (Settings.System.canWrite(applicationContext)) {
             writeSettingsButton.visibility = View.GONE
         }
+
+        // Check for updates automatically (once per 24 hours)
+        checkUpdateAutomatically()
     }
 
 
@@ -1043,6 +1049,11 @@ class MainActivity : AppCompatActivity() {
             R.id.question_and_answer_menu_item -> fileName =
                 "/guide/Q&A"
 
+            R.id.check_update_menu_item -> {
+                checkUpdate()
+                return true
+            }
+
             R.id.donate_menu_item -> fileName = "/donate"
         }
         // Use the already initialized privacyPolice variable
@@ -1242,6 +1253,206 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun showUpdateDialog(version: String, downloadUrl: String) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.update_available)
+            .setMessage(getString(R.string.update_message, version))
+            .setPositiveButton(R.string.download) { _, _ ->
+                // Open download URL in browser
+                val customTabsIntent = CustomTabsIntent.Builder()
+                    .setDefaultColorSchemeParams(
+                        CustomTabColorSchemeParams.Builder()
+                            .setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary))
+                            .build()
+                    )
+                    .build()
+                customTabsIntent.launchUrl(this, downloadUrl.toUri())
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun checkUpdate() {
+        if (BuildConfig.DEBUG) {
+            showErrorDialog("Debug version can not check update.")
+            return
+        }
+        var appIdentifier = applicationContext.getString(R.string.app_identifier)
+        if (BuildConfig.VERSION_NAME.contains("nightly")) {
+            appIdentifier += "-nightly"
+        }
+        val updateMMKV = MMKV.mmkvWithID(Const.UPDATE_ID)
+        updateMMKV.putLong("last_check", System.currentTimeMillis())
+
+        val progressDialog = ProgressDialog(this@MainActivity)
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
+        progressDialog.setTitle(R.string.check_update)
+        progressDialog.setMessage(getString(R.string.connect_wait_message))
+        progressDialog.isIndeterminate = false
+        progressDialog.setCancelable(false)
+        progressDialog.show()
+        performUpdateCheck(appIdentifier, progressDialog)
+    }
+
+    private fun checkUpdateAutomatically() {
+        if (BuildConfig.DEBUG) {
+            return
+        }
+
+        val updateMMKV = MMKV.mmkvWithID(Const.UPDATE_ID)
+        val lastCheck = updateMMKV.getLong("last_check", 0)
+        val currentTime = System.currentTimeMillis()
+
+        // Check if 24 hours have passed (86400000 milliseconds = 24 hours)
+        val twentyFourHours = 24 * 60 * 60 * 1000L
+        if (currentTime - lastCheck < twentyFourHours) {
+            Log.d(Const.TAG, "Update check skipped: Last check was less than 24 hours ago")
+            return
+        }
+
+        var appIdentifier = applicationContext.getString(R.string.app_identifier)
+        if (BuildConfig.VERSION_NAME.contains("nightly")) {
+            appIdentifier += "-nightly"
+        }
+
+        updateMMKV.putLong("last_check", currentTime)
+        Log.d(Const.TAG, "Performing automatic update check")
+        performUpdateCheck(appIdentifier, null)
+    }
+
+    private fun performUpdateCheck(appIdentifier: String, progressDialog: ProgressDialog?) {
+        val okhttpObj = getOkhttpObj()
+        val requestUri = String.format(
+            "https://api.github.com/repos/telegram-sms/%s/releases/latest",
+            appIdentifier
+        )
+        val request: Request = Request.Builder().url(requestUri).build()
+        val call = okhttpObj.newCall(request)
+        val errorHead = "Send message failed: "
+        call.enqueue(object : Callback {
+            @Throws(IOException::class)
+            override fun onResponse(call: Call, response: Response) {
+                progressDialog?.cancel()
+                if (!response.isSuccessful) {
+                    val errorMessage = errorHead + response.code
+                    Log.e(Const.TAG, errorMessage)
+                    return
+                }
+                val jsonString = response.body.string()
+                Log.d(Const.TAG, "onResponse: $jsonString")
+                val gson = Gson()
+                val release = gson.fromJson(jsonString, GitHubRelease::class.java)
+
+                // Find output-metadata.json in release assets
+                val metadataAsset = release.assets.find { it.name == "output-metadata.json" }
+                if (metadataAsset != null) {
+                    // Download and parse output-metadata.json
+                    checkVersionFromMetadata(release, metadataAsset.browserDownloadUrl, okhttpObj, progressDialog)
+                } else {
+                    // Fallback to tagName comparison for older releases
+                    if (release.tagName != BuildConfig.VERSION_NAME) {
+                        runOnUiThread {
+                            showUpdateDialog(
+                                release.tagName,
+                                release.assets[0].browserDownloadUrl
+                            )
+                        }
+                    } else {
+                        Log.d(Const.TAG, "App is up to date (tag comparison)")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e(Const.TAG, "onFailure: ${e.message}", e)
+                progressDialog?.cancel()
+                if (progressDialog != null) {
+                    val errorMessage = errorHead + e.message
+                    runOnUiThread {
+                        showErrorDialog(errorMessage)
+                    }
+                }
+            }
+        })
+    }
+
+    private fun checkVersionFromMetadata(
+        release: GitHubRelease,
+        metadataUrl: String,
+        okhttpObj: OkHttpClient,
+        progressDialog: ProgressDialog?
+    ) {
+        val request: Request = Request.Builder().url(metadataUrl).build()
+        val call = okhttpObj.newCall(request)
+        call.enqueue(object : Callback {
+            @Throws(IOException::class)
+            override fun onResponse(call: Call, response: Response) {
+                if (!response.isSuccessful) {
+                    Log.e(Const.TAG, "Failed to download output-metadata.json: ${response.code}")
+                    if (progressDialog != null) {
+                        runOnUiThread {
+                            showErrorDialog("Failed to download update metadata.")
+                        }
+                    }
+                    return
+                }
+
+                val metadataJson = response.body.string()
+                Log.d(Const.TAG, "output-metadata.json: $metadataJson")
+
+                try {
+                    val gson = Gson()
+                    val metadata = gson.fromJson(metadataJson, OutputMetadata::class.java)
+
+                    // Get the versionCode from metadata (first element)
+                    val remoteVersionCode = metadata.elements.firstOrNull()?.versionCode
+                    if (remoteVersionCode != null && remoteVersionCode > BuildConfig.VERSION_CODE) {
+                        // Find the APK asset
+                        val apkAsset = release.assets.find {
+                            it.name.endsWith(".apk") && !it.name.contains("output-metadata")
+                        }
+                        if (apkAsset != null) {
+                            runOnUiThread {
+                                showUpdateDialog(
+                                    release.tagName,
+                                    apkAsset.browserDownloadUrl
+                                )
+                            }
+                        } else {
+                            Log.e(Const.TAG, "No APK asset found in release")
+                            if (progressDialog != null) {
+                                runOnUiThread {
+                                    showErrorDialog("No APK found for the update.")
+                                }
+                            }
+                        }
+                    } else {
+                        Log.d(
+                            Const.TAG,
+                            "App is up to date. Current: ${BuildConfig.VERSION_CODE}, Remote: $remoteVersionCode"
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.e(Const.TAG, "Failed to parse output-metadata.json", e)
+                    if (progressDialog != null) {
+                        runOnUiThread {
+                            showErrorDialog("Failed to parse update metadata.")
+                        }
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e(Const.TAG, "Failed to fetch output-metadata.json", e)
+                if (progressDialog != null) {
+                    runOnUiThread {
+                        showErrorDialog("Failed to fetch update metadata.")
+                    }
+                }
+            }
+        })
     }
 
     companion object {

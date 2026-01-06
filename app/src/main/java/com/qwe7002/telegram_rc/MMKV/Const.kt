@@ -18,5 +18,6 @@ object Const {
     const val UPGRADE_MMKV_ID: String = "upgrade"
     const val IMSI_MMKV_ID: String = "IMSI"
     const val DATA_PLAN_MMKV_ID: String = "data_plan"
+    const val UPDATE_ID: String = "update"
 
 }

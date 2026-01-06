@@ -4,4 +4,8 @@
     <string name="about_content">"Developer: qwe7002\nEnglish translation: @tangbao @jixunmoe\nCurrent version: "</string>
     <string name="qrcode_notice">Keep this QR code safe!\nPlease don\'t share it with others.</string>
     <string name="donate">Donate</string>
+    <string name="check_update">Check for Updates</string>
+    <string name="update_available">Update Available</string>
+    <string name="update_message">A new version %1$s is available. Would you like to download it?</string>
+    <string name="download">Download</string>
 </resources>
