@@ -1160,7 +1160,7 @@ class ChatService : Service() {
                                         } catch (e: Exception) {
                                             Log.e(
                                                 Const.TAG,
-                                                "Switching default data SIM failed: ${e.message}"
+                                                "Switching default data SIM failed: ${e.message}",e
                                             )
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
@@ -1392,7 +1392,7 @@ class ChatService : Service() {
                     try {
                         response.close()
                     } catch (e: Exception) {
-                        Log.w(Const.TAG, "Failed to close response: ${e.message}")
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}",e)
                     }
                     return
                 }
@@ -1466,7 +1466,7 @@ class ChatService : Service() {
                                     } catch (e: Exception) {
                                         Log.e(
                                             Const.TAG,
-                                            "Error getting hotspot IP address: ${e.message}"
+                                            "Error getting hotspot IP address: ${e.message}",e
                                         )
                                         // 继续重试
                                     }
@@ -1573,7 +1573,7 @@ class ChatService : Service() {
                 try {
                     response.close()
                 } catch (e: Exception) {
-                    Log.w(Const.TAG, "Failed to close response: ${e.message}")
+                    Log.w(Const.TAG, "Failed to close response: ${e.message}",e)
                 }
             }
         })
