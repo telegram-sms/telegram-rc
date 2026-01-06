@@ -113,12 +113,58 @@ class ChatService : Service() {
             return buttonArraylist
         }
 
+        fun getReplyKeyboardMarkup(): KeyboardMarkup {
+            val keyboard = KeyboardMarkup()
+            val keyboardButtons = ArrayList<ArrayList<KeyboardButton>>()
+
+            val row1 = ArrayList<KeyboardButton>()
+            row1.add(KeyboardButton("/help"))
+            row1.add(KeyboardButton("/getinfo"))
+            keyboardButtons.add(row1)
+
+            val row2 = ArrayList<KeyboardButton>()
+            row2.add(KeyboardButton("/sendsms"))
+            row2.add(KeyboardButton("/sendussd"))
+            keyboardButtons.add(row2)
+
+            // Third row: /switch
+            val row3 = ArrayList<KeyboardButton>()
+            row3.add(KeyboardButton("/switch auto"))
+            row3.add(KeyboardButton("/switch datacard"))
+            keyboardButtons.add(row3)
+
+            keyboard.keyboard = keyboardButtons
+            keyboard.resizeKeyboard = true
+            keyboard.oneTimeKeyboard = false
+            keyboard.isPersistent = true
+
+            return keyboard
+        }
+
+        fun getRemoveKeyboardMarkup(): KeyboardMarkup {
+            val keyboard = KeyboardMarkup()
+            keyboard.removeKeyboard = true
+            return keyboard
+        }
+
         class KeyboardMarkup {
             @SerializedName(value = "inline_keyboard")
-            lateinit var inlineKeyboard: ArrayList<ArrayList<InlineKeyboardButton>>
+            var inlineKeyboard: ArrayList<ArrayList<InlineKeyboardButton>>? = null
 
-            @Suppress("unused")
-            val oneTimeKeyboard: Boolean = true
+            @SerializedName(value = "keyboard")
+            var keyboard: ArrayList<ArrayList<KeyboardButton>>? = null
+
+            @SerializedName(value = "resize_keyboard")
+            var resizeKeyboard: Boolean = false
+
+            @SerializedName(value = "one_time_keyboard")
+            var oneTimeKeyboard: Boolean = true
+
+            @SerializedName(value = "is_persistent")
+            var isPersistent: Boolean = false
+
+            @SerializedName(value = "remove_keyboard")
+            var removeKeyboard: Boolean = false
         }
 
         class InlineKeyboardButton {
@@ -127,6 +173,8 @@ class ChatService : Service() {
             @SerializedName(value = "callback_data")
             lateinit var callbackData: String
         }
+
+        class KeyboardButton(val text: String)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -1645,14 +1693,7 @@ class ChatService : Service() {
 
     private fun readLogcat(lines: Int): String {
         return try {
-            var level = "I"
-            if(BuildConfig.DEBUG) {
-                level = "V" // Verbose in debug builds
-                if(BuildConfig.VERSION_NAME.contains("nightly", ignoreCase = true)) {
-                    level = "D"
-                    Log.d(Const.TAG, "onCreate: Setting log level to V for debug/nightly build")
-                }
-            }
+            val level ="I"
             val process = Runtime.getRuntime().exec(
                 arrayOf(
                     "logcat","${Const.TAG}:${level}", "Telegram-RC.TetherManager:${level}",

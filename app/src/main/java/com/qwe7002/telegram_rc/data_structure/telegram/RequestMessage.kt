@@ -22,7 +22,7 @@ class RequestMessage {
     var messageThreadId: String? = null
 
     @SerializedName(value = "reply_markup")
-    lateinit var keyboardMarkup: ChatService.ReplyMarkupKeyboard.KeyboardMarkup
+    var keyboardMarkup: ChatService.ReplyMarkupKeyboard.KeyboardMarkup? = null
 
     @SerializedName(value = "disable_notification")
     var disableNotification: Boolean = false

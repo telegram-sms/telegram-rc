@@ -579,6 +579,14 @@ class MainActivity : AppCompatActivity() {
                 messageThreadIdEditView.text.toString().trim { it <= ' ' }
             requestBody.text =
                 "${getString(R.string.system_message_head)}\n${getString(R.string.success_connect)}"
+
+            // Add or remove reply keyboard based on chat command setting
+            if (chatCommandSwitch.isChecked) {
+                requestBody.keyboardMarkup = ChatService.ReplyMarkupKeyboard.getReplyKeyboardMarkup()
+            } else {
+                requestBody.keyboardMarkup = ChatService.ReplyMarkupKeyboard.getRemoveKeyboardMarkup()
+            }
+
             val gson = Gson()
             val requestBodyRaw = gson.toJson(requestBody)
             val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)

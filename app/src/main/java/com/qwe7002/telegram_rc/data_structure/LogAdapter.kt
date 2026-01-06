@@ -1,19 +1,59 @@
 package com.qwe7002.telegram_rc.data_structure
 
-import android.annotation.SuppressLint
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.qwe7002.telegram_rc.R
 
-class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<LogAdapter.LogViewHolder>() {
+data class LogEntry(
+    val id: Long,
+    val timestamp: String,
+    val level: Char,
+    val tag: String,
+    val message: String,
+    val rawLine: String,
+    val continuationLines: MutableList<String> = mutableListOf(),
+    var isExpanded: Boolean = false
+) {
+    fun hasContinuation(): Boolean = continuationLines.isNotEmpty()
+
+    fun copy(expanded: Boolean): LogEntry {
+        return LogEntry(id, timestamp, level, tag, message, rawLine, continuationLines, expanded)
+    }
+}
+
+class LogAdapter : ListAdapter<LogEntry, LogAdapter.LogViewHolder>(LogDiffCallback()) {
+
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long {
+        return getItem(position).id
+    }
 
     class LogViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tagText: TextView = itemView.findViewById(R.id.log_tag)
-        val timestampText: TextView = itemView.findViewById(R.id.log_timestamp)
-        val messageText: TextView = itemView.findViewById(R.id.log_message)
+        val levelView: TextView = itemView.findViewById(R.id.log_level)
+        val tagView: TextView = itemView.findViewById(R.id.log_tag)
+        val timestampView: TextView = itemView.findViewById(R.id.log_timestamp)
+        val messageView: TextView = itemView.findViewById(R.id.log_message)
+        val expandIndicator: TextView = itemView.findViewById(R.id.log_expand_indicator)
+        val detailsView: TextView = itemView.findViewById(R.id.log_details)
+    }
+
+    class LogDiffCallback : DiffUtil.ItemCallback<LogEntry>() {
+        override fun areItemsTheSame(oldItem: LogEntry, newItem: LogEntry): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: LogEntry, newItem: LogEntry): Boolean {
+            return oldItem == newItem
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LogViewHolder {
@@ -22,53 +62,70 @@ class LogAdapter(private var logEntries: List<String>) : RecyclerView.Adapter<Lo
         return LogViewHolder(view)
     }
 
-
     override fun onBindViewHolder(holder: LogViewHolder, position: Int) {
-        val entry = logEntries[position]
+        val entry = getItem(position)
 
-        // Parse logcat format: "MM-DD HH:MM:SS.mmm PID TID LEVEL TAG: message"
-        val parsed = parseLogcatEntry(entry)
-        holder.tagText.text = parsed.first
-        holder.timestampText.text = parsed.second
-        holder.messageText.text = parsed.third
-    }
+        // Set level emoji
+        holder.levelView.text = getLevelString(entry.level)
+        holder.levelView.setTextColor(getLevelColor(entry.level))
 
-    override fun getItemCount(): Int = logEntries.size
+        // Set tag
+        holder.tagView.text = entry.tag.ifEmpty { "Unknown" }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun updateLogs(newLogs: List<String>) {
-        logEntries = newLogs
-        notifyDataSetChanged()
-    }
+        // Set timestamp
+        holder.timestampView.text = entry.timestamp
 
-    private fun parseLogcatEntry(entry: String): Triple<String, String, String> {
-        // Logcat format: "MM-DD HH:MM:SS.mmm PID TID LEVEL TAG: message"
-        // Example: "12-08 10:30:45.123  1234  5678 I MyTag: This is a message"
-        val regex = Regex("""^(\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3})\s+\d+\s+\d+\s+([VDIWEF])\s+([^:]+):\s*(.*)$""")
-        val match = regex.find(entry)
+        // Set message
+        holder.messageView.text = entry.message
 
-        return if (match != null) {
-            val timestamp = match.groupValues[1]
-            val level = match.groupValues[2]
-            val tag = match.groupValues[3].trim()
-            val message = match.groupValues[4]
-            val levelEmoji = levelToEmoji(level)
-            Triple("$levelEmoji $tag", timestamp, message)
+        // Handle expand/collapse for continuation lines
+        if (entry.hasContinuation()) {
+            holder.expandIndicator.visibility = View.VISIBLE
+            holder.expandIndicator.text = if (entry.isExpanded) "▼ ${entry.continuationLines.size}" else "▶ ${entry.continuationLines.size}"
+
+            if (entry.isExpanded) {
+                holder.detailsView.visibility = View.VISIBLE
+                holder.detailsView.text = entry.continuationLines.joinToString("\n")
+            } else {
+                holder.detailsView.visibility = View.GONE
+            }
+
+            holder.itemView.setOnClickListener {
+                val currentPosition = holder.bindingAdapterPosition
+                if (currentPosition != RecyclerView.NO_POSITION) {
+                    val currentEntry = getItem(currentPosition)
+                    currentEntry.isExpanded = !currentEntry.isExpanded
+                    notifyItemChanged(currentPosition)
+                }
+            }
         } else {
-            // Fallback if regex doesn't match
-            Triple("", "", entry)
+            holder.expandIndicator.visibility = View.GONE
+            holder.detailsView.visibility = View.GONE
+            holder.itemView.setOnClickListener(null)
         }
     }
 
-    private fun levelToEmoji(level: String): String {
+    private fun getLevelString(level: Char): String {
         return when (level) {
-            "V" -> "📝 Verbose"  // Verbose
-            "D" -> "🐛 Debug"  // Debug
-            "I" -> "ℹ️ Info"  // Info
-            "W" -> "⚠️ Warning"  // Warning
-            "E" -> "❌ Error"  // Error
-            "F" -> "💀 Fatal"  // Fatal
+            'E' -> "❌ Error"  // Error
+            'W' -> "⚠️ Warning"  // Warning
+            'I' -> "ℹ️ Info"  // Info
+            'D' -> "🐛 Debug"  // Debug
+            'V' -> "📝 Verbose"  // Verbose
+            'F' -> "💀 Fatal"  // Fatal
             else -> "❓"
+        }
+    }
+
+    private fun getLevelColor(level: Char): Int {
+        return when (level) {
+            'E' -> Color.RED
+            'W' -> Color.rgb(255, 165, 0)  // Orange
+            'I' -> Color.rgb(100, 149, 237) // Cornflower Blue
+            'D' -> Color.rgb(0, 200, 0)     // Green
+            'V' -> Color.GRAY
+            'F' -> Color.RED
+            else -> Color.WHITE
         }
     }
 }
