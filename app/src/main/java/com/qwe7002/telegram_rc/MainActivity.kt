@@ -1076,8 +1076,8 @@ class MainActivity : AppCompatActivity() {
     fun logout(chatId: String) {
         val progressDialog = ProgressDialog(this)
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER)
-        progressDialog.setTitle(getString(R.string.get_recent_chat_title))
-        progressDialog.setMessage(getString(R.string.get_recent_chat_message))
+        progressDialog.setTitle(getString(R.string.logout_progress_title))
+        progressDialog.setMessage(getString(R.string.logout_progress_message))
         progressDialog.isIndeterminate = false
         progressDialog.setCancelable(false)
         progressDialog.show()

@@ -132,4 +132,8 @@
     <string name="yellowpage_saving">Saving to database…</string>
     <string name="yellowpage_cleared">Database cleared.</string>
     <string name="yellowpage_menu_title">YellowPage Sync</string>
+
+    <string name="logout_progress_title">Logging out from official API…</string>
+    <string name="logout_progress_message">Please wait…</string>
+    <string name="logout_failed">Logout failed.</string>
 </resources>
