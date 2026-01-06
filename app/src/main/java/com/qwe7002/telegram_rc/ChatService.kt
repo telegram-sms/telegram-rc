@@ -125,14 +125,14 @@ class ChatService : Service() {
             keyboardButtons.add(row1)
 
             val row2 = ArrayList<KeyboardButton>()
-            if(ActivityCompat.checkSelfPermission(
-                context,
+            if (ActivityCompat.checkSelfPermission(
+                    context,
                     Manifest.permission.SEND_SMS
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 row2.add(KeyboardButton("/sendsms"))
             }
-            if(ActivityCompat.checkSelfPermission(
+            if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.CALL_PHONE
                 ) == PackageManager.PERMISSION_GRANTED
@@ -152,14 +152,14 @@ class ChatService : Service() {
             row4.add(KeyboardButton("/switch datacard"))
 
             keyboardButtons.add(row4)
-            val row5 = ArrayList<KeyboardButton>()
-            if(getActiveCard(context)==2){
+            if (getActiveCard(context) == 2) {
+                val row5 = ArrayList<KeyboardButton>()
                 row5.add(KeyboardButton("/switch sim on 1"))
                 row5.add(KeyboardButton("/switch sim off 1"))
                 row5.add(KeyboardButton("/switch sim on 2"))
                 row5.add(KeyboardButton("/switch sim off 2"))
+                keyboardButtons.add(row5)
             }
-            keyboardButtons.add(row5)
 
             keyboard.keyboard = keyboardButtons
             keyboard.resizeKeyboard = true
@@ -314,12 +314,12 @@ class ChatService : Service() {
                         throw IOException(response.code.toString())
                     }
                 } catch (e: IOException) {
-                    Log.e(Const.TAG, "failed to send message:" + e.message,e)
+                    Log.e(Const.TAG, "failed to send message:" + e.message, e)
                 } finally {
                     try {
                         response?.close()
                     } catch (e: Exception) {
-                        Log.w(Const.TAG, "Failed to close response: ${e.message}",e)
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}", e)
                     }
                 }
                 return
@@ -457,11 +457,13 @@ class ChatService : Service() {
                 val quickInfoRequest = RequestMessage()
                 quickInfoRequest.chatId = chatID
                 quickInfoRequest.messageThreadId = messageThreadId
-                quickInfoRequest.text = "${getString(R.string.system_message_head)}\n${getString(R.string.collecting_info)}"
+                quickInfoRequest.text =
+                    "${getString(R.string.system_message_head)}\n${getString(R.string.collecting_info)}"
 
                 val quickRequestUri = getUrl(botToken, "sendMessage")
                 val quickBody = Gson().toJson(quickInfoRequest).toRequestBody(Const.JSON)
-                val quickSendRequest = Request.Builder().url(quickRequestUri).method("POST", quickBody).build()
+                val quickSendRequest =
+                    Request.Builder().url(quickRequestUri).method("POST", quickBody).build()
 
                 Thread {
                     var messageId: Long = -1
@@ -665,14 +667,16 @@ class ChatService : Service() {
                                                 packageName,
                                                 Manifest.permission.BATTERY_STATS
                                             )
-                                            val process = service.newProcess(shizukuCommand, null, null)
+                                            val process =
+                                                service.newProcess(shizukuCommand, null, null)
 
                                             try {
                                                 process.waitFor()
                                             } catch (e: Exception) {
                                                 Log.e(
                                                     Const.TAG,
-                                                    "BATTERY_STATS grant process error: ${e.message}",e
+                                                    "BATTERY_STATS grant process error: ${e.message}",
+                                                    e
                                                 )
                                             }
 
@@ -726,7 +730,8 @@ class ChatService : Service() {
                                 ""
                             }
                         val batteryTemperature =
-                            batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
+                            batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
+                                ?.div(10.0)
                         val healthRatio = Battery.getLearnedBatteryCapacity()
                             ?.let { (it.toDouble() / Battery.getBatteryCapacity(applicationContext)) * 100 }
                         val health = healthRatio?.toInt()
@@ -742,7 +747,11 @@ class ChatService : Service() {
                     val shizukuStatus =
                         "\nShizuku Status: " + if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) "Enabled" else "Disabled"
                     val fullInfoText =
-                        "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
+                        "${getString(R.string.system_message_head)}\n${
+                            applicationContext.getString(
+                                R.string.current_battery_level
+                            )
+                        }" + Battery.getBatteryInfo(
                             applicationContext
                         ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + shizukuStatus + beaconStatus + cardInfo
 
@@ -758,12 +767,16 @@ class ChatService : Service() {
 
                         val editRequestUri = getUrl(botToken, "editMessageText")
                         val editBody = Gson().toJson(editRequest).toRequestBody(Const.JSON)
-                        val editSendRequest = Request.Builder().url(editRequestUri).method("POST", editBody).build()
+                        val editSendRequest =
+                            Request.Builder().url(editRequestUri).method("POST", editBody).build()
 
                         try {
                             val editResponse = okhttpClient.newCall(editSendRequest).execute()
                             if (editResponse.code != 200) {
-                                Log.e(Const.TAG, "Failed to edit getinfo message: ${editResponse.code}")
+                                Log.e(
+                                    Const.TAG,
+                                    "Failed to edit getinfo message: ${editResponse.code}"
+                                )
                             }
                             editResponse.close()
                         } catch (e: Exception) {
@@ -797,7 +810,8 @@ class ChatService : Service() {
                             if (learnedCapacityValue != null && learnedCapacityValue > 0) {
                                 reportText += "Max Learned Capacity: $learnedCapacity mAh\n"
                                 // Calculate battery health percentage
-                                batteryHealthPercent = (learnedCapacityValue / batteryCapacity) * 100.0
+                                batteryHealthPercent =
+                                    (learnedCapacityValue / batteryCapacity) * 100.0
                                 reportText += "Battery Health: %.1f%%\n".format(batteryHealthPercent)
                             }
                         } catch (e: Exception) {
@@ -1099,16 +1113,22 @@ class ChatService : Service() {
                                         } else {
                                             requestBody.text =
                                                 "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${
-                                                    if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                                    if (newState) getString(R.string.enable) else getString(
+                                                        R.string.disable
+                                                    )
                                                 }"
-                                            actionToExecute = { beacon.putBoolean("beacon_enable", newState) }
+                                            actionToExecute =
+                                                { beacon.putBoolean("beacon_enable", newState) }
                                         }
                                     } else {
                                         requestBody.text =
                                             "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${
-                                                if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                                if (newState) getString(R.string.enable) else getString(
+                                                    R.string.disable
+                                                )
                                             }"
-                                        actionToExecute = { beacon.putBoolean("beacon_enable", newState) }
+                                        actionToExecute =
+                                            { beacon.putBoolean("beacon_enable", newState) }
                                     }
                                 }
 
@@ -1121,7 +1141,9 @@ class ChatService : Service() {
                                     }
                                     requestBody.text =
                                         "${getString(R.string.system_message_head)}\nSwitching mobile network status: ${
-                                            if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                            if (newState) getString(R.string.enable) else getString(
+                                                R.string.disable
+                                            )
                                         }"
                                     actionToExecute = { setData(newState) }
                                 }
@@ -1137,7 +1159,9 @@ class ChatService : Service() {
                                     }
                                     requestBody.text =
                                         "${getString(R.string.system_message_head)}\nWIFI state: ${
-                                            if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                            if (newState) getString(R.string.enable) else getString(
+                                                R.string.disable
+                                            )
                                         }"
                                     actionToExecute = { setWifi(newState) }
                                 }
@@ -1152,7 +1176,9 @@ class ChatService : Service() {
                                     }
                                     requestBody.text =
                                         "${getString(R.string.system_message_head)}\nBluetooth state: ${
-                                            if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                            if (newState) getString(R.string.enable) else getString(
+                                                R.string.disable
+                                            )
                                         }"
                                     actionToExecute = { setBlueTooth(newState) }
                                 }
@@ -1181,13 +1207,18 @@ class ChatService : Service() {
                                         } else {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
-                                                    if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                                    if (newState) getString(R.string.enable) else getString(
+                                                        R.string.disable
+                                                    )
                                                 }"
                                             actionToExecute = {
                                                 try {
                                                     val tm = Telephony()
                                                     tm.setSimPowerState(slot, newState)
-                                                    Log.d(Const.TAG, "Successfully switched SIM${slot + 1} card status")
+                                                    Log.d(
+                                                        Const.TAG,
+                                                        "Successfully switched SIM${slot + 1} card status"
+                                                    )
                                                 } catch (e: Exception) {
                                                     Log.e(
                                                         Const.TAG,
@@ -1235,11 +1266,15 @@ class ChatService : Service() {
                                                 dataSub.setDefaultDataSubIdWithShizuku(
                                                     subscriptionInfo.subscriptionId
                                                 )
-                                                Log.d(Const.TAG, "Successfully switched default data SIM")
+                                                Log.d(
+                                                    Const.TAG,
+                                                    "Successfully switched default data SIM"
+                                                )
                                             } catch (e: Exception) {
                                                 Log.e(
                                                     Const.TAG,
-                                                    "Switching default data SIM failed: ${e.message}", e
+                                                    "Switching default data SIM failed: ${e.message}",
+                                                    e
                                                 )
                                             } catch (e: NoSuchMethodError) {
                                                 Log.e(
@@ -1267,20 +1302,32 @@ class ChatService : Service() {
                                     val requestUri = getUrl(botToken, "sendMessage")
                                     val gson = Gson()
                                     val body = gson.toJson(requestBody).toRequestBody(Const.JSON)
-                                    val sendRequest = Request.Builder().url(requestUri).method("POST", body).build()
+                                    val sendRequest =
+                                        Request.Builder().url(requestUri).method("POST", body)
+                                            .build()
 
                                     try {
                                         val response = okhttpClient.newCall(sendRequest).execute()
                                         if (response.code == 200) {
-                                            Log.d(Const.TAG, "Switch message sent successfully, executing action")
+                                            Log.d(
+                                                Const.TAG,
+                                                "Switch message sent successfully, executing action"
+                                            )
                                             // Execute the network action after successful message send
                                             actionToExecute.invoke()
                                         } else {
-                                            Log.e(Const.TAG, "Failed to send switch message: ${response.code}")
+                                            Log.e(
+                                                Const.TAG,
+                                                "Failed to send switch message: ${response.code}"
+                                            )
                                         }
                                         response.close()
                                     } catch (e: Exception) {
-                                        Log.e(Const.TAG, "Exception sending switch message: ${e.message}", e)
+                                        Log.e(
+                                            Const.TAG,
+                                            "Exception sending switch message: ${e.message}",
+                                            e
+                                        )
                                     }
                                 }.start()
                                 // Return early to avoid sending the message again in the normal flow
@@ -1472,7 +1519,7 @@ class ChatService : Service() {
         val call = okhttpClient.newCall(sendRequest)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(Const.TAG, "Send reply failed: ${e.message}",e )
+                Log.e(Const.TAG, "Send reply failed: ${e.message}", e)
             }
 
             @Throws(IOException::class)
@@ -1481,10 +1528,10 @@ class ChatService : Service() {
                     val body = response.body
                     body.string()
                 } catch (e: IOException) {
-                    Log.e(Const.TAG, "Failed to read response body: ${e.message}",e)
+                    Log.e(Const.TAG, "Failed to read response body: ${e.message}", e)
                     return
                 } catch (e: NullPointerException) {
-                    Log.e(Const.TAG, "Response body is null: ${e.message}",e)
+                    Log.e(Const.TAG, "Response body is null: ${e.message}", e)
                     return
                 }
 
@@ -1496,7 +1543,7 @@ class ChatService : Service() {
                     try {
                         response.close()
                     } catch (e: Exception) {
-                        Log.w(Const.TAG, "Failed to close response: ${e.message}",e)
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}", e)
                     }
                     return
                 }
@@ -1505,13 +1552,13 @@ class ChatService : Service() {
                 try {
                     resultObj = JsonParser.parseString(responseString).asJsonObject
                 } catch (e: Exception) {
-                    Log.e(Const.TAG, "Failed to parse response JSON: ${e.message}",e)
+                    Log.e(Const.TAG, "Failed to parse response JSON: ${e.message}", e)
                     try {
                         response.close()
                     } catch (e2: Exception) {
                         Log.w(
                             Const.TAG,
-                            "Failed to close response: ${e2.message}",e2
+                            "Failed to close response: ${e2.message}", e2
                         )
                     }
                     return
@@ -1526,7 +1573,7 @@ class ChatService : Service() {
                     try {
                         sendStatusMMKV.putLong("message_id", getMessageId(responseString))
                     } catch (e: Exception) {
-                        Log.e(Const.TAG, "Failed to get message ID: ${e.message}",e)
+                        Log.e(Const.TAG, "Failed to get message ID: ${e.message}", e)
                     }
                 }
 
@@ -1570,7 +1617,7 @@ class ChatService : Service() {
                                     } catch (e: Exception) {
                                         Log.e(
                                             Const.TAG,
-                                            "Error getting hotspot IP address: ${e.message}",e
+                                            "Error getting hotspot IP address: ${e.message}", e
                                         )
                                         // 继续重试
                                     }
@@ -1677,7 +1724,7 @@ class ChatService : Service() {
                 try {
                     response.close()
                 } catch (e: Exception) {
-                    Log.w(Const.TAG, "Failed to close response: ${e.message}",e)
+                    Log.w(Const.TAG, "Failed to close response: ${e.message}", e)
                 }
             }
         })
@@ -1800,7 +1847,7 @@ class ChatService : Service() {
                                     } catch (e: Exception) {
                                         Log.e(
                                             Const.TAG,
-                                            "Error processing message: ${e.message}",e
+                                            "Error processing message: ${e.message}", e
                                         )
                                     }
                                 }
@@ -1831,7 +1878,7 @@ class ChatService : Service() {
                 } catch (e: IOException) {
                     Log.e(
                         Const.TAG,
-                        "Connection to the Telegram API service failed: ${e.message}",e
+                        "Connection to the Telegram API service failed: ${e.message}", e
                     )
                     try {
                         Thread.sleep(1000L)
@@ -1840,7 +1887,7 @@ class ChatService : Service() {
                 } catch (e: Exception) {
                     Log.e(
                         Const.TAG,
-                        "Unexpected error in polling thread: ${e.message}",e
+                        "Unexpected error in polling thread: ${e.message}", e
                     )
                     try {
                         Thread.sleep(1000L)
@@ -1850,7 +1897,7 @@ class ChatService : Service() {
                     try {
                         response?.close()
                     } catch (e: Exception) {
-                        Log.w(Const.TAG, "Failed to close response: ${e.message}",e)
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}", e)
                     }
                 }
             }
