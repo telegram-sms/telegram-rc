@@ -1716,7 +1716,7 @@ class ChatService : Service() {
                 logList.joinToString("\n")
             }
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Error reading logcat: ${e.message}")
+            Log.e(Const.TAG, "Error reading logcat: ${e.message}",e)
             getString(R.string.no_logs)
         }
     }
