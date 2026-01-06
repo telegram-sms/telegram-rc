@@ -132,7 +132,14 @@ class ChatService : Service() {
             val row3 = ArrayList<KeyboardButton>()
             row3.add(KeyboardButton("/switch auto"))
             row3.add(KeyboardButton("/switch datacard"))
+
             keyboardButtons.add(row3)
+
+            // Fourth row: /battery and /log
+            val row4 = ArrayList<KeyboardButton>()
+            row4.add(KeyboardButton("/battery"))
+            row4.add(KeyboardButton("/log"))
+            keyboardButtons.add(row4)
 
             keyboard.keyboard = keyboardButtons
             keyboard.resizeKeyboard = true
@@ -704,6 +711,64 @@ class ChatService : Service() {
             "/log" -> {
                 requestBody.text =
                     getString(R.string.system_message_head) + "\n" + readLogcat(10)
+            }
+
+            "/battery" -> {
+                val batteryInfo = Battery.getBatteryInfo(applicationContext)
+                val batteryCapacity = Battery.getBatteryCapacity(applicationContext)
+
+                var reportText = "${getString(R.string.battery_report_head)}\n"
+                reportText += "${getString(R.string.current_battery_level)}$batteryInfo\n"
+                reportText += "Battery Capacity: ${batteryCapacity.toInt()} mAh\n"
+
+                // Get learned battery capacity if Shizuku is available
+                if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                    val learnedCapacity = Battery.getLearnedBatteryCapacity()
+                    if (learnedCapacity != null) {
+                        reportText += "Max Learned Capacity: $learnedCapacity mAh\n"
+                    }
+                }
+
+                // Get battery health
+                val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                val batteryStatus = checkNotNull(registerReceiver(null, intentFilter))
+                val health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1)
+                val healthStr = when (health) {
+                    BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
+                    BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheat"
+                    BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
+                    BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over Voltage"
+                    BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
+                    else -> "Unknown"
+                }
+                reportText += "Battery Health: $healthStr\n"
+
+                // Get battery temperature
+                val temperature = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
+                if (temperature > 0) {
+                    reportText += "Temperature: ${temperature / 10.0}°C\n"
+                }
+
+                // Get battery voltage
+                val voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)
+                if (voltage > 0) {
+                    reportText += "Voltage: ${voltage / 1000.0}V\n"
+                }
+
+                // Get charging status details
+                val plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+                if (plugged > 0) {
+                    val pluggedStr = when (plugged) {
+                        BatteryManager.BATTERY_PLUGGED_AC -> "AC Charger"
+                        BatteryManager.BATTERY_PLUGGED_USB -> "USB"
+                        BatteryManager.BATTERY_PLUGGED_WIRELESS -> "Wireless"
+                        else -> "Unknown"
+                    }
+                    reportText += "Power Source: $pluggedStr"
+                }
+
+                requestBody.text = reportText.trim()
+                Log.d(Const.TAG, "battery: " + requestBody.text)
             }
 
             "/hotspot" -> {

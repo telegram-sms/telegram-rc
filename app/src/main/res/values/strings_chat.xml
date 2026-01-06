@@ -10,7 +10,8 @@
     <string name="unknown_command">Unknown command, send /help to get the available commands list.</string>
     <string name="chat_command_service_name">"Chat command "</string>
     <string name="receive_sms_head">Receive SMS</string>
-    <string name="available_command">Available Commands:\n/help - Display help information\n/getinfo - Get system information\n/log - Output the last 10 log records</string>
+    <string name="available_command">Available Commands:\n/help - Display help information\n/getinfo - Get system information\n/log - Output the last 10 log records\n/battery - Get battery report</string>
+    <string name="battery_report_head">[Battery Report]</string>
     <string name="sendsms">/sendsms - Send SMS</string>
     <string name="sending">Sending</string>
     <string name="get_recent_chat_title">Retrieving recent chats…</string>
