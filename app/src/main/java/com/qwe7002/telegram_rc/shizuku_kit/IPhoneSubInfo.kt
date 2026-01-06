@@ -1,9 +1,7 @@
 package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.annotation.SuppressLint
-import android.nfc.Tag
 import android.util.Log
-import com.qwe7002.telegram_rc.MMKV.Const
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
@@ -21,7 +19,7 @@ class IPhoneSubInfo {
             // Get the IPhoneSubInfo service binder via Shizuku
             val binder = SystemServiceHelper.getSystemService("iphonesubinfo")
             if (binder == null) {
-                Log.e(shizuku.TAG, "Failed to get IPhoneSubInfo service binder")
+                Log.e(ShizukuKit.TAG, "Failed to get IPhoneSubInfo service binder")
                 return null
             }
 
@@ -37,11 +35,11 @@ class IPhoneSubInfo {
             )
 
             val iPhoneSubInfoService = asInterfaceMethod.invoke(null, wrappedBinder)
-            Log.d(shizuku.TAG, "Successfully obtained IPhoneSubInfo service")
+            Log.d(ShizukuKit.TAG, "Successfully obtained IPhoneSubInfo service")
             iPhoneSubInfoService
         } catch (e: Exception) {
             Log.e(
-                shizuku.TAG,
+                ShizukuKit.TAG,
                 "Failed to get IPhoneSubInfo service: ${e.message}",
                 e
             )
@@ -53,7 +51,7 @@ class IPhoneSubInfo {
         return try {
             val iPhoneSubInfoService = getIPhoneSubInfoService()
             if (iPhoneSubInfoService == null) {
-                Log.e(shizuku.TAG, "Failed to get IPhoneSubInfo service")
+                Log.e(ShizukuKit.TAG, "Failed to get IPhoneSubInfo service")
                 return null
             }
 
@@ -66,10 +64,10 @@ class IPhoneSubInfo {
             val result =
                 getSubscriberIdMethod.invoke(iPhoneSubInfoService, "com.android.shell") as? String
 
-            Log.i(shizuku.TAG, "Successfully retrieved subscriber ID")
+            Log.i(ShizukuKit.TAG, "Successfully retrieved subscriber ID")
             result
         } catch (e: Exception) {
-            Log.e(shizuku.TAG, "Exception during getSubscriberId: ${e.message}", e)
+            Log.e(ShizukuKit.TAG, "Exception during getSubscriberId: ${e.message}", e)
             null
         }
     }
@@ -78,7 +76,7 @@ class IPhoneSubInfo {
         return try {
             val iPhoneSubInfoService = getIPhoneSubInfoService()
             if (iPhoneSubInfoService == null) {
-                Log.e(shizuku.TAG, "Failed to get IPhoneSubInfo service")
+                Log.e(ShizukuKit.TAG, "Failed to get IPhoneSubInfo service")
                 return null
             }
 
@@ -100,13 +98,13 @@ class IPhoneSubInfo {
                 ) as? String
 
                 Log.i(
-                    shizuku.TAG,
+                    ShizukuKit.TAG,
                     "Successfully retrieved subscriber ID for subId: $subId (with featureId)"
                 )
                 return result
             } catch (e: NoSuchMethodException) {
                 Log.e(
-                    shizuku.TAG,
+                    ShizukuKit.TAG,
                     "Method with featureId not found, trying without: ${e.message}",e
                 )
             }
@@ -125,13 +123,13 @@ class IPhoneSubInfo {
             ) as? String
 
             Log.i(
-                shizuku.TAG,
+                ShizukuKit.TAG,
                 "Successfully retrieved subscriber ID for subId: $subId"
             )
             result
         } catch (e: Exception) {
             Log.e(
-                shizuku.TAG,
+                ShizukuKit.TAG,
                 "Exception during getSubscriberIdForSubscriber: ${e.message}",
                 e
             )

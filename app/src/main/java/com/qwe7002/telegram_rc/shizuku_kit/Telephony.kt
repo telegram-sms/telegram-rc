@@ -3,7 +3,6 @@ package com.qwe7002.telegram_rc.shizuku_kit
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
-import com.qwe7002.telegram_rc.MMKV.Const
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
@@ -22,7 +21,7 @@ class Telephony {
             // Get the ITelephony service binder via Shizuku
             val binder = SystemServiceHelper.getSystemService(Context.TELEPHONY_SERVICE)
             if (binder == null) {
-                Log.e(shizuku.TAG, "Failed to get ITelephony service binder")
+                Log.e(ShizukuKit.TAG, "Failed to get ITelephony service binder")
                 return null
             }
 
@@ -38,10 +37,10 @@ class Telephony {
             )
 
             val iTelephonyService = asInterfaceMethod.invoke(null, wrappedBinder)
-            Log.d(shizuku.TAG, "Successfully obtained ITelephony service")
+            Log.d(ShizukuKit.TAG, "Successfully obtained ITelephony service")
             iTelephonyService
         } catch (e: Exception) {
-            Log.e(shizuku.TAG, "Failed to get ITelephony service: ${e.message}", e)
+            Log.e(ShizukuKit.TAG, "Failed to get ITelephony service: ${e.message}", e)
             null
         }
     }
@@ -51,7 +50,7 @@ class Telephony {
         return try {
             val iTelephonyService = getITelephonyService()
             if (iTelephonyService == null) {
-                Log.e(shizuku.TAG, "Failed to get ITelephony service")
+                Log.e(ShizukuKit.TAG, "Failed to get ITelephony service")
                 return false
             }
 
@@ -68,14 +67,14 @@ class Telephony {
                 setSimPowerStateForSlotMethod.invoke(iTelephonyService, slotIndex, state)
 
                 Log.i(
-                    shizuku.TAG,
+                    ShizukuKit.TAG,
                     "Successfully set SIM power state for slot $slotIndex to state $state"
                 )
 
                 return true
             } catch (e: NoSuchMethodException) {
                 Log.e(
-                    shizuku.TAG,
+                    ShizukuKit.TAG,
                     "Method with int state not found, trying boolean signature: ${e.message}",e
                 )
             }
@@ -90,13 +89,13 @@ class Telephony {
             setSimPowerStateForSlotMethod.invoke(iTelephonyService, slotIndex, powerUp)
 
             Log.i(
-                shizuku.TAG,
+                ShizukuKit.TAG,
                 "Successfully set SIM power state for slot $slotIndex to ${if (powerUp) "UP" else "DOWN"}"
             )
             true
         } catch (e: Exception) {
             Log.e(
-                shizuku.TAG,
+                ShizukuKit.TAG,
                 "Exception during setSimPowerStateForSlot: ${e.message}",
                 e
             )

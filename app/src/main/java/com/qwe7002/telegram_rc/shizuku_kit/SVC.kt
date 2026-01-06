@@ -4,7 +4,6 @@ package com.qwe7002.telegram_rc.shizuku_kit
 
 import android.content.pm.PackageManager
 import android.util.Log
-import com.qwe7002.telegram_rc.MMKV.Const
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
 import java.io.BufferedReader
@@ -19,10 +18,10 @@ object SVC {
         val state = if (enable) "enable" else "disable"
         return try {
             val result = executeCommand(arrayOf("svc", "wifi", state))
-            Log.i(shizuku.TAG, "Command output: $result")
+            Log.i(ShizukuKit.TAG, "Command output: $result")
             result.isSuccess
         } catch (e: Exception) {
-            Log.e(shizuku.TAG, "Exception occurred: ${e.message}", e)
+            Log.e(ShizukuKit.TAG, "Exception occurred: ${e.message}", e)
             false
         }
     }
@@ -30,23 +29,23 @@ object SVC {
     @JvmStatic
     fun setData(enable: Boolean): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(shizuku.TAG, "Shizuku is not running")
+            Log.e(ShizukuKit.TAG, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(shizuku.TAG, "Shizuku permission not granted")
+            Log.e(ShizukuKit.TAG, "Shizuku permission not granted")
             return false
         }
 
         val state = if (enable) "enable" else "disable"
         return try {
             val result = executeCommand(arrayOf("svc", "data", state))
-            Log.i(shizuku.TAG, "Command output: $result")
+            Log.i(ShizukuKit.TAG, "Command output: $result")
             result.isSuccess
         } catch (e: Exception) {
-            Log.e(shizuku.TAG, "Exception occurred: ${e.message}", e)
+            Log.e(ShizukuKit.TAG, "Exception occurred: ${e.message}", e)
             false
         }
     }
@@ -54,23 +53,23 @@ object SVC {
     @JvmStatic
     fun setBlueTooth(enable: Boolean): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(shizuku.TAG, "Shizuku is not running")
+            Log.e(ShizukuKit.TAG, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(shizuku.TAG, "Shizuku permission not granted")
+            Log.e(ShizukuKit.TAG, "Shizuku permission not granted")
             return false
         }
 
         val state = if (enable) "enable" else "disable"
         return try {
             val result = executeCommand(arrayOf("svc", "bluetooth", state))
-            Log.i(shizuku.TAG, "Command output: $result")
+            Log.i(ShizukuKit.TAG, "Command output: $result")
             result.isSuccess
         } catch (e: Exception) {
-            Log.e(shizuku.TAG, "Exception occurred: ${e.message}", e)
+            Log.e(ShizukuKit.TAG, "Exception occurred: ${e.message}", e)
             false
         }
     }
@@ -95,7 +94,7 @@ object SVC {
             @Suppress("USELESS_CAST") val reader = BufferedReader(InputStreamReader(process.inputStream as InputStream?))
             var line: String?
             while ((reader.readLine().also { line = it }) != null) {
-                Log.d(shizuku.TAG, line!!)
+                Log.d(ShizukuKit.TAG, line!!)
             }
 
             // 使用線程來實現超時
@@ -103,7 +102,7 @@ object SVC {
                 try {
                     process.waitFor()
                 } catch (e: Exception) {
-                    Log.e(shizuku.TAG, "Process wait error: ${e.message}",e)
+                    Log.e(ShizukuKit.TAG, "Process wait error: ${e.message}",e)
                 }
             }
             processThread.start()
@@ -112,13 +111,13 @@ object SVC {
             if (processThread.isAlive) {
                 process.destroy()
                 processThread.interrupt()
-                Log.e(shizuku.TAG, "Command timed out")
+                Log.e(ShizukuKit.TAG, "Command timed out")
                 return CommandResult(false, "", "Command timed out")
             }
 
             return CommandResult(process.exitValue() == 0, reader.readText(), "")
         } catch (e: java.lang.Exception) {
-            Log.e(shizuku.TAG, "Execution failed: " + e.message,e)
+            Log.e(ShizukuKit.TAG, "Execution failed: " + e.message,e)
             return CommandResult(false, "", e.message)
         }
     }

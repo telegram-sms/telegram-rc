@@ -27,7 +27,7 @@ object VPNHotspot {
             }
             Thread.sleep(1000)
         } catch (e: InterruptedException) {
-            Log.e(shizuku.TAG, "disableVPNHotspot: ${e.message}",e )
+            Log.e(ShizukuKit.TAG, "disableVPNHotspot: ${e.message}",e )
         }
         SVC.setWifi(true)
         try {
@@ -36,7 +36,7 @@ object VPNHotspot {
             }
             Thread.sleep(1000)
         } catch (e: InterruptedException) {
-            Log.e(shizuku.TAG, "disableVPNHotspot: ${e.message}",e )
+            Log.e(ShizukuKit.TAG, "disableVPNHotspot: ${e.message}",e )
         }
     }
 
@@ -53,7 +53,7 @@ object VPNHotspot {
             }
             Thread.sleep(1000)
         } catch (e: InterruptedException) {
-            Log.e(shizuku.TAG, "enableVPNHotspot: ${e.message}",e )
+            Log.e(ShizukuKit.TAG, "enableVPNHotspot: ${e.message}",e )
         }
 
         startForegroundService("be.mygod.vpnhotspot", "be.mygod.vpnhotspot.RepeaterService")
@@ -62,20 +62,20 @@ object VPNHotspot {
     @JvmStatic
     fun isVPNHotspotActive(): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(shizuku.TAG, "Shizuku is not running")
+            Log.e(ShizukuKit.TAG, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(shizuku.TAG, "Shizuku permission not granted")
+            Log.e(ShizukuKit.TAG, "Shizuku permission not granted")
             return false
         }
 
         return try {
             val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
             if (service == null) {
-                Log.e(shizuku.TAG, "Shizuku service not available")
+                Log.e(ShizukuKit.TAG, "Shizuku service not available")
                 return false
             }
 
@@ -94,7 +94,7 @@ object VPNHotspot {
                 try {
                     process.waitFor()
                 } catch (e: Exception) {
-                    Log.e(shizuku.TAG, "Process wait error: ${e.message}")
+                    Log.e(ShizukuKit.TAG, "Process wait error: ${e.message}")
                 }
             }
             processThread.start()
@@ -103,13 +103,13 @@ object VPNHotspot {
             if (processThread.isAlive) {
                 process.destroy()
                 processThread.interrupt()
-                Log.e(shizuku.TAG, "isVPNHotspotActive command timed out")
+                Log.e(ShizukuKit.TAG, "isVPNHotspotActive command timed out")
                 return false
             }
 
             output.isNotEmpty()
         } catch (e: Exception) {
-            Log.e(shizuku.TAG, "Failed to check VPNHotspot status: ${e.message}", e)
+            Log.e(ShizukuKit.TAG, "Failed to check VPNHotspot status: ${e.message}", e)
             false
         }
     }
@@ -120,7 +120,7 @@ object VPNHotspot {
         try {
             info = context.packageManager.getApplicationInfo("be.mygod.vpnhotspot", 0)
         } catch (e: PackageManager.NameNotFoundException) {
-            Log.d(shizuku.TAG, "isVPNHotspotExist: ${e.message}",e)
+            Log.d(ShizukuKit.TAG, "isVPNHotspotExist: ${e.message}",e)
             info = null
         }
 
@@ -129,20 +129,20 @@ object VPNHotspot {
 
     private fun startForegroundService(packageName: String, serviceName: String): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(shizuku.TAG, "Shizuku is not running")
+            Log.e(ShizukuKit.TAG, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(shizuku.TAG, "Shizuku permission not granted")
+            Log.e(ShizukuKit.TAG, "Shizuku permission not granted")
             return false
         }
 
         return try {
             val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
             if (service == null) {
-                Log.e(shizuku.TAG, "Shizuku service not available")
+                Log.e(ShizukuKit.TAG, "Shizuku service not available")
                 return false
             }
 
@@ -170,7 +170,7 @@ object VPNHotspot {
                 try {
                     process.waitFor()
                 } catch (e: Exception) {
-                    Log.e(shizuku.TAG, "Process wait error: ${e.message}")
+                    Log.e(ShizukuKit.TAG, "Process wait error: ${e.message}")
                 }
             }
             processThread.start()
@@ -179,7 +179,7 @@ object VPNHotspot {
             if (processThread.isAlive) {
                 process.destroy()
                 processThread.interrupt()
-                Log.e(shizuku.TAG, "startForegroundService command timed out")
+                Log.e(ShizukuKit.TAG, "startForegroundService command timed out")
                 return false
             }
 
@@ -187,36 +187,36 @@ object VPNHotspot {
             val errorOutput = errorReader.readText()
 
             if (output.isNotEmpty()) {
-                Log.i(shizuku.TAG, "Command output: $output")
+                Log.i(ShizukuKit.TAG, "Command output: $output")
             }
 
             if (errorOutput.isNotEmpty()) {
-                Log.e(shizuku.TAG, "Command error: $errorOutput")
+                Log.e(ShizukuKit.TAG, "Command error: $errorOutput")
             }
 
             process.exitValue() == 0
         } catch (e: Exception) {
-            Log.e(shizuku.TAG, "Failed to start service: ${e.message}", e)
+            Log.e(ShizukuKit.TAG, "Failed to start service: ${e.message}", e)
             false
         }
     }
 
     private fun forceStopService(packageName: String): Boolean {
         if (!Shizuku.pingBinder()) {
-            Log.e(shizuku.TAG, "Shizuku is not running")
+            Log.e(ShizukuKit.TAG, "Shizuku is not running")
             return false
         }
 
         // 检查Shizuku权限
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Log.e(shizuku.TAG, "Shizuku permission not granted")
+            Log.e(ShizukuKit.TAG, "Shizuku permission not granted")
             return false
         }
 
         return try {
             val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
             if (service == null) {
-                Log.e(shizuku.TAG, "Shizuku service not available")
+                Log.e(ShizukuKit.TAG, "Shizuku service not available")
                 return false
             }
 
@@ -237,7 +237,7 @@ object VPNHotspot {
                 try {
                     process.waitFor()
                 } catch (e: Exception) {
-                    Log.e(shizuku.TAG, "Process wait error: ${e.message}",e)
+                    Log.e(ShizukuKit.TAG, "Process wait error: ${e.message}",e)
                 }
             }
             processThread.start()
@@ -246,7 +246,7 @@ object VPNHotspot {
             if (processThread.isAlive) {
                 process.destroy()
                 processThread.interrupt()
-                Log.e(shizuku.TAG, "forceStopService command timed out")
+                Log.e(ShizukuKit.TAG, "forceStopService command timed out")
                 return false
             }
 
@@ -254,16 +254,16 @@ object VPNHotspot {
             val errorOutput = errorReader.readText()
 
             if (output.isNotEmpty()) {
-                Log.i(shizuku.TAG, "Command output: $output")
+                Log.i(ShizukuKit.TAG, "Command output: $output")
             }
 
             if (errorOutput.isNotEmpty()) {
-                Log.e(shizuku.TAG, "Command error: $errorOutput")
+                Log.e(ShizukuKit.TAG, "Command error: $errorOutput")
             }
 
             process.exitValue() == 0
         } catch (e: Exception) {
-            Log.e(shizuku.TAG, "Failed to force stop service: ${e.message}", e)
+            Log.e(ShizukuKit.TAG, "Failed to force stop service: ${e.message}", e)
             false
         }
     }

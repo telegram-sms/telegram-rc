@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.qwe7002.telegram_rc.MMKV.Const
 import com.qwe7002.telegram_rc.data_structure.LogAdapter
 import com.qwe7002.telegram_rc.data_structure.LogEntry
-import com.qwe7002.telegram_rc.shizuku_kit.shizuku
+import com.qwe7002.telegram_rc.shizuku_kit.ShizukuKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -103,7 +103,7 @@ class LogcatActivity : AppCompatActivity() {
                 logcatProcess = Runtime.getRuntime().exec(
                     arrayOf(
                         "logcat", "${Const.TAG}:${level}", "Telegram-RC.TetherManager:${level}",
-                        "$${shizuku.TAG}:${level}",
+                        "$${ShizukuKit.TAG}:${level}",
                         "*:S", "-d", "-t", maxLines.toString(), "-v", "time"
                     )
                 )

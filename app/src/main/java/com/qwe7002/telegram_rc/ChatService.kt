@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
@@ -39,7 +38,7 @@ import com.qwe7002.telegram_rc.shizuku_kit.SVC.setWifi
 import com.qwe7002.telegram_rc.shizuku_kit.Telephony
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot.isVPNHotspotActive
-import com.qwe7002.telegram_rc.shizuku_kit.shizuku
+import com.qwe7002.telegram_rc.shizuku_kit.ShizukuKit
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.DataUsage
@@ -1772,7 +1771,7 @@ class ChatService : Service() {
             val process = Runtime.getRuntime().exec(
                 arrayOf(
                     "logcat","${Const.TAG}:${level}", "Telegram-RC.TetherManager:${level}",
-                    "${shizuku.TAG}:${level}",
+                    "${ShizukuKit.TAG}:${level}",
                     "*:S", "-d", "-t", lines.toString()
                 )
             )
