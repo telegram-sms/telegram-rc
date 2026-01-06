@@ -38,6 +38,7 @@ import com.qwe7002.telegram_rc.shizuku_kit.SVC.setWifi
 import com.qwe7002.telegram_rc.shizuku_kit.Telephony
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot.isVPNHotspotActive
+import com.qwe7002.telegram_rc.shizuku_kit.shizuku
 import com.qwe7002.telegram_rc.static_class.ArfcnConverter
 import com.qwe7002.telegram_rc.static_class.Battery
 import com.qwe7002.telegram_rc.static_class.DataUsage
@@ -286,13 +287,12 @@ class ChatService : Service() {
                         throw IOException(response.code.toString())
                     }
                 } catch (e: IOException) {
-                    e.printStackTrace()
-                    Log.e(Const.TAG, "failed to send message:" + e.message)
+                    Log.e(Const.TAG, "failed to send message:" + e.message,e)
                 } finally {
                     try {
                         response?.close()
                     } catch (e: Exception) {
-                        Log.w(Const.TAG, "Failed to close response: ${e.message}")
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}",e)
                     }
                 }
                 return
@@ -1042,13 +1042,18 @@ class ChatService : Service() {
                                                         ) else getString(R.string.disable)
                                                     }"
                                             } catch (e: Exception) {
+                                                Log.e(
+                                                    Const.TAG,
+                                                    "Switching SIM${slot + 1} card status failed: ${e.message}",
+                                                    e
+                                                )
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
                                             } catch (e: NoSuchMethodError) {
-                                                e.printStackTrace()
                                                 Log.e(
                                                     Const.TAG,
-                                                    "Switching SIM${slot + 1} card status failed: ${e.message}"
+                                                    "Switching SIM${slot + 1} card status failed: ${e.message}",
+                                                    e
                                                 )
                                                 requestBody.text =
                                                     "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
@@ -1088,14 +1093,18 @@ class ChatService : Service() {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
                                         } catch (e: Exception) {
+                                            Log.e(
+                                                Const.TAG,
+                                                "Switching default data SIM failed: ${e.message}"
+                                            )
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
                                         } catch (e: NoSuchMethodError) {
                                             Log.e(
                                                 Const.TAG,
-                                                "Switching default data SIM failed: Method is not available"
+                                                "Switching default data SIM failed: Method is not available",
+                                                e
                                             )
-                                            e.printStackTrace()
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Method is not available"
 
@@ -1294,8 +1303,7 @@ class ChatService : Service() {
         val call = okhttpClient.newCall(sendRequest)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-                Log.e(Const.TAG, "Send reply failed: ${e.message}" )
+                Log.e(Const.TAG, "Send reply failed: ${e.message}",e )
             }
 
             @Throws(IOException::class)
@@ -1304,12 +1312,10 @@ class ChatService : Service() {
                     val body = response.body
                     body.string()
                 } catch (e: IOException) {
-                    e.printStackTrace()
-                    Log.e(Const.TAG, "Failed to read response body: ${e.message}")
+                    Log.e(Const.TAG, "Failed to read response body: ${e.message}",e)
                     return
                 } catch (e: NullPointerException) {
-                    e.printStackTrace()
-                    Log.e(Const.TAG, "Response body is null: ${e.message}")
+                    Log.e(Const.TAG, "Response body is null: ${e.message}",e)
                     return
                 }
 
@@ -1330,15 +1336,13 @@ class ChatService : Service() {
                 try {
                     resultObj = JsonParser.parseString(responseString).asJsonObject
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    Log.e(Const.TAG, "Failed to parse response JSON: ${e.message}")
+                    Log.e(Const.TAG, "Failed to parse response JSON: ${e.message}",e)
                     try {
                         response.close()
                     } catch (e2: Exception) {
-                        e2.printStackTrace()
                         Log.w(
                             Const.TAG,
-                            "Failed to close response: ${e2.message}"
+                            "Failed to close response: ${e2.message}",e2
                         )
                     }
                     return
@@ -1353,8 +1357,7 @@ class ChatService : Service() {
                     try {
                         sendStatusMMKV.putLong("message_id", getMessageId(responseString))
                     } catch (e: Exception) {
-                        e.printStackTrace()
-                        Log.e(Const.TAG, "Failed to get message ID: ${e.message}")
+                        Log.e(Const.TAG, "Failed to get message ID: ${e.message}",e)
                     }
                 }
 
@@ -1608,10 +1611,10 @@ class ChatService : Service() {
                             result = response.body.string()
                             Log.v(Const.TAG, "Polling response: $result")
                         } catch (e: IOException) {
-                            e.printStackTrace()
                             Log.e(
                                 Const.TAG,
-                                "Connection to the Telegram API service failed"
+                                "Connection to the Telegram API service failed",
+                                e
                             )
                             continue
                         }
@@ -1626,10 +1629,9 @@ class ChatService : Service() {
                                         }
                                         receiveHandle(item.asJsonObject)
                                     } catch (e: Exception) {
-                                        e.printStackTrace()
                                         Log.e(
                                             Const.TAG,
-                                            "Error processing message: ${e.message}"
+                                            "Error processing message: ${e.message}",e
                                         )
                                     }
                                 }
@@ -1644,47 +1646,42 @@ class ChatService : Service() {
                                 }
                             }
                         } catch (e: Exception) {
-                            e.printStackTrace()
                             Log.e(
                                 Const.TAG,
-                                "Error parsing JSON response: ${e.message}"
+                                "Error parsing JSON response: ${e.message}",
+                                e
                             )
                         }
                     } else {
                         Log.e(Const.TAG, "Error response code:" + response.code)
                         try {
                             Thread.sleep(5000L)
-                        } catch (e: InterruptedException) {
-                            e.printStackTrace()
+                        } catch (_: InterruptedException) {
                         }
                     }
                 } catch (e: IOException) {
-                    e.printStackTrace()
                     Log.e(
                         Const.TAG,
-                        "Connection to the Telegram API service failed: ${e.message}"
+                        "Connection to the Telegram API service failed: ${e.message}",e
                     )
                     try {
                         Thread.sleep(1000L)
-                    } catch (e1: InterruptedException) {
-                        e1.printStackTrace()
+                    } catch (_: InterruptedException) {
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
                     Log.e(
                         Const.TAG,
-                        "Unexpected error in polling thread: ${e.message}"
+                        "Unexpected error in polling thread: ${e.message}",e
                     )
                     try {
                         Thread.sleep(1000L)
-                    } catch (e1: InterruptedException) {
-                        e1.printStackTrace()
+                    } catch (_: InterruptedException) {
                     }
                 } finally {
                     try {
                         response?.close()
                     } catch (e: Exception) {
-                        Log.w(Const.TAG, "Failed to close response: ${e.message}")
+                        Log.w(Const.TAG, "Failed to close response: ${e.message}",e)
                     }
                 }
             }
@@ -1697,7 +1694,7 @@ class ChatService : Service() {
             val process = Runtime.getRuntime().exec(
                 arrayOf(
                     "logcat","${Const.TAG}:${level}", "Telegram-RC.TetherManager:${level}",
-                    "ShizukuShell:${level}",
+                    "${shizuku.TAG}:${level}",
                     "*:S", "-d", "-t", lines.toString()
                 )
             )

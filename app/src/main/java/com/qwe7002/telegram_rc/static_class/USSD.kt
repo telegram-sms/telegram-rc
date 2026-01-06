@@ -64,8 +64,7 @@ object USSD {
                 val response = call.execute()
                 messageId = Other.getMessageId(Objects.requireNonNull(response.body).string())
             } catch (e: IOException) {
-                e.printStackTrace()
-                Log.d(Const.TAG, "send_ussd: $e")
+                Log.d(Const.TAG, "send_ussd: ${e.message}",e)
                 return@Thread
             }
             if (ActivityCompat.checkSelfPermission(

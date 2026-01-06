@@ -73,8 +73,7 @@ class BatteryNetworkJob : JobService() {
         
         call.enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
-                e.printStackTrace()
-                Log.e(Const.TAG, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message,e)
                 if (action == Intent.ACTION_BATTERY_LOW) {
                     SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                 }

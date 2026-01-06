@@ -156,7 +156,7 @@ class LogcatActivity : AppCompatActivity() {
                     logChannel.trySend(lastEntry)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(Const.TAG, "Error reading logcat", e)
             }
         }
     }
@@ -204,7 +204,7 @@ class LogcatActivity : AppCompatActivity() {
             logBuffer.clear()
             logAdapter.submitList(emptyList())
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(Const.TAG, "Error clearing logcat", e)
         }
     }
 

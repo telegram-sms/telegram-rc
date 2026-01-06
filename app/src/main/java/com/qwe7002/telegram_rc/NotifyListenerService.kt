@@ -76,7 +76,7 @@ class NotifyListenerService : NotificationListenerService() {
                     appName = pm.getApplicationLabel(applicationInfo) as String
                     appNameList[packageName] = appName
                 } catch (e: PackageManager.NameNotFoundException) {
-                    e.printStackTrace()
+                    Log.e(Const.TAG, "Get app name failed: " + e.message,e)
                 }
             }
             requestBody.text =
@@ -101,8 +101,7 @@ class NotifyListenerService : NotificationListenerService() {
         val errorHead = "Send notification failed:"
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-                Log.e(Const.TAG, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message,e)
                 ReSendJob.addResendLoop(applicationContext, requestBody.text)
             }
 

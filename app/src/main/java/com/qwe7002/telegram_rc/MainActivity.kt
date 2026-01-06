@@ -225,9 +225,10 @@ class MainActivity : AppCompatActivity() {
                         Snackbar.LENGTH_LONG
                     ).show()
                 } catch (e: Exception) {
+                    Log.e(Const.TAG, "Failed to get IMSI: ${e.message}", e)
                     showErrorDialog(e.message.toString())
                 } catch (e: NoSuchMethodError) {
-                    e.printStackTrace()
+                    Log.e(Const.TAG, "The current device cannot obtain the IMSI of two cards at the same time.",e, )
                     showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
 
                 }
@@ -775,14 +776,13 @@ class MainActivity : AppCompatActivity() {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         } catch (e: Exception) {
+                            Log.e(Const.TAG, "Failed to get IMSI: ${e.message}", e)
                             showErrorDialog(e.message.toString())
-                            Log.e(Const.TAG, e.message.toString())
                         } catch (e: NoSuchMethodError) {
-                            e.printStackTrace()
                             showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
                             Log.e(
                                 Const.TAG,
-                                "The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card."
+                                "The current device cannot obtain the IMSI of two cards at the same time.",e
                             )
 
                         }

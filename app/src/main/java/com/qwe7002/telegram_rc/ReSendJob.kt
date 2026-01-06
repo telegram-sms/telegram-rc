@@ -112,15 +112,13 @@ class ReSendJob : JobService() {
         } catch (e: IOException) {
             Log.e(
                 Const.TAG,
-                "An error occurred while resending: " + e.message
+                "An error occurred while resending: " + e.message,e
             )
-            e.printStackTrace()
         } catch (e: Exception) {
             Log.e(
                 Const.TAG,
-                "An unexpected error occurred while resending: " + e.message
+                "An unexpected error occurred while resending: " + e.message,e
             )
-            e.printStackTrace()
         }
     }
 

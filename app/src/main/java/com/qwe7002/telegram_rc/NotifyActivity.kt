@@ -87,7 +87,7 @@ class NotifyActivity : AppCompatActivity() {
                 appInfoList.add(appInfo)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(Const.TAG, "scanAppList: ${e.message}", e)
         }
         return appInfoList
     }

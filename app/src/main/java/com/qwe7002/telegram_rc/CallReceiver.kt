@@ -89,8 +89,7 @@ class CallReceiver : BroadcastReceiver() {
                 val errorHead = "Send missed call error:"
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
-                        e.printStackTrace()
-                        Log.e(Const.TAG, "$errorHead${e.message}")
+                        Log.e(Const.TAG, "$errorHead ${e.message}",e)
                         SMS.sendFallbackSMS(
                             context,
                             requestBody.text,

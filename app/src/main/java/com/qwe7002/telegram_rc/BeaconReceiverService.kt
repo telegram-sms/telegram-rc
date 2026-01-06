@@ -217,9 +217,8 @@ class BeaconReceiverService : Service() {
                     okhttpClient.newCall(request).enqueue(object : Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             try {
-                                Log.d(Const.TAG, "onFailure: " + e.message)
+                                Log.e(Const.TAG, "onFailure: " + e.message,e)
                                 ReSendJob.addResendLoop(applicationContext, requestBody.text)
-                                e.printStackTrace()
                             } catch (ioException: Exception) {
                                 Log.e(
                                     Const.TAG,
@@ -231,7 +230,6 @@ class BeaconReceiverService : Service() {
 
                         override fun onResponse(call: Call, response: Response) {
                             val responseString = response.body.string()
-                            Log.d(Const.TAG, "onResponse: $responseString")
                             try {
                                 // 如果需要更新热点IP地址，则启动更新线程
                                 if (beaconConfig.getBoolean("need_update_hotspot_ip", false)) {

@@ -43,7 +43,7 @@ object Other {
             try {
                 result = intStr.toLong()
             } catch (e: NumberFormatException) {
-                e.printStackTrace()
+                Log.e(Const.TAG, "parseStringToLong: ",e)
             }
         }
         return result

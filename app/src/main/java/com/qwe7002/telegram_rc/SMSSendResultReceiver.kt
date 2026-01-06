@@ -65,8 +65,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         val errorHead = "Send SMS status failed:"
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-                Log.e(Const.TAG, errorHead + e.message)
+                Log.e(Const.TAG, errorHead + e.message,e)
                 SMS.sendFallbackSMS(context, requestBody.text, sub)
                 ReSendJob.addResendLoop(context,requestBody.text)
             }
@@ -83,8 +82,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
                         ReSendJob.addResendLoop(context,requestBody.text)
                     }
                 } catch (e: Exception) {
-                    Log.e(Const.TAG, errorHead + e.message)
-                    e.printStackTrace()
+                    Log.e(Const.TAG, errorHead + e.message,e)
                 } finally {
                     response.close()
                 }

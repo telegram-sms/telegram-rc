@@ -145,7 +145,7 @@ object Network {
         try {
             return InetAddress.getByName(host)
         } catch (e: UnknownHostException) {
-            e.printStackTrace()
+            Log.e(Const.TAG, "getByIp: ${e.message}",e )
             throw RuntimeException(e)
         }
     }

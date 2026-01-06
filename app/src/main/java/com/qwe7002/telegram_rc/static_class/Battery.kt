@@ -92,7 +92,6 @@ object Battery {
             process.waitFor()
             learnedCapacity
         } catch (e: Exception) {
-            e.printStackTrace()
             Log.e(Const.TAG, "Exception occurred: ${e.message}", e)
             null
         }

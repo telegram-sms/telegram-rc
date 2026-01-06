@@ -5,6 +5,7 @@ import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
 import android.util.Log
 import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.data_structure.LogEntry
 
 object ArfcnConverter {
 
@@ -265,7 +266,7 @@ object ArfcnConverter {
                     val arfcn = try {
                         cellIdentity.javaClass.getMethod("getNrarfcn").invoke(cellIdentity) as Int
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.e(Const.TAG, "Error getting NR-ARFCN", e)
                         Int.MAX_VALUE
                     }
                     Log.d(Const.TAG, "getCellInfoDetails NR: ARFCN=$arfcn")
@@ -282,7 +283,7 @@ object ArfcnConverter {
                             cellSignalStrength.javaClass.getMethod("getRsrp").invoke(cellSignalStrength) as Int
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        Log.e(Const.TAG, "Error getting SS RSRP", e)
                         Int.MAX_VALUE
                     }
 
