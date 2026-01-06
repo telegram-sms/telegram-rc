@@ -143,15 +143,21 @@ class ChatService : Service() {
 
             val row3 = ArrayList<KeyboardButton>()
             row3.add(KeyboardButton("/hotspot"))
+            row3.add(KeyboardButton("/switch auto"))
             keyboardButtons.add(row3)
-            // Third row: /switch
             val row4 = ArrayList<KeyboardButton>()
-            row4.add(KeyboardButton("/switch auto"))
             row4.add(KeyboardButton("/switch wifi"))
-            row3.add(KeyboardButton("/switch data"))
+            row4.add(KeyboardButton("/switch bluetooth"))
+            row4.add(KeyboardButton("/switch data"))
             row4.add(KeyboardButton("/switch datacard"))
 
             keyboardButtons.add(row4)
+            val row5 = ArrayList<KeyboardButton>()
+            if(getActiveCard(context)==2){
+                row5.add(KeyboardButton("/switch sim 1"))
+                row5.add(KeyboardButton("/switch sim 2"))
+            }
+            keyboardButtons.add(row5)
 
             keyboard.keyboard = keyboardButtons
             keyboard.resizeKeyboard = true
@@ -734,14 +740,25 @@ class ChatService : Service() {
                 reportText += "Battery Capacity: ${batteryCapacity.toInt()} mAh\n"
 
                 // Get learned battery capacity if Shizuku is available
+                var batteryHealthPercent: Double? = null
                 if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                     val learnedCapacity = Battery.getLearnedBatteryCapacity()
                     if (learnedCapacity != null) {
-                        reportText += "Max Learned Capacity: $learnedCapacity mAh\n"
+                        try {
+                            val learnedCapacityValue = learnedCapacity.toDoubleOrNull()
+                            if (learnedCapacityValue != null && learnedCapacityValue > 0) {
+                                reportText += "Max Learned Capacity: $learnedCapacity mAh\n"
+                                // Calculate battery health percentage
+                                batteryHealthPercent = (learnedCapacityValue / batteryCapacity) * 100.0
+                                reportText += "Battery Health: %.1f%%\n".format(batteryHealthPercent)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(Const.TAG, "Error calculating battery health: ${e.message}", e)
+                        }
                     }
                 }
 
-                // Get battery health
+                // Get battery health status
                 val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
                 val batteryStatus = checkNotNull(registerReceiver(null, intentFilter))
                 val health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1)
@@ -753,7 +770,12 @@ class ChatService : Service() {
                     BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
                     else -> "Unknown"
                 }
-                reportText += "Battery Health: $healthStr\n"
+                // Only show status if health percentage was not calculated
+                if (batteryHealthPercent == null) {
+                    reportText += "Battery Health Status: $healthStr\n"
+                } else {
+                    reportText += "Health Status: $healthStr\n"
+                }
 
                 // Get battery temperature
                 val temperature = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
@@ -1006,8 +1028,10 @@ class ChatService : Service() {
                             var sim: String? = null
                             if (switchType == "sim" && commandListData.size > 3) {
                                 sim = commandListData[3].lowercase(Locale.getDefault())
-
                             }
+
+                            // Prepare response message and action to execute after sending
+                            var actionToExecute: (() -> Unit)? = null
 
                             when (switchType) {
                                 "auto" -> {
@@ -1018,22 +1042,26 @@ class ChatService : Service() {
                                         "off" -> false
                                         else -> !currentState // toggle
                                     }
+
+                                    // Set response message first
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
                                         if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                                             requestBody.text =
                                                 "${applicationContext.getString(R.string.system_message_head)}\nShizuku permission not granted"
                                         } else {
-                                            beacon.putBoolean("beacon_enable", newState)
+                                            requestBody.text =
+                                                "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${
+                                                    if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                                }"
+                                            actionToExecute = { beacon.putBoolean("beacon_enable", newState) }
                                         }
                                     } else {
-                                        beacon.putBoolean("beacon_enable", newState)
+                                        requestBody.text =
+                                            "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${
+                                                if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                            }"
+                                        actionToExecute = { beacon.putBoolean("beacon_enable", newState) }
                                     }
-                                    requestBody.text =
-                                        "${applicationContext.getString(R.string.system_message_head)}\nBeacon monitoring status: ${
-                                            if (newState) getString(
-                                                R.string.enable
-                                            ) else getString(R.string.disable)
-                                        }"
                                 }
 
                                 "data" -> {
@@ -1043,13 +1071,11 @@ class ChatService : Service() {
                                         "off" -> false
                                         else -> !dataEnable // toggle
                                     }
-                                    setData(newState)
                                     requestBody.text =
                                         "${getString(R.string.system_message_head)}\nSwitching mobile network status: ${
-                                            if (newState) getString(R.string.enable) else getString(
-                                                R.string.disable
-                                            )
+                                            if (newState) getString(R.string.enable) else getString(R.string.disable)
                                         }"
+                                    actionToExecute = { setData(newState) }
                                 }
 
                                 "wifi" -> {
@@ -1061,13 +1087,11 @@ class ChatService : Service() {
                                         "off" -> false
                                         else -> !wifiEnabled // toggle
                                     }
-                                    setWifi(newState)
                                     requestBody.text =
                                         "${getString(R.string.system_message_head)}\nWIFI state: ${
-                                            if (newState) getString(
-                                                R.string.enable
-                                            ) else getString(R.string.disable)
+                                            if (newState) getString(R.string.enable) else getString(R.string.disable)
                                         }"
+                                    actionToExecute = { setWifi(newState) }
                                 }
 
                                 "bluetooth" -> {
@@ -1078,13 +1102,11 @@ class ChatService : Service() {
                                         "off" -> false
                                         else -> !bluetoothEnabled // toggle
                                     }
-                                    setBlueTooth(newState)
                                     requestBody.text =
                                         "${getString(R.string.system_message_head)}\nBluetooth state: ${
-                                            if (newState) getString(
-                                                R.string.enable
-                                            ) else getString(R.string.disable)
+                                            if (newState) getString(R.string.enable) else getString(R.string.disable)
                                         }"
+                                    actionToExecute = { setBlueTooth(newState) }
                                 }
 
                                 "sim" -> {
@@ -1109,35 +1131,31 @@ class ChatService : Service() {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nYou cannot switch the current data SIM card."
                                         } else {
-                                            try {
-                                                val tm = Telephony()
-                                                tm.setSimPowerState(slot, newState)
-                                                requestBody.text =
-                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
-                                                        if (newState) getString(
-                                                            R.string.enable
-                                                        ) else getString(R.string.disable)
-                                                    }"
-                                            } catch (e: Exception) {
-                                                Log.e(
-                                                    Const.TAG,
-                                                    "Switching SIM${slot + 1} card status failed: ${e.message}",
-                                                    e
-                                                )
-                                                requestBody.text =
-                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
-                                            } catch (e: NoSuchMethodError) {
-                                                Log.e(
-                                                    Const.TAG,
-                                                    "Switching SIM${slot + 1} card status failed: ${e.message}",
-                                                    e
-                                                )
-                                                requestBody.text =
-                                                    "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status failed: ${e.message}"
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nSwitching SIM${slot + 1} card status: ${
+                                                    if (newState) getString(R.string.enable) else getString(R.string.disable)
+                                                }"
+                                            actionToExecute = {
+                                                try {
+                                                    val tm = Telephony()
+                                                    tm.setSimPowerState(slot, newState)
+                                                    Log.d(Const.TAG, "Successfully switched SIM${slot + 1} card status")
+                                                } catch (e: Exception) {
+                                                    Log.e(
+                                                        Const.TAG,
+                                                        "Switching SIM${slot + 1} card status failed: ${e.message}",
+                                                        e
+                                                    )
+                                                } catch (e: NoSuchMethodError) {
+                                                    Log.e(
+                                                        Const.TAG,
+                                                        "Switching SIM${slot + 1} card status failed: ${e.message}",
+                                                        e
+                                                    )
+                                                }
                                             }
                                         }
                                     }
-
                                 }
 
                                 "datacard" -> {
@@ -1145,7 +1163,6 @@ class ChatService : Service() {
                                         requestBody.text =
                                             "${getString(R.string.system_message_head)}\nYou cannot switch the default data SIM card"
                                     } else {
-
                                         val subscriptionManager =
                                             (applicationContext.getSystemService(
                                                 TELEPHONY_SUBSCRIPTION_SERVICE
@@ -1162,29 +1179,27 @@ class ChatService : Service() {
                                             subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(
                                                 slotIndex
                                             )
-                                        try {
-                                            val dataSub = ISub()
-                                            dataSub.setDefaultDataSubIdWithShizuku(
-                                                subscriptionInfo.subscriptionId
-                                            )
-                                            requestBody.text =
-                                                "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
-                                        } catch (e: Exception) {
-                                            Log.e(
-                                                Const.TAG,
-                                                "Switching default data SIM failed: ${e.message}",e
-                                            )
-                                            requestBody.text =
-                                                "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: ${e.message}"
-                                        } catch (e: NoSuchMethodError) {
-                                            Log.e(
-                                                Const.TAG,
-                                                "Switching default data SIM failed: Method is not available",
-                                                e
-                                            )
-                                            requestBody.text =
-                                                "${getString(R.string.system_message_head)}\nSwitching default data SIM failed: Method is not available"
-
+                                        requestBody.text =
+                                            "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
+                                        actionToExecute = {
+                                            try {
+                                                val dataSub = ISub()
+                                                dataSub.setDefaultDataSubIdWithShizuku(
+                                                    subscriptionInfo.subscriptionId
+                                                )
+                                                Log.d(Const.TAG, "Successfully switched default data SIM")
+                                            } catch (e: Exception) {
+                                                Log.e(
+                                                    Const.TAG,
+                                                    "Switching default data SIM failed: ${e.message}", e
+                                                )
+                                            } catch (e: NoSuchMethodError) {
+                                                Log.e(
+                                                    Const.TAG,
+                                                    "Switching default data SIM failed: Method is not available",
+                                                    e
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -1193,6 +1208,35 @@ class ChatService : Service() {
                                     requestBody.text =
                                         "${getString(R.string.system_message_head)}\nUnknown switch type. Available types: auto, sim, data, wifi, bluetooth, datacard"
                                 }
+                            }
+
+                            // Store the action to be executed after message is sent
+                            if (actionToExecute != null) {
+                                statusMMKV.putString("pending_switch_action", switchType)
+                                // Execute the action in the callback after message is successfully sent
+                                Thread {
+                                    // Send message first using synchronous approach
+                                    val requestUri = getUrl(botToken, "sendMessage")
+                                    val gson = Gson()
+                                    val body = gson.toJson(requestBody).toRequestBody(Const.JSON)
+                                    val sendRequest = Request.Builder().url(requestUri).method("POST", body).build()
+
+                                    try {
+                                        val response = okhttpClient.newCall(sendRequest).execute()
+                                        if (response.code == 200) {
+                                            Log.d(Const.TAG, "Switch message sent successfully, executing action")
+                                            // Execute the network action after successful message send
+                                            actionToExecute.invoke()
+                                        } else {
+                                            Log.e(Const.TAG, "Failed to send switch message: ${response.code}")
+                                        }
+                                        response.close()
+                                    } catch (e: Exception) {
+                                        Log.e(Const.TAG, "Exception sending switch message: ${e.message}", e)
+                                    }
+                                }.start()
+                                // Return early to avoid sending the message again in the normal flow
+                                return
                             }
                         }
                     }
@@ -1767,17 +1811,25 @@ class ChatService : Service() {
 
     private fun readLogcat(lines: Int): String {
         return try {
-            val level ="I"
+            val level = "I"
+            // Use logcat with proper filtering and tail to get recent logs
             val process = Runtime.getRuntime().exec(
                 arrayOf(
-                    "logcat","${Const.TAG}:${level}", "Telegram-RC.TetherManager:${level}",
+                    "logcat",
+                    "${Const.TAG}:${level}",
+                    "Telegram-RC.TetherManager:${level}",
                     "${ShizukuKit.TAG}:${level}",
-                    "*:S", "-d", "-t", lines.toString()
+                    "*:S",
+                    "-d",
+                    "-t",
+                    lines.toString()
                 )
             )
+
             val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
             val logList = mutableListOf<String>()
             var logLine: String?
+
             while (bufferedReader.readLine().also { logLine = it } != null) {
                 logLine?.let {
                     if (it.isNotBlank() && !it.startsWith("---------")) {
@@ -1785,16 +1837,19 @@ class ChatService : Service() {
                     }
                 }
             }
+
             bufferedReader.close()
             process.waitFor()
+
             if (logList.isEmpty()) {
                 getString(R.string.no_logs)
             } else {
-                logList.joinToString("\n")
+                // Format logs with HTML code tag for better display in Telegram
+                "<code>${logList.joinToString("\n")}</code>"
             }
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Error reading logcat: ${e.message}",e)
-            getString(R.string.no_logs)
+            Log.e(Const.TAG, "Error reading logcat: ${e.message}", e)
+            "${getString(R.string.no_logs)}\n${getString(R.string.error_message)}${e.message}"
         }
     }
 }
