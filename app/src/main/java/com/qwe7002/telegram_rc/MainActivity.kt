@@ -864,8 +864,7 @@ class MainActivity : AppCompatActivity() {
         var fileName: String? = null
         when (item.itemId) {
             R.id.about_menu_item -> {
-
-                var versionName = BuildConfig.VERSION_NAME
+                val versionName = BuildConfig.VERSION_NAME
                 val builder = AlertDialog.Builder(this)
                 builder.setTitle(R.string.about_title)
                 builder.setMessage(getString(R.string.about_content) + versionName)
