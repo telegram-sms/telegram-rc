@@ -198,7 +198,11 @@ class MainActivity : AppCompatActivity() {
                 )
                 return@setOnClickListener
             }
-            if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS)!= PackageManager.PERMISSION_GRANTED){
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.READ_PHONE_NUMBERS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.READ_PHONE_NUMBERS),
@@ -228,7 +232,11 @@ class MainActivity : AppCompatActivity() {
                     Log.e(Const.TAG, "Failed to get IMSI: ${e.message}", e)
                     showErrorDialog(e.message.toString())
                 } catch (e: NoSuchMethodError) {
-                    Log.e(Const.TAG, "The current device cannot obtain the IMSI of two cards at the same time.",e, )
+                    Log.e(
+                        Const.TAG,
+                        "The current device cannot obtain the IMSI of two cards at the same time.",
+                        e,
+                    )
                     showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
 
                 }
@@ -380,7 +388,8 @@ class MainActivity : AppCompatActivity() {
                     if (response.code != 200) {
                         val result = Objects.requireNonNull(response.body).string()
                         val resultObj = JsonParser.parseString(result).asJsonObject
-                        val errorMessage = "Get chat ID failed: ${resultObj["description"].asString}"
+                        val errorMessage =
+                            "Get chat ID failed: ${resultObj["description"].asString}"
                         Log.e(Const.TAG, errorMessage)
                         runOnUiThread { showErrorDialog(errorMessage) }
                         return
@@ -583,9 +592,11 @@ class MainActivity : AppCompatActivity() {
 
             // Add or remove reply keyboard based on chat command setting
             if (chatCommandSwitch.isChecked) {
-                requestBody.keyboardMarkup = ChatService.ReplyMarkupKeyboard.getReplyKeyboardMarkup()
+                requestBody.keyboardMarkup =
+                    ChatService.ReplyMarkupKeyboard.getReplyKeyboardMarkup()
             } else {
-                requestBody.keyboardMarkup = ChatService.ReplyMarkupKeyboard.getRemoveKeyboardMarkup()
+                requestBody.keyboardMarkup =
+                    ChatService.ReplyMarkupKeyboard.getRemoveKeyboardMarkup()
             }
 
             val gson = Gson()
@@ -759,9 +770,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             2 -> {
-                // 处理READ_PHONE_STATE权限请求结果
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // 权限已授予，继续执行数据使用权限检查
                     if (!DataUsage.hasPermission(applicationContext)) {
                         DataUsage.openUsageStatsSettings(this)
                         return
@@ -782,7 +791,8 @@ class MainActivity : AppCompatActivity() {
                             showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
                             Log.e(
                                 Const.TAG,
-                                "The current device cannot obtain the IMSI of two cards at the same time.",e
+                                "The current device cannot obtain the IMSI of two cards at the same time.",
+                                e
                             )
 
                         }
@@ -856,15 +866,8 @@ class MainActivity : AppCompatActivity() {
         var fileName: String? = null
         when (item.itemId) {
             R.id.about_menu_item -> {
-                val packageManager = applicationContext.packageManager
-                val packageInfo: PackageInfo
-                var versionName = ""
-                try {
-                    packageInfo = packageManager.getPackageInfo(applicationContext.packageName, 0)
-                    versionName = packageInfo.versionName.toString()
-                } catch (e: PackageManager.NameNotFoundException) {
-                    Log.e(Const.TAG, "onOptionsItemSelected: ", e)
-                }
+
+                var versionName = BuildConfig.VERSION_NAME
                 val builder = AlertDialog.Builder(this)
                 builder.setTitle(R.string.about_title)
                 builder.setMessage(getString(R.string.about_content) + versionName)
@@ -1099,18 +1102,21 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call, response: Response) {
                 progressDialog.cancel()
                 if (!response.isSuccessful) {
-                    showErrorDialog("Logout failed.")
+                    runOnUiThread { showErrorDialog("Logout failed.") }
                 } else {
                     val body = response.body.string()
                     val jsonObj = JsonParser.parseString(body).asJsonObject
                     if (jsonObj.get("ok").asBoolean) {
-                        Snackbar.make(
-                            findViewById(R.id.set_api_address),
-                            "Set API address successful.",
-                            Snackbar.LENGTH_LONG
-                        ).show()
+                        runOnUiThread {
+                            Snackbar.make(
+                                findViewById(R.id.set_api_address),
+                                "Set API address successful.",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
                     } else {
-                        showErrorDialog("Set API address failed.")
+                        runOnUiThread { showErrorDialog("Set API address failed.") }
+
                     }
 
                 }
