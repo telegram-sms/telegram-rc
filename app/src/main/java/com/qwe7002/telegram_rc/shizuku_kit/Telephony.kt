@@ -22,7 +22,7 @@ class Telephony {
             // Get the ITelephony service binder via Shizuku
             val binder = SystemServiceHelper.getSystemService(Context.TELEPHONY_SERVICE)
             if (binder == null) {
-                Log.e(Const.TAG, "Failed to get ITelephony service binder")
+                Log.e(shizuku.TAG, "Failed to get ITelephony service binder")
                 return null
             }
 
@@ -38,10 +38,10 @@ class Telephony {
             )
 
             val iTelephonyService = asInterfaceMethod.invoke(null, wrappedBinder)
-            Log.d(Const.TAG, "Successfully obtained ITelephony service")
+            Log.d(shizuku.TAG, "Successfully obtained ITelephony service")
             iTelephonyService
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Failed to get ITelephony service: ${e.message}", e)
+            Log.e(shizuku.TAG, "Failed to get ITelephony service: ${e.message}", e)
             null
         }
     }
@@ -51,7 +51,7 @@ class Telephony {
         return try {
             val iTelephonyService = getITelephonyService()
             if (iTelephonyService == null) {
-                Log.e(Const.TAG, "Failed to get ITelephony service")
+                Log.e(shizuku.TAG, "Failed to get ITelephony service")
                 return false
             }
 
@@ -68,15 +68,15 @@ class Telephony {
                 setSimPowerStateForSlotMethod.invoke(iTelephonyService, slotIndex, state)
 
                 Log.i(
-                    Const.TAG,
+                    shizuku.TAG,
                     "Successfully set SIM power state for slot $slotIndex to state $state"
                 )
 
                 return true
             } catch (e: NoSuchMethodException) {
-                Log.d(
-                    Const.TAG,
-                    "Method with int state not found, trying boolean signature: ${e.message}"
+                Log.e(
+                    shizuku.TAG,
+                    "Method with int state not found, trying boolean signature: ${e.message}",e
                 )
             }
             // Fallback to old signature with boolean (Android 8-9)
@@ -90,13 +90,13 @@ class Telephony {
             setSimPowerStateForSlotMethod.invoke(iTelephonyService, slotIndex, powerUp)
 
             Log.i(
-                Const.TAG,
+                shizuku.TAG,
                 "Successfully set SIM power state for slot $slotIndex to ${if (powerUp) "UP" else "DOWN"}"
             )
             true
         } catch (e: Exception) {
             Log.e(
-                Const.TAG,
+                shizuku.TAG,
                 "Exception during setSimPowerStateForSlot: ${e.message}",
                 e
             )

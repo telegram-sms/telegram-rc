@@ -21,7 +21,7 @@ class ISub {
             // Get the ISub service binder via Shizuku
             val binder = SystemServiceHelper.getSystemService("isub")
             if (binder == null) {
-                Log.e(Const.TAG, "Failed to get ISub service binder")
+                Log.e(shizuku.TAG, "Failed to get ISub service binder")
                 return null
             }
 
@@ -34,10 +34,10 @@ class ISub {
                 iSubStubClass.getMethod("asInterface", Class.forName("android.os.IBinder"))
 
             val iSubService = asInterfaceMethod.invoke(null, wrappedBinder)
-            Log.d(Const.TAG, "Successfully obtained ISub service")
+            Log.d(shizuku.TAG, "Successfully obtained ISub service")
             iSubService
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Failed to get ISub service: ${e.message}", e)
+            Log.e(shizuku.TAG, "Failed to get ISub service: ${e.message}", e)
             null
         }
     }
@@ -46,7 +46,7 @@ class ISub {
         return try {
             val iSubService = getISubService()
             if (iSubService == null) {
-                Log.e(Const.TAG, "Failed to get ISub service")
+                Log.e(shizuku.TAG, "Failed to get ISub service")
                 return false
             }
 
@@ -57,11 +57,11 @@ class ISub {
             )
 
             setDefaultDataSubIdMethod.invoke(iSubService, subId)
-            Log.i(Const.TAG, "Successfully set default data subId to: $subId")
+            Log.i(shizuku.TAG, "Successfully set default data subId to: $subId")
             true
         } catch (e: Exception) {
             Log.e(
-                Const.TAG,
+                shizuku.TAG,
                 "Exception during setDefaultDataSubId: ${e.message}",
                 e
             )

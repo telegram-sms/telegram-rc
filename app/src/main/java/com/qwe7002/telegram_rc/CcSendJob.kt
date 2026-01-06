@@ -131,8 +131,7 @@ class CcSendJob : JobService() {
                 Log.e(Const.TAG, "Send message failed: " + response.code + " " + response.body.string())
             }
         } catch (e: IOException) {
-            Log.e(Const.TAG, "An error occurred while resending: " + e.message)
-            e.printStackTrace()
+            Log.e(Const.TAG, "An error occurred while resending: " + e.message,e)
         }
     }
 
