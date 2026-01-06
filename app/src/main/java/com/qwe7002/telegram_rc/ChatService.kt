@@ -223,8 +223,12 @@ class ChatService : Service() {
 
 
     override fun onDestroy() {
-        wifiLock.release()
-        wakeLock.release()
+        if(wifiLock.isHeld){
+            wifiLock.release()
+        }
+        if (wakeLock.isHeld){
+            wakeLock.release()
+        }
         terminalThread = true
         if (mainThread.isAlive) {
             mainThread.interrupt()
