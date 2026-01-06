@@ -4,8 +4,9 @@ apply plugin: 'kotlin-kapt'
 
 
 android {
-    //noinspection GradleDependency
     compileSdk 36
+
+    //noinspection GradleDependency
     //noinspection GrDeprecatedAPIUsage
     defaultConfig {
         applicationId "com.qwe7002.telegram_rc"
@@ -55,6 +56,8 @@ android {
         }
     }
     namespace 'com.qwe7002.telegram_rc'
+    compileSdkMinor 1
+    buildToolsVersion '36.1.0'
 }
 
 
