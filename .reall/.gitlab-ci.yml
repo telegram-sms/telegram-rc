@@ -42,7 +42,7 @@ cache:
     - |
       set -euo pipefail
       echo "==> Installing dependencies..."
-      apk --update --no-cache add git openssl bash curl wget ca-certificates zip unzip
+      apk --update --no-cache add git openssl bash curl wget ca-certificates zip unzip python3 py3-pip
     - |
       echo "==> Setting up keystore..."
       if [ -z "${KEYSTORE:-}" ]; then
@@ -137,10 +137,11 @@ build_release:
       git remote add source https://github.com/telegram-sms/telegram-rc
       git fetch source --tags
     - |
-      echo "==> Compiling ChangelogGenerate.java..."
-      javac .reall/changelogGenerate.java
-      echo "==> Generating changelog..."
-      java -cp .reall changelogGenerate
+      echo "==> Installing Python dependencies..."
+      pip3 install --break-system-packages -r .reall/scripts/requirements.txt
+    - |
+      echo "==> Generating changelog with Python..."
+      python3 .reall/scripts/changelogGenerate.py
     - |
       echo "==> Using generated changelog..."
       export RELEASE_CHANGELOG=$(cat CHANGELOG.md)
