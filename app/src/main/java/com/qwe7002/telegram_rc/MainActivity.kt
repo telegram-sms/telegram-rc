@@ -598,6 +598,9 @@ class MainActivity : AppCompatActivity() {
                 requestBody.keyboardMarkup =
                     ChatService.ReplyMarkupKeyboard.getRemoveKeyboardMarkup()
             }
+            KeepAliveJob.stopJob(applicationContext)
+            ReSendJob.stopJob(applicationContext)
+            stopAllService(applicationContext)
 
             val gson = Gson()
             val requestBodyRaw = gson.toJson(requestBody)
@@ -610,16 +613,14 @@ class MainActivity : AppCompatActivity() {
                 override fun onFailure(call: Call, e: IOException) {
                     Log.e(Const.TAG, "onFailure: ", e)
                     progressDialog.cancel()
-                    val errorMessage = errorHead + e.message
-                    Log.e(Const.TAG, errorMessage)
-                    runOnUiThread { showErrorDialog(errorMessage) }
+                    runOnUiThread { showErrorDialog(errorHead + e.message) }
                 }
 
                 @Throws(IOException::class)
                 override fun onResponse(call: Call, response: Response) {
                     progressDialog.cancel()
                     val newBotToken = botTokenEditView.text.toString().trim { it <= ' ' }
-                    if (response.code != 200) {
+                    if (!response.isSuccessful) {
                         val result = Objects.requireNonNull(response.body).string()
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage = errorHead + resultObj["description"]
@@ -664,9 +665,6 @@ class MainActivity : AppCompatActivity() {
                     preferences.putBoolean("initialized", true)
                     preferences.putBoolean("privacy_dialog_agree", true)
                     Thread {
-                        KeepAliveJob.stopJob(applicationContext)
-                        ReSendJob.stopJob(applicationContext)
-                        stopAllService(applicationContext)
                         startService(
                             applicationContext,
                             batteryMonitoringSwitch.isChecked,
