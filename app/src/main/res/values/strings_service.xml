@@ -19,6 +19,7 @@
     <string name="airplane_mode">Device is in Airplane mode</string>
     <string name="no_network">No service</string>
     <string name="failed_to_get_information">Fail to get information.</string>
+    <string name="collecting_info">Collecting information…</string>
     <string name="no_logs">No logs yet.</string>
     <string name="charger_status">Monitor charger status</string>
     <string name="charging">Charging</string>

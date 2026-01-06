@@ -451,279 +451,325 @@ class ChatService : Service() {
             }
 
             "/ping", "/getinfo" -> {
-                var cardInfo = ""
-                val networkType = Network.getNetworkType(
-                    applicationContext
-                )
-                val telephonyManager =
-                    applicationContext.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-                if (ActivityCompat.checkSelfPermission(
-                        applicationContext,
-                        Manifest.permission.READ_PHONE_STATE
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    cardInfo = if (getActiveCard(applicationContext) == 2) {
-                        val subId1 = getSubId(applicationContext, 0)
-                        val subId2 = getSubId(applicationContext, 1)
-                        val tm1 = telephonyManager.createForSubscriptionId(subId1)
-                        val tm2 = telephonyManager.createForSubscriptionId(subId2)
-                        val sim1Display = getSimDisplayName(applicationContext, 0)
-                        val sim2Display = getSimDisplayName(applicationContext, 1)
-                        var sim1Info: String
-                        var sim2Info: String
-                        if (sim1Display == tm1.simOperatorName) {
-                            sim1Info = tm1.simOperatorName
-                        } else {
-                            sim1Info =
-                                tm1.simOperatorName + "\nSIM1 Alias: " + sim1Display
-                        }
-                        if (sim2Display == tm2.simOperatorName) {
-                            sim2Info = tm2.simOperatorName
-                        } else {
-                            sim2Info =
-                                tm2.simOperatorName + "\nSIM2 Alias: " + sim2Display
-                        }
-                        if (DataUsage.hasPermission(applicationContext)) {
-                            if (ActivityCompat.checkSelfPermission(
-                                    applicationContext,
-                                    Manifest.permission.READ_PHONE_STATE
-                                ) == PackageManager.PERMISSION_GRANTED &&
-                                ActivityCompat.checkSelfPermission(
-                                    applicationContext,
-                                    Manifest.permission.READ_PHONE_NUMBERS
-                                ) == PackageManager.PERMISSION_GRANTED &&
-                                ActivityCompat.checkSelfPermission(
-                                    applicationContext,
-                                    Manifest.permission.READ_SMS
-                                ) == PackageManager.PERMISSION_GRANTED
-                            ) {
-                                val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
-                                sim1Info += " ($phone1Number)"
-                                val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
-                                sim2Info += " ($phone2Number)"
-                                val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-                                val phone1DataUsage = DataUsage.getDataUsageForSim(
-                                    applicationContext,
-                                    imsiCache.getString(phone1Number, null)
-                                )
-                                val phone2DataUsage = DataUsage.getDataUsageForSim(
-                                    applicationContext,
-                                    imsiCache.getString(phone2Number, null)
-                                )
-                                sim1Info += "\nSIM1 Data Usage: $phone1DataUsage"
-                                sim2Info += "\nSIM2 Data Usage: $phone2DataUsage"
+                // Send immediate response first, then collect detailed info asynchronously
+                val quickInfoRequest = RequestMessage()
+                quickInfoRequest.chatId = chatID
+                quickInfoRequest.messageThreadId = messageThreadId
+                quickInfoRequest.text = "${getString(R.string.system_message_head)}\n${getString(R.string.collecting_info)}"
 
-                            }
-                        }
-                        if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            val cellInfoList1 = requestUpdatedCellInfo(applicationContext, tm1)
-                            if (cellInfoList1.isNotEmpty()) {
-                                val registeredCell1 = cellInfoList1.find { it.isRegistered }
-                                if (registeredCell1 != null) {
-                                    val cellDetails =
-                                        ArfcnConverter.getCellInfoDetails(registeredCell1)
-                                    sim1Info += "\nSIM1 Signal: $cellDetails"
-                                }
-                            }
-                        }
-                        if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            val cellInfoList2 = requestUpdatedCellInfo(applicationContext, tm2)
-                            if (cellInfoList2.isNotEmpty()) {
-                                val registeredCell2 = cellInfoList2.find { it.isRegistered }
-                                if (registeredCell2 != null) {
-                                    val cellDetails =
-                                        ArfcnConverter.getCellInfoDetails(registeredCell2)
-                                    sim2Info += "\nSIM2 Signal: $cellDetails"
-                                }
-                            }
-                        }
+                val quickRequestUri = getUrl(botToken, "sendMessage")
+                val quickBody = Gson().toJson(quickInfoRequest).toRequestBody(Const.JSON)
+                val quickSendRequest = Request.Builder().url(quickRequestUri).method("POST", quickBody).build()
 
-                        "\n${getString(R.string.current_data_card)}: SIM" + getDataSimId(
-                            applicationContext
-                        ) + "\nSIM1: " + sim1Info + "\nSIM2: " + sim2Info
-                    } else {
-                        var simInfo = ""
-                        if (DataUsage.hasPermission(applicationContext)) {
-                            if (ActivityCompat.checkSelfPermission(
-                                    applicationContext,
-                                    Manifest.permission.READ_PHONE_STATE
-                                ) == PackageManager.PERMISSION_GRANTED &&
-                                ActivityCompat.checkSelfPermission(
-                                    applicationContext,
-                                    Manifest.permission.READ_PHONE_NUMBERS
-                                ) == PackageManager.PERMISSION_GRANTED &&
-                                ActivityCompat.checkSelfPermission(
-                                    applicationContext,
-                                    Manifest.permission.READ_SMS
-                                ) == PackageManager.PERMISSION_GRANTED
-                            ) {
-                                val simDisplayName = getSimDisplayName(
-                                    applicationContext,
-                                    0
-                                )
-                                if (simDisplayName == telephonyManager.simOperatorName) {
-                                    simInfo = telephonyManager.simOperatorName
-                                } else {
-                                    simInfo =
-                                        telephonyManager.simOperatorName + "\nSIM Alias: " + simDisplayName
-                                }
-
-                                val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
-                                simInfo += " ($phone1Number)"
-                                val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
-                                val phone1DataUsage = DataUsage.getDataUsageForSim(
-                                    applicationContext,
-                                    imsiCache.getString(phone1Number, null)
-                                )
-                                simInfo += "\nData Usage: $phone1DataUsage"
-                            }
+                Thread {
+                    var messageId: Long = -1
+                    try {
+                        val quickResponse = okhttpClient.newCall(quickSendRequest).execute()
+                        if (quickResponse.code == 200) {
+                            val responseBody = quickResponse.body.string()
+                            messageId = getMessageId(responseBody)
                         }
-                        if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            ) == PackageManager.PERMISSION_GRANTED
-                        ) {
-                            val cellInfoList = telephonyManager.allCellInfo
-                            if (cellInfoList.isNotEmpty()) {
-                                val registeredCell = cellInfoList.find { it.isRegistered }
-                                if (registeredCell != null) {
-                                    val cellDetails =
-                                        ArfcnConverter.getCellInfoDetails(registeredCell)
-                                    simInfo += "\nSignal: $cellDetails"
-                                }
-                            }
-                        }
-
-                        "\nSIM: $simInfo"
+                        quickResponse.close()
+                    } catch (e: Exception) {
+                        Log.e(Const.TAG, "Failed to send quick response: ${e.message}", e)
                     }
-                }
 
-                var isHotspotRunning = ""
-                isHotspotRunning += "\n${getString(R.string.hotspot_status)}"
-                isHotspotRunning += if (isHotspotActive(applicationContext)) {
-                    getString(R.string.enable)
-                } else {
-                    getString(R.string.disable)
-                }
-                val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
-                var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
-                beaconStatus += if (beacon.getBoolean("beacon_enable", false)) {
-                    if (!ServiceManage.hasLocationPermissions(applicationContext)) {
-                        "Location Permission Missing"
-                    } else {
-                        getString(R.string.enable)
-                    }
-                } else {
-                    getString(R.string.disable)
-                }
-                var batteryHealth = ""
-                if (Shizuku.pingBinder()) {
-                    if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-                        // Check if we have BATTERY_STATS permission, if not, try to grant it via Shizuku
-                        if (checkSelfPermission(Manifest.permission.BATTERY_STATS) != PackageManager.PERMISSION_GRANTED) {
-                            // Try to grant BATTERY_STATS permission using Shizuku shell command
-                            if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-                                try {
-                                    val service: IShizukuService? =
-                                        IShizukuService.Stub.asInterface(Shizuku.getBinder())
-                                    if (service != null) {
-                                        val command = arrayOf(
-                                            "pm",
-                                            "grant",
-                                            packageName,
-                                            Manifest.permission.BATTERY_STATS
-                                        )
-                                        val process = service.newProcess(command, null, null)
-
-                                        try {
-                                            process.waitFor()
-                                        } catch (e: Exception) {
-                                            Log.e(
-                                                Const.TAG,
-                                                "BATTERY_STATS grant process error: ${e.message}"
-                                            )
-                                        }
-
-                                        if (process.exitValue() == 0) {
-                                            Log.i(
-                                                Const.TAG,
-                                                "Successfully granted BATTERY_STATS permission via Shizuku"
-                                            )
-                                        } else {
-                                            Log.e(
-                                                Const.TAG,
-                                                "Failed to grant BATTERY_STATS permission via Shizuku"
-                                            )
-                                        }
-
-                                    }
-                                } catch (e: Exception) {
-                                    Log.e(Const.TAG, e.message.toString())
-                                    Log.e(
-                                        Const.TAG,
-                                        "Error granting BATTERY_STATS permission: ${e.message}",
-                                        e
+                    // Collect detailed info
+                    var cardInfo = ""
+                    val networkType = Network.getNetworkType(applicationContext)
+                    val telephonyManager =
+                        applicationContext.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+                    if (ActivityCompat.checkSelfPermission(
+                            applicationContext,
+                            Manifest.permission.READ_PHONE_STATE
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        cardInfo = if (getActiveCard(applicationContext) == 2) {
+                            val subId1 = getSubId(applicationContext, 0)
+                            val subId2 = getSubId(applicationContext, 1)
+                            val tm1 = telephonyManager.createForSubscriptionId(subId1)
+                            val tm2 = telephonyManager.createForSubscriptionId(subId2)
+                            val sim1Display = getSimDisplayName(applicationContext, 0)
+                            val sim2Display = getSimDisplayName(applicationContext, 1)
+                            var sim1Info: String
+                            var sim2Info: String
+                            if (sim1Display == tm1.simOperatorName) {
+                                sim1Info = tm1.simOperatorName
+                            } else {
+                                sim1Info =
+                                    tm1.simOperatorName + "\nSIM1 Alias: " + sim1Display
+                            }
+                            if (sim2Display == tm2.simOperatorName) {
+                                sim2Info = tm2.simOperatorName
+                            } else {
+                                sim2Info =
+                                    tm2.simOperatorName + "\nSIM2 Alias: " + sim2Display
+                            }
+                            if (DataUsage.hasPermission(applicationContext)) {
+                                if (ActivityCompat.checkSelfPermission(
+                                        applicationContext,
+                                        Manifest.permission.READ_PHONE_STATE
+                                    ) == PackageManager.PERMISSION_GRANTED &&
+                                    ActivityCompat.checkSelfPermission(
+                                        applicationContext,
+                                        Manifest.permission.READ_PHONE_NUMBERS
+                                    ) == PackageManager.PERMISSION_GRANTED &&
+                                    ActivityCompat.checkSelfPermission(
+                                        applicationContext,
+                                        Manifest.permission.READ_SMS
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
+                                    sim1Info += " ($phone1Number)"
+                                    val phone2Number = Phone.getPhoneNumber(applicationContext, 1)
+                                    sim2Info += " ($phone2Number)"
+                                    val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                                    val phone1DataUsage = DataUsage.getDataUsageForSim(
+                                        applicationContext,
+                                        imsiCache.getString(phone1Number, null)
                                     )
+                                    val phone2DataUsage = DataUsage.getDataUsageForSim(
+                                        applicationContext,
+                                        imsiCache.getString(phone2Number, null)
+                                    )
+                                    sim1Info += "\nSIM1 Data Usage: $phone1DataUsage"
+                                    sim2Info += "\nSIM2 Data Usage: $phone2DataUsage"
+
                                 }
                             }
-                        }
+                            if (ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val cellInfoList1 = requestUpdatedCellInfo(applicationContext, tm1)
+                                if (cellInfoList1.isNotEmpty()) {
+                                    val registeredCell1 = cellInfoList1.find { it.isRegistered }
+                                    if (registeredCell1 != null) {
+                                        val cellDetails =
+                                            ArfcnConverter.getCellInfoDetails(registeredCell1)
+                                        sim1Info += "\nSIM1 Signal: $cellDetails"
+                                    }
+                                }
+                            }
+                            if (ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val cellInfoList2 = requestUpdatedCellInfo(applicationContext, tm2)
+                                if (cellInfoList2.isNotEmpty()) {
+                                    val registeredCell2 = cellInfoList2.find { it.isRegistered }
+                                    if (registeredCell2 != null) {
+                                        val cellDetails =
+                                            ArfcnConverter.getCellInfoDetails(registeredCell2)
+                                        sim2Info += "\nSIM2 Signal: $cellDetails"
+                                    }
+                                }
+                            }
 
-                    }
-                }
-                if (batteryHealth.isEmpty() && checkSelfPermission(Manifest.permission.BATTERY_STATS) == PackageManager.PERMISSION_GRANTED) {
-                    val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-                    val batteryStatus = applicationContext.registerReceiver(null, intentFilter)
-
-                    val batteryHealthValue =
-                        batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) ?: -1
-                    val batteryHealthString = when (batteryHealthValue) {
-                        BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
-                        BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheat"
-                        BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
-                        BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over voltage"
-                        BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Unspecified failure"
-                        BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
-                        else -> "Unknown"
-                    }
-                    val cycleCount =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                            val count =
-                                batteryStatus?.getIntExtra(BatteryManager.EXTRA_CYCLE_COUNT, -1)
-                                    ?: -1
-                            "Cycle Count: $count, "
+                            "\n${getString(R.string.current_data_card)}: SIM" + getDataSimId(
+                                applicationContext
+                            ) + "\nSIM1: " + sim1Info + "\nSIM2: " + sim2Info
                         } else {
-                            ""
-                        }
-                    val batteryTemperature =
-                        batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
-                    val healthRatio = Battery.getLearnedBatteryCapacity()
-                        ?.let { (it.toDouble() / Battery.getBatteryCapacity(applicationContext)) * 100 }
-                    val health = healthRatio?.toInt()
-                    Log.d(
-                        Const.TAG,
-                        "getInfo: battery health ratio: $healthRatio, temperature: $batteryTemperature"
-                    )
-                    batteryHealth =
-                        "\nBattery Health: $batteryHealthString${
-                            if (health != null) " (${health}%)" else ""
-                        } ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
-                }
-                val shizukuStatus =
-                    "\nShizuku Status: " + if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) "Enabled" else "Disabled"
-                requestBody.text =
-                    "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
-                        applicationContext
-                    ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + shizukuStatus + beaconStatus + cardInfo
+                            var simInfo = ""
+                            if (DataUsage.hasPermission(applicationContext)) {
+                                if (ActivityCompat.checkSelfPermission(
+                                        applicationContext,
+                                        Manifest.permission.READ_PHONE_STATE
+                                    ) == PackageManager.PERMISSION_GRANTED &&
+                                    ActivityCompat.checkSelfPermission(
+                                        applicationContext,
+                                        Manifest.permission.READ_PHONE_NUMBERS
+                                    ) == PackageManager.PERMISSION_GRANTED &&
+                                    ActivityCompat.checkSelfPermission(
+                                        applicationContext,
+                                        Manifest.permission.READ_SMS
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    val simDisplayName = getSimDisplayName(
+                                        applicationContext,
+                                        0
+                                    )
+                                    if (simDisplayName == telephonyManager.simOperatorName) {
+                                        simInfo = telephonyManager.simOperatorName
+                                    } else {
+                                        simInfo =
+                                            telephonyManager.simOperatorName + "\nSIM Alias: " + simDisplayName
+                                    }
 
-                Log.d(Const.TAG, "getInfo: " + requestBody.text)
+                                    val phone1Number = Phone.getPhoneNumber(applicationContext, 0)
+                                    simInfo += " ($phone1Number)"
+                                    val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                                    val phone1DataUsage = DataUsage.getDataUsageForSim(
+                                        applicationContext,
+                                        imsiCache.getString(phone1Number, null)
+                                    )
+                                    simInfo += "\nData Usage: $phone1DataUsage"
+                                }
+                            }
+                            if (ActivityCompat.checkSelfPermission(
+                                    applicationContext,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val cellInfoList = telephonyManager.allCellInfo
+                                if (cellInfoList.isNotEmpty()) {
+                                    val registeredCell = cellInfoList.find { it.isRegistered }
+                                    if (registeredCell != null) {
+                                        val cellDetails =
+                                            ArfcnConverter.getCellInfoDetails(registeredCell)
+                                        simInfo += "\nSignal: $cellDetails"
+                                    }
+                                }
+                            }
+
+                            "\nSIM: $simInfo"
+                        }
+                    }
+
+                    var isHotspotRunning = ""
+                    isHotspotRunning += "\n${getString(R.string.hotspot_status)}"
+                    isHotspotRunning += if (isHotspotActive(applicationContext)) {
+                        getString(R.string.enable)
+                    } else {
+                        getString(R.string.disable)
+                    }
+                    val beacon = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
+                    var beaconStatus = "\n${getString(R.string.beacon_monitoring_status)}"
+                    beaconStatus += if (beacon.getBoolean("beacon_enable", false)) {
+                        if (!ServiceManage.hasLocationPermissions(applicationContext)) {
+                            "Location Permission Missing"
+                        } else {
+                            getString(R.string.enable)
+                        }
+                    } else {
+                        getString(R.string.disable)
+                    }
+                    var batteryHealth = ""
+                    if (Shizuku.pingBinder()) {
+                        if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                            // Check if we have BATTERY_STATS permission, if not, try to grant it via Shizuku
+                            if (checkSelfPermission(Manifest.permission.BATTERY_STATS) != PackageManager.PERMISSION_GRANTED) {
+                                // Try to grant BATTERY_STATS permission using Shizuku shell command
+                                if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                                    try {
+                                        val service: IShizukuService? =
+                                            IShizukuService.Stub.asInterface(Shizuku.getBinder())
+                                        if (service != null) {
+                                            val shizukuCommand = arrayOf(
+                                                "pm",
+                                                "grant",
+                                                packageName,
+                                                Manifest.permission.BATTERY_STATS
+                                            )
+                                            val process = service.newProcess(shizukuCommand, null, null)
+
+                                            try {
+                                                process.waitFor()
+                                            } catch (e: Exception) {
+                                                Log.e(
+                                                    Const.TAG,
+                                                    "BATTERY_STATS grant process error: ${e.message}",e
+                                                )
+                                            }
+
+                                            if (process.exitValue() == 0) {
+                                                Log.i(
+                                                    Const.TAG,
+                                                    "Successfully granted BATTERY_STATS permission via Shizuku"
+                                                )
+                                            } else {
+                                                Log.e(
+                                                    Const.TAG,
+                                                    "Failed to grant BATTERY_STATS permission via Shizuku"
+                                                )
+                                            }
+
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            Const.TAG,
+                                            "Error granting BATTERY_STATS permission: ${e.message}",
+                                            e
+                                        )
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                    if (batteryHealth.isEmpty() && checkSelfPermission(Manifest.permission.BATTERY_STATS) == PackageManager.PERMISSION_GRANTED) {
+                        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                        val batteryStatus = applicationContext.registerReceiver(null, intentFilter)
+
+                        val batteryHealthValue =
+                            batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) ?: -1
+                        val batteryHealthString = when (batteryHealthValue) {
+                            BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
+                            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheat"
+                            BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
+                            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over voltage"
+                            BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Unspecified failure"
+                            BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
+                            else -> "Unknown"
+                        }
+                        val cycleCount =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                val count =
+                                    batteryStatus?.getIntExtra(BatteryManager.EXTRA_CYCLE_COUNT, -1)
+                                        ?: -1
+                                "Cycle Count: $count, "
+                            } else {
+                                ""
+                            }
+                        val batteryTemperature =
+                            batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)?.div(10.0)
+                        val healthRatio = Battery.getLearnedBatteryCapacity()
+                            ?.let { (it.toDouble() / Battery.getBatteryCapacity(applicationContext)) * 100 }
+                        val health = healthRatio?.toInt()
+                        Log.d(
+                            Const.TAG,
+                            "getInfo: battery health ratio: $healthRatio, temperature: $batteryTemperature"
+                        )
+                        batteryHealth =
+                            "\nBattery Health: $batteryHealthString${
+                                if (health != null) " (${health}%)" else ""
+                            } ($cycleCount Temperature: ${batteryTemperature ?: "Unknown"}℃)"
+                    }
+                    val shizukuStatus =
+                        "\nShizuku Status: " + if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) "Enabled" else "Disabled"
+                    val fullInfoText =
+                        "${getString(R.string.system_message_head)}\n${applicationContext.getString(R.string.current_battery_level)}" + Battery.getBatteryInfo(
+                            applicationContext
+                        ) + batteryHealth + "\n" + getString(R.string.current_network_connection_status) + networkType + isHotspotRunning + shizukuStatus + beaconStatus + cardInfo
+
+                    Log.d(Const.TAG, "getInfo: $fullInfoText")
+
+                    // Edit the message with full info
+                    if (messageId != -1L) {
+                        val editRequest = RequestMessage()
+                        editRequest.chatId = chatID
+                        editRequest.messageId = messageId
+                        editRequest.messageThreadId = messageThreadId
+                        editRequest.text = fullInfoText
+
+                        val editRequestUri = getUrl(botToken, "editMessageText")
+                        val editBody = Gson().toJson(editRequest).toRequestBody(Const.JSON)
+                        val editSendRequest = Request.Builder().url(editRequestUri).method("POST", editBody).build()
+
+                        try {
+                            val editResponse = okhttpClient.newCall(editSendRequest).execute()
+                            if (editResponse.code != 200) {
+                                Log.e(Const.TAG, "Failed to edit getinfo message: ${editResponse.code}")
+                            }
+                            editResponse.close()
+                        } catch (e: Exception) {
+                            Log.e(Const.TAG, "Failed to edit getinfo message: ${e.message}", e)
+                        }
+                    }
+                }.start()
+                return
             }
 
             "/log" -> {
