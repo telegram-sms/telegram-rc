@@ -12,10 +12,10 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import com.fitc.wifihotspot.TetherManager
-import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Hotspot
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import java.util.Objects
@@ -79,7 +79,7 @@ class BatteryService : Service() {
 
     internal inner class BatteryBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d(Const.TAG, "Receive action: " + intent.action)
+            Log.d(TAG, "Receive action: " + intent.action)
             val builder = StringBuilder(context.getString(R.string.system_message_head) + "\n")
             val action = intent.action
             val batteryManager = context.getSystemService(BATTERY_SERVICE) as BatteryManager
@@ -104,7 +104,7 @@ class BatteryService : Service() {
             var batteryLevel =
                 batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
             if (batteryLevel > 100) {
-                Log.d(Const.TAG, "The previous battery is over 100%, and the correction is 100%.")
+                Log.d(TAG, "The previous battery is over 100%, and the correction is 100%.")
                 batteryLevel = 100
             }
             val result =

@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.switchmaterial.SwitchMaterial
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.BEACON_MMKV_ID
 import com.tencent.mmkv.MMKV
 import rikka.shizuku.Shizuku
 
@@ -30,7 +30,7 @@ class ExtraSwitchActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         setTitle("Extra Settings")
 
-        beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
+        beaconMMKV = MMKV.mmkvWithID(BEACON_MMKV_ID)
         autoSwitch = findViewById(R.id.beacon_auto_switch)
         shizukuStatusText = findViewById(R.id.shizuku_status_text)
 

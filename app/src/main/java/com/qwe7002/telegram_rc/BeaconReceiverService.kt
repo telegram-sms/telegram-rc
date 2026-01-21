@@ -26,6 +26,8 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
+import com.qwe7002.telegram_rc.MMKV.BEACON_MMKV_ID
+import com.qwe7002.telegram_rc.MMKV.IMSI_MMKV_ID
 import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
@@ -43,6 +45,7 @@ import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Phone
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import kotlinx.coroutines.CoroutineScope
@@ -90,7 +93,7 @@ class BeaconReceiverService : Service() {
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
                     if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-                        Log.e(Const.TAG, "Shizuku not available")
+                        Log.e(TAG, "Shizuku not available")
                         if(beaconConfig.getBoolean("beacon_enable", false)){
                             beaconConfig.putBoolean("beacon_enable", false)
                             Notify.sendMessage(
@@ -140,7 +143,7 @@ class BeaconReceiverService : Service() {
                 // Use coroutine to handle network operations off the main thread
                 serviceScope.launch {
                     val message = buildMessage(switchStatus, foundBeacon)
-                    Log.d(Const.TAG, "processBeaconList: $message")
+                    Log.d(TAG, "processBeaconList: $message")
                     val requestBody = RequestMessage()
                     requestBody.chatId = chatId
 
@@ -172,7 +175,7 @@ class BeaconReceiverService : Service() {
                                 subscriptionManager.getActiveSubscriptionInfo(SubscriptionManager.getDefaultDataSubscriptionId())
                             val phone1Number =
                                 Phone.getPhoneNumber(applicationContext, info.simSlotIndex)
-                            val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+                            val imsiCache = MMKV.mmkvWithID(IMSI_MMKV_ID)
                             val phone1DataUsage = DataUsage.getDataUsageForSim(
                                 applicationContext,
                                 imsiCache.getString(phone1Number, null)
@@ -217,11 +220,11 @@ class BeaconReceiverService : Service() {
                     okhttpClient.newCall(request).enqueue(object : Callback {
                         override fun onFailure(call: Call, e: IOException) {
                             try {
-                                Log.e(Const.TAG, "onFailure: " + e.message,e)
+                                Log.e(TAG, "onFailure: " + e.message,e)
                                 ReSendJob.addResendLoop(applicationContext, requestBody.text)
                             } catch (ioException: Exception) {
                                 Log.e(
-                                    Const.TAG,
+                                    TAG,
                                     "Error in onFailure handler: ${ioException.message}",
                                     ioException
                                 )
@@ -251,20 +254,20 @@ class BeaconReceiverService : Service() {
                                                 Thread.sleep(retryDelay)
                                             } catch (e: InterruptedException) {
                                                 Log.w(
-                                                    Const.TAG,
+                                                    TAG,
                                                     "Hotspot IP update thread interrupted: ${e.message}"
                                                 )
                                                 return@Thread
                                             } catch (e: Exception) {
                                                 Log.e(
-                                                    Const.TAG,
+                                                    TAG,
                                                     "Error getting hotspot IP address: ${e.message}"
                                                 )
                                                 // 继续重试
                                             }
                                             if (i == maxRetries) {
                                                 Log.w(
-                                                    Const.TAG,
+                                                    TAG,
                                                     "Failed to get hotspot IP after $maxRetries attempts"
                                                 )
                                             }
@@ -301,12 +304,12 @@ class BeaconReceiverService : Service() {
                                                 val editResponse = client.newCall(request).execute()
                                                 try {
                                                     Log.d(
-                                                        Const.TAG,
+                                                        TAG,
                                                         "Hotspot IP update result: ${editResponse.code}"
                                                     )
                                                     if (editResponse.code != 200) {
                                                         Log.e(
-                                                            Const.TAG,
+                                                            TAG,
                                                             "Failed to update hotspot IP message. Status code: ${editResponse.code}"
                                                         )
                                                     }
@@ -315,7 +318,7 @@ class BeaconReceiverService : Service() {
                                                 }
                                             } catch (e: Exception) {
                                                 Log.e(
-                                                    Const.TAG,
+                                                    TAG,
                                                     "Failed to update hotspot IP message",
                                                     e
                                                 )
@@ -332,7 +335,7 @@ class BeaconReceiverService : Service() {
                                     updateThread.start()
                                 }
                             } catch (e: Exception) {
-                                Log.e(Const.TAG, "Error processing response: ${e.message}", e)
+                                Log.e(TAG, "Error processing response: ${e.message}", e)
                             } finally {
                                 response.close()
                             }
@@ -342,24 +345,24 @@ class BeaconReceiverService : Service() {
             } catch (e: Exception) {
                 when (e) {
                     is IllegalArgumentException -> {
-                        Log.e(Const.TAG, "Invalid beacon list data: ${e.message}")
+                        Log.e(TAG, "Invalid beacon list data: ${e.message}")
                     }
 
                     is IllegalStateException -> {
-                        Log.e(Const.TAG, "Beacon processing in illegal state: ${e.message}")
+                        Log.e(TAG, "Beacon processing in illegal state: ${e.message}")
                     }
 
                     is IOException -> {
-                        Log.e(Const.TAG, "IO error processing beacon list: ${e.message}")
+                        Log.e(TAG, "IO error processing beacon list: ${e.message}")
                     }
 
                     is InterruptedException -> {
-                        Log.e(Const.TAG, "Interrupted while processing beacon list: ${e.message}")
+                        Log.e(TAG, "Interrupted while processing beacon list: ${e.message}")
                         Thread.currentThread().interrupt()
                     }
 
                     else -> {
-                        Log.e(Const.TAG, "Error processing beacon list: ${e.message}", e)
+                        Log.e(TAG, "Error processing beacon list: ${e.message}", e)
                     }
                 }
                 resetCounters()
@@ -400,7 +403,7 @@ class BeaconReceiverService : Service() {
         MMKV.initialize(applicationContext)
         MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         if (!hasLocationPermissions()) {
-            Log.i(Const.TAG, "onCreate: permission denied")
+            Log.i(TAG, "onCreate: permission denied")
             return
         }
         okhttpClient = Network.getOkhttpObj()
@@ -444,7 +447,7 @@ class BeaconReceiverService : Service() {
 
     private fun loadPreferences() {
         preferences = MMKV.defaultMMKV()
-        beaconConfig = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
+        beaconConfig = MMKV.mmkvWithID(BEACON_MMKV_ID)
         chatId = preferences.getString("chat_id", "")!!
         messageThreadId = preferences.getString("message_thread_id", "")!!
     }
@@ -466,7 +469,7 @@ class BeaconReceiverService : Service() {
                             try {
                                 scanner.ranger.calculateDistance(beacon)
                             } catch (e: Exception) {
-                                Log.d(Const.TAG, "Error calculating beacon distance: ${e.message}")
+                                Log.d(TAG, "Error calculating beacon distance: ${e.message}")
                                 -1.0
                             }
                         } else {
@@ -481,13 +484,13 @@ class BeaconReceiverService : Service() {
                             distance = distance
                         )
                     } catch (e: IllegalArgumentException) {
-                        Log.d(Const.TAG, "Error processing beacon data: ${e.message}")
+                        Log.d(TAG, "Error processing beacon data: ${e.message}")
                         null
                     } catch (e: IllegalStateException) {
-                        Log.d(Const.TAG, "Error calculating beacon distance: ${e.message}")
+                        Log.d(TAG, "Error calculating beacon distance: ${e.message}")
                         null
                     } catch (e: Exception) {
-                        Log.d(Const.TAG, "Error processing beacon: ${e.message}")
+                        Log.d(TAG, "Error processing beacon: ${e.message}")
                         null
                     }
                 }
@@ -576,7 +579,7 @@ class BeaconReceiverService : Service() {
     private fun toggleWifiHotspot(enable: Boolean) {
         if (Build.VERSION.SDK_INT >= 36) {
             if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-                Log.d(Const.TAG, "toggleWifiHotspot: shizuku Not work")
+                Log.d(TAG, "toggleWifiHotspot: shizuku Not work")
                 return
             }
         }

@@ -2,8 +2,6 @@ package com.qwe7002.telegram_rc
 
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -11,10 +9,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.data_structure.LogAdapter
 import com.qwe7002.telegram_rc.data_structure.LogEntry
 import com.qwe7002.telegram_rc.shizuku_kit.ShizukuKit
+import com.qwe7002.telegram_rc.value.TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -97,12 +95,12 @@ class LogcatActivity : AppCompatActivity() {
                     level = "V" // Verbose in debug builds
                     if (BuildConfig.VERSION_NAME.contains("nightly", ignoreCase = true)) {
                         level = "D"
-                        Log.d(Const.TAG, "onCreate: Setting log level to D for debug/nightly build")
+                        Log.d(TAG, "onCreate: Setting log level to D for debug/nightly build")
                     }
                 }
                 logcatProcess = Runtime.getRuntime().exec(
                     arrayOf(
-                        "logcat", "${Const.TAG}:${level}", "Telegram-RC.TetherManager:${level}",
+                        "logcat", "${TAG}:${level}", "Telegram-RC.TetherManager:${level}",
                         "$${ShizukuKit.TAG}:${level}",
                         "*:S", "-d", "-t", maxLines.toString(), "-v", "time"
                     )
@@ -156,7 +154,7 @@ class LogcatActivity : AppCompatActivity() {
                     logChannel.trySend(lastEntry)
                 }
             } catch (e: Exception) {
-                Log.e(Const.TAG, "Error reading logcat", e)
+                Log.e(TAG, "Error reading logcat", e)
             }
         }
     }

@@ -15,6 +15,7 @@ import com.google.gson.JsonParser
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.Result
 import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.value.TAG
 
 
 class ScannerActivity : Activity() {
@@ -40,7 +41,7 @@ class ScannerActivity : Activity() {
         }.also { this.mCodeScanner.formats = it }
         DecodeCallback { result: Result ->
             runOnUiThread {
-                Log.d(Const.TAG, "format: " + result.barcodeFormat + " content: " + result.text)
+                Log.d(TAG, "format: " + result.barcodeFormat + " content: " + result.text)
                 if (!jsonValidate(result.text)) {
                     Toast.makeText(this, "The QR code is not legal", Toast.LENGTH_SHORT).show()
                     mCodeScanner.startPreview()
@@ -70,7 +71,7 @@ class ScannerActivity : Activity() {
         try {
             jsonElement = JsonParser.parseString(jsonStr)
         } catch (e: Exception) {
-            Log.d(Const.TAG, "jsonValidate: $e")
+            Log.d(TAG, "jsonValidate: $e")
             return false
         }
         return jsonElement != null

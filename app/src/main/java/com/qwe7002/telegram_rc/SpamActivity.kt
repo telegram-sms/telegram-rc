@@ -14,7 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 
 class SpamActivity : AppCompatActivity() {
@@ -78,7 +78,7 @@ class SpamActivity : AppCompatActivity() {
     }
 
     private fun saveAndFlush(blackKeywordList: MutableList<String>, listAdapter: ArrayAdapter<String>) {
-        Log.d(Const.TAG, blackKeywordList.toString())
+        Log.d(TAG, blackKeywordList.toString())
         MMKV.defaultMMKV().encode("block_keyword_list", blackKeywordList.toSet())
         listAdapter.notifyDataSetChanged()
     }

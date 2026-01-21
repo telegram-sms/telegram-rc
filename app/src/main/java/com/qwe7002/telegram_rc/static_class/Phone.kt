@@ -7,9 +7,10 @@ import android.os.Build
 import android.telephony.SubscriptionManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.IMSI_MMKV_ID
 import com.qwe7002.telegram_rc.shizuku_kit.IPhoneSubInfo
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 
 
@@ -44,14 +45,14 @@ object Phone {
 
     @JvmStatic
     fun getIMSICache(context: Context) {
-        val imsiCache = MMKV.mmkvWithID(Const.IMSI_MMKV_ID)
+        val imsiCache = MMKV.mmkvWithID(IMSI_MMKV_ID)
         val phoneInfo = IPhoneSubInfo()
         if (context.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             val phoneCount = getActiveCard(context)
-            Log.d(Const.TAG, "getIMSICache: $phoneCount")
+            Log.d(TAG, "getIMSICache: $phoneCount")
             if (phoneCount == 1) {
                 val phone = phoneInfo.getDefaultIMSIWithShizuku()
-                Log.i(Const.TAG, "getIMSICache: $phone")
+                Log.i(TAG, "getIMSICache: $phone")
                 if (phone != null) {
                     if (phone.isNotEmpty()) {
                         imsiCache.putString(getPhoneNumber(context, 0), phone)
@@ -63,7 +64,7 @@ object Phone {
                 for (i in 0 until phoneCount) {
                     val subid = Other.getSubId(context, i)
                     val phone = phoneInfo.getIMSIWithShizuku(subid)
-                    Log.i(Const.TAG, "getIMSICache: $phone")
+                    Log.i(TAG, "getIMSICache: $phone")
                     if (phone != null) {
                         if (phone.isNotEmpty()) {
                             imsiCache.putString(getPhoneNumber(context, i), phone)

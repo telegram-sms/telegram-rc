@@ -8,7 +8,6 @@ import android.app.ProgressDialog
 import android.content.ActivityNotFoundException
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -44,8 +43,11 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.CHAT_INFO_MMKV_ID
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager
+import com.qwe7002.telegram_rc.MMKV.PROXY_MMKV_ID
+import com.qwe7002.telegram_rc.MMKV.UPDATE_ID
+import com.qwe7002.telegram_rc.MMKV.UPGRADE_MMKV_ID
 import com.qwe7002.telegram_rc.data_structure.GitHubRelease
 import com.qwe7002.telegram_rc.data_structure.OutputMetadata
 import com.qwe7002.telegram_rc.data_structure.ScannerJson
@@ -60,6 +62,10 @@ import com.qwe7002.telegram_rc.static_class.ServiceManage.isNotifyListener
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startBeaconService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.startService
 import com.qwe7002.telegram_rc.static_class.ServiceManage.stopAllService
+import com.qwe7002.telegram_rc.value.JSON_TYPE
+import com.qwe7002.telegram_rc.value.RESULT_CONFIG_JSON
+import com.qwe7002.telegram_rc.value.SYSTEM_CONFIG_VERSION
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Call
@@ -120,7 +126,7 @@ class MainActivity : AppCompatActivity() {
 
         scannerLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-                if (result.resultCode == Const.RESULT_CONFIG_JSON) {
+                if (result.resultCode == RESULT_CONFIG_JSON) {
                     val data = result.data
                     val configJson = data?.getStringExtra("config_json")
                     if (configJson != null) {
@@ -175,7 +181,7 @@ class MainActivity : AppCompatActivity() {
         MMKV.initialize(applicationContext)
         MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         preferences = MMKV.defaultMMKV()
-        proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
+        proxyMMKV = MMKV.mmkvWithID(PROXY_MMKV_ID)
         DataPlanManager.initialize() // 初始化数据计划管理器
         writeSettingsButton.setOnClickListener {
             val writeSystemIntent = Intent(
@@ -232,11 +238,11 @@ class MainActivity : AppCompatActivity() {
                         Snackbar.LENGTH_LONG
                     ).show()
                 } catch (e: Exception) {
-                    Log.e(Const.TAG, "Failed to get IMSI: ${e.message}", e)
+                    Log.e(TAG, "Failed to get IMSI: ${e.message}", e)
                     showErrorDialog(e.message.toString())
                 } catch (e: NoSuchMethodError) {
                     Log.e(
-                        Const.TAG,
+                        TAG,
                         "The current device cannot obtain the IMSI of two cards at the same time.",
                         e,
                     )
@@ -249,7 +255,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         preferences = MMKV.defaultMMKV()
-        proxyMMKV = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
+        proxyMMKV = MMKV.mmkvWithID(PROXY_MMKV_ID)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
             writeSettingsButton.visibility = View.GONE
         }
@@ -372,16 +378,16 @@ class MainActivity : AppCompatActivity() {
                 .build()
             val requestBody = PollingJson()
             requestBody.timeout = 60
-            val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
+            val body: RequestBody = RequestBody.create(JSON_TYPE, Gson().toJson(requestBody))
             val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
             val call = okhttpClient.newCall(request)
             progressDialog.setOnCancelListener { call.cancel() }
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.e(Const.TAG, "onFailure: ", e)
+                    Log.e(TAG, "onFailure: ", e)
                     progressDialog.cancel()
                     val errorMessage = "Get chat ID failed: ${e.message}"
-                    Log.e(Const.TAG, errorMessage)
+                    Log.e(TAG, errorMessage)
                     runOnUiThread { showErrorDialog(errorMessage) }
                 }
 
@@ -393,7 +399,7 @@ class MainActivity : AppCompatActivity() {
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage =
                             "Get chat ID failed: ${resultObj["description"].asString}"
-                        Log.e(Const.TAG, errorMessage)
+                        Log.e(TAG, errorMessage)
                         runOnUiThread { showErrorDialog(errorMessage) }
                         return
                     }
@@ -606,14 +612,14 @@ class MainActivity : AppCompatActivity() {
 
             val gson = Gson()
             val requestBodyRaw = gson.toJson(requestBody)
-            val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+            val body: RequestBody = requestBodyRaw.toRequestBody(JSON_TYPE)
             val okhttpClient = getOkhttpObj()
             val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
             val call = okhttpClient.newCall(request)
             val errorHead = "Send message failed: "
             call.enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    Log.e(Const.TAG, "onFailure: ", e)
+                    Log.e(TAG, "onFailure: ", e)
                     progressDialog.cancel()
                     runOnUiThread { showErrorDialog(errorHead + e.message) }
                 }
@@ -626,20 +632,20 @@ class MainActivity : AppCompatActivity() {
                         val result = Objects.requireNonNull(response.body).string()
                         val resultObj = JsonParser.parseString(result).asJsonObject
                         val errorMessage = errorHead + resultObj["description"]
-                        Log.e(Const.TAG, errorMessage)
+                        Log.e(TAG, errorMessage)
                         runOnUiThread { showErrorDialog(errorMessage) }
                         return
                     }
                     if (newBotToken != botTokenSave) {
                         Log.i(
-                            Const.TAG,
+                            TAG,
                             "onResponse: The current bot token does not match the saved bot token, clearing the message database."
                         )
-                        MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID).clear()
+                        MMKV.mmkvWithID(CHAT_INFO_MMKV_ID).clear()
                     }
-                    MMKV.mmkvWithID(Const.UPGRADE_MMKV_ID).putInt(
+                    MMKV.mmkvWithID(UPGRADE_MMKV_ID).putInt(
                         "version",
-                        Const.SYSTEM_CONFIG_VERSION
+                        SYSTEM_CONFIG_VERSION
                     )
                     preferences.clear()
                     preferences.putString("bot_token", newBotToken)
@@ -740,7 +746,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 customTabsIntent.launchUrl(applicationContext, uri)
             } catch (e: ActivityNotFoundException) {
-                Log.e(Const.TAG, "show_privacy_dialog: ", e)
+                Log.e(TAG, "show_privacy_dialog: ", e)
                 showErrorDialog("Browser not found.")
             }
         }
@@ -760,7 +766,7 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             0 -> {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    Log.d(Const.TAG, "No camera permissions.")
+                    Log.d(TAG, "No camera permissions.")
                     showErrorDialog(applicationContext.getString(R.string.no_camera_permission))
                     return
                 }
@@ -769,7 +775,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             1 -> {
-                Log.d(Const.TAG, "onRequestPermissionsResult: 1")
+                Log.d(TAG, "onRequestPermissionsResult: 1")
             }
 
             2 -> {
@@ -780,7 +786,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                         try {
-                            Log.d(Const.TAG, "onCreate: ")
+                            Log.d(TAG, "onCreate: ")
                             getIMSICache(applicationContext)
                             Snackbar.make(
                                 findViewById(R.id.data_usage_button),
@@ -788,12 +794,12 @@ class MainActivity : AppCompatActivity() {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         } catch (e: Exception) {
-                            Log.e(Const.TAG, "Failed to get IMSI: ${e.message}", e)
+                            Log.e(TAG, "Failed to get IMSI: ${e.message}", e)
                             showErrorDialog(e.message.toString())
                         } catch (e: NoSuchMethodError) {
                             showErrorDialog("The current device cannot obtain the IMSI of two cards at the same time. Please try to obtain the IMSI of one card.")
                             Log.e(
-                                Const.TAG,
+                                TAG,
                                 "The current device cannot obtain the IMSI of two cards at the same time.",
                                 e
                             )
@@ -812,7 +818,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1) {
-            if (resultCode == Const.RESULT_CONFIG_JSON) {
+            if (resultCode == RESULT_CONFIG_JSON) {
                 val gson = Gson()
                 val scannerJson =
                     gson.fromJson(data?.getStringExtra("config_json"), ScannerJson::class.java)
@@ -911,7 +917,7 @@ class MainActivity : AppCompatActivity() {
                         Manifest.permission.ACCESS_COARSE_LOCATION
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    Log.d(Const.TAG, "No permissions.")
+                    Log.d(TAG, "No permissions.")
                     showErrorDialog("No permission.")
                     return false
                 }
@@ -1070,7 +1076,7 @@ class MainActivity : AppCompatActivity() {
         try {
             customTabsIntent.launchUrl(this, uri)
         } catch (e: ActivityNotFoundException) {
-            Log.e(Const.TAG, "onOptionsItemSelected: ", e)
+            Log.e(TAG, "onOptionsItemSelected: ", e)
             showErrorDialog("Browser not found.")
         }
         return true
@@ -1101,7 +1107,7 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 progressDialog.cancel()
-                Log.e(Const.TAG, "checkAndLogout getMe onFailure: ", e)
+                Log.e(TAG, "checkAndLogout getMe onFailure: ", e)
                 runOnUiThread {
                     Snackbar.make(
                         findViewById(R.id.doh_switch),
@@ -1117,13 +1123,13 @@ class MainActivity : AppCompatActivity() {
                     val body = response.body.string()
                     val jsonObj = JsonParser.parseString(body).asJsonObject
                     if (jsonObj.get("ok").asBoolean) {
-                        Log.i(Const.TAG, "onResponse: Logged in, proceeding to logout")
+                        Log.i(TAG, "onResponse: Logged in, proceeding to logout")
                         // Bot token is still active on official API, need to logout
                         runOnUiThread {
                             logout(botToken)
                         }
                     } else {
-                        Log.i(Const.TAG, "onResponse: Already logged out")
+                        Log.i(TAG, "onResponse: Already logged out")
                         // Already logged out
                         runOnUiThread {
                             Snackbar.make(
@@ -1134,7 +1140,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    Log.w(Const.TAG, "onResponse: ${response.code}" )
+                    Log.w(TAG, "onResponse: ${response.code}" )
                     // Not logged in or error, no need to logout
                     runOnUiThread {
                         Snackbar.make(
@@ -1161,14 +1167,14 @@ class MainActivity : AppCompatActivity() {
         okhttpClient = okhttpClient.newBuilder().build()
         val requestBody = PollingJson()
         val body: RequestBody =
-            RequestBody.create(Const.JSON, Gson().toJson(requestBody))
+            RequestBody.create(JSON_TYPE, Gson().toJson(requestBody))
         val request: Request =
             Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 progressDialog.cancel()
-                Log.e(Const.TAG, "onFailure: ", e)
+                Log.e(TAG, "onFailure: ", e)
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -1283,7 +1289,7 @@ class MainActivity : AppCompatActivity() {
         if (BuildConfig.VERSION_NAME.contains("nightly")) {
             appIdentifier += "-nightly"
         }
-        val updateMMKV = MMKV.mmkvWithID(Const.UPDATE_ID)
+        val updateMMKV = MMKV.mmkvWithID(UPDATE_ID)
         updateMMKV.putLong("last_check", System.currentTimeMillis())
 
         val progressDialog = ProgressDialog(this@MainActivity)
@@ -1301,14 +1307,14 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val updateMMKV = MMKV.mmkvWithID(Const.UPDATE_ID)
+        val updateMMKV = MMKV.mmkvWithID(UPDATE_ID)
         val lastCheck = updateMMKV.getLong("last_check", 0)
         val currentTime = System.currentTimeMillis()
 
         // Check if 24 hours have passed (86400000 milliseconds = 24 hours)
         val twentyFourHours = 24 * 60 * 60 * 1000L
         if (currentTime - lastCheck < twentyFourHours) {
-            Log.d(Const.TAG, "Update check skipped: Last check was less than 24 hours ago")
+            Log.d(TAG, "Update check skipped: Last check was less than 24 hours ago")
             return
         }
 
@@ -1318,7 +1324,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateMMKV.putLong("last_check", currentTime)
-        Log.d(Const.TAG, "Performing automatic update check")
+        Log.d(TAG, "Performing automatic update check")
         performUpdateCheck(appIdentifier, null)
     }
 
@@ -1337,11 +1343,11 @@ class MainActivity : AppCompatActivity() {
                 progressDialog?.cancel()
                 if (!response.isSuccessful) {
                     val errorMessage = errorHead + response.code
-                    Log.e(Const.TAG, errorMessage)
+                    Log.e(TAG, errorMessage)
                     return
                 }
                 val jsonString = response.body.string()
-                Log.d(Const.TAG, "onResponse: $jsonString")
+                Log.d(TAG, "onResponse: $jsonString")
                 val gson = Gson()
                 val release = gson.fromJson(jsonString, GitHubRelease::class.java)
 
@@ -1360,13 +1366,13 @@ class MainActivity : AppCompatActivity() {
                             )
                         }
                     } else {
-                        Log.d(Const.TAG, "App is up to date (tag comparison)")
+                        Log.d(TAG, "App is up to date (tag comparison)")
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(Const.TAG, "onFailure: ${e.message}", e)
+                Log.e(TAG, "onFailure: ${e.message}", e)
                 progressDialog?.cancel()
                 if (progressDialog != null) {
                     val errorMessage = errorHead + e.message
@@ -1390,7 +1396,7 @@ class MainActivity : AppCompatActivity() {
             @Throws(IOException::class)
             override fun onResponse(call: Call, response: Response) {
                 if (!response.isSuccessful) {
-                    Log.e(Const.TAG, "Failed to download output-metadata.json: ${response.code}")
+                    Log.e(TAG, "Failed to download output-metadata.json: ${response.code}")
                     if (progressDialog != null) {
                         runOnUiThread {
                             showErrorDialog("Failed to download update metadata.")
@@ -1400,7 +1406,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val metadataJson = response.body.string()
-                Log.d(Const.TAG, "output-metadata.json: $metadataJson")
+                Log.d(TAG, "output-metadata.json: $metadataJson")
 
                 try {
                     val gson = Gson()
@@ -1421,7 +1427,7 @@ class MainActivity : AppCompatActivity() {
                                 )
                             }
                         } else {
-                            Log.e(Const.TAG, "No APK asset found in release")
+                            Log.e(TAG, "No APK asset found in release")
                             if (progressDialog != null) {
                                 runOnUiThread {
                                     showErrorDialog("No APK found for the update.")
@@ -1430,12 +1436,12 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else {
                         Log.d(
-                            Const.TAG,
+                            TAG,
                             "App is up to date. Current: ${BuildConfig.VERSION_CODE}, Remote: $remoteVersionCode"
                         )
                     }
                 } catch (e: Exception) {
-                    Log.e(Const.TAG, "Failed to parse output-metadata.json", e)
+                    Log.e(TAG, "Failed to parse output-metadata.json", e)
                     if (progressDialog != null) {
                         runOnUiThread {
                             showErrorDialog("Failed to parse update metadata.")
@@ -1445,7 +1451,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(Const.TAG, "Failed to fetch output-metadata.json", e)
+                Log.e(TAG, "Failed to fetch output-metadata.json", e)
                 if (progressDialog != null) {
                     runOnUiThread {
                         showErrorDialog("Failed to fetch update metadata.")

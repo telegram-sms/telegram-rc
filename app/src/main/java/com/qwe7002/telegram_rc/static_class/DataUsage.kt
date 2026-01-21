@@ -12,8 +12,8 @@ import android.os.Process
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager
+import com.qwe7002.telegram_rc.value.TAG
 import java.util.Calendar
 
 
@@ -59,10 +59,10 @@ object DataUsage {
             val totalBytes = bucket.rxBytes + bucket.txBytes
             formatBytes(totalBytes)
         } catch (e: SecurityException) {
-            Log.e(Const.TAG, "SecurityException when getting data", e)
+            Log.e(TAG, "SecurityException when getting data", e)
             "Permission required - open settings"
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Error getting data usage", e)
+            Log.e(TAG, "Error getting data usage", e)
             "Error: ${e.message}"
         }
     }
@@ -77,10 +77,10 @@ object DataUsage {
             mode == AppOpsManager.MODE_ALLOWED
         } catch (e: ClassCastException) {
             // 处理Shizuku可能返回BinderProxy的情况
-            Log.e(Const.TAG, "ClassCastException when checking permission", e)
+            Log.e(TAG, "ClassCastException when checking permission", e)
             false
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Error when checking permission", e)
+            Log.e(TAG, "Error when checking permission", e)
             false
         }
     }

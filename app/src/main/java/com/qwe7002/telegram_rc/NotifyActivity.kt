@@ -25,7 +25,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import java.util.Locale
 
@@ -87,7 +87,7 @@ class NotifyActivity : AppCompatActivity() {
                 appInfoList.add(appInfo)
             }
         } catch (e: Exception) {
-            Log.e(Const.TAG, "scanAppList: ${e.message}", e)
+            Log.e(TAG, "scanAppList: ${e.message}", e)
         }
         return appInfoList
     }
@@ -239,7 +239,7 @@ class NotifyActivity : AppCompatActivity() {
                 } else {
                     listenListTemp.remove(packageName)
                 }
-                Log.d(Const.TAG, "notify_listen_list: $listenListTemp")
+                Log.d(TAG, "notify_listen_list: $listenListTemp")
                 MMKV.defaultMMKV().encode("notify_listen_list", listenListTemp.toSet())
                 listenList = listenListTemp
             }

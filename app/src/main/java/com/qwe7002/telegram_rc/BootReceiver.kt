@@ -6,9 +6,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.BEACON_MMKV_ID
+import com.qwe7002.telegram_rc.MMKV.STATUS_MMKV_ID
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.ServiceManage
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import rikka.shizuku.Shizuku
@@ -21,7 +23,7 @@ class BootReceiver : BroadcastReceiver() {
             val preferences = MMKV.defaultMMKV()
             if (preferences.contains("initialized")) {
                 Log.i(
-                    Const.TAG,
+                    TAG,
                     "Received [" + intent.action + "] broadcast, starting background service."
                 )
                 ServiceManage.startService(
@@ -35,23 +37,23 @@ class BootReceiver : BroadcastReceiver() {
             }
 
             try {
-                MMKV.mmkvWithID(Const.STATUS_MMKV_ID).clear()
+                MMKV.mmkvWithID(STATUS_MMKV_ID).clear()
             } catch (e: Exception) {
-                Log.w(Const.TAG, "Failed to clear status MMKV: ${e.message}")
+                Log.w(TAG, "Failed to clear status MMKV: ${e.message}")
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
                 if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-                    MMKV.mmkvWithID(Const.BEACON_MMKV_ID).putBoolean("beacon_enable", false)
-                    Log.w(Const.TAG, "Shizuku not available, beacon disabled.")
+                    MMKV.mmkvWithID(BEACON_MMKV_ID).putBoolean("beacon_enable", false)
+                    Log.w(TAG, "Shizuku not available, beacon disabled.")
                     if(preferences.getBoolean("beacon_switch", false)) {
                         Notify.sendMessage(context, "BootReceiver", "Shizuku not available, Beacon disabled.")
                         ReSendJob.addResendLoop(context, "Shizuku not available, Beacon disabled.")
                     }
                 }
             }
-            Log.d(Const.TAG, "BootReceiver finished processing.")
+            Log.d(TAG, "BootReceiver finished processing.")
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Error in BootReceiver: ${e.message}", e)
+            Log.e(TAG, "Error in BootReceiver: ${e.message}", e)
         }
     }
 }

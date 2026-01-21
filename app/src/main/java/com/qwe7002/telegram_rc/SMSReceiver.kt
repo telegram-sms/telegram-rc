@@ -22,6 +22,7 @@ import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Call
 import okhttp3.Callback
@@ -41,7 +42,7 @@ class SMSReceiver : BroadcastReceiver() {
         val extras = intent.extras!!
         preferences = MMKV.defaultMMKV()
         if (!preferences.contains("initialized")) {
-            Log.i(Const.TAG, "Uninitialized, SMS receiver is deactivated.")
+            Log.i(TAG, "Uninitialized, SMS receiver is deactivated.")
             return
         }
         val botToken = preferences.getString("bot_token", "").toString()
@@ -73,12 +74,12 @@ class SMSReceiver : BroadcastReceiver() {
         )
         for (i in pdus.indices) {
             val format = extras.getString("format")
-            Log.d(Const.TAG, "format: $format")
+            Log.d(TAG, "format: $format")
             assert(format != null)
             messages[i] = SmsMessage.createFromPdu(pdus[i] as ByteArray, format)
         }
         if (messages.isEmpty()) {
-            Log.e(Const.TAG, "Message length is equal to 0.")
+            Log.e(TAG, "Message length is equal to 0.")
             return
         }
 
@@ -105,7 +106,7 @@ class SMSReceiver : BroadcastReceiver() {
         if (trustedPhoneNumber.isNotEmpty()) {
             isTrustedPhone = messageAddress.contains(trustedPhoneNumber)
         }
-        Log.d(Const.TAG, "onReceive: $isTrustedPhone")
+        Log.d(TAG, "onReceive: $isTrustedPhone")
         val requestBody = RequestMessage()
         requestBody.chatId = chatId
         requestBody.messageThreadId = preferences.getString("message_thread_id", "")
@@ -180,7 +181,7 @@ class SMSReceiver : BroadcastReceiver() {
                                 Manifest.permission.SEND_SMS
                             ) != PackageManager.PERMISSION_GRANTED
                         ) {
-                            Log.i(Const.TAG, "No SMS permission.")
+                            Log.i(TAG, "No SMS permission.")
                             return
                         }
                         val command = commandList[0].split(" ")
@@ -219,7 +220,7 @@ class SMSReceiver : BroadcastReceiver() {
                 }
             }
         }
-        Log.d(Const.TAG, "onReceive: $isVerificationCode")
+        Log.d(TAG, "onReceive: $isVerificationCode")
         var silentSend = false
         if (!isVerificationCode && !isTrustedPhone) {
             val blackListArray =
@@ -230,7 +231,7 @@ class SMSReceiver : BroadcastReceiver() {
                     continue
                 }
                 if (messageBody.contains(blockListItem)) {
-                    Log.i(Const.TAG, "Detected message contains blacklist keywords, Silent send.")
+                    Log.i(TAG, "Detected message contains blacklist keywords, Silent send.")
                     silentSend = true
                 }
             }
@@ -253,8 +254,8 @@ class SMSReceiver : BroadcastReceiver() {
         val finalIsFlash = (messages[0]!!.messageClass == SmsMessage.MessageClass.CLASS_0)
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d(Const.TAG, e.toString())
-                Log.e(Const.TAG, errorHead + e.message)
+                Log.d(TAG, e.toString())
+                Log.e(TAG, errorHead + e.message)
                 SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                 ReSendJob.addResendLoop(context, requestBody.text)
                 commandHandle(messageBody, dataEnable)
@@ -264,14 +265,14 @@ class SMSReceiver : BroadcastReceiver() {
             override fun onResponse(call: Call, response: Response) {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
-                    Log.e(Const.TAG, errorHead + response.code + " " + result)
+                    Log.e(TAG, errorHead + response.code + " " + result)
                     if (!finalIsFlash) {
                         SMS.sendFallbackSMS(context, finalRawRequestBodyText, subId)
                     }
                     ReSendJob.addResendLoop(context, requestBody.text)
                 } else {
                     if (!Other.isPhoneNumber(messageAddress)) {
-                        Log.w(Const.TAG, "[$messageAddress] Not a regular phone number.")
+                        Log.w(TAG, "[$messageAddress] Not a regular phone number.")
                         return
                     }
                     Other.addMessageList(Other.getMessageId(result), messageAddress, slot)
@@ -304,7 +305,7 @@ class SMSReceiver : BroadcastReceiver() {
             try {
                 Thread.sleep(100)
             } catch (e: InterruptedException) {
-                Log.d(Const.TAG, e.toString())
+                Log.d(TAG, e.toString())
             }
             ++loopCount
         }

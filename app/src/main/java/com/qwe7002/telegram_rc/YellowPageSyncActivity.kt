@@ -10,8 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.textfield.TextInputEditText
-import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.database.YellowPage
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -111,7 +111,7 @@ class YellowPageSyncActivity : AppCompatActivity() {
                     clearButton.isEnabled = true
                 }
             } catch (e: Exception) {
-                Log.e(Const.TAG, "YellowPage sync failed", e)
+                Log.e(TAG, "YellowPage sync failed", e)
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
                     statusText.text = getString(R.string.yellowpage_sync_failed, e.message)

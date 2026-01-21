@@ -13,6 +13,7 @@ import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.USSDCallBack
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -35,14 +36,14 @@ object USSD {
                 Manifest.permission.CALL_PHONE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.i(Const.TAG, "send_ussd: No permission.")
+            Log.i(TAG, "send_ussd: No permission.")
             return
         }
 
         val botToken = preferences.getString("bot_token", "") ?: ""
         val chatId = preferences.getString("chat_id", "") ?: ""
         if (botToken.isEmpty() || chatId.isEmpty()) {
-            Log.e(Const.TAG, "send_ussd: bot_token or chat_id is empty.")
+            Log.e(TAG, "send_ussd: bot_token or chat_id is empty.")
             return
         }
 
@@ -64,7 +65,7 @@ object USSD {
                 val response = call.execute()
                 messageId = Other.getMessageId(Objects.requireNonNull(response.body).string())
             } catch (e: IOException) {
-                Log.d(Const.TAG, "send_ussd: ${e.message}",e)
+                Log.d(TAG, "send_ussd: ${e.message}",e)
                 return@Thread
             }
             if (ActivityCompat.checkSelfPermission(

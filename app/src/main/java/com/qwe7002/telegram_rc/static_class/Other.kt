@@ -12,9 +12,10 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.CHAT_INFO_MMKV_ID
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import java.util.Locale
 
@@ -43,7 +44,7 @@ object Other {
             try {
                 result = intStr.toLong()
             } catch (e: NumberFormatException) {
-                Log.e(Const.TAG, "parseStringToLong: ",e)
+                Log.e(TAG, "parseStringToLong: ",e)
             }
         }
         return result
@@ -97,7 +98,7 @@ object Other {
                 Manifest.permission.READ_PHONE_STATE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.d(Const.TAG, "getDataSimId: No permission.")
+            Log.d(TAG, "getDataSimId: No permission.")
             return result
         }
         val subscriptionManager =
@@ -112,7 +113,7 @@ object Other {
 
     @JvmStatic
     fun getMessageId(result: String?): Long {
-        Log.d(Const.TAG, "getMessageId: $result")
+        Log.d(TAG, "getMessageId: $result")
         val resultObj = JsonParser.parseString(result).asJsonObject["result"].asJsonObject
         return resultObj["message_id"].asLong
     }
@@ -151,7 +152,7 @@ object Other {
                     Manifest.permission.READ_PHONE_STATE
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                Log.i(Const.TAG, "get_sub_id: No permission")
+                Log.i(TAG, "get_sub_id: No permission")
                 return -1
             }
             val subscriptionManager =
@@ -183,19 +184,19 @@ object Other {
                 Manifest.permission.READ_PHONE_STATE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.i(Const.TAG, "No permission.")
+            Log.i(TAG, "No permission.")
             return result
         }
         val subscriptionManager =
             (context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager)
         var info = subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(slot)
         if (info == null) {
-            Log.d(Const.TAG, "The active card is in the second card slot.")
+            Log.d(TAG, "The active card is in the second card slot.")
             if (getActiveCard(context) == 1 && slot == 0) {
                 info = subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(1)
             }
             if (info == null) {
-                Log.d(Const.TAG, "get_sim_display_name: Unable to obtain information")
+                Log.d(TAG, "get_sim_display_name: Unable to obtain information")
                 return result
             }
         }
@@ -214,8 +215,8 @@ object Other {
         val item = SMSRequestInfo()
         item.phone = phone
         item.card = slot
-        MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
+        MMKV.mmkvWithID(CHAT_INFO_MMKV_ID)
             .putString(messageId.toString(), Gson().toJson(item))
-        Log.d(Const.TAG, "add_message_list: $messageId")
+        Log.d(TAG, "add_message_list: $messageId")
     }
 }

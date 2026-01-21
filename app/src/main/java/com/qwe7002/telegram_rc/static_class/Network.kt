@@ -20,8 +20,9 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import com.fitc.wifihotspot.TetherManager
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.PROXY_MMKV_ID
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -50,7 +51,7 @@ object Network {
         val networks = connectivityManager.allNetworks
         for (network in networks) {
             val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
-            Log.d(Const.TAG, "check_network_status: $networkCapabilities")
+            Log.d(TAG, "check_network_status: $networkCapabilities")
             assert(networkCapabilities != null)
             if (networkCapabilities!!.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
                 networkStatus = true
@@ -68,7 +69,7 @@ object Network {
         val networks = manager.allNetworks
         for (network in networks) {
             val networkCapabilities = manager.getNetworkCapabilities(network)
-            Log.d(Const.TAG, "check_network_status: $networkCapabilities")
+            Log.d(TAG, "check_network_status: $networkCapabilities")
             assert(networkCapabilities != null)
             if (networkCapabilities!!.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
                 networkStatus = true
@@ -88,7 +89,7 @@ object Network {
     fun getOkhttpObj(): OkHttpClient {
         val doh = MMKV.defaultMMKV().getBoolean("doh_switch", true)
 
-        val proxyConfig = MMKV.mmkvWithID(Const.PROXY_MMKV_ID)
+        val proxyConfig = MMKV.mmkvWithID(PROXY_MMKV_ID)
         val okhttp: OkHttpClient.Builder = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
@@ -145,7 +146,7 @@ object Network {
         try {
             return InetAddress.getByName(host)
         } catch (e: UnknownHostException) {
-            Log.e(Const.TAG, "getByIp: ${e.message}",e )
+            Log.e(TAG, "getByIp: ${e.message}",e )
             throw RuntimeException(e)
         }
     }
@@ -212,7 +213,7 @@ object Network {
             requestUpdatedCellInfo(context, telephonyManager)
 
         if (cellInfoList.isEmpty()) {
-            Log.d(Const.TAG, "No cell info available")
+            Log.d(TAG, "No cell info available")
             return when (telephonyManager.dataNetworkType) {
                 TelephonyManager.NETWORK_TYPE_NR -> "NR"
                 TelephonyManager.NETWORK_TYPE_LTE,
@@ -305,7 +306,7 @@ object Network {
 
                     override fun onError(errorCode: Int, detail: Throwable?) {
                         Log.w(
-                            Const.TAG,
+                            TAG,
                             "Failed to get updated cell info. Error code: $errorCode",
                             detail
                         )
@@ -316,7 +317,7 @@ object Network {
             // Wait up to 2 seconds for the update
             latch.await(2, TimeUnit.SECONDS)
         } catch (e: Exception) {
-            Log.w(Const.TAG, "Exception while requesting cell info update", e)
+            Log.w(TAG, "Exception while requesting cell info update", e)
         }
 
         return result
@@ -328,13 +329,13 @@ object Network {
             checkNotNull(context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
         var telephonyManager : TelephonyManager
         if(getActiveCard(context) == 2){
-            Log.d(Const.TAG, "Dual SIM detected")
+            Log.d(TAG, "Dual SIM detected")
             telephonyManager = checkNotNull(
                 context
                     .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
             ).createForSubscriptionId(SubscriptionManager.getDefaultDataSubscriptionId())
         }else{
-            Log.d(Const.TAG, "Single SIM detected")
+            Log.d(TAG, "Single SIM detected")
             telephonyManager = checkNotNull(
                 context
                     .getSystemService(TELEPHONY_SERVICE) as TelephonyManager
@@ -359,7 +360,7 @@ object Network {
 
                     networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
                         if (!hasPhoneStatePermission) {
-                            Log.i(Const.TAG, "get_network_type: No permission.")
+                            Log.i(TAG, "get_network_type: No permission.")
                             return netType
                         }
                         netType = checkCellularNetworkType(
@@ -403,14 +404,14 @@ object Network {
                     else -> "wlan"
                 }
                 if (interfaceName.startsWith(prefix)) {
-                    Log.d(Const.TAG, "Checking interface: $interfaceName")
+                    Log.d(TAG, "Checking interface: $interfaceName")
                     val addresses = networkInterface.inetAddresses
 
                     while (addresses.hasMoreElements()) {
                         val address = addresses.nextElement()
                         if (!address.isLoopbackAddress && address is Inet4Address) {
                             Log.d(
-                                Const.TAG,
+                                TAG,
                                 "Found IP on $interfaceName: ${address.hostAddress}"
                             )
                             @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -419,7 +420,7 @@ object Network {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(Const.TAG, "Error getting hotspot IP: ${e.message}")
+                Log.e(TAG, "Error getting hotspot IP: ${e.message}")
             }
         }
         return "Unknown"

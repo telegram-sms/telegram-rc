@@ -14,6 +14,7 @@ import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
 import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Network
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -24,10 +25,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class CcSendJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
-        Log.d(Const.TAG, "startJob: Trying to send message.")
+        Log.d(TAG, "startJob: Trying to send message.")
         
         if (params == null) {
-            Log.e(Const.TAG, "onStartJob: params is null")
+            Log.e(TAG, "onStartJob: params is null")
             return false
         }
         
@@ -90,15 +91,15 @@ class CcSendJob : JobService() {
                     }
                 }
                 if (sendList.isNotEmpty()) {
-                    Log.i(Const.TAG, "The Cc message is complete.")
+                    Log.i(TAG, "The Cc message is complete.")
                 }
             } catch (e: Exception) {
-                Log.e(Const.TAG, "Error in CcSend job", e)
+                Log.e(TAG, "Error in CcSend job", e)
             } finally {
                 try {
                     jobFinished(params, false)
                 } catch (e: Exception) {
-                    Log.e(Const.TAG, "Error finishing job", e)
+                    Log.e(TAG, "Error finishing job", e)
                 }
             }
         }.start()
@@ -126,12 +127,12 @@ class CcSendJob : JobService() {
         try {
             val response = call.execute()
             if (response.code == 200) {
-                Log.i(Const.TAG, "networkProgressHandle: Message sent successfully.")
+                Log.i(TAG, "networkProgressHandle: Message sent successfully.")
             }else{
-                Log.e(Const.TAG, "Send message failed: " + response.code + " " + response.body.string())
+                Log.e(TAG, "Send message failed: " + response.code + " " + response.body.string())
             }
         } catch (e: IOException) {
-            Log.e(Const.TAG, "An error occurred while resending: " + e.message,e)
+            Log.e(TAG, "An error occurred while resending: " + e.message,e)
         }
     }
 
@@ -154,10 +155,10 @@ class CcSendJob : JobService() {
                 jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 val result = jobScheduler.schedule(jobInfoBuilder.build())
                 if (result <= 0) {
-                    Log.e(Const.TAG, "Failed to schedule job, result code: $result")
+                    Log.e(TAG, "Failed to schedule job, result code: $result")
                 }
             } catch (e: Exception) {
-                Log.e(Const.TAG, "Failed to start job", e)
+                Log.e(TAG, "Failed to start job", e)
             }
         }
 
@@ -178,10 +179,10 @@ class CcSendJob : JobService() {
                 jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 val result = jobScheduler.schedule(jobInfoBuilder.build())
                 if (result <= 0) {
-                    Log.e(Const.TAG, "Failed to schedule job, result code: $result")
+                    Log.e(TAG, "Failed to schedule job, result code: $result")
                 }
             } catch (e: Exception) {
-                Log.e(Const.TAG, "Failed to start job", e)
+                Log.e(TAG, "Failed to start job", e)
             }
         }
         

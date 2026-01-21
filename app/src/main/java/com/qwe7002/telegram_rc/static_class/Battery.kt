@@ -8,8 +8,8 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.R
+import com.qwe7002.telegram_rc.value.TAG
 import moe.shizuku.server.IShizukuService
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.shizuku.Shizuku
@@ -24,7 +24,7 @@ object Battery {
             batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         if (batteryLevel > 100) {
             Log.i(
-                Const.TAG,
+                TAG,
                 "The previous battery is over 100%, and the correction is 100%."
             )
             batteryLevel = 100
@@ -65,10 +65,10 @@ object Battery {
         return try {
             val service: IShizukuService? = IShizukuService.Stub.asInterface(Shizuku.getBinder())
             if (service == null) {
-                Log.e(Const.TAG, "Shizuku service not available")
+                Log.e(TAG, "Shizuku service not available")
                 return null
             }
-            Log.d(Const.TAG, "Shizuku service obtained successfully")
+            Log.d(TAG, "Shizuku service obtained successfully")
 
             // Use grep to filter output directly in the shell command
             val process = service.newProcess(
@@ -92,7 +92,7 @@ object Battery {
             process.waitFor()
             learnedCapacity
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Exception occurred: ${e.message}", e)
+            Log.e(TAG, "Exception occurred: ${e.message}", e)
             null
         }
     }

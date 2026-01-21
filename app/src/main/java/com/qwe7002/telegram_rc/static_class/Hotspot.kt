@@ -3,14 +3,14 @@ package com.qwe7002.telegram_rc.static_class
 import android.content.Context
 import android.os.Build
 import com.fitc.wifihotspot.TetherManager
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.STATUS_MMKV_ID
 import com.qwe7002.telegram_rc.shizuku_kit.TetheringManagerShizuku
 import com.tencent.mmkv.MMKV
 
 object Hotspot {
     @JvmStatic
     fun enableHotspot(context: Context, mode: Int) {
-        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", true)
+        MMKV.mmkvWithID(STATUS_MMKV_ID).putBoolean("tether", true)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val manager = TetherManager(context)
             manager.startTethering(mode, null)
@@ -21,7 +21,7 @@ object Hotspot {
 
     @JvmStatic
     fun disableHotspot(context: Context, mode: Int) {
-        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", false)
+        MMKV.mmkvWithID(STATUS_MMKV_ID).putBoolean("tether", false)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val manager = TetherManager(context)
             manager.stopTethering(mode)
@@ -33,7 +33,7 @@ object Hotspot {
     @JvmStatic
     fun isHotspotActive(context: Context): Boolean {
         val manager = TetherManager(context)
-        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", manager.isTetherActive())
+        MMKV.mmkvWithID(STATUS_MMKV_ID).putBoolean("tether", manager.isTetherActive())
         return manager.isTetherActive()
     }
 }

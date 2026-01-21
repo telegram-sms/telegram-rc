@@ -25,10 +25,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import com.google.android.material.switchmaterial.SwitchMaterial
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.BEACON_MMKV_ID
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.shizuku_kit.VPNHotspot
 import com.qwe7002.telegram_rc.static_class.BeaconDataRepository
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import rikka.shizuku.Shizuku
 
@@ -76,7 +77,7 @@ class BeaconActivity : AppCompatActivity() {
         }
         FakeStatusBar().fakeStatusBar(this, window)
         
-        beaconMMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
+        beaconMMKV = MMKV.mmkvWithID(BEACON_MMKV_ID)
         flushListView(ArrayList())
 
         // Observe beacon list updates
@@ -179,7 +180,7 @@ class BeaconActivity : AppCompatActivity() {
         var context: Context
     ) :
         BaseAdapter() {
-        private var beaconMMKV: MMKV = MMKV.mmkvWithID(Const.BEACON_MMKV_ID)
+        private var beaconMMKV: MMKV = MMKV.mmkvWithID(BEACON_MMKV_ID)
         private var listenList: ArrayList<String> =
             beaconMMKV.decodeStringSet("address", setOf()).orEmpty().toCollection(ArrayList())
 
@@ -247,7 +248,7 @@ class BeaconActivity : AppCompatActivity() {
                 } else {
                     listenListTemp.remove(address)
                 }
-                Log.d(Const.TAG, "beacon_address: $listenListTemp")
+                Log.d(TAG, "beacon_address: $listenListTemp")
                 beaconMMKV.encode("address", listenListTemp.toSet())
                 listenList = listenListTemp as ArrayList<String>
             }

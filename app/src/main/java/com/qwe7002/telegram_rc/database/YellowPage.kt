@@ -4,14 +4,12 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.database.yellowpage.AppDatabase
 import com.qwe7002.telegram_rc.database.yellowpage.Organization
 import com.qwe7002.telegram_rc.database.yellowpage.PhoneNumber
 import com.qwe7002.telegram_rc.static_class.Network
-import kotlinx.coroutines.CoroutineScope
+import com.qwe7002.telegram_rc.value.TAG
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.Request
@@ -44,7 +42,7 @@ object YellowPage {
                 }
             }
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Error checking phone number in database", e)
+            Log.e(TAG, "Error checking phone number in database", e)
             null
         }
     }
@@ -126,7 +124,7 @@ object YellowPage {
             totalEntries += phoneNumbers.size
         }
 
-        Log.d(Const.TAG, "YellowPage sync completed: $totalEntries entries")
+        Log.d(TAG, "YellowPage sync completed: $totalEntries entries")
         totalEntries
     }
 
@@ -144,6 +142,6 @@ object YellowPage {
     suspend fun clearDatabase(context: Context) = withContext(Dispatchers.IO) {
         val db = AppDatabase.getDatabase(context)
         db.organizationDao().deleteAllOrganizations()
-        Log.d(Const.TAG, "YellowPage database cleared")
+        Log.d(TAG, "YellowPage database cleared")
     }
 }

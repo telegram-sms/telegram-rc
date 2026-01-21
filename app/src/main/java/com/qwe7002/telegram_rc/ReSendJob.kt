@@ -8,9 +8,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
+import com.qwe7002.telegram_rc.MMKV.RESEND_MMKV_ID
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Network
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.OkHttpClient
@@ -30,7 +32,7 @@ class ReSendJob : JobService() {
     private lateinit var preferences: MMKV
     override fun onStartJob(params: JobParameters?): Boolean {
         if (params == null) {
-            Log.e(Const.TAG, "ReSendJob: params is null")
+            Log.e(TAG, "ReSendJob: params is null")
             return false
         }
 
@@ -58,18 +60,18 @@ class ReSendJob : JobService() {
                     }
                     if (sendList.isNotEmpty()) {
                         Log.i(
-                            Const.TAG,
+                            TAG,
                             "The resend failure message is complete."
                         )
                     }
                 } catch (e: Exception) {
-                    Log.e(Const.TAG, "Error in resend job", e)
+                    Log.e(TAG, "Error in resend job", e)
                 } finally {
                     jobFinished(params, false)
                 }
             }.start()
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Failed to start resend job", e)
+            Log.e(TAG, "Failed to start resend job", e)
             return false
         }
         return true
@@ -111,12 +113,12 @@ class ReSendJob : JobService() {
             }
         } catch (e: IOException) {
             Log.e(
-                Const.TAG,
+                TAG,
                 "An error occurred while resending: " + e.message,e
             )
         } catch (e: Exception) {
             Log.e(
-                Const.TAG,
+                TAG,
                 "An unexpected error occurred while resending: " + e.message,e
             )
         }
@@ -149,7 +151,7 @@ class ReSendJob : JobService() {
             if (message.isEmpty()) {
                 return
             }
-            val mmkv = MMKV.mmkvWithID(Const.RESEND_MMKV_ID)
+            val mmkv = MMKV.mmkvWithID(RESEND_MMKV_ID)
             val resendList = mmkv.decodeStringSet("resend_list", mutableSetOf())
             val simpleDateFormat =
                 SimpleDateFormat(context.getString(R.string.time_format), Locale.UK)

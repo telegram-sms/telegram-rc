@@ -7,8 +7,8 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
-import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.ServiceManage
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import java.util.concurrent.TimeUnit
@@ -18,7 +18,7 @@ class KeepAliveJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         try {
             if (params == null) {
-                Log.e(Const.TAG, "KeepAliveJob: params is null")
+                Log.e(TAG, "KeepAliveJob: params is null")
                 return false
             }
             
@@ -33,16 +33,16 @@ class KeepAliveJob : JobService() {
                 )
                 ServiceManage.startBeaconService(applicationContext)
             }
-            Log.v(Const.TAG, "KeepAliveJob: Try to pull up the service")
+            Log.v(TAG, "KeepAliveJob: Try to pull up the service")
             this.jobFinished(params, false)
             startJob(applicationContext)
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Error in onStartJob", e)
+            Log.e(TAG, "Error in onStartJob", e)
             if (params != null) {
                 try {
                     this.jobFinished(params, false)
                 } catch (exception: Exception) {
-                    Log.e(Const.TAG, "Error finishing job", exception)
+                    Log.e(TAG, "Error finishing job", exception)
                 }
             }
             return false

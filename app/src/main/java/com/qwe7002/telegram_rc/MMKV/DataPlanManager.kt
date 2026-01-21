@@ -1,6 +1,5 @@
 package com.qwe7002.telegram_rc.MMKV
 
-import com.qwe7002.telegram_rc.value.Const
 import com.tencent.mmkv.MMKV
 
 object DataPlanManager {
@@ -13,7 +12,7 @@ object DataPlanManager {
     private lateinit var dataPlanMMKV: MMKV
     
     fun initialize() {
-        dataPlanMMKV = MMKV.mmkvWithID(Const.DATA_PLAN_MMKV_ID)
+        dataPlanMMKV = MMKV.mmkvWithID(DATA_PLAN_MMKV_ID)
     }
     
     fun setDataPlanType(type: Int) {

@@ -4,8 +4,7 @@ import android.telephony.CellInfo
 import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
 import android.util.Log
-import com.qwe7002.telegram_rc.value.Const
-import com.qwe7002.telegram_rc.data_structure.LogEntry
+import com.qwe7002.telegram_rc.value.TAG
 
 object ArfcnConverter {
 
@@ -190,7 +189,7 @@ object ArfcnConverter {
             return matchingBands.first()
         }
 
-        Log.d(Const.TAG, "Multiple bands match ARFCN $arfcn: $matchingBands")
+        Log.d(TAG, "Multiple bands match ARFCN $arfcn: $matchingBands")
 
         // 多个匹配时的优先级规则：
         // 1. TDD频段优先
@@ -247,7 +246,7 @@ object ArfcnConverter {
                     val cellIdentity = cellInfo.cellIdentity
                     val cellSignalStrength = cellInfo.cellSignalStrength
                     val earfcn = cellIdentity.earfcn
-                    Log.d(Const.TAG, "getCellInfoDetails LTE: EARFCN=$earfcn")
+                    Log.d(TAG, "getCellInfoDetails LTE: EARFCN=$earfcn")
 
                     val band = if (earfcn != Int.MAX_VALUE) {
                         getLteBand(earfcn)
@@ -266,10 +265,10 @@ object ArfcnConverter {
                     val arfcn = try {
                         cellIdentity.javaClass.getMethod("getNrarfcn").invoke(cellIdentity) as Int
                     } catch (e: Exception) {
-                        Log.e(Const.TAG, "Error getting NR-ARFCN", e)
+                        Log.e(TAG, "Error getting NR-ARFCN", e)
                         Int.MAX_VALUE
                     }
-                    Log.d(Const.TAG, "getCellInfoDetails NR: ARFCN=$arfcn")
+                    Log.d(TAG, "getCellInfoDetails NR: ARFCN=$arfcn")
 
                     val band = if (arfcn != Int.MAX_VALUE) getNrBand(arfcn) else null
                     val duplexMode = band?.let { getBandDuplexMode(it) }
@@ -283,7 +282,7 @@ object ArfcnConverter {
                             cellSignalStrength.javaClass.getMethod("getRsrp").invoke(cellSignalStrength) as Int
                         }
                     } catch (e: Exception) {
-                        Log.e(Const.TAG, "Error getting SS RSRP", e)
+                        Log.e(TAG, "Error getting SS RSRP", e)
                         Int.MAX_VALUE
                     }
 
@@ -296,7 +295,7 @@ object ArfcnConverter {
                 }
             }
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Error getting cell info details", e)
+            Log.e(TAG, "Error getting cell info details", e)
             "Error getting cell info"
         }
     }

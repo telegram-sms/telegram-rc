@@ -11,6 +11,7 @@ import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Network
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Call
@@ -26,7 +27,7 @@ class NotifyListenerService : NotificationListenerService() {
     var appNameList: MutableMap<String, String> = HashMap()
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName
-        Log.d(Const.TAG, "onNotificationPosted: $packageName")
+        Log.d(TAG, "onNotificationPosted: $packageName")
         val extras = sbn.notification.extras!!
         val title = extras.getString(Notification.EXTRA_TITLE, "None")
         val content = extras.getString(Notification.EXTRA_TEXT, "None")
@@ -38,7 +39,7 @@ class NotifyListenerService : NotificationListenerService() {
         val preferences = MMKV.defaultMMKV()
         val requestBody = RequestMessage()
         if (!preferences.contains("initialized")) {
-            Log.i(Const.TAG, "Uninitialized, Notification receiver is deactivated.")
+            Log.i(TAG, "Uninitialized, Notification receiver is deactivated.")
             return
         }
         if (packageName == "com.android.server.telecom" && preferences.getBoolean(
@@ -51,10 +52,10 @@ class NotifyListenerService : NotificationListenerService() {
                     "${getString(R.string.receive_notification_title)}\n${
                         getString(R.string.title)
                     }$title\n${getString(R.string.content)}$content"
-                Log.d(Const.TAG, "onNotificationPosted: $title $content")
+                Log.d(TAG, "onNotificationPosted: $title $content")
             } else {
                 Log.w(
-                    Const.TAG,
+                    TAG,
                     "The number [${title}] has been called multiple times and the notification has been collapsed."
                 )
                 return
@@ -63,7 +64,7 @@ class NotifyListenerService : NotificationListenerService() {
             val listenList: List<String> =
                 preferences.decodeStringSet("notify_listen_list", setOf())?.toList() ?: listOf()
             if (!listenList.contains(packageName)) {
-                Log.i(Const.TAG, "[$packageName] Not in the list of listening packages.")
+                Log.i(TAG, "[$packageName] Not in the list of listening packages.")
                 return
             }
             var appName: String? = "unknown"
@@ -76,7 +77,7 @@ class NotifyListenerService : NotificationListenerService() {
                     appName = pm.getApplicationLabel(applicationInfo) as String
                     appNameList[packageName] = appName
                 } catch (e: PackageManager.NameNotFoundException) {
-                    Log.e(Const.TAG, "Get app name failed: " + e.message,e)
+                    Log.e(TAG, "Get app name failed: " + e.message,e)
                 }
             }
             requestBody.text =
@@ -101,7 +102,7 @@ class NotifyListenerService : NotificationListenerService() {
         val errorHead = "Send notification failed:"
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(Const.TAG, errorHead + e.message,e)
+                Log.e(TAG, errorHead + e.message,e)
                 ReSendJob.addResendLoop(applicationContext, requestBody.text)
             }
 
@@ -109,7 +110,7 @@ class NotifyListenerService : NotificationListenerService() {
             override fun onResponse(call: Call, response: Response) {
                 val result = Objects.requireNonNull(response.body).string()
                 if (response.code != 200) {
-                    Log.e(Const.TAG, errorHead + response.code + " " + result)
+                    Log.e(TAG, errorHead + response.code + " " + result)
                     ReSendJob.addResendLoop(applicationContext, requestBody.text)
                 }
             }

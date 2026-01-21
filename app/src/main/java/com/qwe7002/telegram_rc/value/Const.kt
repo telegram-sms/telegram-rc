@@ -2,22 +2,8 @@ package com.qwe7002.telegram_rc.value
 
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
+const val SYSTEM_CONFIG_VERSION: Int = 1
 
-object Const {
-    const val TAG: String = "Telegram-RC"
-    const val SYSTEM_CONFIG_VERSION: Int = 1
-
-    @JvmField
-    val JSON: MediaType = "application/json; charset=utf-8".toMediaType()
-    const val RESULT_CONFIG_JSON: Int = 1
-    const val CHAT_INFO_MMKV_ID: String = "chat_info"
-    const val BEACON_MMKV_ID: String = "beacon"
-    const val STATUS_MMKV_ID: String = "status"
-    const val PROXY_MMKV_ID: String = "proxy"
-    const val RESEND_MMKV_ID: String = "resend"
-    const val UPGRADE_MMKV_ID: String = "upgrade"
-    const val IMSI_MMKV_ID: String = "IMSI"
-    const val DATA_PLAN_MMKV_ID: String = "data_plan"
-    const val UPDATE_ID: String = "update"
-
-}
+@JvmField
+val JSON_TYPE: MediaType = "application/json; charset=utf-8".toMediaType()
+const val RESULT_CONFIG_JSON: Int = 1

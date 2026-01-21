@@ -10,11 +10,13 @@ import android.content.Intent
 import android.os.PersistableBundle
 import android.util.Log
 import com.google.gson.Gson
+import com.qwe7002.telegram_rc.MMKV.CHAT_INFO_MMKV_ID
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
 import okhttp3.Request
@@ -26,7 +28,7 @@ import java.io.IOException
 class BatteryNetworkJob : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         if (params == null) {
-            Log.e(Const.TAG, "onStartJob: params is null")
+            Log.e(TAG, "onStartJob: params is null")
             return false
         }
         
@@ -47,7 +49,7 @@ class BatteryNetworkJob : JobService() {
             this.messageThreadId = messageThreadId
         }
         
-        val chatInfoMMKV = MMKV.mmkvWithID(Const.CHAT_INFO_MMKV_ID)
+        val chatInfoMMKV = MMKV.mmkvWithID(CHAT_INFO_MMKV_ID)
         var requestUri = Network.getUrl(botToken, "sendMessage")
         
         if ((System.currentTimeMillis() - chatInfoMMKV.getLong(
@@ -60,7 +62,7 @@ class BatteryNetworkJob : JobService() {
         ) {
             requestUri = Network.getUrl(botToken, "editMessageText")
             requestBody.messageId = chatInfoMMKV.getLong("batteryLastReceiveMessageId", 0L)
-            Log.d(Const.TAG, "onReceive: edit_mode")
+            Log.d(TAG, "onReceive: edit_mode")
         }
         
         chatInfoMMKV.putLong("batteryLastReceiveTime", System.currentTimeMillis())
@@ -73,7 +75,7 @@ class BatteryNetworkJob : JobService() {
         
         call.enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
-                Log.e(Const.TAG, errorHead + e.message,e)
+                Log.e(TAG, errorHead + e.message,e)
                 if (action == Intent.ACTION_BATTERY_LOW) {
                     SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                 }
@@ -86,7 +88,7 @@ class BatteryNetworkJob : JobService() {
 
                 val result = responseBody.string()
                 if (response.code != 200) {
-                    Log.e(Const.TAG, errorHead + response.code + " " + result)
+                    Log.e(TAG, errorHead + response.code + " " + result)
                     if (action == Intent.ACTION_BATTERY_LOW) {
                         SMS.sendFallbackSMS(applicationContext, requestBody.text, -1)
                     }

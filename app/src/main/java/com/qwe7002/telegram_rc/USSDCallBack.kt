@@ -9,6 +9,7 @@ import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Call
 import okhttp3.Callback
@@ -74,8 +75,8 @@ class USSDCallBack(
         val errorHead = "Send USSD failed:"
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d(Const.TAG, "onFailure: $e")
-                Log.e(Const.TAG, errorHead + e.message)
+                Log.d(TAG, "onFailure: $e")
+                Log.e(TAG, errorHead + e.message)
                 SMS.sendFallbackSMS(context, requestBody.text, -1)
                 ReSendJob.addResendLoop(context,requestBody.text)
             }
@@ -84,7 +85,7 @@ class USSDCallBack(
             override fun onResponse(call: Call, response: Response) {
                 if (response.code != 200) {
                     Log.e(
-                        Const.TAG,
+                        TAG,
                         errorHead + response.code + " " + Objects.requireNonNull(response.body)
                             .string()
                     )

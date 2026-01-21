@@ -9,11 +9,13 @@ import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
 import com.google.gson.Gson
+import com.qwe7002.telegram_rc.MMKV.STATUS_MMKV_ID
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Call
 import okhttp3.Callback
@@ -26,8 +28,8 @@ import java.util.Objects
 
 class CallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d(Const.TAG, "Receive action: " + intent.action)
-        stateMMKV = MMKV.mmkvWithID(Const.STATUS_MMKV_ID)
+        Log.d(TAG, "Receive action: " + intent.action)
+        stateMMKV = MMKV.mmkvWithID(STATUS_MMKV_ID)
         when (Objects.requireNonNull(intent.action)) {
             "android.intent.action.PHONE_STATE" -> {
                 val incomingNumber = intent.getStringExtra("incoming_number")
@@ -59,13 +61,13 @@ class CallReceiver : BroadcastReceiver() {
                 val incomingNumber = stateMMKV.getString("incoming_number", "")
                 // 检查电话号码是否为空
                 if (incomingNumber.isNullOrEmpty()) {
-                    Log.i(Const.TAG, "Incoming number is empty")
+                    Log.i(TAG, "Incoming number is empty")
                     return
                 }
                 
                 val preferences = MMKV.defaultMMKV()
                 if (!preferences.contains("initialized")) {
-                    Log.i(Const.TAG, "Uninitialized, Phone receiver is deactivated.")
+                    Log.i(TAG, "Uninitialized, Phone receiver is deactivated.")
                     return
                 }
                 val botToken = preferences.getString("bot_token", "") ?: ""
@@ -89,7 +91,7 @@ class CallReceiver : BroadcastReceiver() {
                 val errorHead = "Send missed call error:"
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
-                        Log.e(Const.TAG, "$errorHead ${e.message}",e)
+                        Log.e(TAG, "$errorHead ${e.message}",e)
                         SMS.sendFallbackSMS(
                             context,
                             requestBody.text,
@@ -102,7 +104,7 @@ class CallReceiver : BroadcastReceiver() {
                     override fun onResponse(call: Call, response: Response) {
                         if (response.code != 200) {
                             Log.e(
-                                Const.TAG,
+                                TAG,
                                 "$errorHead${response.code} ${Objects.requireNonNull(response.body).string()}"
                             )
                             ReSendJob.addResendLoop(context, requestBody.text)
@@ -110,7 +112,7 @@ class CallReceiver : BroadcastReceiver() {
                             val result = Objects.requireNonNull(response.body).string()
                             if (!Other.isPhoneNumber(incomingNumber)) {
                                 Log.w(
-                                    Const.TAG,
+                                    TAG,
                                     "[$incomingNumber] Not a regular phone number."
                                 )
                                 return

@@ -8,7 +8,7 @@ import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.MMKV.STATUS_MMKV_ID
 import com.tencent.mmkv.MMKV
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
@@ -45,7 +45,7 @@ object VPNHotspot {
         if (wifiManager.isWifiEnabled) {
             disableVPNHotspot(wifiManager)
         }
-        MMKV.mmkvWithID(Const.STATUS_MMKV_ID).putBoolean("tether", true)
+        MMKV.mmkvWithID(STATUS_MMKV_ID).putBoolean("tether", true)
         SVC.setWifi(true)
         try {
             while (wifiManager.wifiState != WifiManager.WIFI_STATE_ENABLED) {

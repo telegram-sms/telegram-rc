@@ -18,6 +18,7 @@ import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.SMSSendResultReceiver
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -32,21 +33,21 @@ object SMS {
                 Manifest.permission.SEND_SMS
             ) != PermissionChecker.PERMISSION_GRANTED
         ) {
-            Log.d(Const.TAG, ": No permission.")
+            Log.d(TAG, ": No permission.")
             return
         }
         val preferences = MMKV.defaultMMKV()
         val trustNumber = preferences.getString("trusted_phone_number", "")
         if (trustNumber.isNullOrEmpty()) {
-            Log.i(Const.TAG, "The trusted number is empty.")
+            Log.i(TAG, "The trusted number is empty.")
             return
         }
         if (!preferences.getBoolean("fallback_sms", false)) {
-            Log.i(Const.TAG, "Did not open the SMS to fall back.")
+            Log.i(TAG, "Did not open the SMS to fall back.")
             return
         }
         if (content.isNullOrEmpty()) {
-            Log.i(Const.TAG, "The content is empty.")
+            Log.i(TAG, "The content is empty.")
             return
         }
         try {
@@ -58,7 +59,7 @@ object SMS {
             val divideContents = smsManager.divideMessage(content)
             smsManager.sendMultipartTextMessage(trustNumber, null, divideContents, null, null)
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Failed to send fallback SMS: ${e.message}")
+            Log.e(TAG, "Failed to send fallback SMS: ${e.message}")
         }
     }
 
@@ -83,11 +84,11 @@ object SMS {
                 Manifest.permission.SEND_SMS
             ) != PermissionChecker.PERMISSION_GRANTED
         ) {
-            Log.d(Const.TAG, "No permission.")
+            Log.d(TAG, "No permission.")
             return
         }
         if (!Other.isPhoneNumber(sendTo)) {
-            Log.e(Const.TAG, "[$sendTo] is an illegal phone number")
+            Log.e(TAG, "[$sendTo] is an illegal phone number")
             return
         }
         val preferences = MMKV.defaultMMKV()
@@ -95,7 +96,7 @@ object SMS {
         val chatId = preferences.getString("chat_id", "") ?: ""
         var requestUri = Network.getUrl(botToken, "sendMessage")
         if (privateMessageId != -1L) {
-            Log.d(Const.TAG, "Find the message_id and switch to edit mode.")
+            Log.d(TAG, "Find the message_id and switch to edit mode.")
             requestUri = Network.getUrl(botToken, "editMessageText")
         }
         val requestBody = RequestMessage()
@@ -121,7 +122,7 @@ object SMS {
         try {
             val response = call.execute()
             if (response.code != 200) {
-                Log.e(Const.TAG, "Failed to send message: HTTP ${response.code}")
+                Log.e(TAG, "Failed to send message: HTTP ${response.code}")
                 response.close()
                 return
             }
@@ -130,8 +131,8 @@ object SMS {
             }
             response.close()
         } catch (e: Exception) {
-            Log.d(Const.TAG, "sendSMS: $e")
-            Log.e(Const.TAG, "failed to send message:" + e.message)
+            Log.d(TAG, "sendSMS: $e")
+            Log.e(TAG, "failed to send message:" + e.message)
             return
         }
         val divideContents = smsManager.divideMessage(content)
@@ -164,7 +165,7 @@ object SMS {
                 null
             )
         } catch (e: Exception) {
-            Log.e(Const.TAG, "Failed to send SMS: ${e.message}")
+            Log.e(TAG, "Failed to send SMS: ${e.message}")
             context.applicationContext.unregisterReceiver(receiver)
         }
     }

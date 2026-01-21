@@ -33,6 +33,7 @@ import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
 import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 
 class CcActivity : AppCompatActivity() {
@@ -97,7 +98,7 @@ class CcActivity : AppCompatActivity() {
                         position: Int,
                         id: Long
                     ) {
-                        Log.d(Const.TAG, position.toString())
+                        Log.d(TAG, position.toString())
                         when (position) {
                             0 -> dialog.findViewById<EditText>(R.id.body_editview).isEnabled = false
                             1 -> dialog.findViewById<EditText>(R.id.body_editview).isEnabled = true
@@ -105,7 +106,7 @@ class CcActivity : AppCompatActivity() {
                     }
 
                     override fun onNothingSelected(parent: AdapterView<*>?) {
-                        Log.d(Const.TAG, "nothing")
+                        Log.d(TAG, "nothing")
                     }
                 }
                 val webhook =
@@ -231,7 +232,7 @@ class CcActivity : AppCompatActivity() {
                     position: Int,
                     id: Long
                 ) {
-                    Log.d(Const.TAG, position.toString())
+                    Log.d(TAG, position.toString())
                     when (position) {
                         0 -> dialog.findViewById<EditText>(R.id.body_editview).isEnabled = false
                         1 -> dialog.findViewById<EditText>(R.id.body_editview).isEnabled = true
@@ -239,7 +240,7 @@ class CcActivity : AppCompatActivity() {
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>?) {
-                    Log.d(Const.TAG, "nothing")
+                    Log.d(TAG, "nothing")
                 }
             }
             val webhook = dialog.findViewById<EditText>(R.id.webhook_editview)
@@ -328,7 +329,7 @@ class CcActivity : AppCompatActivity() {
             JsonParser.parseString(json)
             true
         } catch (e: JsonSyntaxException) {
-            Log.e(Const.TAG, "isValidJson: " + e.message)
+            Log.e(TAG, "isValidJson: " + e.message)
             false
         }
     }
@@ -337,7 +338,7 @@ class CcActivity : AppCompatActivity() {
         serviceList: ArrayList<CcSendService>,
         listAdapter: ArrayAdapter<CcSendService>
     ) {
-        Log.d(Const.TAG, serviceList.toString())
+        Log.d(TAG, serviceList.toString())
         preferences.putString("cc_service_list", Gson().toJson(serviceList))
         listAdapter.notifyDataSetChanged()
     }
@@ -391,7 +392,7 @@ class CcActivity : AppCompatActivity() {
         when (requestCode) {
             0 -> {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    Log.d(Const.TAG, "onRequestPermissionsResult: No camera permissions.")
+                    Log.d(TAG, "onRequestPermissionsResult: No camera permissions.")
                     Snackbar.make(
                         findViewById(R.id.bot_token_editview),
                         R.string.no_camera_permission,
@@ -409,7 +410,7 @@ class CcActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.d(Const.TAG, "onActivityResult: $resultCode")
+        Log.d(TAG, "onActivityResult: $resultCode")
         if (requestCode == 1) {
             if (resultCode == Const.RESULT_CONFIG_JSON) {
                 val gson = Gson()
@@ -417,7 +418,7 @@ class CcActivity : AppCompatActivity() {
                     data!!.getStringExtra("config_json"),
                     CcSendService::class.java
                 )
-                Log.d(Const.TAG, "onActivityResult: $jsonConfig")
+                Log.d(TAG, "onActivityResult: $jsonConfig")
                 serviceList.add(jsonConfig)
                 saveAndFlush(serviceList, listAdapter)
             }
