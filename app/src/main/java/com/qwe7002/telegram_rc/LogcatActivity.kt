@@ -198,15 +198,7 @@ class LogcatActivity : AppCompatActivity() {
         logcatProcess = null
     }
 
-    private fun clearLogcat() {
-        try {
-            Runtime.getRuntime().exec(arrayOf("logcat", "-c")).waitFor()
-            logBuffer.clear()
-            logAdapter.submitList(emptyList())
-        } catch (e: Exception) {
-            Log.e(Const.TAG, "Error clearing logcat", e)
-        }
-    }
+
 
     public override fun onPause() {
         super.onPause()
@@ -224,19 +216,4 @@ class LogcatActivity : AppCompatActivity() {
         logChannel.close()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.logcat_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_clear_logs -> {
-                clearLogcat()
-                true
-            }
-
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
 }
