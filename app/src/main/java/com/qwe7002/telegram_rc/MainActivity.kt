@@ -44,7 +44,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager
 import com.qwe7002.telegram_rc.data_structure.GitHubRelease
 import com.qwe7002.telegram_rc.data_structure.OutputMetadata

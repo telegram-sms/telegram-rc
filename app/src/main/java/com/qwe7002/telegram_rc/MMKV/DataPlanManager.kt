@@ -1,5 +1,6 @@
 package com.qwe7002.telegram_rc.MMKV
 
+import com.qwe7002.telegram_rc.value.Const
 import com.tencent.mmkv.MMKV
 
 object DataPlanManager {

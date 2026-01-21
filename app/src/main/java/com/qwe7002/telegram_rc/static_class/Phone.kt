@@ -7,7 +7,7 @@ import android.os.Build
 import android.telephony.SubscriptionManager
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.shizuku_kit.IPhoneSubInfo
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.tencent.mmkv.MMKV

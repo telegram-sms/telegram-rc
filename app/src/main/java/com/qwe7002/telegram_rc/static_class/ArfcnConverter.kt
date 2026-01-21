@@ -4,7 +4,7 @@ import android.telephony.CellInfo
 import android.telephony.CellInfoLte
 import android.telephony.CellInfoNr
 import android.util.Log
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.data_structure.LogEntry
 
 object ArfcnConverter {

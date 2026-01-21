@@ -7,7 +7,7 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel

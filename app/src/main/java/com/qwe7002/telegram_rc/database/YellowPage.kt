@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.database.yellowpage.AppDatabase
 import com.qwe7002.telegram_rc.database.yellowpage.Organization
 import com.qwe7002.telegram_rc.database.yellowpage.PhoneNumber

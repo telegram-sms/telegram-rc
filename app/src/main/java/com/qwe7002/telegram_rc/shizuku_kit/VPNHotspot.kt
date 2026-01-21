@@ -8,7 +8,7 @@ import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.tencent.mmkv.MMKV
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku

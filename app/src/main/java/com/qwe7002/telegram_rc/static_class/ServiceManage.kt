@@ -11,7 +11,7 @@ import com.qwe7002.telegram_rc.BatteryService
 import com.qwe7002.telegram_rc.BeaconReceiverService
 import com.qwe7002.telegram_rc.NotifyListenerService
 import com.qwe7002.telegram_rc.ChatService
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 
 object ServiceManage {
     @JvmStatic

@@ -12,7 +12,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Network
 import com.tencent.mmkv.MMKV
 import okhttp3.OkHttpClient

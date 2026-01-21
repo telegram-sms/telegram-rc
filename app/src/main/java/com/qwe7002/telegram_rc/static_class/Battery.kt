@@ -8,7 +8,7 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.R
 import moe.shizuku.server.IShizukuService
 import org.lsposed.hiddenapibypass.HiddenApiBypass

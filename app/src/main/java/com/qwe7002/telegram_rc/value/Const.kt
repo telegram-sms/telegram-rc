@@ -1,4 +1,4 @@
-package com.qwe7002.telegram_rc.MMKV
+package com.qwe7002.telegram_rc.value
 
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType

@@ -11,7 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.data_structure.LogAdapter
 import com.qwe7002.telegram_rc.data_structure.LogEntry
 import com.qwe7002.telegram_rc.shizuku_kit.ShizukuKit

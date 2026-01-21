@@ -26,7 +26,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage

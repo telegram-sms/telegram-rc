@@ -32,7 +32,7 @@ import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.tencent.mmkv.MMKV
 
 class CcActivity : AppCompatActivity() {

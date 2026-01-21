@@ -14,7 +14,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.Result
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 
 
 class ScannerActivity : Activity() {

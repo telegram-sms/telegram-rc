@@ -12,7 +12,7 @@ import android.os.Process
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.MMKV.DataPlanManager
 import java.util.Calendar
 

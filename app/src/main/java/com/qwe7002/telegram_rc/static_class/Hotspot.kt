@@ -3,7 +3,7 @@ package com.qwe7002.telegram_rc.static_class
 import android.content.Context
 import android.os.Build
 import com.fitc.wifihotspot.TetherManager
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.shizuku_kit.TetheringManagerShizuku
 import com.tencent.mmkv.MMKV
 

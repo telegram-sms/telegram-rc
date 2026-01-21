@@ -6,7 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import com.qwe7002.telegram_rc.MMKV.Const
+import com.qwe7002.telegram_rc.value.Const
 import com.qwe7002.telegram_rc.static_class.Notify
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.tencent.mmkv.MMKV
