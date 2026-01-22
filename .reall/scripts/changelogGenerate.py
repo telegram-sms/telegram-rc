@@ -17,7 +17,7 @@ class ChangelogGenerator:
 
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model = "gemini-2.0-flash-001"
+        self.model = "gemini-3-flash-preview"
 
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY environment variable must be set")
