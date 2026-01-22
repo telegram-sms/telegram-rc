@@ -7,21 +7,23 @@ Fetches Git commit history and uses AI to generate a structured changelog.
 import os
 import sys
 import subprocess
-import json
-import requests
 from typing import Optional
+from google import genai
+from google.genai import types
 
 
 class ChangelogGenerator:
-    """Generate changelog from Git commits using AI API"""
+    """Generate changelog from Git commits using Gemini AI API"""
 
     def __init__(self):
-        self.api_base_url = os.getenv("ONEAPI_BASE_URL")
-        self.api_key = os.getenv("ONEAPI_API_KEY")
-        self.model = "gpt-5-mini"
+        self.api_key = os.getenv("GEMINI_API_KEY")
+        self.model = "gemini-2.0-flash-001"
 
-        if not self.api_base_url or not self.api_key:
-            raise ValueError("ONEAPI_BASE_URL and ONEAPI_API_KEY environment variables must be set")
+        if not self.api_key:
+            raise ValueError("GEMINI_API_KEY environment variable must be set")
+
+        # Initialize Gemini client
+        self.client = genai.Client(api_key=self.api_key)
 
     def get_latest_tag(self, repo_path: str = ".") -> str:
         """
@@ -114,6 +116,67 @@ class ChangelogGenerator:
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Git command failed: {e.stderr}")
 
+    def detect_breaking_changes(self, commits: str) -> bool:
+        """
+        Detect if there are breaking changes in commit messages
+
+        Args:
+            commits: Commit history
+
+        Returns:
+            True if breaking changes detected, False otherwise
+        """
+        breaking_indicators = [
+            "BREAKING CHANGE:",
+            "breaking change:",
+            "BREAKING:",
+            "breaking:",
+            "!:",  # Conventional commit with breaking change marker
+        ]
+
+        # Potential breaking change patterns (case-insensitive)
+        potential_breaking_patterns = [
+            "migrate",
+            "migration",
+            "replace.*with",
+            "removed.*feature",
+            "deprecate",
+            "rename.*package",
+            "change.*api",
+            "incompatible",
+            "paper.*mmkv",
+            "sharedpreferences.*mmkv",
+        ]
+
+        commit_lines = commits.split('\n')
+        has_potential_breaking = False
+
+        for line in commit_lines:
+            line_lower = line.lower()
+
+            # Check for explicit breaking change indicators
+            for indicator in breaking_indicators:
+                if indicator in line_lower:
+                    return True
+
+            # Check for conventional commit with ! (e.g., "feat!: something")
+            if " | " in line:
+                parts = line.split(" | ")
+                if len(parts) >= 4:
+                    message = parts[3]
+                    if message.strip().startswith(('feat!', 'fix!', 'refactor!', 'perf!')):
+                        return True
+
+                    # Check for potential breaking patterns in commit message
+                    message_lower = message.lower()
+                    for pattern in potential_breaking_patterns:
+                        import re
+                        if re.search(pattern, message_lower):
+                            has_potential_breaking = True
+                            break
+
+        return has_potential_breaking
+
     def build_prompt(self, commits: str) -> str:
         """
         Build the prompt for AI API
@@ -127,9 +190,21 @@ class ChangelogGenerator:
         prompt = (
             "Analyze the following Git commit history and generate a clean, structured changelog.\n"
             "Format: hash | author | date | message\n\n"
+            "IMPORTANT: Detect Breaking Changes by looking for:\n"
+            "- Commits with 'BREAKING CHANGE:', 'breaking change:', or '!' in commit messages\n"
+            "- API changes that break backward compatibility\n"
+            "- Removed features or deprecated functionality\n"
+            "- Changes to data structures, configuration formats, or interfaces\n"
+            "- Database schema changes requiring migration\n"
+            "- Library replacements (e.g., Paper to MMKV, SharedPreferences to MMKV)\n"
+            "- Storage migration or data format changes\n"
+            "- Package renames or major refactoring\n"
+            "- Commits with 'migrate', 'migration', 'replace X with Y' that affect user data\n\n"
             "Output ONLY the categorized changelog in this exact format:\n\n"
             "## Summary\n"
             "A concise summary of the changes (approx. 140 characters).\n\n"
+            "## ⚠️ Breaking Changes\n"
+            "- [hash] message (detailed explanation of what breaks and migration steps)\n\n"
             "## Features\n"
             "- [hash] message\n\n"
             "## Bug Fixes\n"
@@ -143,15 +218,17 @@ class ChangelogGenerator:
             "Rules:\n"
             "1. Do NOT include any introductory text, notes, or explanations\n"
             "2. Start directly with the Summary\n"
-            "3. Only include changelog categories that have commits (Summary is mandatory)\n"
-            "4. Keep commit messages concise\n"
-            "5. Use markdown format only"
+            "3. Breaking Changes section should be placed FIRST after Summary if detected\n"
+            "4. Only include changelog categories that have commits (Summary is mandatory)\n"
+            "5. Keep commit messages concise\n"
+            "6. Use markdown format only\n"
+            "7. If no breaking changes found, omit the Breaking Changes section entirely"
         )
         return f"{prompt}\n\nCommit History:\n{commits}"
 
     def summarize_changelog(self, commits: str) -> str:
         """
-        Call OneAPI to summarize commits
+        Call Gemini API to summarize commits
 
         Args:
             commits: Commit history
@@ -162,49 +239,22 @@ class ChangelogGenerator:
         Raises:
             RuntimeError: If API request fails
         """
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
-
-        payload = {
-            "model": self.model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a changelog generator. Output only the formatted changelog without any additional commentary."
-                },
-                {
-                    "role": "user",
-                    "content": self.build_prompt(commits)
-                }
-            ],
-            "max_completion_tokens": 100000,
-            "top_p": 1,
-            "presence_penalty": 0,
-            "frequency_penalty": 0,
-            "stream": False
-        }
-
         try:
-            response = requests.post(
-                self.api_base_url,
-                headers=headers,
-                json=payload,
-                timeout=60
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=self.build_prompt(commits),
+                config=types.GenerateContentConfig(
+                    temperature=0,
+                    top_p=1,
+                    max_output_tokens=100000,
+                    candidate_count=1,
+                )
             )
-            response.raise_for_status()
 
-            data = response.json()
+            return response.text
 
-            # Extract content from response
-            if "choices" in data and len(data["choices"]) > 0:
-                return data["choices"][0]["message"]["content"]
-            else:
-                return data.get("content", str(data))
-
-        except requests.exceptions.RequestException as e:
-            raise RuntimeError(f"API request failed: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Gemini API request failed: {e}")
 
     def generate(self, repo_path: str = ".") -> str:
         """
@@ -226,9 +276,24 @@ class ChangelogGenerator:
             raise ValueError("No commit history found")
 
         print(f"\nFetched commits:\n{commits}")
-        print("\nCalling OneAPI for summarization...")
+
+        # Detect breaking changes
+        has_breaking = self.detect_breaking_changes(commits)
+        if has_breaking:
+            print("\n⚠️  WARNING: Potential BREAKING CHANGES detected in commits!")
+            print("    Please review the changelog carefully.\n")
+        else:
+            print("\n✓ No breaking changes detected in commit messages.\n")
+
+        print("Calling Gemini API for summarization...")
 
         summary = self.summarize_changelog(commits)
+
+        # Verify if AI detected breaking changes
+        if "Breaking Changes" in summary or "⚠️" in summary:
+            print("\n⚠️  BREAKING CHANGES DETECTED IN CHANGELOG!")
+            print("    This release contains breaking changes that may affect users.\n")
+
         print(f"\n=== Changelog Summary ===\n{summary}")
 
         return summary
@@ -262,4 +327,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
