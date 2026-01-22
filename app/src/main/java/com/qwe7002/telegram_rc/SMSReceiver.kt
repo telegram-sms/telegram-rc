@@ -15,13 +15,14 @@ import com.github.sumimakito.codeauxlib.CodeauxLibPortable
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
 import com.qwe7002.telegram_rc.shizuku_kit.SVC.setData
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.database.YellowPage
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Call
@@ -238,7 +239,7 @@ class SMSReceiver : BroadcastReceiver() {
         }
 
         requestBody.disableNotification = silentSend
-        val body: RequestBody = RequestBody.create(Const.JSON, Gson().toJson(requestBody))
+        val body: RequestBody = RequestBody.create(JSON_TYPE, Gson().toJson(requestBody))
         val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)

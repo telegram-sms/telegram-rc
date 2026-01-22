@@ -6,9 +6,10 @@ import android.telephony.TelephonyManager.UssdResponseCallback
 import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Call
@@ -68,7 +69,7 @@ class USSDCallBack(
     private fun networkHandle(message: String) {
         requestBody.text = message
         val requestBodyJson = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
+        val body: RequestBody = requestBodyJson.toRequestBody(JSON_TYPE)
         val okhttpClient = Network.getOkhttpObj()
         val requestObj: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(requestObj)

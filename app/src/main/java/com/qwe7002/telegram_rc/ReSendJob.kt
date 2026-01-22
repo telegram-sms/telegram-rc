@@ -10,8 +10,9 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.MMKV.RESEND_MMKV_ID
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.static_class.Network
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
@@ -95,7 +96,7 @@ class ReSendJob : JobService() {
             requestBody.parseMode = "html"
         }
         val requestBodyJson = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyJson.toRequestBody(Const.JSON)
+        val body: RequestBody = requestBodyJson.toRequestBody(JSON_TYPE)
         val requestObj: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(requestObj)
         try {

@@ -31,7 +31,7 @@ import com.qwe7002.telegram_rc.MMKV.BEACON_MMKV_ID
 import com.qwe7002.telegram_rc.MMKV.CHAT_INFO_MMKV_ID
 import com.qwe7002.telegram_rc.MMKV.IMSI_MMKV_ID
 import com.qwe7002.telegram_rc.MMKV.STATUS_MMKV_ID
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.data_structure.SMSRequestInfo
 import com.qwe7002.telegram_rc.data_structure.telegram.PollingJson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
@@ -68,6 +68,7 @@ import com.qwe7002.telegram_rc.static_class.Phone
 import com.qwe7002.telegram_rc.static_class.SMS.sendSMS
 import com.qwe7002.telegram_rc.static_class.ServiceManage
 import com.qwe7002.telegram_rc.static_class.USSD.sendUssd
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
@@ -228,10 +229,10 @@ class ChatService : Service() {
 
 
     override fun onDestroy() {
-        if(wifiLock.isHeld){
+        if (wifiLock.isHeld) {
             wifiLock.release()
         }
-        if (wakeLock.isHeld){
+        if (wakeLock.isHeld) {
             wakeLock.release()
         }
         terminalThread = true
@@ -312,7 +313,7 @@ class ChatService : Service() {
                 requestBody.messageThreadId = messageThreadId
                 val gson = Gson()
                 val requestBodyRaw = gson.toJson(requestBody)
-                val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+                val body: RequestBody = requestBodyRaw.toRequestBody(JSON_TYPE)
                 val request: Request =
                     Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClient.newCall(request)
@@ -470,7 +471,7 @@ class ChatService : Service() {
                     "${getString(R.string.system_message_head)}\n${getString(R.string.collecting_info)}"
 
                 val quickRequestUri = getUrl(botToken, "sendMessage")
-                val quickBody = Gson().toJson(quickInfoRequest).toRequestBody(Const.JSON)
+                val quickBody = Gson().toJson(quickInfoRequest).toRequestBody(JSON_TYPE)
                 val quickSendRequest =
                     Request.Builder().url(quickRequestUri).method("POST", quickBody).build()
 
@@ -775,7 +776,7 @@ class ChatService : Service() {
                         editRequest.text = fullInfoText
 
                         val editRequestUri = getUrl(botToken, "editMessageText")
-                        val editBody = Gson().toJson(editRequest).toRequestBody(Const.JSON)
+                        val editBody = Gson().toJson(editRequest).toRequestBody(JSON_TYPE)
                         val editSendRequest =
                             Request.Builder().url(editRequestUri).method("POST", editBody).build()
 
@@ -798,7 +799,7 @@ class ChatService : Service() {
 
             "/log" -> {
                 requestBody.text =
-                    getString(R.string.system_message_head) + "\n" + readLogcat(10)
+                    getString(R.string.system_message_head) + "\n" + readLogcat()
             }
 
             "/battery" -> {
@@ -1310,7 +1311,7 @@ class ChatService : Service() {
                                     // Send message first using synchronous approach
                                     val requestUri = getUrl(botToken, "sendMessage")
                                     val gson = Gson()
-                                    val body = gson.toJson(requestBody).toRequestBody(Const.JSON)
+                                    val body = gson.toJson(requestBody).toRequestBody(JSON_TYPE)
                                     val sendRequest =
                                         Request.Builder().url(requestUri).method("POST", body)
                                             .build()
@@ -1522,7 +1523,7 @@ class ChatService : Service() {
 
         val gson = Gson()
         val body
-                : RequestBody = gson.toJson(requestBody).toRequestBody(Const.JSON)
+                : RequestBody = gson.toJson(requestBody).toRequestBody(JSON_TYPE)
         Log.v(TAG, "receive_handle: " + gson.toJson(requestBody))
         val sendRequest: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(sendRequest)
@@ -1655,7 +1656,7 @@ class ChatService : Service() {
                                     val gson = Gson()
                                     val requestBodyRaw = gson.toJson(editRequest)
                                     val body: RequestBody =
-                                        requestBodyRaw.toRequestBody(Const.JSON)
+                                        requestBodyRaw.toRequestBody(JSON_TYPE)
                                     val requestUri = getUrl(botToken, "editMessageText")
                                     val request: Request =
                                         Request.Builder().url(requestUri).method("POST", body)
@@ -1823,7 +1824,7 @@ class ChatService : Service() {
                 requestBody.offset = offset
                 requestBody.timeout = timeout
                 val body: RequestBody =
-                    RequestBody.create(Const.JSON, Gson().toJson(requestBody))
+                    RequestBody.create(JSON_TYPE, Gson().toJson(requestBody))
                 val request: Request =
                     Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClientNew.newCall(request)
@@ -1913,7 +1914,7 @@ class ChatService : Service() {
         }
     }
 
-    private fun readLogcat(lines: Int): String {
+    private fun readLogcat(): String {
         return try {
             val level = "I"
             // Use logcat with proper filtering and tail to get recent logs
@@ -1926,7 +1927,7 @@ class ChatService : Service() {
                     "*:S",
                     "-d",
                     "-t",
-                    lines.toString()
+                    "10"
                 )
             )
 

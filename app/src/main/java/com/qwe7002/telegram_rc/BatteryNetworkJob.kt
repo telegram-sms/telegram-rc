@@ -12,10 +12,11 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.MMKV.CHAT_INFO_MMKV_ID
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
@@ -68,7 +69,7 @@ class BatteryNetworkJob : JobService() {
         chatInfoMMKV.putLong("batteryLastReceiveTime", System.currentTimeMillis())
         val okhttpClient = Network.getOkhttpObj()
         val requestBodyRaw = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+        val body: RequestBody = requestBodyRaw.toRequestBody(JSON_TYPE)
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)
         val errorHead = "Send battery info failed:"

@@ -12,8 +12,9 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.static_class.Network
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.OkHttpClient
@@ -83,7 +84,7 @@ class CcSendJob : JobService() {
                             networkProgressHandle(
                                 "POST",
                                 render(item.webhook, urlParameters),
-                                render(item.body, bodyParameters).toRequestBody(Const.JSON),
+                                render(item.body, bodyParameters).toRequestBody(JSON_TYPE),
                                 header,
                                 okhttpClient
                             )

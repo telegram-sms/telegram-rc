@@ -11,10 +11,11 @@ import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.MMKV.STATUS_MMKV_ID
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Call
@@ -84,7 +85,7 @@ class CallReceiver : BroadcastReceiver() {
                 CcSendJob.startJob(context, context.getString(R.string.missed_call_head), requestBody.text)
                 val gson = Gson()
                 val requestBodyRaw = gson.toJson(requestBody)
-                val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+                val body: RequestBody = requestBodyRaw.toRequestBody(JSON_TYPE)
                 val okhttpClient = Network.getOkhttpObj()
                 val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
                 val call = okhttpClient.newCall(request)

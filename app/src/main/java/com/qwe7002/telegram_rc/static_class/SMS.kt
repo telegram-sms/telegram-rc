@@ -14,10 +14,11 @@ import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.content.PermissionChecker
 import com.google.gson.Gson
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.R
 import com.qwe7002.telegram_rc.SMSSendResultReceiver
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Request
@@ -115,7 +116,7 @@ object SMS {
         requestBody.messageId = privateMessageId
         val gson = Gson()
         val requestBodyRaw = gson.toJson(requestBody)
-        val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+        val body: RequestBody = requestBodyRaw.toRequestBody(JSON_TYPE)
         val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)

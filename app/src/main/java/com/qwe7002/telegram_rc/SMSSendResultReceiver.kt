@@ -8,9 +8,10 @@ import android.telephony.SmsManager
 import android.util.Log
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.static_class.Network
 import com.qwe7002.telegram_rc.static_class.SMS
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import okhttp3.Call
@@ -59,7 +60,7 @@ class SMSSendResultReceiver : BroadcastReceiver() {
         }
         requestBody.text = "${extras.getString("message_text")}\n${context.getString(R.string.status)}$resultStatus"
         val requestBodyRaw = Gson().toJson(requestBody)
-        val body: RequestBody = requestBodyRaw.toRequestBody(Const.JSON)
+        val body: RequestBody = requestBodyRaw.toRequestBody(JSON_TYPE)
         val okhttpClient = Network.getOkhttpObj()
         val request: Request = Request.Builder().url(requestUri).method("POST", body).build()
         val call = okhttpClient.newCall(request)

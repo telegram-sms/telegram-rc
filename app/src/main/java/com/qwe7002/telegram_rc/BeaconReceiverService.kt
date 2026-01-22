@@ -28,7 +28,7 @@ import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.qwe7002.telegram_rc.MMKV.BEACON_MMKV_ID
 import com.qwe7002.telegram_rc.MMKV.IMSI_MMKV_ID
-import com.qwe7002.telegram_rc.value.Const
+
 import com.qwe7002.telegram_rc.data_structure.BeaconModel
 import com.qwe7002.telegram_rc.data_structure.BeaconModel.beaconItemName
 import com.qwe7002.telegram_rc.data_structure.telegram.RequestMessage
@@ -45,6 +45,7 @@ import com.qwe7002.telegram_rc.static_class.Other
 import com.qwe7002.telegram_rc.static_class.Other.getActiveCard
 import com.qwe7002.telegram_rc.static_class.Other.getSubId
 import com.qwe7002.telegram_rc.static_class.Phone
+import com.qwe7002.telegram_rc.value.JSON_TYPE
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 import com.tencent.mmkv.MMKVLogLevel
@@ -213,7 +214,7 @@ class BeaconReceiverService : Service() {
                     requestBody.messageThreadId = messageThreadId
 
                     val requestBodyJson = gson.toJson(requestBody)
-                    val body = requestBodyJson.toRequestBody(Const.JSON)
+                    val body = requestBodyJson.toRequestBody(JSON_TYPE)
                     val requestUrl =
                         Network.getUrl(preferences.getString("bot_token", "")!!, "SendMessage")
                     val request = Request.Builder().url(requestUrl).method("POST", body).build()
@@ -289,7 +290,7 @@ class BeaconReceiverService : Service() {
 
                                             val gson = Gson()
                                             val requestBodyRaw = gson.toJson(editRequest)
-                                            val body = requestBodyRaw.toRequestBody(Const.JSON)
+                                            val body = requestBodyRaw.toRequestBody(JSON_TYPE)
                                             val requestUri = Network.getUrl(
                                                 preferences.getString("bot_token", "")!!,
                                                 "editMessageText"

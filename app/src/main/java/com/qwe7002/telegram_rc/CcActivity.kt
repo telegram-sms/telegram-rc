@@ -32,7 +32,8 @@ import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.qwe7002.telegram_rc.data_structure.CcSendService
-import com.qwe7002.telegram_rc.value.Const
+import com.qwe7002.telegram_rc.value.RESULT_CONFIG_JSON
+
 import com.qwe7002.telegram_rc.value.TAG
 import com.tencent.mmkv.MMKV
 
@@ -412,7 +413,7 @@ class CcActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         Log.d(TAG, "onActivityResult: $resultCode")
         if (requestCode == 1) {
-            if (resultCode == Const.RESULT_CONFIG_JSON) {
+            if (resultCode == RESULT_CONFIG_JSON) {
                 val gson = Gson()
                 val jsonConfig = gson.fromJson(
                     data!!.getStringExtra("config_json"),
