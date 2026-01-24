@@ -38,7 +38,6 @@ class BatteryNetworkJob : JobService() {
         val action: String? = extras.getString("action", null)
         
         MMKV.initialize(applicationContext)
-        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         val preferences = MMKV.defaultMMKV()
         val chatId = preferences.getString("chat_id", "") ?: ""
         val botToken = preferences.getString("bot_token", "") ?: ""

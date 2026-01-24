@@ -49,7 +49,6 @@ class BatteryService : Service() {
     override fun onCreate() {
         super.onCreate()
         MMKV.initialize(applicationContext)
-        MMKV.setLogLevel(MMKVLogLevel.LevelWarning)
         val preferences = MMKV.defaultMMKV()
         val chargerStatus = preferences.getBoolean("charger_status", false)
         batteryReceiver = BatteryBroadcastReceiver()
