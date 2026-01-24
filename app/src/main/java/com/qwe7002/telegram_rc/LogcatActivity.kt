@@ -25,7 +25,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 class LogcatActivity : AppCompatActivity() {
     private lateinit var logRecyclerView: RecyclerView
     private lateinit var logAdapter: LogAdapter
-    private val maxLines = 500
     private var logcatProcess: Process? = null
     private var logcatJob: Job? = null
     private val logBuffer = CopyOnWriteArrayList<LogEntry>()
@@ -54,7 +53,6 @@ class LogcatActivity : AppCompatActivity() {
         }
 
         FakeStatusBar().fakeStatusBar(this, window)
-
         logAdapter = LogAdapter()
         logAdapter.setHasStableIds(true)
         logRecyclerView.adapter = logAdapter
@@ -66,9 +64,6 @@ class LogcatActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.Main) {
             for (entry in logChannel) {
                 logBuffer.add(entry)
-                if (logBuffer.size > maxLines) {
-                    logBuffer.removeAt(0)
-                }
                 updateAdapter()
             }
         }
@@ -101,8 +96,8 @@ class LogcatActivity : AppCompatActivity() {
                 logcatProcess = Runtime.getRuntime().exec(
                     arrayOf(
                         "logcat", "${TAG}:${level}", "Telegram-RC.TetherManager:${level}",
-                        "$${ShizukuKit.TAG}:${level}",
-                        "*:S", "-d", "-t", maxLines.toString(), "-v", "time"
+                        "${ShizukuKit.TAG}:${level}",
+                        "*:S", "-d", "-t", "500", "-v", "time"
                     )
                 )
 
