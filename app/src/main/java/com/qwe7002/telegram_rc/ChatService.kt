@@ -859,19 +859,19 @@ class ChatService : Service() {
                 }
 
                 // Get battery temperature
-                val temperature = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
+                val temperature = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) ?: -1
                 if (temperature > 0) {
                     reportText += "Temperature: ${temperature / 10.0}°C\n"
                 }
 
                 // Get battery voltage
-                val voltage = batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)
+                val voltage = batteryStatus?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) ?: -1
                 if (voltage > 0) {
                     reportText += "Voltage: ${voltage / 1000.0}V\n"
                 }
 
                 // Get charging status details
-                val plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+                val plugged = batteryStatus?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
                 if (plugged > 0) {
                     val pluggedStr = when (plugged) {
                         BatteryManager.BATTERY_PLUGGED_AC -> "AC Charger"
