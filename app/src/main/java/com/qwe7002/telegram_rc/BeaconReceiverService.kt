@@ -76,6 +76,8 @@ class BeaconReceiverService : Service() {
     private lateinit var beaconConfig: MMKV
     private var detectCount = 0
     private var notFoundCount = 0
+    @Volatile private var pendingHotspotIntent: Boolean? = null
+    @Volatile private var pendingHotspotIntentDeadline: Long = 0L
     private val flushReceiverLock = ReentrantLock()
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -408,6 +410,7 @@ class BeaconReceiverService : Service() {
             return
         }
         okhttpClient = Network.getOkhttpObj()
+        wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
 
         initializeWakeLock()
         loadPreferences()
@@ -511,10 +514,19 @@ class BeaconReceiverService : Service() {
     }
 
     private fun isHotspotEnabled(): Boolean {
+        // While a recent toggle command is pending, trust the intent so we don't
+        // act twice on a stale state from getTetheredIfaces / softap state machine.
+        val intent = pendingHotspotIntent
+        if (intent != null) {
+            if (System.currentTimeMillis() < pendingHotspotIntentDeadline) {
+                return intent
+            }
+            pendingHotspotIntent = null
+        }
         return if (beaconConfig.getBoolean("useVpnHotspot", false)) {
             VPNHotspot.isVPNHotspotActive()
         } else {
-            Hotspot.isHotspotActive(applicationContext)
+            Hotspot.isWifiApEnabled(applicationContext)
         }
     }
 
@@ -584,6 +596,10 @@ class BeaconReceiverService : Service() {
                 return
             }
         }
+        // Latch our intent so subsequent batches see the desired state immediately,
+        // even if the actual softap / netd state has not flipped yet (common on MTK).
+        pendingHotspotIntent = enable
+        pendingHotspotIntentDeadline = System.currentTimeMillis() + HOTSPOT_INTENT_TIMEOUT_MS
         if (beaconConfig.getBoolean("useVpnHotspot", false)) {
             if (enable) {
                 VPNHotspot.enableVPNHotspot(wifiManager)
@@ -662,5 +678,6 @@ class BeaconReceiverService : Service() {
         private const val STANDBY = -1
         private const val ENABLE_AP = 0
         private const val DISABLE_AP = 1
+        private const val HOTSPOT_INTENT_TIMEOUT_MS = 60_000L
     }
 }
