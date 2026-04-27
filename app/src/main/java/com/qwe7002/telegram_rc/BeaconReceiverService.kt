@@ -514,20 +514,24 @@ class BeaconReceiverService : Service() {
     }
 
     private fun isHotspotEnabled(): Boolean {
-        // While a recent toggle command is pending, trust the intent so we don't
-        // act twice on a stale state from getTetheredIfaces / softap state machine.
-        val intent = pendingHotspotIntent
-        if (intent != null) {
-            if (System.currentTimeMillis() < pendingHotspotIntentDeadline) {
-                return intent
-            }
-            pendingHotspotIntent = null
-        }
-        return if (beaconConfig.getBoolean("useVpnHotspot", false)) {
+        val actual = if (beaconConfig.getBoolean("useVpnHotspot", false)) {
             VPNHotspot.isVPNHotspotActive()
         } else {
             Hotspot.isWifiApEnabled(applicationContext)
         }
+        // While a recent toggle command is pending, trust the intent so we don't
+        // act twice on a stale state from getTetheredIfaces / softap state machine.
+        // Clear the latch as soon as the actual state catches up, so we don't stay
+        // pinned to the intent for the full timeout when the toggle finishes early.
+        val intent = pendingHotspotIntent
+        if (intent != null) {
+            if (actual == intent || System.currentTimeMillis() >= pendingHotspotIntentDeadline) {
+                pendingHotspotIntent = null
+                return actual
+            }
+            return intent
+        }
+        return actual
     }
 
     private fun isBluetoothEnabled(): Boolean {

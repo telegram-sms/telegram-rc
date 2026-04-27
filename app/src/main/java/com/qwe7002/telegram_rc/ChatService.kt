@@ -26,6 +26,7 @@ import com.fitc.wifihotspot.TetherManager
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName
 import com.qwe7002.telegram_rc.MMKV.BEACON_MMKV_ID
 import com.qwe7002.telegram_rc.MMKV.CHAT_INFO_MMKV_ID
@@ -85,7 +86,6 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.Locale
-import java.util.Objects
 import java.util.concurrent.TimeUnit
 
 
@@ -393,8 +393,16 @@ class ChatService : Service() {
                 messageObj["reply_to_message"].asJsonObject["message_id"].asString,
                 null
             )
-            val saveItem =
-                Gson().fromJson(saveItemString, SMSRequestInfo::class.java)
+            val saveItem = if (saveItemString.isNullOrEmpty()) {
+                null
+            } else {
+                try {
+                    Gson().fromJson(saveItemString, SMSRequestInfo::class.java)
+                } catch (e: JsonSyntaxException) {
+                    Log.w(TAG, "Stale reply_to_message payload, ignoring: ${e.message}")
+                    null
+                }
+            }
 
             if (saveItem != null && requestMsg.isNotEmpty()) {
                 val phoneNumber = saveItem.phone
@@ -407,17 +415,18 @@ class ChatService : Service() {
         }
         var hasCommand = false
         if (messageObj.has("entities")) {
-            val tempCommand: String
-            val tempCommandLowercase: String
             val entitiesArr = messageObj["entities"].asJsonArray
-            val entitiesObjCommand = entitiesArr[0].asJsonObject
-            if (entitiesObjCommand["type"].asString == "bot_command") {
+            val entitiesObjCommand = entitiesArr.firstOrNull()?.asJsonObject
+            if (entitiesObjCommand != null &&
+                entitiesObjCommand["type"]?.asString == "bot_command"
+            ) {
                 hasCommand = true
                 val commandOffset = entitiesObjCommand["offset"].asInt
                 val commandEndOffset = commandOffset + entitiesObjCommand["length"].asInt
-                tempCommand =
-                    requestMsg.substring(commandOffset, commandEndOffset).trim { it <= ' ' }
-                tempCommandLowercase =
+                val safeStart = commandOffset.coerceIn(0, requestMsg.length)
+                val safeEnd = commandEndOffset.coerceIn(safeStart, requestMsg.length)
+                val tempCommand = requestMsg.substring(safeStart, safeEnd).trim { it <= ' ' }
+                val tempCommandLowercase =
                     tempCommand.lowercase(Locale.getDefault()).replace("_", "")
                 command = tempCommandLowercase
                 if (tempCommandLowercase.contains("@")) {
@@ -832,8 +841,8 @@ class ChatService : Service() {
 
                 // Get battery health status
                 val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-                val batteryStatus = checkNotNull(registerReceiver(null, intentFilter))
-                val health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1)
+                val batteryStatus = registerReceiver(null, intentFilter)
+                val health = batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) ?: -1
                 val healthStr = when (health) {
                     BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
                     BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheat"
@@ -1194,7 +1203,7 @@ class ChatService : Service() {
                                 }
 
                                 "sim" -> {
-                                    val slot = sim?.toInt()?.minus(1)
+                                    val slot = sim?.toIntOrNull()?.minus(1)
                                     val newState = when (action) {
                                         "on" -> true
                                         "off" -> false
@@ -1211,7 +1220,10 @@ class ChatService : Service() {
                                         val info = subscriptionManager.getActiveSubscriptionInfo(
                                             SubscriptionManager.getDefaultDataSubscriptionId()
                                         )
-                                        if (info.simSlotIndex == slot) {
+                                        if (info == null) {
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nNo active SIM detected on the default data slot."
+                                        } else if (info.simSlotIndex == slot) {
                                             requestBody.text =
                                                 "${getString(R.string.system_message_head)}\nYou cannot switch the current data SIM card."
                                         } else {
@@ -1260,38 +1272,40 @@ class ChatService : Service() {
                                             subscriptionManager.getActiveSubscriptionInfo(
                                                 SubscriptionManager.getDefaultDataSubscriptionId()
                                             )
-                                        var slotIndex = 0
-                                        if (info.simSlotIndex == 0) {
-                                            slotIndex = 1
-                                        }
+                                        val slotIndex = if (info?.simSlotIndex == 0) 1 else 0
                                         val subscriptionInfo =
                                             subscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(
                                                 slotIndex
                                             )
-                                        requestBody.text =
-                                            "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
-                                        actionToExecute = {
-                                            try {
-                                                val dataSub = ISub()
-                                                dataSub.setDefaultDataSubIdWithShizuku(
-                                                    subscriptionInfo.subscriptionId
-                                                )
-                                                Log.d(
-                                                    TAG,
-                                                    "Successfully switched default data SIM"
-                                                )
-                                            } catch (e: Exception) {
-                                                Log.e(
-                                                    TAG,
-                                                    "Switching default data SIM failed: ${e.message}",
-                                                    e
-                                                )
-                                            } catch (e: NoSuchMethodError) {
-                                                Log.e(
-                                                    TAG,
-                                                    "Switching default data SIM failed: Method is not available",
-                                                    e
-                                                )
+                                        if (info == null || subscriptionInfo == null) {
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nUnable to switch data SIM: one of the slots has no active subscription."
+                                        } else {
+                                            requestBody.text =
+                                                "${getString(R.string.system_message_head)}\nOriginal Data SIM: ${(info.simSlotIndex + 1)}\nCurrent Data SIM: ${(subscriptionInfo.simSlotIndex + 1)}"
+                                            actionToExecute = {
+                                                try {
+                                                    val dataSub = ISub()
+                                                    dataSub.setDefaultDataSubIdWithShizuku(
+                                                        subscriptionInfo.subscriptionId
+                                                    )
+                                                    Log.d(
+                                                        TAG,
+                                                        "Successfully switched default data SIM"
+                                                    )
+                                                } catch (e: Exception) {
+                                                    Log.e(
+                                                        TAG,
+                                                        "Switching default data SIM failed: ${e.message}",
+                                                        e
+                                                    )
+                                                } catch (e: NoSuchMethodError) {
+                                                    Log.e(
+                                                        TAG,
+                                                        "Switching default data SIM failed: Method is not available",
+                                                        e
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -1766,16 +1780,13 @@ class ChatService : Service() {
         botToken = preferences.getString("bot_token", "").toString()
         messageThreadId = preferences.getString("message_thread_id", "").toString()
         okhttpClient = getOkhttpObj()
-        wifiLock = (Objects.requireNonNull(
-            applicationContext.getSystemService(
-                WIFI_SERVICE
+        wifiLock = (applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
+            .createWifiLock(
+                WifiManager.WIFI_MODE_FULL_HIGH_PERF,
+                "bot_command_polling_wifi"
             )
-        ) as WifiManager).createWifiLock(
-            WifiManager.WIFI_MODE_FULL_HIGH_PERF,
-            "bot_command_polling_wifi"
-        )
         wakeLock =
-            (Objects.requireNonNull(applicationContext.getSystemService(POWER_SERVICE)) as PowerManager).newWakeLock(
+            (applicationContext.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, "bot_command_polling"
             )
         wifiLock.setReferenceCounted(false)
