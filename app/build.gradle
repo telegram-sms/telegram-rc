@@ -74,7 +74,6 @@ dependencies {
     implementation 'org.conscrypt:conscrypt-android:2.5.3'
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.1.0'
-    implementation 'aga.android:luch:0.4'
     implementation 'com.linkedin.dexmaker:dexmaker:2.28.6'
     // Android KTX
     implementation "androidx.core:core-ktx:1.17.0"

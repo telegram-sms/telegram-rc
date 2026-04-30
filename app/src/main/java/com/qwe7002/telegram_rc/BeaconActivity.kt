@@ -223,7 +223,8 @@ class BeaconActivity : AppCompatActivity() {
             }
 
             val beacon = list[position]
-            holder.titleView.text = beacon.uuid
+            val nameSuffix = beacon.name?.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
+            holder.titleView.text = beacon.uuid + nameSuffix
             holder.addressView.text =
                 "Major: " + beacon.major + " Minor: " + beacon.minor + " Rssi: " + beacon.rssi + " dBm"
             holder.infoView.text = "Distance: " + beacon.distance.toInt() + " meters"

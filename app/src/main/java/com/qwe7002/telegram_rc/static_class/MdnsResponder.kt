@@ -10,7 +10,6 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.fitc.wifihotspot.TetherManager
 import com.qwe7002.telegram_rc.value.TAG
-import java.net.Inet4Address
 import java.net.InetAddress
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -28,7 +27,8 @@ object MdnsResponder {
 
     @JvmStatic
     fun start(context: Context) {
-        // setHostname / setHostAddresses on NsdServiceInfo require Android 14+.
+        // NsdServiceInfo.setHostAddresses requires Android 14+; without it we cannot
+        // bind the service to a specific IP, so router.local resolution would not work.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Log.w(TAG, "MdnsResponder: custom hostname requires Android 14+, skipping")
             return
@@ -79,25 +79,28 @@ object MdnsResponder {
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @SuppressLint("WifiManagerLeak")
     private fun register(context: Context, ip: String) {
-        val addr: InetAddress = Inet4Address.getByName(ip)
+        val addr: InetAddress = InetAddress.getByName(ip)
 
         val wifi = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val lock = wifi.createMulticastLock("mdns_responder").apply {
             setReferenceCounted(false)
             acquire()
         }
+        // Store before registerService so cleanup() can release on later failure.
         multicastLock = lock
 
+        // NsdManager has no public setHostname; on API 34+ it derives the host record
+        // from serviceName when hostAddresses is set, so "router._http._tcp.local"
+        // and "router.local" both resolve to the supplied addresses.
         val info = NsdServiceInfo().apply {
             serviceName = HOSTNAME
             serviceType = SERVICE_TYPE
-            hostname = HOSTNAME
             hostAddresses = listOf(addr)
             port = SERVICE_PORT
         }
         val listener = object : NsdManager.RegistrationListener {
             override fun onServiceRegistered(info: NsdServiceInfo) {
-                Log.i(TAG, "MdnsResponder: registered ${info.hostname}.local -> $ip")
+                Log.i(TAG, "MdnsResponder: registered ${info.serviceName}.local -> $ip")
             }
             override fun onRegistrationFailed(info: NsdServiceInfo, errorCode: Int) {
                 Log.e(TAG, "MdnsResponder: registration failed code=$errorCode")
@@ -110,9 +113,9 @@ object MdnsResponder {
                 Log.e(TAG, "MdnsResponder: unregistration failed code=$errorCode")
             }
         }
+        registrationListener = listener
         val nsdManager = context.getSystemService(NsdManager::class.java)
         nsdManager.registerService(info, NsdManager.PROTOCOL_DNS_SD, listener)
-        registrationListener = listener
     }
 
     private fun cleanup(context: Context) {

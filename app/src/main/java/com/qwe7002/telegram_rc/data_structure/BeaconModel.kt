@@ -7,7 +7,8 @@ object BeaconModel {
         val minor: Int,
         val rssi: Int,
         val hardwareAddress: String,
-        val distance: Double
+        val distance: Double,
+        val name: String? = null
     )
 
     fun beaconItemName(uuid: String, major: Int, minor: Int): String {

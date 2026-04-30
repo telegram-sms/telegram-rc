@@ -2,10 +2,10 @@
 
 package com.qwe7002.telegram_rc
 
-import aga.android.luch.BeaconScanner
-import aga.android.luch.IScanner
-import aga.android.luch.ScanDuration
-import aga.android.luch.parsers.BeaconParserFactory
+import com.qwe7002.telegram_rc.beacon.BeaconScanner
+import com.qwe7002.telegram_rc.beacon.IScanner
+import com.qwe7002.telegram_rc.beacon.ScanDuration
+import com.qwe7002.telegram_rc.beacon.BeaconParserFactory
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Service
@@ -471,7 +471,7 @@ class BeaconReceiverService : Service() {
                     try {
                         val distance = if (::scanner.isInitialized) {
                             try {
-                                scanner.ranger.calculateDistance(beacon)
+                                scanner.ranger?.calculateDistance(beacon) ?: -1.0
                             } catch (e: Exception) {
                                 Log.d(TAG, "Error calculating beacon distance: ${e.message}")
                                 -1.0
@@ -485,7 +485,8 @@ class BeaconReceiverService : Service() {
                             minor = beacon.getIdentifierAsInt(3),
                             rssi = beacon.rssi.toInt(),
                             hardwareAddress = beacon.hardwareAddress,
-                            distance = distance
+                            distance = distance,
+                            name = beacon.name
                         )
                     } catch (e: IllegalArgumentException) {
                         Log.d(TAG, "Error processing beacon data: ${e.message}")
@@ -624,7 +625,9 @@ class BeaconReceiverService : Service() {
     private fun buildMessage(switchStatus: Int, foundBeacon: BeaconModel.BeaconModel?): String {
         val beaconStatus = if (foundBeacon != null) {
             val distance = foundBeacon.distance.toInt().toString()
-            "\nBeacon Distance: $distance meter"
+            val nameLine = foundBeacon.name?.takeIf { it.isNotBlank() }
+                ?.let { "\nBeacon Name: $it" }.orEmpty()
+            "$nameLine\nBeacon Distance: $distance meter"
         } else {
             "\nBeacon Not Found."
         }
