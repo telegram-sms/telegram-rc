@@ -50,10 +50,31 @@ class BeaconActivity : AppCompatActivity() {
     fun flushListView(arrayList: ArrayList<BeaconModel.BeaconModel>) {
         val beaconListview = findViewById<ListView>(R.id.beacon_listview)
         val list = ArrayList<BeaconModel.BeaconModel>()
+        val seenItemNames = mutableSetOf<String>()
         for (beacon in arrayList) {
             if (beacon.distance < 200.0) {
                 list.add(beacon)
+                seenItemNames.add(
+                    BeaconModel.beaconItemName(beacon.uuid, beacon.major, beacon.minor)
+                )
             }
+        }
+
+        val selected = beaconMMKV.decodeStringSet("address", emptySet()).orEmpty()
+        for (itemName in selected) {
+            if (itemName in seenItemNames) continue
+            val parsed = BeaconModel.parseBeaconItemName(itemName) ?: continue
+            list.add(
+                BeaconModel.BeaconModel(
+                    uuid = parsed.first,
+                    major = parsed.second,
+                    minor = parsed.third,
+                    rssi = 0,
+                    hardwareAddress = "",
+                    distance = -1.0,
+                    name = null
+                )
+            )
         }
 
         runOnUiThread {
@@ -224,10 +245,18 @@ class BeaconActivity : AppCompatActivity() {
 
             val beacon = list[position]
             val nameSuffix = beacon.name?.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
+            val outOfRange = beacon.distance < 0
             holder.titleView.text = beacon.uuid + nameSuffix
-            holder.addressView.text =
-                "Major: " + beacon.major + " Minor: " + beacon.minor + " Rssi: " + beacon.rssi + " dBm"
-            holder.infoView.text = "Distance: " + beacon.distance.toInt() + " meters"
+            holder.addressView.text = if (outOfRange) {
+                "Major: ${beacon.major} Minor: ${beacon.minor}"
+            } else {
+                "Major: ${beacon.major} Minor: ${beacon.minor} Rssi: ${beacon.rssi} dBm"
+            }
+            holder.infoView.text = if (outOfRange) {
+                "Out of range"
+            } else {
+                "Distance: " + beacon.distance.toInt() + " meters"
+            }
 
             val beaconItemName = BeaconModel.beaconItemName(
                 beacon.uuid,
