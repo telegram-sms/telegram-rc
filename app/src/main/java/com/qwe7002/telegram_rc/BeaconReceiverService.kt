@@ -625,9 +625,7 @@ class BeaconReceiverService : Service() {
     private fun buildMessage(switchStatus: Int, foundBeacon: BeaconModel.BeaconModel?): String {
         val beaconStatus = if (foundBeacon != null) {
             val distance = foundBeacon.distance.toInt().toString()
-            val nameLine = foundBeacon.name?.takeIf { it.isNotBlank() }
-                ?.let { "\nBeacon Name: $it" }.orEmpty()
-            "$nameLine\nBeacon Distance: $distance meter"
+            "\nBeacon Distance: $distance meter"
         } else {
             "\nBeacon Not Found."
         }
