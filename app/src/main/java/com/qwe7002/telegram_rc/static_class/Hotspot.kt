@@ -24,11 +24,17 @@ object Hotspot {
         } else {
             TetheringManagerShizuku.startTethering(context, mode)
         }
+        if (mode == TetherManager.TetherMode.TETHERING_WIFI) {
+            MdnsResponder.start(context)
+        }
     }
 
     @JvmStatic
     fun disableHotspot(context: Context, mode: Int) {
         MMKV.mmkvWithID(STATUS_MMKV_ID).putBoolean("tether", false)
+        if (mode == TetherManager.TetherMode.TETHERING_WIFI) {
+            MdnsResponder.stop(context)
+        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val manager = TetherManager(context)
             manager.stopTethering(mode)

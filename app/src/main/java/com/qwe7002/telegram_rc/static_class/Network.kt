@@ -391,32 +391,27 @@ object Network {
     }
 
     fun getHotspotIpAddress(type: Int): String {
-        // Get all network interfaces
+        // MTK SoC uses "ap0" for the Wi-Fi tether interface; AOSP uses "wlan*".
+        val prefixes = when (type) {
+            TetherManager.TetherMode.TETHERING_BLUETOOTH -> listOf("bnep")
+            TetherManager.TetherMode.TETHERING_USB -> listOf("rndis")
+            TetherManager.TetherMode.TETHERING_ETHERNET -> listOf("eth")
+            else -> listOf("wlan", "ap")
+        }
         val interfaces = NetworkInterface.getNetworkInterfaces()
         while (interfaces.hasMoreElements()) {
             try {
                 val networkInterface = interfaces.nextElement()
                 val interfaceName = networkInterface.name
-                val prefix = when (type) {
-                    TetherManager.TetherMode.TETHERING_BLUETOOTH -> "bnep"
-                    TetherManager.TetherMode.TETHERING_USB -> "rndis"
-                    TetherManager.TetherMode.TETHERING_ETHERNET -> "eth"
-                    else -> "wlan"
-                }
-                if (interfaceName.startsWith(prefix)) {
-                    Log.d(TAG, "Checking interface: $interfaceName")
-                    val addresses = networkInterface.inetAddresses
-
-                    while (addresses.hasMoreElements()) {
-                        val address = addresses.nextElement()
-                        if (!address.isLoopbackAddress && address is Inet4Address) {
-                            Log.d(
-                                TAG,
-                                "Found IP on $interfaceName: ${address.hostAddress}"
-                            )
-                            @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-                            return address.hostAddress
-                        }
+                if (prefixes.none { interfaceName.startsWith(it) }) continue
+                Log.d(TAG, "Checking interface: $interfaceName")
+                val addresses = networkInterface.inetAddresses
+                while (addresses.hasMoreElements()) {
+                    val address = addresses.nextElement()
+                    if (!address.isLoopbackAddress && address is Inet4Address) {
+                        Log.d(TAG, "Found IP on $interfaceName: ${address.hostAddress}")
+                        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+                        return address.hostAddress
                     }
                 }
             } catch (e: Exception) {
