@@ -89,12 +89,13 @@ object MdnsResponder {
         // Store before registerService so cleanup() can release on later failure.
         multicastLock = lock
 
-        // NsdManager has no public setHostname; on API 34+ it derives the host record
-        // from serviceName when hostAddresses is set, so "router._http._tcp.local"
-        // and "router.local" both resolve to the supplied addresses.
+        // setHostname registers the A/AAAA record for "router.local"; without it only
+        // the DNS-SD entry "router._http._tcp.local" would be advertised and direct
+        // hostname resolution would fail.
         val info = NsdServiceInfo().apply {
             serviceName = HOSTNAME
             serviceType = SERVICE_TYPE
+            hostname = HOSTNAME
             hostAddresses = listOf(addr)
             port = SERVICE_PORT
         }
