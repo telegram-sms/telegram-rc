@@ -84,6 +84,8 @@ dependencies {
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:6.1'
+    // mDNS responder for advertising router.local on Wi-Fi tethering
+    implementation 'org.jmdns:jmdns:3.5.12'
     // Room database dependencies
     runtimeOnly("androidx.room:room-runtime:2.8.4")
     implementation "androidx.room:room-ktx:2.8.4"
@@ -94,4 +96,19 @@ dependencies {
 repositories {
     google()
     mavenCentral()
+}
+
+// On some Windows machines the kapt worker JVM falls through to the Windows
+// directory for java.io.tmpdir, where sqlite-jdbc (used by Room's query
+// verifier) cannot extract its native lib. Pin the worker tmpdir to the user
+// temp folder so the Room annotation processor can run.
+afterEvaluate {
+    if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+        def tmp = System.getenv('TEMP') ?: System.getenv('TMP') ?:
+                "${System.getProperty('user.home')}\\AppData\\Local\\Temp"
+        tasks.withType(org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask).configureEach { t ->
+            t.kaptProcessJvmArgs.add("-Djava.io.tmpdir=${tmp}".toString())
+            t.kaptProcessJvmArgs.add("-Dorg.sqlite.tmpdir=${tmp}".toString())
+        }
+    }
 }
