@@ -206,9 +206,17 @@ build_release:
       git fetch source --tags
     - |
       echo "==> Syncing GitHub tags to GitLab..."
-      git push origin --tags || {
-        echo "WARNING: Failed to push tags to GitLab, continuing..."
-      }
+      # CI_JOB_TOKEN cannot push by default; use a Project Access Token / Deploy
+      # Token with write_repository scope, exposed as the GITLAB_PUSH_TOKEN
+      # CI/CD variable, to authenticate the tag mirror.
+      if [ -z "${GITLAB_PUSH_TOKEN:-}" ]; then
+        echo "WARNING: GITLAB_PUSH_TOKEN not set; skipping GitLab tag sync"
+      else
+        GITLAB_PUSH_URL="https://oauth2:${GITLAB_PUSH_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+        git push "${GITLAB_PUSH_URL}" --tags || {
+          echo "WARNING: Failed to push tags to GitLab, continuing..."
+        }
+      fi
     - |
       echo "==> Reading changelog artifact from generate_changelog..."
       if [ ! -s CHANGELOG.md ]; then
