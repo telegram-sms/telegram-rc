@@ -10,6 +10,7 @@ object Notify {
     const val BATTERY: Int = 1
     const val CHAT_COMMAND: Int = 2
     const val BEACON_SERVICE: Int = 3
+    const val MDNS_RESPONDER: Int = 4
     @JvmStatic
     fun sendMessage(context: Context, subject: String, message: String) {
         val intent = Intent(context, MainActivity::class.java)

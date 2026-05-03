@@ -13,6 +13,7 @@
     <string name="current_network_connection_status">"Network status: "</string>
     <string name="service_is_running">Service is running…</string>
     <string name="battery_monitoring_notify">"Battery monitor "</string>
+    <string name="mdns_service_name">"mDNS Responder "</string>
     <string name="restart_service">Background service has been restarted.</string>
     <string name="status">"Status: "</string>
     <string name="send_failed">Failed</string>

@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.Log
 import com.fitc.wifihotspot.TetherManager
 import com.qwe7002.telegram_rc.MMKV.STATUS_MMKV_ID
+import com.qwe7002.telegram_rc.MdnsResponderService
 import com.qwe7002.telegram_rc.shizuku_kit.TetheringManagerShizuku
 import com.tencent.mmkv.MMKV
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -25,7 +26,7 @@ object Hotspot {
             TetheringManagerShizuku.startTethering(context, mode)
         }
         if (mode == TetherManager.TetherMode.TETHERING_WIFI) {
-            MdnsResponder.start(context)
+            MdnsResponderService.start(context)
         }
     }
 
@@ -33,7 +34,7 @@ object Hotspot {
     fun disableHotspot(context: Context, mode: Int) {
         MMKV.mmkvWithID(STATUS_MMKV_ID).putBoolean("tether", false)
         if (mode == TetherManager.TetherMode.TETHERING_WIFI) {
-            MdnsResponder.stop()
+            MdnsResponderService.stop(context)
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) {
             val manager = TetherManager(context)

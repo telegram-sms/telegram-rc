@@ -1797,6 +1797,11 @@ class ChatService : Service() {
         if (!wakeLock.isHeld) {
             wakeLock.acquire()
         }
+        // Resync mDNS state with the current hotspot. If the hotspot was already
+        // active before the service started (e.g., user upgraded the app with
+        // tethering already on), enableHotspot was never called, so the
+        // responder service would otherwise stay idle.
+        MdnsResponderService.syncWithHotspot(applicationContext)
         mainThread = Thread(threadMainRunnable())
         mainThread.start()
     }

@@ -35,6 +35,10 @@ class BootReceiver : BroadcastReceiver() {
                 KeepAliveJob.startJob(context)
                 ReSendJob.startJob(context)
             }
+            // Re-attach the mDNS responder if the hotspot survived the event
+            // (notably MY_PACKAGE_REPLACED, where Wi-Fi tethering keeps running
+            // while the app is upgraded).
+            MdnsResponderService.syncWithHotspot(context)
 
             try {
                 MMKV.mmkvWithID(STATUS_MMKV_ID).clear()

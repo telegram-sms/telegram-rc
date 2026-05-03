@@ -206,14 +206,15 @@ build_release:
       git fetch source --tags
     - |
       echo "==> Syncing GitHub tags to GitLab..."
-      # CI_JOB_TOKEN cannot push by default; use a Project Access Token / Deploy
-      # Token with write_repository scope, exposed as the GITLAB_PUSH_TOKEN
-      # CI/CD variable, to authenticate the tag mirror.
+      # CI_JOB_TOKEN cannot push by default; expose a Project Access Token (use
+      # username "oauth2") or a Deploy Token (use its generated username, e.g.
+      # "gitlab+deploy-token-123") with write_repository scope as the
+      # GITLAB_PUSH_TOKEN CI/CD variable. Override GITLAB_PUSH_USER for deploy
+      # tokens. Do not enable CI_DEBUG_TRACE on this job — it would log the URL.
       if [ -z "${GITLAB_PUSH_TOKEN:-}" ]; then
         echo "WARNING: GITLAB_PUSH_TOKEN not set; skipping GitLab tag sync"
       else
-        GITLAB_PUSH_URL="https://oauth2:${GITLAB_PUSH_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
-        git push "${GITLAB_PUSH_URL}" --tags || {
+        git push "https://${GITLAB_PUSH_USER:-oauth2}:${GITLAB_PUSH_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" --tags || {
           echo "WARNING: Failed to push tags to GitLab, continuing..."
         }
       fi
